@@ -1,6 +1,4 @@
 import React from 'react'
-import Image from 'next/image';
-import ThemeToggle from './ThemeToggle';
 
 const Footer = async () => {
 

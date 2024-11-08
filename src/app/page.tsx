@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { fetchBio } from "./api/db/connect";
 
 export default async function Home() {
 
@@ -259,8 +258,7 @@ export default async function Home() {
           <div className="flex-col">
             <h2 className="mb-10 text-4xl text-main">ZTM-Coffee-Connoisseur Project</h2>
             <p className="text-left text-5xl lg:text-2xl ml-10">
-            This is the first NextJS WebApp project committed from the ZTM NextJS Course.
-            The WebApp lets you find coffee stores near your location (Palermo set as default), the user can navigate through various coffee stores gathering their information such as it's name or address and can leave a star to upvote the coffee store.
+                {"This is the first NextJS WebApp project committed from the ZTM NextJS Course. The WebApp lets you find coffee stores near your location (Palermo set as default). The user can navigate through various coffee stores gathering their information such as it's name or address and can leave a star to upvote the coffee store."}
             </p>
           </div>
         </div>
