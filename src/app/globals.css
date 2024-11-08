@@ -2,8 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @layer base{
   body {
-      @apply dark:bg-[#080808] dark:text-[#e8e8e8] bg-[#e8e8e8] text-[#080808]
+      @apply dark:text-lighttext text-darktext bg-gradient-wrapper dark:bg-gradient-wrapper-dark
   }
+
+  label {
+    @apply cursor-text
+  }
+
 }

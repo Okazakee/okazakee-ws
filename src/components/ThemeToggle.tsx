@@ -1,14 +1,21 @@
 'use client';
 
 import useThemeStore from '../store/themeStore';
+import Image from 'next/image';
+import darkmodesvg from '../app/public/darkmode.svg'
 
 export default function ThemeToggle() {
-  const { isDark, toggleTheme } = useThemeStore();
+  const { toggleTheme } = useThemeStore();
 
   return (
     <button onClick={toggleTheme} className="p-2 rounded-md">
-      {isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-      <label>{isDark ? ' dark' : ' light'}</label>
+      <Image
+        src={darkmodesvg}
+        width={30}
+        height={30}
+        className='dark:invert'
+        alt="darkmode"
+      />
     </button>
   );
 }

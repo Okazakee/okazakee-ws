@@ -1,6 +1,6 @@
 'use server'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/database.types';
+import type { Database } from '@/src/types/database.types';
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
