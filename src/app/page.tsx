@@ -1,13 +1,14 @@
 import Image from "next/image";
 import { fetchBio } from "./api/db/connect";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default async function Home() {
 
-  const bio = await fetchBio();
-
   return (
-    <div>
-      {''}
+    <div className="">
+
+    <ThemeToggle />
+
     </div>
   );
 }
