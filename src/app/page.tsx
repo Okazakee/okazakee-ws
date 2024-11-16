@@ -2,200 +2,154 @@ import Image from "next/image";
 
 export default async function Home() {
 
+  //TODO placeholder data
+  const skillsArray = [
+    {
+      category: 'Frontend',
+      skills: [
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg',
+          title: 'JavaScript'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg',
+          title: 'TypeScript'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg',
+          title: 'ReactJS'
+        },
+        {
+          invert: true,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-plain.svg',
+          title: 'NextJS'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg',
+          title: 'HTML'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg',
+          title: 'TailwindCSS'
+        }
+      ]
+    },
+    {
+      category: 'Backend',
+      skills: [
+        {
+          invert: true,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg',
+          title: 'ExpressJS'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg',
+          title: 'PostgreSQL'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg',
+          title: 'MongoDB'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nestjs/nestjs-original.svg',
+          title: 'NestJS'
+        }
+      ]
+    },
+    {
+      category: 'Tools',
+      skills: [
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg',
+          title: 'Git'
+        },
+        {
+          invert: true,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vercel/vercel-original.svg',
+          title: 'Vercel'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/supabase/supabase-original.svg',
+          title: 'Supabase'
+        },
+        {
+          invert: false,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg',
+          title: 'Docker'
+        },
+        {
+          invert: true,
+          icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/bash/bash-original.svg',
+          title: 'Bash'
+        }
+      ]
+    }
+  ];
+
   return (
     <div className="mx-auto max-w-7xl">
-      <section id="header" className="flex items-center justify-between mx-16 pt-[15rem] pb-[30rem]">
+
+      <section id="header" className="flex flex-col xl:flex-row items-center xl:justify-between xl:mx-16 h-svh xl:h-screen xl:-mt-20">
         <Image
           src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/propic.jpeg'
-          width={450}
-          height={450}
-          className='rounded-2xl mr-10'
+          width={400}
+          height={400}
+          className='rounded-2xl xl:mr-10 w-[350px] xl:w-[400px] xl:mx-0 my-20 xl:py-0'
           alt="logo"
         />
-        <div className="text-center text-5xl lg:text-6xl">
-          <h1 className="mb-5">Cristian <label className="text-main">Di Carlo</label></h1>
+        <div className="text-center text-4xl lg:text-6xl">
+          <h1 className="xl:mb-5 mb-12">Cristian <label className="text-main">Di Carlo</label></h1>
           <h2 className="">Fullstack Web Developer</h2>
         </div>
       </section>
 
-      <section id="aboutme" className="text-center mx-16 pb-[30rem]">
-        <h1 className="text-6xl mb-20 ">About me</h1>
-        <p className="text-left lg:text-3xl">
+      <section id="aboutme" className="text-center mx-5 xl:mx-16 xl:pb-[20rem] h-lvh">
+        <h1 className="xl:text-6xl text-4xl xl:mb-20 mb-10">About me</h1>
+        <p className="xl:text-left text-justify text-2xl lg:text-3xl">
           My name is <label className='text-main'>Cristian</label>, also known as Okazakee on the web. At <label className='text-main'>25</label> years old, I am a passionate <label className='text-main'>Web Developer</label> from <label className='text-main'>Italy</label>. From a young age, I have had a love for technology and have been heavily involved in the IT world. I am an avid supporter of <label className='text-main'>Open Source</label> and have experience in video editing and post production. However, in late 2021, I decided to shift my focus to Web Development. I am currently working on various personal projects and aim to become a good <label className='text-main'>Full Stack developer</label> in the near future.
           You can view my <label className='text-main'>portfolio</label> and find my social profiles to learn more about my skills and experience.</p>
       </section>
 
-      <section id="skills" className="text-center mx-16 pb-[30rem]">
-        <h1 className="text-6xl mb-5">Skills & Tech Stack</h1>
-        <h3 className="mb-20 text-2xl">
+      <section id="skills" className="text-center mx-5 xl:mx-16 pb-[30rem]">
+        <h1 className="xl:text-6xl text-4xl mb-10 xl:mb-0">Skills & Tech Stack</h1>
+        <h3 className="xl:mb-20 text-xl mb-20">
           This section outlines the <label className='text-main'>key technologies</label> and tools that I am proficient in.
         </h3>
         <div className="">
-          <h2 className="text-5xl mb-20">Frontend</h2>
-          <div className="flex items-center">
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">JavaScript</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">TypeScript</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">ReactJS</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-plain.svg'
-                width={100}
-                height={100}
-                className='mx-auto dark:invert'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">NextJS</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">HTML</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">TailwindCSS</h3>
-            </div>
-          </div>
-
-          <h2 className="text-5xl my-20">Backend</h2>
-          <div className="flex items-center">
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/express/express-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto dark:invert'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">ExpressJS</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">PostgreSQL</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mongodb/mongodb-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">MongoDB</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nestjs/nestjs-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">NestJS</h3>
-            </div>
-          </div>
-
-          <h2 className="text-5xl my-20">Tools</h2>
-          <div className="flex items-center">
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">Git</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vercel/vercel-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto dark:invert'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">Vercel</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/supabase/supabase-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">Supabase</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">Docker</h3>
-            </div>
-            <div className="mx-auto">
-              <Image
-                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/bash/bash-original.svg'
-                width={100}
-                height={100}
-                className='mx-auto dark:invert'
-                alt="stack"
-              />
-              <h3 className="mt-5 text-xl">Bash</h3>
-            </div>
-          </div>
+          {skillsArray.map((skillCategory, index) => (
+            <>
+              <h2 className="text-3xl">{skillCategory.category}</h2>
+              {/* <div className="xl:flex grid grid-cols-3 gap-2 items-center justify-items-center"> */}
+              <div className="flex xl:flex-nowrap flex-wrap justify-center items-center">
+                {skillsArray[index].skills.map((skill, i) => (
+                <div className="mx-auto my-10 w-[calc(33.333%-1rem)]">
+                  <Image
+                    src={skill.icon}
+                    width={80}
+                    height={80}
+                    className={`mx-auto w-[60px] xl:w-[80px] ${skill.invert && 'dark:invert'}`}
+                    alt="stack"
+                  />
+                  <h3 className="mt-5 text-xl xl:text-2xl">{skill.title}</h3>
+                </div>
+                ))}
+              </div>
+            </>
+          ))}
         </div>
       </section>
 
-      <section id="portfolio" className="text-center mx-16 pb-[30rem]">
+      <section id="portfolio" className="text-center mx-5 xl:mx-16 pb-[30rem]">
         <h1 className="text-6xl mb-5 ">Portfolio</h1>
         <h3 className="mb-20 text-2xl">
           My portfolio showcases a <label className='text-main'>selection of projects</label> I have worked on. These projects cover a range of technologies and use cases and visitors can explore the <label className='text-main'>live deployments</label> of these projects and access the source code on GitHub.
@@ -266,7 +220,7 @@ export default async function Home() {
         <button className="bg-main px-5 py-2 rounded-md mt-10 text-2xl">Explore more...</button>
       </section>
 
-      <section id="blog" className="text-center mx-16 pb-[30rem]">
+      <section id="blog" className="text-center mx-5 xl:mx-16 pb-[30rem]">
       <h1 className="text-6xl mb-5 ">Blog</h1>
         <h3 className="mb-20 text-2xl">
         Occasional posts on interesting web development <label className='text-main'>experiences</label> and insights.
@@ -335,7 +289,7 @@ export default async function Home() {
         <button className="bg-main px-5 py-2 rounded-md mt-10 text-2xl">Explore more...</button>
       </section>
 
-      <section id="contacts" className="text-center mx-16 pb-[30rem]">
+      <section id="contacts" className="text-center mx-5 xl:mx-16 pb-[30rem]">
         <h1 className="text-6xl mb-5 ">Contacts</h1>
         <h3 className="mb-20 text-2xl">
         You can <label className='text-main'>reach out</label> to me through the following channels:

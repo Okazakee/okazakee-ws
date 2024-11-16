@@ -2,14 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-
-@layer base{
+@layer base {
   body {
-      @apply dark:text-lighttext text-darktext bg-gradient-wrapper dark:bg-gradient-wrapper-dark
+    @apply dark:text-lighttext text-darktext bg-gradient-wrapper dark:bg-gradient-wrapper-dark;
   }
 
   label {
-    @apply cursor-text
+    @apply cursor-text;
   }
 
 }

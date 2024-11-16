@@ -7,13 +7,13 @@ import Link from 'next/link';
 const Header = async () => {
 
   return (
-    <div className='flex justify-center items-center pt-5 px-10 mb-20'>
-      <div className='mr-auto'>
+    <div className='flex justify-center items-center pt-5 '>
+      <div className='xl:mr-auto xl:mx-0 absolute xl:static left-1/2 transform -translate-x-1/2 space-x-5 xl:left-0 xl:-translate-x-0 xl:space-x-0'>
         <Image
           src={logo}
           width={200}
           height={100}
-          className="dark:invert -mt-1"
+          className="dark:invert -mt-0.5 xl:w-[200px] w-[150px]"
           alt="logo"
         />
       </div>

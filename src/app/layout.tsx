@@ -25,7 +25,7 @@ export default function RootLayout({
     <html lang="en" className="">
       <body className={`${whiteRabbit.variable} font-whiterabt antialiased`}>
         <ThemeProvider>
-          <div className="rounded-xl my-4 mx-3 md:m-5">
+          <div className="rounded-xl my-4 mx-3 xl:m-5">
             <Header />
             {children}
             <Footer />
