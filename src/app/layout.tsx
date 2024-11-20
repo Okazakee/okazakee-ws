@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import ThemeProvider from "../components/ThemeProvider";
+import { Providers } from "./providers";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -24,13 +24,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="">
       <body className={`${whiteRabbit.variable} font-whiterabt antialiased`}>
-        <ThemeProvider>
-          <div className="rounded-xl my-4 mx-3 xl:m-5">
-            <Header />
-            {children}
-            <Footer />
-          </div>
-        </ThemeProvider>
+        <div id="about" className="rounded-xl my-4 mx-3 xl:m-5 scroll-smooth">
+          <Header />
+            <Providers>
+              {children}
+            </Providers>
+          <Footer />
+        </div>
       </body>
     </html>
   );

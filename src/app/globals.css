@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    @apply dark:text-lighttext text-darktext bg-gradient-wrapper dark:bg-gradient-wrapper-dark;
+    @apply dark:text-lighttext text-darktext bg-[#d4d4d4] dark:bg-[#0a0a0a];
   }
 
   label {

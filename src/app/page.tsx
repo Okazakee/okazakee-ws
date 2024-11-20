@@ -99,38 +99,41 @@ export default async function Home() {
   return (
     <div className="mx-auto max-w-7xl">
 
-      <section id="header" className="flex flex-col xl:flex-row items-center xl:justify-between xl:mx-16 h-svh xl:h-screen xl:-mt-20">
-        <Image
-          src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/propic.jpeg'
-          width={400}
-          height={400}
-          className='rounded-2xl xl:mr-10 w-[350px] xl:w-[400px] xl:mx-0 my-20 xl:py-0'
-          alt="logo"
-        />
-        <div className="text-center text-4xl lg:text-6xl">
-          <h1 className="xl:mb-5 mb-12">Cristian <label className="text-main">Di Carlo</label></h1>
-          <h2 className="">Fullstack Web Developer</h2>
+      <section className="xl:mx-16 h-svh mt-10">
+        <div className="flex flex-col xl:flex-row items-center xl:justify-between">
+          <Image
+            src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/propic.jpeg'
+            width={400}
+            height={400}
+            className='rounded-2xl xl:mr-10 w-[350px] xl:w-[400px] xl:mx-0 my-20 xl:py-0'
+            alt="logo"
+          />
+          <div className="text-center text-4xl lg:text-6xl">
+            <h1 className="xl:mb-5 mb-12">Cristian <label className="text-main">Di Carlo</label></h1>
+            <h2 className="">Fullstack Web Developer</h2>
+          </div>
+        </div>
+        <div className="flex items-center text-center">
+          <div>
+            <h1 className="xl:text-6xl text-4xl xl:mb-20 mb-10">About me</h1>
+            <p className="xl:text-left text-justify text-2xl lg:text-3xl">
+              My name is <label className='text-main'>Cristian</label>, also known as Okazakee on the web. At <label className='text-main'>25</label> years old, I am a passionate <label className='text-main'>Web Developer</label> from <label className='text-main'>Italy</label>. From a young age, I have had a love for technology and have been heavily involved in the IT world. I am an avid supporter of <label className='text-main'>Open Source</label> and have experience in video editing and post production. However, in late 2021, I decided to shift my focus to Web Development. I am currently working on various personal projects and aim to become a good <label className='text-main'>Full Stack developer</label> in the near future.
+              You can view my <label className='text-main'>portfolio</label> and find my social profiles to learn more about my skills and experience.</p>
+          </div>
         </div>
       </section>
 
-      <section id="aboutme" className="text-center mx-5 xl:mx-16 xl:pb-[20rem] h-lvh">
-        <h1 className="xl:text-6xl text-4xl xl:mb-20 mb-10">About me</h1>
-        <p className="xl:text-left text-justify text-2xl lg:text-3xl">
-          My name is <label className='text-main'>Cristian</label>, also known as Okazakee on the web. At <label className='text-main'>25</label> years old, I am a passionate <label className='text-main'>Web Developer</label> from <label className='text-main'>Italy</label>. From a young age, I have had a love for technology and have been heavily involved in the IT world. I am an avid supporter of <label className='text-main'>Open Source</label> and have experience in video editing and post production. However, in late 2021, I decided to shift my focus to Web Development. I am currently working on various personal projects and aim to become a good <label className='text-main'>Full Stack developer</label> in the near future.
-          You can view my <label className='text-main'>portfolio</label> and find my social profiles to learn more about my skills and experience.</p>
-      </section>
-
-      <section id="skills" className="text-center mx-5 xl:mx-16 pb-[30rem]">
-        <h1 className="xl:text-6xl text-4xl mb-10 xl:mb-0">Skills & Tech Stack</h1>
-        <h3 className="xl:mb-20 text-xl mb-20">
-          This section outlines the <label className='text-main'>key technologies</label> and tools that I am proficient in.
-        </h3>
-        <div className="">
+      <section id="skills" className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-lvh mb-32">
+        <div className="w-full h-full">
+          <h1 className="xl:text-6xl text-4xl mb-10 xl:mb-5">Skills & Tech Stack</h1>
+          <h3 className="xl:mb-20 text-2xl mb-20">
+            This section outlines the <label className='text-main'>key technologies</label> and tools that I am proficient in.
+          </h3>
           {skillsArray.map((skillCategory, index) => (
             <>
-              <h2 className="text-3xl">{skillCategory.category}</h2>
+              <h2 className="text-[2.66rem] my-10">{skillCategory.category}</h2>
               {/* <div className="xl:flex grid grid-cols-3 gap-2 items-center justify-items-center"> */}
-              <div className="flex xl:flex-nowrap flex-wrap justify-center items-center">
+              <div key={index} className="flex xl:flex-nowrap flex-wrap justify-center items-center">
                 {skillsArray[index].skills.map((skill, i) => (
                 <div className="mx-auto my-10 w-[calc(33.333%-1rem)]">
                   <Image
@@ -149,13 +152,13 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="portfolio" className="text-center mx-5 xl:mx-16 pb-[30rem]">
+      <section id="portfolio" className="text-center mx-5 xl:mx-16 min-h-lvh mb-32">
         <h1 className="text-6xl mb-5 ">Portfolio</h1>
         <h3 className="mb-20 text-2xl">
           My portfolio showcases a <label className='text-main'>selection of projects</label> I have worked on. These projects cover a range of technologies and use cases and visitors can explore the <label className='text-main'>live deployments</label> of these projects and access the source code on GitHub.
         </h3>
-        <div className="flex items-center border border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
-          <div className="min-w-[28rem] max-w-[28rem] min-h-[20rem] max-h-[20rem] relative">
+        <div className="flex items-center border-2 border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
+          <div className="min-w-[22rem] max-w-[22rem] min-h-[15rem] max-h-[15rem] relative">
             <Image
               src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/test%20post.png'
               fill
@@ -168,14 +171,14 @@ export default async function Home() {
             />
           </div>
           <div className="flex-col">
-            <h2 className="mb-10 text-4xl text-main">Weather App</h2>
-            <p className="text-left text-5xl lg:text-2xl ml-10">
+            <h2 className="mb-2 text-4xl text-main">Weather App</h2>
+            <p className="text-left text-3xl lg:text-[1.33rem] lg:leading-6 ml-10">
             Welcome to the Weather-APP project, a web application that displays weather data for three different cities (dynamic features in the future). This project was developed as part of a front-end development test and utilizes various API service to retrieve real-time weather data.
             </p>
           </div>
         </div>
-        <div className="flex items-center border border-transparent cursor-pointer hover:border-main p-5 rounded-2xl my-10">
-          <div className="min-w-[28rem] max-w-[28rem] min-h-[20rem] max-h-[20rem] relative">
+        <div className="flex items-center border-2 border-transparent cursor-pointer hover:border-main p-5 rounded-2xl my-5">
+          <div className="min-w-[22rem] max-w-[22rem] min-h-[15rem] max-h-[15rem] relative">
             <Image
               src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/mc2.png'
               fill
@@ -188,16 +191,16 @@ export default async function Home() {
             />
           </div>
           <div className="flex-col">
-            <h2 className="mb-10 text-4xl text-main">Minecraft Servers w/ Lazymc</h2>
-            <p className="text-left text-5xl lg:text-2xl ml-10">
+            <h2 className="mb-2 text-4xl text-main">Minecraft Servers w/ Lazymc</h2>
+            <p className="text-left text-5xl lg:text-[1.33rem] lg:leading-6 ml-10">
             This is a Linux Docker image for creating Minecraft servers with lazymc.
             Lazymc is a utility that puts your Minecraft server to rest when idle and wakes it up when players try to connect. This allows the server to not waste resources if nobody is connected.
             This image provides a basic Minecraft server using one of the supported providers. All customizations are left to the user.
             </p>
           </div>
         </div>
-        <div className="flex items-center border border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
-          <div className="min-w-[28rem] max-w-[28rem] min-h-[20rem] max-h-[20rem] relative">
+        <div className="flex items-center border-2 border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
+          <div className="min-w-[22rem] max-w-[22rem] min-h-[15rem] max-h-[15rem] relative">
             <Image
               src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/ztm.png'
               fill
@@ -210,23 +213,23 @@ export default async function Home() {
             />
           </div>
           <div className="flex-col">
-            <h2 className="mb-10 text-4xl text-main">ZTM-Coffee-Connoisseur Project</h2>
-            <p className="text-left text-5xl lg:text-2xl ml-10">
+            <h2 className="mb-2 text-4xl text-main">ZTM-Coffee-Connoisseur Project</h2>
+            <p className="text-left text-5xl lg:text-[1.33rem] lg:leading-6 ml-10">
                 {"This is the first NextJS WebApp project committed from the ZTM NextJS Course. The WebApp lets you find coffee stores near your location (Palermo set as default). The user can navigate through various coffee stores gathering their information such as it's name or address and can leave a star to upvote the coffee store."}
             </p>
           </div>
         </div>
 
-        <button className="bg-main px-5 py-2 rounded-md mt-10 text-2xl">Explore more...</button>
+        <button className="hover:bg-main bg-[#533197] transition-all px-6 py-3 rounded-xl mt-10 text-2xl text-[]">Explore more...</button>
       </section>
 
-      <section id="blog" className="text-center mx-5 xl:mx-16 pb-[30rem]">
+      <section id="blog" className="text-center mx-5 xl:mx-16 min-h-lvh">
       <h1 className="text-6xl mb-5 ">Blog</h1>
         <h3 className="mb-20 text-2xl">
         Occasional posts on interesting web development <label className='text-main'>experiences</label> and insights.
         </h3>
-        <div className="flex items-center border border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
-          <div className="min-w-[28rem] max-w-[28rem] min-h-[20rem] max-h-[20rem] relative">
+        <div className="flex items-center border-2 border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
+          <div className="min-w-[22rem] max-w-[22rem] min-h-[15rem] max-h-[15rem] relative">
             <Image
               src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/blog1.jpg'
               fill
@@ -239,14 +242,14 @@ export default async function Home() {
             />
           </div>
           <div className="flex-col">
-            <h2 className="mb-10 text-4xl text-main">BLOG POST 1</h2>
-            <p className="text-left text-5xl lg:text-2xl ml-10">
+            <h2 className="mb-2 text-4xl text-main">BLOG POST 1</h2>
+            <p className="text-left text-5xl lg:text-[1.33rem] lg:leading-6 ml-10">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur...
             </p>
           </div>
         </div>
-        <div className="flex items-center border border-transparent cursor-pointer hover:border-main p-5 rounded-2xl my-10">
-          <div className="min-w-[28rem] max-w-[28rem] min-h-[20rem] max-h-[20rem] relative">
+        <div className="flex items-center border-2 border-transparent cursor-pointer hover:border-main p-5 rounded-2xl my-5">
+          <div className="min-w-[22rem] max-w-[22rem] min-h-[15rem] max-h-[15rem] relative">
             <Image
               src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/blog2.jpg'
               fill
@@ -259,14 +262,14 @@ export default async function Home() {
             />
           </div>
           <div className="flex-col">
-            <h2 className="mb-10 text-4xl text-main">BLOG POST 2</h2>
-            <p className="text-left text-5xl lg:text-2xl ml-10">
+            <h2 className="mb-2 text-4xl text-main">BLOG POST 2</h2>
+            <p className="text-left text-5xl lg:text-[1.33rem] lg:leading-6 ml-10">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur...
             </p>
           </div>
         </div>
-        <div className="flex items-center border border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
-          <div className="min-w-[28rem] max-w-[28rem] min-h-[20rem] max-h-[20rem] relative">
+        <div className="flex items-center border-2 border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
+          <div className="min-w-[22rem] max-w-[22rem] min-h-[15rem] max-h-[15rem] relative">
             <Image
               src='https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/blog3.jpg'
               fill
@@ -279,24 +282,26 @@ export default async function Home() {
             />
           </div>
           <div className="flex-col">
-            <h2 className="mb-10 text-4xl text-main">BLOG POST 3</h2>
-            <p className="text-left text-5xl lg:text-2xl ml-10">
+            <h2 className="mb-2 text-4xl text-main">BLOG POST 3</h2>
+            <p className="text-left text-5xl lg:text-[1.33rem] lg:leading-6 ml-10">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur...
             </p>
           </div>
         </div>
 
-        <button className="bg-main px-5 py-2 rounded-md mt-10 text-2xl">Explore more...</button>
+        <button className="hover:bg-main bg-[#533197] transition-all px-6 py-3 rounded-xl mt-10 text-2xl">Explore more...</button>
       </section>
 
-      <section id="contacts" className="text-center mx-5 xl:mx-16 pb-[30rem]">
-        <h1 className="text-6xl mb-5 ">Contacts</h1>
-        <h3 className="mb-20 text-2xl">
-        You can <label className='text-main'>reach out</label> to me through the following channels:
-        </h3>
-        <p className="text-center lg:text-3xl">
-              Here contacts wunga bunga
-        </p>
+      <section id="contacts" className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-lvh">
+        <div>
+          <h1 className="text-6xl mb-5 ">Contacts</h1>
+          <h3 className="mb-20 text-2xl">
+          You can <label className='text-main'>reach out</label> to me through the following channels:
+          </h3>
+          <p className="text-center lg:text-3xl">
+                Here contacts wunga bunga
+          </p>
+        </div>
       </section>
     </div>
   );

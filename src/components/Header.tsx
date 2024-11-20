@@ -19,7 +19,6 @@ const Header = async () => {
       </div>
 
       <div className='hidden lg:flex text-2xl absolute left-1/2 transform -translate-x-1/2 space-x-5'>
-        <Link href={'#aboutme'} className='px-3 hover:text-main'>About</Link>
         <Link href={'#skills'} className='px-3 hover:text-main'>Skills</Link>
         <Link href={'#portfolio'} className='px-3 hover:text-main'>Portfolio</Link>
         <Link href={'#blog'} className='px-3 hover:text-main'>Blog</Link>

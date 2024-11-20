@@ -1,6 +1,8 @@
-'use client'
+'use client';
+
 import React, { useState, useEffect, PropsWithChildren } from 'react';
 import useThemeStore from '../store/themeStore';
+import { ParallaxProvider } from 'react-scroll-parallax';
 
 const ThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { isDark } = useThemeStore();
@@ -19,4 +21,6 @@ const ThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
   return <>{mounted && children}</>;
 };
 
-export default ThemeProvider;
+export function Providers({ children }: { children: React.ReactNode }) {
+  return <ThemeProvider><ParallaxProvider>{children}</ParallaxProvider></ThemeProvider>;
+}
