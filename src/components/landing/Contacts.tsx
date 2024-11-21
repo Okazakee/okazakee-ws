@@ -43,8 +43,8 @@ export default function Contacts({contactsArray: {sectionName, subtitle, contact
               const IconComponent = getIconComponent(icon);
 
               return (
-                <Link href={link} target="_blank">
-                  <div key={label} className="transition-all ease-in-out w-40 h-40 border-2 border-transparent hover:border-main rounded-2xl">
+                <Link key={label} href={link} target="_blank">
+                  <div className="transition-all ease-in-out w-40 h-40 border-2 border-transparent hover:border-main rounded-2xl">
                     {IconComponent ? (
                     <Suspense fallback={<div>Loading...</div>}>
                       <div className="h-full flex flex-col justify-center items-center">

@@ -20,7 +20,7 @@ export default function Blog({ blogArray: { sectionName, subtitle, latestPosts }
       <h1 className="text-6xl mb-5 ">{sectionName}</h1>
         <h3 className="mb-20 text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>
         </h3>
-        {latestPosts.map((post, i) => {
+        {latestPosts.map((post) => {
           return (
             <div key={post.id} className="flex items-center border-2 border-transparent cursor-pointer hover:border-main p-5 rounded-2xl">
               <div className="min-w-[22rem] max-w-[22rem] min-h-[15rem] max-h-[15rem] relative">

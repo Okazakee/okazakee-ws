@@ -1,4 +1,3 @@
-import Image from "next/image";
 import React from "react";
 import Contacts from "../components/landing/Contacts";
 import Blog from "../components/landing/Blog";
