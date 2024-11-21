@@ -8,11 +8,11 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply dark:text-lighttext text-darktext bg-[#d4d4d4] dark:bg-[#0a0a0a];
+    @apply dark:text-lighttext text-darktext bg-bglight dark:bg-bgdark;
   }
 
   label {
-    @apply cursor-text;
+    @apply cursor-text text-main;
   }
 
 }

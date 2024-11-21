@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../components/sections/Header";
+import Footer from "../components/sections/Footer";
 
 const whiteRabbit = localFont({
   src: "./fonts/WHITRABT.woff",
@@ -22,14 +22,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="">
+    <html lang="en" className="w-full">
       <body className={`${whiteRabbit.variable} font-whiterabt antialiased`}>
-        <div id="about" className="rounded-xl my-4 mx-3 xl:m-5 scroll-smooth">
-          <Header />
-            <Providers>
+        <div id="about" className="rounded-xl scroll-smooth w-full">
+          <Providers>
+            <Header />
               {children}
-            </Providers>
-          <Footer />
+            <Footer />
+          </Providers>
         </div>
       </body>
     </html>
