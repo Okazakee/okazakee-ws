@@ -1,20 +1,14 @@
 import React, { Suspense } from 'react'
 import { LucideProps } from 'lucide-react';
 import Link from 'next/link';
+import { ContactSection } from '@/types/fetchedData.types';
 
-interface Props {
-  contactsArray: {
-    sectionName: string;
-    subtitle: string;
-    contacts: {
-      label: string;
-      icon: string;
-      link: string;
-    }[];
-  };
-}
-
-export default function Contacts({contactsArray: {sectionName, subtitle, contacts}}: Props) {
+export default function Contacts({
+  contactSection
+}: {
+  contactSection: ContactSection
+}) {
+  const {section_name, subtitle, contacts} = contactSection;
 
   const getIconComponent = (iconName: string) => {
     // Dynamic import of the icon, explicitly cast to React.ComponentType
@@ -35,7 +29,7 @@ export default function Contacts({contactsArray: {sectionName, subtitle, contact
   return (
     <section className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-lvh">
         <div>
-          <h1 className="text-6xl mb-5 ">{sectionName}</h1>
+          <h1 className="text-6xl mb-5 ">{section_name}</h1>
           <h3 className="mb-20 text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>
           </h3>
           <div className="flex justify-between">

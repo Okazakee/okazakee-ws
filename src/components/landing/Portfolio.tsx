@@ -34,8 +34,8 @@ export default function Portfolio({
               {post.body.length > 270 ? post.body.substring(0, 270) + "..." : post.body}
             </p>
             <div className="mt-3">
-              {post.tags.map((tag, index) => (
-                <span key={index} className="bg-main text-lighttext rounded-md px-2 py-1.5">{tag}</span>
+              {post.tags.map((tag) => (
+                <span key={post.id} className="bg-main text-lighttext rounded-md px-2 py-1.5">{tag}</span>
               ))}
             </div>
           </div>

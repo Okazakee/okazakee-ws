@@ -75,3 +75,18 @@ export type BlogPost = {
 export type BlogPostTag = {
   tag: string;
 };
+
+export type Contact = {
+  id: number;
+  label: string;
+  icon: string;
+  link: string;
+};
+
+export type ContactSection = {
+  id: number;
+  section_name: string;
+  subtitle: string;
+  language: string;
+  contacts: Contact[];
+};
