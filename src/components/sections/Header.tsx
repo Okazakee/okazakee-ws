@@ -3,6 +3,7 @@ import Image from 'next/image';
 import ThemeToggle from '../ThemeToggle';
 import logo from './../../app/public/logo.svg';
 import Link from 'next/link';
+import LanguageSelector from '../Language-selector';
 
 const Header = async () => {
 
@@ -14,7 +15,7 @@ const Header = async () => {
             src={logo}
             width={200}
             height={100}
-            className="dark:invert -mt-0.5 xl:w-[200px] w-[150px]"
+            className="dark:invert -mt-0.5 xl:w-[200px] w-[150px] transition-all duration-300"
             alt="logo"
           />
         </div>
@@ -26,7 +27,8 @@ const Header = async () => {
           <Link href={'#contacts'} className='px-3 transition-all hover:text-main'>Contacts</Link>
         </div>
 
-        <div className='ml-auto'>
+        <div className='ml-auto flex items-center'>
+          <LanguageSelector />
           <ThemeToggle />
         </div>
       </div>

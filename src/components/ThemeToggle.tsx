@@ -2,7 +2,7 @@
 
 import useThemeStore from '../store/themeStore';
 import Image from 'next/image';
-import darkmodesvg from '../app/public/darkmode.svg'
+import darkmodesvg from '@public/darkmode.svg'
 
 export default function ThemeToggle() {
   const { toggleTheme } = useThemeStore();

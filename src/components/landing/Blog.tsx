@@ -16,7 +16,7 @@ interface Props {
 
 export default function Blog({ blogArray: { sectionName, subtitle, latestPosts } }: Props) {
   return (
-    <section id="blog" className="text-center mx-5 xl:mx-16 min-h-lvh">
+    <section id="blog" className="text-center mx-5 xl:mx-16 min-h-lvh mt-32 2xlh:mt-0 transition-all">
       <h1 className="text-6xl mb-5 ">{sectionName}</h1>
         <h3 className="mb-20 text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>
         </h3>
@@ -45,7 +45,7 @@ export default function Blog({ blogArray: { sectionName, subtitle, latestPosts }
           )
         })}
 
-        <button className="hover:bg-main bg-[#533197] text-lighttext transition-all px-6 py-3 rounded-xl mt-10 text-2xl">Explore more...</button>
+        <button className="hover:bg-main bg-secondary text-lighttext transition-all px-6 py-3 rounded-xl mt-10 text-2xl">Explore more...</button>
       </section>
   )
 };

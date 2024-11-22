@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
-import Header from "../components/sections/Header";
-import Footer from "../components/sections/Footer";
+import Header from "@components/sections/Header";
+import Footer from "@components/sections/Footer";
 
 const whiteRabbit = localFont({
   src: "./fonts/WHITRABT.woff",

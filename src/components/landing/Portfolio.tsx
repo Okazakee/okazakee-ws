@@ -45,7 +45,7 @@ export default function Portfolio({ portfolioArray: { sectionName, subtitle, lat
           )
         })}
 
-        <button className="hover:bg-main bg-[#533197] text-lighttext transition-all px-6 py-3 rounded-xl mt-10 text-2xl">Explore more...</button>
+        <button className="hover:bg-main bg-secondary text-lighttext transition-all px-6 py-3 rounded-xl mt-10 text-2xl">Explore more...</button>
       </section>
   )
 };
