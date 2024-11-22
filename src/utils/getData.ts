@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { BlogSection, ContactSection, HeroSection, PortfolioSection, SkillsSection } from "@/types/fetchedData.types";
+import { BlogPost, BlogPostTag, BlogSection, ContactSection, HeroSection, PortfolioPost, PortfolioPostTag, PortfolioSection, SkillsSection } from "@/types/fetchedData.types";
 import { cache } from 'react'
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
@@ -75,15 +75,15 @@ export const getPortfolioSection = cache(async (): Promise<PortfolioSection | nu
 
   // Fetch the latest 3 posts
   const latestPosts = data.portfolio_posts
-    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a: PortfolioPost, b: PortfolioPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3);
 
   // Format the data with the latest 3 posts including tags
   const portfolioData = {
     ...data,
-    portfolio_posts: latestPosts.map((post: any) => ({
+    portfolio_posts: latestPosts.map((post: PortfolioPost) => ({
       ...post,
-      tags: post.portfolio_post_tags.map((tag: any) => tag.tag),
+      tags: post.portfolio_post_tags.map((tag: PortfolioPostTag) => tag.tag),
     })),
   };
 
@@ -116,15 +116,15 @@ export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
 
   // Fetch the latest 3 posts
   const latestPosts = data.blog_posts
-    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a: BlogPost, b: BlogPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3);
 
   // Format the data with the latest 3 posts including tags
   const portfolioData = {
     ...data,
-    blog_posts: latestPosts.map((post: any) => ({
+    blog_posts: latestPosts.map((post: BlogPost) => ({
       ...post,
-      tags: post.blog_post_tags.map((tag: any) => tag.tag),
+      tags: post.blog_post_tags.map((tag: BlogPostTag) => tag.tag),
     })),
   };
 

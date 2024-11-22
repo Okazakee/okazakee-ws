@@ -3,7 +3,7 @@ import Image from 'next/image';
 import ThemeToggle from '../ThemeToggle';
 import logo from './../../app/public/logo.svg';
 import Link from 'next/link';
-import LanguageSelector from '../Language-selector';
+/* import LanguageSelector from '../Language-selector'; */
 
 const Header = async () => {
 
