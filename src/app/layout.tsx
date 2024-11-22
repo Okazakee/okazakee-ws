@@ -6,7 +6,7 @@ import Header from "@components/sections/Header";
 import Footer from "@components/sections/Footer";
 
 const whiteRabbit = localFont({
-  src: "./fonts/WHITRABT.woff",
+  src: "./fonts/whiterabbit.woff",
   variable: "--font-whiterabt",
   weight: "400",
 });

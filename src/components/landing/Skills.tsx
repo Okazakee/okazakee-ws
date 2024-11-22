@@ -3,13 +3,11 @@ import Image from "next/image";
 import { SkillsCategory, SkillsSection } from "@/types/fetchedData.types";
 
 export default function Skills({
-  skillsSection,
-  skillsCategories,
+  skillsSection
 }: {
   skillsSection: SkillsSection;
-  skillsCategories: SkillsCategory[];
 }) {
-  const { section_name, subtitle } = skillsSection;
+  const { section_name, subtitle, skills_categories } = skillsSection;
 
   return (
     <section id="skills" className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-lvh mb-32">
@@ -19,7 +17,7 @@ export default function Skills({
           className="xl:mb-20 text-2xl mb-20"
           dangerouslySetInnerHTML={{ __html: subtitle }}
         ></h3>
-        {skillsCategories.map((skillCategory, index) => (
+        {skills_categories.map((skillCategory, index) => (
           <div key={index}>
             <h2 className="text-[2.66rem] my-10">{skillCategory.name}</h2>
             <div className="flex xl:flex-nowrap flex-wrap justify-center items-center">

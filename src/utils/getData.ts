@@ -25,33 +25,26 @@ export const getHeroSection = cache(async (): Promise<HeroSection | null> => {
 export const getSkillsSections = cache(async (): Promise<SkillsSection | null> => {
   const { data, error } = await supabase
     .from("skills_section")
-    .select('*');
+    .select(`
+      *,
+      skills_categories (
+        *,
+        skills (
+          id,
+          title,
+          icon,
+          invert
+        )
+      )
+    `);
 
   if (error) {
     console.error("Error fetching skills sections:", error);
     return null;
   }
 
-  return data[0];
-})
+  console.log(data[0])
 
-export const getSkillsCategories = cache(async (): Promise<SkillsCategory[] | null> => {
-  const { data, error } = await supabase
-    .from("skills_categories")
-    .select(`
-      *,
-      skills (
-        id,
-        title,
-        icon,
-        invert
-      )
-    `);
-
-  if (error) {
-    console.error("Error fetching skills categories:", error);
-    return null;
-  }
-
-  return data;
+  return data[0]; // Return the first skills section with its categories and skills
 });
+

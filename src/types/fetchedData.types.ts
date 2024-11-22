@@ -13,6 +13,7 @@ export type SkillsSection = {
   section_name: string;
   subtitle: string;
   language: string;
+  skills_categories: SkillsCategory[]
 };
 
 export type SkillsCategory = {

@@ -4,7 +4,7 @@ import Blog from "@components/landing/Blog";
 import Portfolio from "@components/landing/Portfolio";
 import Skills from "@components/landing/Skills";
 import Hero from "@components/landing/Hero";
-import { getHeroSection, getSkillsSections, getSkillsCategories } from "@/utils/getData";
+import { getHeroSection, getSkillsSections } from "@/utils/getData";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -18,7 +18,6 @@ export default async function Home() {
 
   const heroSection = await getHeroSection();
   const skillsSections = await getSkillsSections();
-  const skillsCategories = await getSkillsCategories() || [];;
 
   if (!heroSection || !skillsSections) {
     return <div>Error loading data</div>;
@@ -29,7 +28,7 @@ export default async function Home() {
 
       <Hero heroSection={heroSection} />
 
-     <Skills skillsSection={skillsSections} skillsCategories={skillsCategories} />
+     <Skills skillsSection={skillsSections} />
 
       {/*  <Portfolio portfolioArray={portfolioArray[0]} />
 
