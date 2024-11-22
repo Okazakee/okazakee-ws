@@ -28,7 +28,7 @@ const Header = async () => {
         </div>
 
         <div className='ml-auto flex items-center'>
-          <LanguageSelector />
+          {/* <LanguageSelector /> */}
           <ThemeToggle />
         </div>
       </div>

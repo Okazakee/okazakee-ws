@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { SkillsCategory, SkillsSection } from "@/types/fetchedData.types";
+import { SkillsSection } from "@/types/fetchedData.types";
 
 export default function Skills({
   skillsSection
@@ -13,8 +13,7 @@ export default function Skills({
     <section id="skills" className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-lvh mb-32">
       <div className="w-full h-full">
         <h1 className="xl:text-6xl text-4xl mb-10 xl:mb-5">{section_name}</h1>
-        <h3
-          className="xl:mb-20 text-2xl mb-20"
+        <h3 className="xl:mb-20 text-2xl mb-20"
           dangerouslySetInnerHTML={{ __html: subtitle }}
         ></h3>
         {skills_categories.map((skillCategory, index) => (

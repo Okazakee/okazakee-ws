@@ -31,7 +31,47 @@ export type Skill = {
   language: string;
 };
 
-export type LandingPageProps = {
-  heroSection: HeroSection;
-  skillsSections: SkillsSection;
+export type PortfolioSection = {
+  id: number;
+  section_name: string;
+  subtitle: string;
+  language: string;
+  portfolio_posts: PortfolioPost[];
+};
+
+export type PortfolioPost = {
+  id: number;
+  created_at: string;
+  title: string;
+  body: string;
+  image: string;
+  source_link: string;
+  prod_link: string;
+  tags: string[];
+};
+
+export type PortfolioPostTag = {
+  tag: string;
+};
+export type BlogSection = {
+  id: number;
+  section_name: string;
+  subtitle: string;
+  language: string;
+  blog_posts: BlogPost[];
+};
+
+export type BlogPost = {
+  id: number;
+  created_at: string;
+  title: string;
+  body: string;
+  image: string;
+  source_link: string;
+  prod_link: string;
+  tags: string[];
+};
+
+export type BlogPostTag = {
+  tag: string;
 };

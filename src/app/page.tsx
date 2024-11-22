@@ -4,7 +4,7 @@ import Blog from "@components/landing/Blog";
 import Portfolio from "@components/landing/Portfolio";
 import Skills from "@components/landing/Skills";
 import Hero from "@components/landing/Hero";
-import { getHeroSection, getSkillsSections } from "@/utils/getData";
+import { getHeroSection, getSkillsSection, getPortfolioSection, getBlogSection } from "@/utils/getData";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -17,24 +17,24 @@ export async function generateStaticParams() {
 export default async function Home() {
 
   const heroSection = await getHeroSection();
-  const skillsSections = await getSkillsSections();
+  const skillsSection = await getSkillsSection();
+  const portfolioSection = await getPortfolioSection();
+  const blogSection = await getBlogSection();
 
-  if (!heroSection || !skillsSections) {
-    return <div>Error loading data</div>;
-  }
+
 
   return (
     <div className="mx-auto max-w-7xl">
 
-      <Hero heroSection={heroSection} />
+      {!heroSection ? <div>Error loading data</div> : <Hero heroSection={heroSection} />}
 
-     <Skills skillsSection={skillsSections} />
+      {!skillsSection ? <div>Error loading data</div> : <Skills skillsSection={skillsSection} />}
 
-      {/*  <Portfolio portfolioArray={portfolioArray[0]} />
+      {!portfolioSection ? <div>Error loading data</div> : <Portfolio portfolioSection={portfolioSection} />}
 
-      <Blog blogArray={blogArray[0]} />
+      <Blog blogSection={blogSection} />
 
-      <Contacts contactsArray={contactsArray[0]} /> */}
+      {/*  <Contacts contactsSection={contactsSection[0]} /> */}
 
     </div>
   );
