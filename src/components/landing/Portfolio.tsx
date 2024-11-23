@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { PortfolioSection } from "@/types/fetchedData.types";
+import Link from "next/link";
 
 export default function Portfolio({
   portfolioSection
@@ -42,9 +43,11 @@ export default function Portfolio({
         </div>
       ))}
 
-      <button className="hover:bg-main bg-secondary text-lighttext transition-all px-3 py-1.5 rounded-xl mt-10 text-2xl">
-        Explore more...
-      </button>
+      <Link href={'/portfolio'}>
+        <button className="hover:bg-main bg-secondary text-lighttext transition-all px-3 py-1.5 rounded-xl mt-10 text-2xl">
+          Explore more...
+        </button>
+      </Link>
     </section>
   );
 }

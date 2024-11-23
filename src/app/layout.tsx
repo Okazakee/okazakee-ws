@@ -23,15 +23,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="w-full">
-      <body className={`${whiteRabbit.variable} font-whiterabt antialiased`}>
-        <div id="about" className="rounded-xl scroll-smooth w-full">
-          <Providers>
-            <Header />
-              {children}
-            <Footer />
-          </Providers>
-        </div>
-      </body>
+      <Providers>
+        <body className={`${whiteRabbit.variable} font-whiterabt antialiased`}>
+          <div id="about" className="rounded-xl scroll-smooth w-full relative">
+              <Header />
+                {children}
+              <Footer />
+          </div>
+        </body>
+      </Providers>
     </html>
   );
 }

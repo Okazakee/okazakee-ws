@@ -1,16 +1,16 @@
 import React from 'react'
 import Image from 'next/image';
-import ThemeToggle from '../ThemeToggle';
-import logo from './../../app/public/logo.svg';
+import ThemeToggle from '@components/ThemeToggle';
+import logo from '@public/logo.svg';
 import Link from 'next/link';
 /* import LanguageSelector from '../Language-selector'; */
 
 const Header = async () => {
 
   return (
-    <div className='absolute w-full'>
+    <div className='-mb-[66px] w-full'>
       <div className='flex justify-center items-center pt-5 mx-5'>
-        <div className='xl:mr-auto xl:mx-0 absolute xl:static left-1/2 transform -translate-x-1/2 space-x-5 xl:left-0 xl:-translate-x-0 xl:space-x-0'>
+        <Link href={'/'} className='xl:mr-auto xl:mx-0 absolute xl:static left-1/2 transform -translate-x-1/2 space-x-5 xl:left-0 xl:-translate-x-0 xl:space-x-0'>
           <Image
             src={logo}
             width={200}
@@ -18,7 +18,7 @@ const Header = async () => {
             className="dark:invert -mt-0.5 xl:w-[200px] w-[150px] transition-all duration-300"
             alt="logo"
           />
-        </div>
+        </Link>
 
         <div className='hidden lg:flex text-2xl absolute left-1/2 transform -translate-x-1/2 space-x-5'>
           <Link href={'#skills'} className='px-3 transition-all hover:text-main'>Skills</Link>
