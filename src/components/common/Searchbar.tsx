@@ -1,6 +1,6 @@
 'use client'
 import { Search } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { debounce } from 'lodash'
 import { performSearch } from "@/utils/serverActions";
 import { PortfolioPost } from "@/types/fetchedData.types";
@@ -9,18 +9,19 @@ export default function Searchbar() {
   const [searchFilter, setSearchFilter] = useState('');
   const [returnedPosts, setRreturnedPosts] = useState<PortfolioPost[] | null>();
 
-  const debouncedSearch = useCallback(
-    debounce( async (value: string) => {
-
+  const debouncedSearch = useMemo(() =>
+    debounce(async (value: string) => {
       // api call
-      setRreturnedPosts( await performSearch(value));
-
+      setRreturnedPosts(await performSearch(value));
     }, 300),
     []
   );
 
+
   useEffect(() => {
-    searchFilter.length >= 3 && debouncedSearch(searchFilter);
+    if (searchFilter.length >= 3) {
+      debouncedSearch(searchFilter);
+    }
 
     // Cleanup function to cancel any pending debounced calls
     return () => {
