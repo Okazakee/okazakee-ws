@@ -47,6 +47,7 @@ export type PortfolioPost = {
   image: string;
   source_link: string;
   prod_link: string;
+  description: string;
   portfolio_post_tags: PortfolioPostTag[];
 };
 
@@ -69,6 +70,7 @@ export type BlogPost = {
   image: string;
   source_link: string;
   prod_link: string;
+  description: string;
   blog_post_tags: BlogPostTag[];
 };
 

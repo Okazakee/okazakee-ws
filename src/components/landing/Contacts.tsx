@@ -37,7 +37,7 @@ export default function Contacts({
               const IconComponent = getIconComponent(icon);
 
               return (
-                <Link key={label} href={link} target="_blank">
+                <Link key={label} href={link} target="_blank" className='mx-2 transition-all hover:scale-105'>
                   <div className="transition-all ease-in-out w-40 h-40 border-2 border-transparent hover:border-main rounded-2xl">
                     {IconComponent ? (
                     <Suspense fallback={<div>Loading...</div>}>

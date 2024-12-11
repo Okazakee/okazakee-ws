@@ -1,21 +1,14 @@
 'use client';
 
 import useThemeStore from '../store/themeStore';
-import Image from 'next/image';
-import darkmodesvg from '@public/darkmode.svg'
+import { SunMoon } from 'lucide-react';
 
 export default function ThemeToggle() {
   const { toggleTheme } = useThemeStore();
 
   return (
-    <button onClick={toggleTheme} className="p-2 rounded-md">
-      <Image
-        src={darkmodesvg}
-        width={30}
-        height={30}
-        className='dark:invert'
-        alt="darkmode"
-      />
+    <button onClick={toggleTheme} className="p-2 rounded-md transition-all hover:scale-110">
+      <SunMoon size={30} />
     </button>
   );
 }

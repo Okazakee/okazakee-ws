@@ -62,7 +62,8 @@ export const getPortfolioSection = cache(async (): Promise<PortfolioSection | nu
         prod_link,
         portfolio_post_tags (
           tag
-        )
+        ),
+        description
       )
     `)
     .eq("language", "en")
@@ -120,7 +121,7 @@ export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
     .slice(0, 3);
 
   // Format the data with the latest 3 posts including tags
-  const portfolioData = {
+  const blogData = {
     ...data,
     blog_posts: latestPosts.map((post: BlogPost) => ({
       ...post,
@@ -128,7 +129,7 @@ export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
     })),
   };
 
-  return portfolioData;
+  return blogData;
 });
 
 export const getContactSection = cache(async (): Promise<ContactSection | null> => {
@@ -151,4 +152,83 @@ export const getContactSection = cache(async (): Promise<ContactSection | null> 
   }
 
   return data?.[0] ?? null;
+});
+
+export const getRecentPortfolioPosts = cache(async (): Promise<PortfolioPost[] | null> => {
+  const { data, error } = await supabase
+    .from("portfolio_posts")
+    .select(`
+      id,
+      created_at,
+      title,
+      body,
+      image,
+      source_link,
+      prod_link,
+      portfolio_post_tags (tag),
+      description
+    `)
+    .order("created_at", { ascending: false })
+    .limit(15);
+
+  if (error) {
+    console.error("Error fetching recent portfolio posts:", error);
+    return null;
+  }
+
+  // Format the posts with tags
+  const recentPosts = data.map((post: PortfolioPost) => ({
+    ...post,
+    tags: post.portfolio_post_tags.map((tag: PortfolioPostTag) => tag.tag),
+  }));
+
+  return recentPosts;
+});
+
+export const searchPortfolioPosts = cache(async (query: string): Promise<PortfolioPost[]> => {
+  // Trim and handle empty query
+  if (!query || query.trim() === '') {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("portfolio_posts")
+    .select(`
+      id,
+      created_at,
+      title,
+      body,
+      image,
+      source_link,
+      prod_link,
+      portfolio_post_tags (tag),
+      description
+    `)
+    .or(`title.ilike.%${query.trim()}%,description.ilike.%${query.trim()}%`)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error searching portfolio posts:", error);
+    return [];
+  }
+
+  // Map posts to include tags, keeping ALL results from the database query
+  const processedPosts = data.map((post: PortfolioPost) => ({
+    ...post,
+    tags: post.portfolio_post_tags.map((tag: PortfolioPostTag) => tag.tag)
+  }));
+
+  // If no results match title or description, try to find by tags
+  const postsWithMatchingTags = processedPosts.filter((post: PortfolioPost) =>
+    post.portfolio_post_tags.some((tag: PortfolioPostTag) =>
+      tag.tag.toLowerCase().includes(query.trim().toLowerCase())
+    )
+  );
+
+  // If tag search yields additional results, combine and deduplicate
+  const combinedPosts = postsWithMatchingTags.length > 0
+    ? [...new Set([...processedPosts, ...postsWithMatchingTags])]
+    : processedPosts;
+
+  return combinedPosts;
 });

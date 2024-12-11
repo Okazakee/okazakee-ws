@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -10,11 +9,6 @@ const whiteRabbit = localFont({
   variable: "--font-whiterabt",
   weight: "400",
 });
-
-export const metadata: Metadata = {
-  title: "Okazakee WS",
-  description: "Personal website with portfolio and blog",
-};
 
 export default function RootLayout({
   children,

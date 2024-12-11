@@ -18,10 +18,10 @@ export default function Skills({
         ></h3>
         {skills_categories.map((skillCategory, index) => (
           <div key={index}>
-            <h2 className="text-[2.66rem] my-10">{skillCategory.name}</h2>
+            <h2 className="text-[2.33rem] my-5">{skillCategory.name}</h2>
             <div className="flex xl:flex-nowrap flex-wrap justify-center items-center">
               {skillCategory.skills.map((skill, i) => (
-                <div key={i} className="mx-auto my-10 w-[calc(33.333%-1rem)]">
+                <div key={i} className="hover:scale-110 transition-all mx-auto my-10 w-[calc(33.333%-1rem)]">
                   <Image
                     src={skill.icon}
                     width={80}
