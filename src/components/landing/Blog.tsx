@@ -35,7 +35,7 @@ export default function Blog({
                   {post.body.length > 270 ? post.body.substring(0, 270) + "..." : post.body}
                 </p>
                 <div className="mt-3">
-                {post.blog_post_tags.map((tag) => (
+                {post.post_tags.map((tag) => (
                     <span key={post.id} className="bg-orange-800 text-lighttext rounded-md px-2 py-1.5">{tag.tag}</span>
                   ))}
                 </div>

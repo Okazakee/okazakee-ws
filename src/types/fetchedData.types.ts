@@ -13,13 +13,14 @@ export type SkillsSection = {
   section_name: string;
   subtitle: string;
   language: string;
-  skills_categories: SkillsCategory[]
+  skills_categories: SkillsCategory[];
 };
 
 export type SkillsCategory = {
   id: number;
   name: string;
   language: string;
+  skills_section: number;
   skills: Skill[];
 };
 
@@ -28,32 +29,27 @@ export type Skill = {
   title: string;
   icon: string;
   invert: boolean;
-  language: string;
+  category_id: number;
 };
 
 export type PortfolioSection = {
-  id: number;
   section_name: string;
   subtitle: string;
-  language: string;
   portfolio_posts: PortfolioPost[];
 };
 
 export type PortfolioPost = {
   id: number;
-  created_at: string;
   title: string;
-  body: string;
   image: string;
-  source_link: string;
-  prod_link: string;
+  language: string;
   description: string;
-  portfolio_post_tags: PortfolioPostTag[];
+  body: string;
+  post_type: string;
+  portfolio_section: number;
+  post_tags: PostTag[];
 };
 
-export type PortfolioPostTag = {
-  tag: string;
-};
 export type BlogSection = {
   id: number;
   section_name: string;
@@ -64,25 +60,21 @@ export type BlogSection = {
 
 export type BlogPost = {
   id: number;
-  created_at: string;
   title: string;
-  body: string;
   image: string;
-  source_link: string;
-  prod_link: string;
+  language: string;
   description: string;
-  blog_post_tags: BlogPostTag[];
+  body: string;
+  post_type: string;
+  blog_section: number;
+  post_tags: PostTag[];
 };
 
-export type BlogPostTag = {
-  tag: string;
-};
-
-export type Contact = {
+export type PostTag = {
   id: number;
-  label: string;
-  icon: string;
-  link: string;
+  tag: string;
+  post_id: number;
+  post_type: string;
 };
 
 export type ContactSection = {
@@ -91,4 +83,11 @@ export type ContactSection = {
   subtitle: string;
   language: string;
   contacts: Contact[];
+};
+
+export type Contact = {
+  id: number;
+  label: string;
+  icon: string;
+  link: string;
 };

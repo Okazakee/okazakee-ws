@@ -2,11 +2,7 @@ import React from 'react'
 import { PortfolioPost } from '@/types/fetchedData.types';
 import Image from 'next/image';
 
-export default function Postcard({
-  post
-}: {
-  post: PortfolioPost;
-}) {
+export default function Postcard({ post } : { post: PortfolioPost }) {
 
   return (
     <div
@@ -28,7 +24,7 @@ export default function Postcard({
         <h3 className="font-bold text-2xl">{post.title}</h3>
         <h2 className="truncate tracking-normal text-lg">{post.description}</h2>
         <div className="mt-2">
-          {post.portfolio_post_tags.map((tag, i) => (
+          {post.post_tags.map((tag, i) => (
             <span key={i} className="bg-main text-lighttext rounded-md px-2 py-1.5 mr-2">
               {tag.tag}
             </span>

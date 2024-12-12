@@ -2,17 +2,15 @@
 import { Search } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { debounce } from 'lodash'
-import { performSearch } from "@/utils/serverActions";
 import { PortfolioPost } from "@/types/fetchedData.types";
 
-export default function Searchbar() {
+export default function Searchbar({ posts } : {posts: PortfolioPost[]}) {
   const [searchFilter, setSearchFilter] = useState('');
-  const [returnedPosts, setRreturnedPosts] = useState<PortfolioPost[] | null>();
 
   const debouncedSearch = useMemo(() =>
     debounce(async (value: string) => {
       // api call
-      setRreturnedPosts(await performSearch(value));
+      console.log(value);
     }, 300),
     []
   );
@@ -45,7 +43,6 @@ export default function Searchbar() {
           strokeWidth={2.5}
         />
       </div>
-      <p className="flex flex-col">{returnedPosts && returnedPosts.map((p) => p.title)}</p>
     </>
   )
 }

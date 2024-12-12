@@ -25,8 +25,8 @@ export default async function Home() {
   const heroSection = await getHeroSection();
   const skillsSection = await getSkillsSection();
   const portfolioSection = await getPortfolioSection();
-  const blogSection = await getBlogSection();
-  const contactSection = await getContactSection();
+/*   const blogSection = await getBlogSection();
+ */  const contactSection = await getContactSection();
 
 
 
@@ -39,8 +39,8 @@ export default async function Home() {
 
       {!portfolioSection ? <div>Error loading data</div> : <Portfolio portfolioSection={portfolioSection} />}
 
-      {!blogSection ? <div>Error loading data</div> : <Blog blogSection={blogSection} />}
-
+{/*       {!blogSection ? <div>Error loading data</div> : <Blog blogSection={blogSection} />}
+ */}
       {!contactSection ? <div>Error loading data</div> : <Contacts contactSection={contactSection} />}
 
     </div>

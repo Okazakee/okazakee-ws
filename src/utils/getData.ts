@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { BlogPost, BlogPostTag, BlogSection, ContactSection, HeroSection, PortfolioPost, PortfolioPostTag, PortfolioSection, SkillsSection } from "@/types/fetchedData.types";
+import { BlogPost, BlogSection, ContactSection, HeroSection, PortfolioPost, PortfolioSection, SkillsSection } from "@/types/fetchedData.types";
 import { cache } from 'react'
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
@@ -7,228 +7,162 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl!, supabaseKey!)
-
 export const getHeroSection = cache(async (): Promise<HeroSection | null> => {
   const { data, error } = await supabase
-    .from("hero_section")
-    .select("*")
-    .eq("language", "en");
-
-  if (error) {
-    console.error("Error fetching hero section:", error);
-    return null;
-  }
-
-  return data[0];
-})
-
-export const getSkillsSection = cache(async (): Promise<SkillsSection | null> => {
-  const { data, error } = await supabase
-    .from("skills_section")
-    .select(`
-      *,
-      skills_categories (
-        *,
-        skills (
-          id,
-          title,
-          icon,
-          invert
-        )
-      )
-    `)
-    .eq("language", "en");;
-
-  if (error) {
-    console.error("Error fetching skills sections:", error);
-    return null;
-  }
-
-  return data[0];
-});
-
-export const getPortfolioSection = cache(async (): Promise<PortfolioSection | null> => {
-  const { data, error } = await supabase
-    .from("portfolio_section")
-    .select(`
-      *,
-      portfolio_posts (
-        id,
-        created_at,
-        title,
-        body,
-        image,
-        source_link,
-        prod_link,
-        portfolio_post_tags (
-          tag
-        ),
-        description
-      )
-    `)
-    .eq("language", "en")
+    .from('hero_section')
+    .select('id, propic, name, job_position, section_name, desc, language')
+    .eq('language', 'en')
     .single();
 
   if (error) {
-    console.error("Error fetching portfolio section and posts:", error);
+    console.error(error);
+    return null;
+  }
+  return data;
+});
+
+export const getSkillsSection = cache(async (): Promise<SkillsSection | null> => {
+  const { data, error } = await supabase
+    .from('skills_section')
+    .select(`
+      id, section_name, subtitle, language,
+      skills_categories: skills_categories (
+        id, name, language, skills_section,
+        skills (id, title, icon, invert, category_id)
+      )
+    `)
+    .eq('language', 'en')
+    .single();
+
+  if (error) {
+    console.error(error);
+    return null;
+  }
+  return data;
+});
+
+export const getPortfolioSection = cache(async (): Promise<PortfolioSection | null> => {
+  const { data: sectionMainData, error } = await supabase
+  .from('portfolio_section')
+  .select('*')
+  .eq('language', 'en')
+  .single();
+
+  if (error) {
+    console.error('Error fetching posts:', error);
     return null;
   }
 
-  // Fetch the latest 3 posts
-  const latestPosts = data.portfolio_posts
-    .sort((a: PortfolioPost, b: PortfolioPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 3);
+  const { data: postsData, error: postsErr } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      post_tags!inner (*)
+    `)
+    .eq('language', 'en')
+    .eq('post_type', 'portfolio')
+    .order('created_at', { ascending: false })
+    .limit(3);
 
-  // Format the data with the latest 3 posts including tags
-  const portfolioData = {
-    ...data,
-    portfolio_posts: latestPosts.map((post: PortfolioPost) => ({
-      ...post,
-      tags: post.portfolio_post_tags.map((tag: PortfolioPostTag) => tag.tag),
-    })),
-  };
+  if (postsErr) {
+    console.error('Error fetching posts:', postsErr);
+    return null;
+  }
 
-  return portfolioData;
+  const sectionData = {
+    section_name: sectionMainData.section_name,
+    subtitle: sectionMainData.subtitle,
+    portfolio_posts: postsData
+  }
+
+  return sectionData;
 });
 
 export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
   const { data, error } = await supabase
-    .from("blog_section")
+    .from('blog_section')
     .select(`
-      *,
-      blog_posts (
+      id, section_name, subtitle, language,
+      blog_posts: posts (
         id,
-        created_at,
         title,
-        body,
         image,
-        blog_post_tags (
-          tag
+        language,
+        description,
+        body,
+        post_type,
+        blog_section,
+        post_tags: post_tags (
+          id,
+          tag,
+          post_id,
+          post_type
         )
       )
     `)
-    .eq("language", "en")
+    .eq('language', 'en')
     .single();
 
   if (error) {
-    console.error("Error fetching blog section and posts:", error);
+    console.error('Error fetching blog section:', error);
     return null;
   }
 
-  // Fetch the latest 3 posts
-  const latestPosts = data.blog_posts
-    .sort((a: BlogPost, b: BlogPost) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 3);
-
-  // Format the data with the latest 3 posts including tags
-  const blogData = {
-    ...data,
-    blog_posts: latestPosts.map((post: BlogPost) => ({
-      ...post,
-      tags: post.blog_post_tags.map((tag: BlogPostTag) => tag.tag),
-    })),
-  };
-
-  return blogData;
+  return data;
 });
 
 export const getContactSection = cache(async (): Promise<ContactSection | null> => {
   const { data, error } = await supabase
-    .from("contacts_section")
+    .from('contacts_section')
     .select(`
-      *,
+      id, section_name, subtitle, language,
       contacts (
-        id,
-        label,
-        icon,
-        link
+        id, label, icon, link
       )
     `)
-    .eq("language", "en");
+    .eq('language', 'en')
+    .single();
 
   if (error) {
-    console.error("Error fetching contact section:", error);
+    console.error(error);
+    return null;
+  }
+  return data;
+});
+
+export const getAllPortfolioPosts = cache(async (): Promise<PortfolioPost[] | null> => {
+
+  const { data: postsData, error: postsErr } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      post_tags (*)
+      `)
+    .eq('language', 'en')
+    .eq('post_type', 'portfolio')
+    .order('created_at', { ascending: false });
+
+  if (postsErr) {
+    console.error('Error fetching posts:', postsErr);
     return null;
   }
 
-  return data?.[0] ?? null;
+  return postsData;
 });
 
-export const getRecentPortfolioPosts = cache(async (): Promise<PortfolioPost[] | null> => {
+/* export const getAllBlogPosts = cache(async (): Promise<BlogPost[] | null> => {
   const { data, error } = await supabase
-    .from("portfolio_posts")
+    .from('posts')
     .select(`
-      id,
-      created_at,
-      title,
-      body,
-      image,
-      source_link,
-      prod_link,
-      portfolio_post_tags (tag),
-      description
+      id, created_at, title, body, image, source_link, prod_link, description, post_type, blog_section,
+      post_tags (id, tag)
     `)
-    .order("created_at", { ascending: false })
-    .limit(15);
+    .eq('post_type', 'blog')
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error fetching recent portfolio posts:", error);
+    console.error(error);
     return null;
   }
-
-  // Format the posts with tags
-  const recentPosts = data.map((post: PortfolioPost) => ({
-    ...post,
-    tags: post.portfolio_post_tags.map((tag: PortfolioPostTag) => tag.tag),
-  }));
-
-  return recentPosts;
-});
-
-export const searchPortfolioPosts = cache(async (query: string): Promise<PortfolioPost[]> => {
-  // Trim and handle empty query
-  if (!query || query.trim() === '') {
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from("portfolio_posts")
-    .select(`
-      id,
-      created_at,
-      title,
-      body,
-      image,
-      source_link,
-      prod_link,
-      portfolio_post_tags (tag),
-      description
-    `)
-    .or(`title.ilike.%${query.trim()}%,description.ilike.%${query.trim()}%`)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error searching portfolio posts:", error);
-    return [];
-  }
-
-  // Map posts to include tags, keeping ALL results from the database query
-  const processedPosts = data.map((post: PortfolioPost) => ({
-    ...post,
-    tags: post.portfolio_post_tags.map((tag: PortfolioPostTag) => tag.tag)
-  }));
-
-  // If no results match title or description, try to find by tags
-  const postsWithMatchingTags = processedPosts.filter((post: PortfolioPost) =>
-    post.portfolio_post_tags.some((tag: PortfolioPostTag) =>
-      tag.tag.toLowerCase().includes(query.trim().toLowerCase())
-    )
-  );
-
-  // If tag search yields additional results, combine and deduplicate
-  const combinedPosts = postsWithMatchingTags.length > 0
-    ? [...new Set([...processedPosts, ...postsWithMatchingTags])]
-    : processedPosts;
-
-  return combinedPosts;
-});
+  return data;
+}); */
