@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { debounce } from 'lodash'
 import { PortfolioPost } from "@/types/fetchedData.types";
 
-export default function Searchbar({ posts } : {posts: PortfolioPost[]}) {
+export default function Searchbar({ /* posts */ } : {posts: PortfolioPost[]}) {
   const [searchFilter, setSearchFilter] = useState('');
 
   const debouncedSearch = useMemo(() =>

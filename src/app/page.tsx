@@ -1,11 +1,11 @@
 import React from "react";
 import { Metadata } from "next";
 import Contacts from "@components/landing/Contacts";
-import Blog from "@components/landing/Blog";
+/* import Blog from "@components/landing/Blog"; */
 import Portfolio from "@components/landing/Portfolio";
 import Skills from "@components/landing/Skills";
 import Hero from "@components/landing/Hero";
-import { getHeroSection, getSkillsSection, getPortfolioSection, getBlogSection, getContactSection } from "@/utils/getData";
+import { getHeroSection, getSkillsSection, getPortfolioSection, getContactSection } from "@/utils/getData";
 
 export const metadata: Metadata = {
   title: "Okazakee WS - Home",
