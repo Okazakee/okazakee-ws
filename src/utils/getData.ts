@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { BlogSection, ContactSection, HeroSection, PortfolioPost, PortfolioSection, SkillsSection } from "@/types/fetchedData.types";
+import { BlogPost, BlogSection, ContactSection, HeroSection, PortfolioPost, PortfolioSection, SkillsSection } from "@/types/fetchedData.types";
 import { cache } from 'react'
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
@@ -49,7 +49,7 @@ export const getPortfolioSection = cache(async (): Promise<PortfolioSection | nu
   .single();
 
   if (error) {
-    console.error('Error fetching posts:', error);
+    console.error('Error fetching portfolio section:', error);
     return null;
   }
 
@@ -57,15 +57,15 @@ export const getPortfolioSection = cache(async (): Promise<PortfolioSection | nu
     .from('posts')
     .select(`
       *,
-      post_tags!inner (*)
-    `)
+      post_tags (*)
+      `)
     .eq('language', 'en')
     .eq('post_type', 'portfolio')
     .order('created_at', { ascending: false })
     .limit(3);
 
   if (postsErr) {
-    console.error('Error fetching posts:', postsErr);
+    console.error('Error fetching portfolio posts:', postsErr);
     return null;
   }
 
@@ -79,36 +79,40 @@ export const getPortfolioSection = cache(async (): Promise<PortfolioSection | nu
 });
 
 export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
-  const { data, error } = await supabase
-    .from('blog_section')
-    .select(`
-      id, section_name, subtitle, language,
-      blog_posts: posts (
-        id,
-        title,
-        image,
-        language,
-        description,
-        body,
-        post_type,
-        blog_section,
-        post_tags: post_tags (
-          id,
-          tag,
-          post_id,
-          post_type
-        )
-      )
-    `)
-    .eq('language', 'en')
-    .single();
+  const { data: sectionMainData, error } = await supabase
+  .from('blog_section')
+  .select('*')
+  .eq('language', 'en')
+  .single();
 
   if (error) {
     console.error('Error fetching blog section:', error);
     return null;
   }
 
-  return data;
+  const { data: postsData, error: postsErr } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      post_tags (*)
+      `)
+    .eq('language', 'en')
+    .eq('post_type', 'blog')
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  if (postsErr) {
+    console.error('Error fetching blog posts:', postsErr);
+    return null;
+  }
+
+  const sectionData = {
+    section_name: sectionMainData.section_name as string,
+    subtitle: sectionMainData.subtitle as string,
+    blog_posts: postsData as BlogPost[]
+  }
+
+  return sectionData;
 });
 
 export const getContactSection = cache(async (): Promise<ContactSection | null> => {

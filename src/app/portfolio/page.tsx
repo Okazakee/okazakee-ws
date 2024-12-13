@@ -25,7 +25,7 @@ export default async function Portfolio() {
 
   return (
     <section className="mt-24 flex justify-center">
-      <div className="xl:mx-16 text-center mb-20">
+      <div className="xl:mx-16 text-center mb-20 max-w-[120rem]">
         {posts.length > 0 ?
         <>
           <div className="text-5xl mb-5">

@@ -27,23 +27,23 @@ export default function Contacts({
   };
 
   return (
-    <section className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-lvh">
+    <section className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh my-20 md:my-0">
         <div>
-          <h1 className="text-6xl mb-5 ">{section_name}</h1>
-          <h3 className="mb-20 text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>
+          <h1 className="text-6xl mb-5">{section_name}</h1>
+          <h3 className="md:mb-20 mb-10 text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>
           </h3>
-          <div className="flex justify-between">
+          <div className="flex md:flex-row flex-col justify-between">
             {contacts.map(({ label, icon, link }) => {
               const IconComponent = getIconComponent(icon);
 
               return (
-                <Link key={label} href={link} target="_blank" className='mx-2 transition-all hover:scale-105'>
-                  <div className="transition-all ease-in-out w-40 h-40 border-2 border-transparent hover:border-main rounded-2xl">
+                <Link key={label} href={link} target="_blank" className='md:mx-2 mx-16 mb-5 md:mb-0 last:mb-0 transition-all hover:scale-105 border-2 border-main hover:bg-main bg-[#c5c5c5] dark:bg-[#0e0e0e] rounded-2xl'>
+                  <div className="transition-all ease-in-out md:my-0 my-2 md:w-40 md:h-40">
                     {IconComponent ? (
                     <Suspense fallback={<div>Loading...</div>}>
-                      <div className="h-full flex flex-col justify-center items-center">
-                        <IconComponent className="dark:invert w-[100px]" size={128} strokeWidth={1} color="#080808" />
-                        <h3 className="text-2xl">{label}</h3>
+                      <div className="h-full flex md:flex-col justify-center items-center">
+                        <IconComponent className="md:mr-0 mr-5 dark:text-lighttext md:w-[100px] w-[5rem] md:h-auto h-[5rem]" size={128} strokeWidth={1} />
+                        <h3 className="text-2xl text-left w-28 md:text-center md:w-auto">{label}</h3>
                       </div>
                     </Suspense>
                   ) : (

@@ -51,10 +51,8 @@ export type PortfolioPost = {
 };
 
 export type BlogSection = {
-  id: number;
   section_name: string;
   subtitle: string;
-  language: string;
   blog_posts: BlogPost[];
 };
 
@@ -74,7 +72,6 @@ export type PostTag = {
   id: number;
   tag: string;
   post_id: number;
-  post_type: string;
 };
 
 export type ContactSection = {
