@@ -121,10 +121,11 @@ export const getContactSection = cache(async (): Promise<ContactSection | null> 
     .select(`
       id, section_name, subtitle, language,
       contacts (
-        id, label, icon, link
+        *
       )
     `)
     .eq('language', 'en')
+    .order('id', { foreignTable: 'contacts' })
     .single();
 
   if (error) {

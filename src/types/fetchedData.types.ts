@@ -87,4 +87,5 @@ export type Contact = {
   label: string;
   icon: string;
   link: string;
+  bg_color: string;
 };

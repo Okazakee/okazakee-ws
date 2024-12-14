@@ -27,11 +27,13 @@ export default function PostsSection({
       ))}
     </div>
 
-      <Link href={isBlog ? '/blog' : '/portfolio'}>
-        <button className="hover:bg-secondary bg-main text-lighttext transition-all px-5 py-2 rounded-xl mt-10 text-xl">
-          Explore more...
-        </button>
-      </Link>
+      {posts.length > 2 &&
+        <Link href={isBlog ? '/blog' : '/portfolio'}>
+          <button className="md:bg-opacity-80 md:hover:bg-opacity-100 hover:scale-105 bg-main text-lighttext transition-all px-5 py-2 rounded-xl mt-10 text-xl">
+            Explore more...
+          </button>
+        </Link>
+      }
     </section>
   );
 }

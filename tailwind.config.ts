@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      backgroundColor: {
+        'custom-hover': 'var(--tw-hover-bg-color)',
+      },
       screens: {
         'mdh': { raw: '(min-width: 768px) and (min-height: 900px)' },
         '2xlh': { raw: '(min-width: 1536px) and (min-height: 1220px)' },

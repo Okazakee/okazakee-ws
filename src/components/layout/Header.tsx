@@ -16,7 +16,7 @@ const Header = () => {
       <div className="flex justify-center items-center pt-5 mx-5">
         <Link
           href={"/"}
-          className="xl:mr-auto xl:mx-0 absolute xl:static left-1/2 transform -translate-x-1/2 space-x-5 xl:left-0 xl:-translate-x-0 xl:space-x-0"
+          className="xl:mr-auto xl:mx-0 xl:static"
         >
           <Image
             src={logo}
@@ -55,6 +55,7 @@ const Header = () => {
 
         <div className="ml-auto flex items-center">
           <ThemeToggle />
+          <p className="md:hidden">menu here</p>
         </div>
       </div>
     </div>

@@ -33,11 +33,21 @@ export default function Contacts({
           <h3 className="md:mb-20 mb-10 text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>
           </h3>
           <div className="flex md:flex-row flex-col justify-between">
-            {contacts.map(({ label, icon, link }) => {
+            {contacts.map(({ id, label, icon, link, bg_color }) => {
               const IconComponent = getIconComponent(icon);
 
               return (
-                <Link key={label} href={link} target="_blank" className='md:mx-2 mx-16 mb-5 md:mb-0 last:mb-0 transition-all hover:scale-105 border-2 border-main hover:bg-main bg-[#c5c5c5] dark:bg-[#0e0e0e] rounded-2xl'>
+                <Link
+                  key={id}
+                  style={{
+                    "--dyn-color": `${bg_color}99`,
+                    "--hover-color": bg_color
+                  } as React.CSSProperties}
+                  href={link}
+                  target="blank"
+                  className={`text-lighttext md:mx-2 mx-16 mb-5 md:mb-0 last:mb-0 transition-all hover:scale-105 border-2
+                    border-main rounded-2xl bg-[var(--hover-color)] md:bg-[var(--dyn-color)] md:hover:bg-[var(--hover-color)]
+                    ${label === 'Resume' && 'md:hidden'}`}>
                   <div className="transition-all ease-in-out md:my-0 my-2 md:w-40 md:h-40">
                     {IconComponent ? (
                     <Suspense fallback={<div>Loading...</div>}>
