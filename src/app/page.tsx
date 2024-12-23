@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: "Personal website with portfolio and blog",
   openGraph: {
     title: "Okazakee WS - Home",
-  description: "Personal website with portfolio and blog",
+    description: "Personal website with portfolio and blog",
     images: [
       {
         url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png',

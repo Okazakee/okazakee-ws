@@ -27,6 +27,7 @@ export default function RootLayout({
           </div>
         </body>
       </Providers>
+      <SpeedInsights />
     </html>
   );
 }
