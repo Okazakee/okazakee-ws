@@ -135,7 +135,7 @@ export const getContactSection = cache(async (): Promise<ContactSection | null> 
   return data;
 });
 
-export const getPortfolioPosts = cache(async (limit?: number): Promise<PortfolioPost[] | null> => {
+export const getPosts = cache(async ( type: string, limit?: number, lang?: string): Promise<BlogPost[] | PortfolioPost[] | null> => {
 
   const query = supabase
     .from('posts')
@@ -143,8 +143,8 @@ export const getPortfolioPosts = cache(async (limit?: number): Promise<Portfolio
       *,
       post_tags (*)
     `)
-    .eq('language', 'en')
-    .eq('post_type', 'portfolio')
+    .eq('language', lang || 'en')
+    .eq('post_type', type)
     .order('created_at', { ascending: false });
 
   // Apply limit only if it's defined
@@ -162,7 +162,7 @@ export const getPortfolioPosts = cache(async (limit?: number): Promise<Portfolio
   return postsData;
 });
 
-export const getPortfolioPost = cache(async (id: string): Promise<PortfolioPost | null> => {
+export const getPost = cache(async (id: string, type: string, lang?: string): Promise<PortfolioPost | BlogPost | null> => {
 
   const { data: postsData, error: postsErr } = await supabase
     .from('posts')
@@ -170,8 +170,8 @@ export const getPortfolioPost = cache(async (id: string): Promise<PortfolioPost 
       *,
       post_tags (*)
       `)
-    .eq('language', 'en')
-    .eq('post_type', 'portfolio')
+    .eq('language', lang || 'en')
+    .eq('post_type', type)
     .eq('id', id)
     .order('created_at', { ascending: false });
 
@@ -182,20 +182,3 @@ export const getPortfolioPost = cache(async (id: string): Promise<PortfolioPost 
 
   return postsData[0];
 });
-
-/* export const getAllBlogPosts = cache(async (): Promise<BlogPost[] | null> => {
-  const { data, error } = await supabase
-    .from('posts')
-    .select(`
-      id, created_at, title, body, image, source_link, prod_link, description, post_type, blog_section,
-      post_tags (id, tag)
-    `)
-    .eq('post_type', 'blog')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return null;
-  }
-  return data;
-}); */

@@ -1,17 +1,15 @@
-import { PortfolioPost } from '@/types/fetchedData.types'
-import { getPortfolioPosts, getPortfolioPost } from '@/utils/getData'
+import { BlogPost, PortfolioPost } from '@/types/fetchedData.types'
+import { getPosts, getPost } from '@/utils/getData'
 import { notFound, redirect } from 'next/navigation'
-
-//TODO MAKE THIS MORE DYNAMIC, [pageType]/[id]/[title], this way blog and portfolio share the same exact structure.
 
 export default async function Page({
   params
 }: {
-  params: Promise<{ id: string, title: string }>
+  params: Promise<{ post_type: string, id: string, title: string }>
 }) {
-  const { id, title } = await params;
+  const { id, title, post_type } = await params;
 
-  const post: PortfolioPost | null = await getPortfolioPost(id)
+  const post: PortfolioPost | BlogPost | null = await getPost(id, post_type)
 
   if (!post) {
     notFound()
@@ -33,22 +31,35 @@ export default async function Page({
 export const revalidate = 3600; // Revalidate every hour
 
 export async function generateStaticParams() {
-  const posts = await getPortfolioPosts(100);
+  // Get both types of posts
+  const portfolioPosts = await getPosts('portfolio', 100) as PortfolioPost[];
+  const blogPosts = await getPosts('blog', 100) as BlogPost[];
 
-  return posts!.map((post: PortfolioPost) => ({
+  // Create params for both types of posts
+  const portfolioParams = portfolioPosts!.map((post: PortfolioPost) => ({
+    post_type: 'portfolio',
     id: post.id.toString(),
     title: post.title.toLowerCase().replace(/\s+/g, '-'),
   }));
+
+  const blogParams = blogPosts!.map((post: BlogPost) => ({
+    post_type: 'blog',
+    id: post.id.toString(),
+    title: post.title.toLowerCase().replace(/\s+/g, '-'),
+  }));
+
+  // Combine and return all params
+  return [...portfolioParams, ...blogParams];
 }
 
 export async function generateMetadata({
   params
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ post_type: string, id: string, title: string }>
 }) {
-  const id = (await params).id
+  const { id, post_type } = await params;
 
-  const post: PortfolioPost | null = await getPortfolioPost(id);
+  const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
 
   if (!post) {
     return {
@@ -58,7 +69,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${post.title} - Portfolio`,
+    title: `${post.title} - ${post.post_type}`,
     description: post.description,
     openGraph: {
       title: `${post.title} - Portfolio`,

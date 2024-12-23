@@ -8,7 +8,7 @@ export default function Postcard({ post } : { post: PortfolioPost | BlogPost }) 
   const slugifiedTitle = post.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
 
   return (
-    <Link href={`/portfolio/${post.id}/${slugifiedTitle}`}
+    <Link href={`/${post.post_type}/${post.id}/${slugifiedTitle}`}
       className={`hover:bg-secondary bg-[#c5c5c5] dark:bg-[#0e0e0e] hover:text-lighttext border-2 p-3 border-secondary rounded-xl overflow-hidden cursor-pointer transition-all text-left flex flex-col justify-between md:w-[32rem] w-full hover:scale-105`}
     >
       <div className="w-full h-[10rem] md:h-[14rem] relative mx-auto mb-2">

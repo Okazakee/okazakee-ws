@@ -2,9 +2,9 @@
 import { Search } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { debounce } from 'lodash'
-import { PortfolioPost } from "@/types/fetchedData.types";
+import { PortfolioPost, BlogPost } from "@/types/fetchedData.types";
 
-export default function Searchbar({ /* posts */ } : {posts: PortfolioPost[]}) {
+export default function Searchbar({ /* posts */ } : {posts: PortfolioPost[] | BlogPost[]}) {
   const [searchFilter, setSearchFilter] = useState('');
 
   const debouncedSearch = useMemo(() =>
