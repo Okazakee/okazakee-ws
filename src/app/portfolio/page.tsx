@@ -7,8 +7,26 @@ import Postcard from '@/components/common/Postcard';
 import Searchbar from '@/components/common/Searchbar';
 
 export const metadata: Metadata = {
-  title: "Okazakee WS - Portfolio",
+  title: "Portfolio - Okazakee WS",
   description: "My portfolio showcasing projects i worked on",
+  openGraph: {
+    title: `Portfolio - Okazakee WS`,
+    description: 'My portfolio showcasing projects i worked on',
+    images: [
+      {
+        url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'logo',
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Portfolio - Okazakee WS`,
+    description: "My portfolio showcasing projects i worked on",
+    images: ['https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png'],
+  },
 };
 
 export const revalidate = 3600; // Revalidate every hour

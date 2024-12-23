@@ -8,8 +8,26 @@ import PostsSection from "@/components/landing/PostsSections";
 import { ErrorDiv } from "@/components/common/ErrorDiv";
 
 export const metadata: Metadata = {
-  title: "Okazakee WS - Home",
+  title: "Home - Okazakee WS",
   description: "Personal website with portfolio and blog",
+  openGraph: {
+    title: "Okazakee WS - Home",
+  description: "Personal website with portfolio and blog",
+    images: [
+      {
+        url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'logo',
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Home - Okazakee WS`,
+    description: "Personal website with portfolio and blog",
+    images: ['https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png'],
+  },
 };
 
 export const revalidate = 3600; // Revalidate every hour

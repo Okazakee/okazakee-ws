@@ -2,6 +2,8 @@ import { PortfolioPost } from '@/types/fetchedData.types'
 import { getPortfolioPosts, getPortfolioPost } from '@/utils/getData'
 import { notFound, redirect } from 'next/navigation'
 
+//TODO MAKE THIS MORE DYNAMIC, [pageType]/[id]/[title], this way blog and portfolio share the same exact structure.
+
 export default async function Page({
   params
 }: {
@@ -55,15 +57,12 @@ export async function generateMetadata({
     };
   }
 
-  const slugifiedTitle = post.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
-
   return {
-    title: `${post.title} | Portfolio`,
+    title: `${post.title} - Portfolio`,
     description: post.description,
     openGraph: {
-      title: post.title,
+      title: `${post.title} - Portfolio`,
       description: post.description,
-      url: `https://example.com/portfolio/${post.id}/${slugifiedTitle}`,
       images: [
         {
           url: post.image,
@@ -75,7 +74,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: post.title,
+      title: `${post.title} - Portfolio`,
       description: post.description,
       images: [post.image],
     },
