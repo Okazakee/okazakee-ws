@@ -35,3 +35,40 @@ export async function generateStaticParams() {
     title: post.title.toLowerCase().replace(/\s+/g, '-'),
   }))
 }
+
+export async function generateMetadata({ params }: { params: { post: string } }) {
+  const post: PortfolioPost | null = await getPortfolioPost(params.post);
+
+  if (!post) {
+    return {
+      title: "Post Not Found",
+      description: "The requested post could not be found.",
+    };
+  }
+
+  const slugifiedTitle = post.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+
+  return {
+    title: `${post.title} | Portfolio`,
+    description: post.description,
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      url: `https://example.com/portfolio/${post.id}/${slugifiedTitle}`,
+      images: [
+        {
+          url: post.image,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.description,
+      images: [post.image],
+    },
+  };
+}
