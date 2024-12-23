@@ -3,12 +3,13 @@ import { getAllPortfolioPosts, getPortfolioPost } from '@/utils/getData'
 import { notFound, redirect } from 'next/navigation'
 
 export default async function Page({
-  params,
+  params
 }: {
-  params: { post: string; title: string }
+  params: Promise<{ id: string }>
 }) {
-  const postID = params.post
-  const post: PortfolioPost | null = await getPortfolioPost(postID)
+  const id = (await params).id
+
+  const post: PortfolioPost | null = await getPortfolioPost(id)
 
   if (!post) {
     notFound()
@@ -16,8 +17,8 @@ export default async function Page({
 
   // If the provided title doesn't match the actual post title, redirect to the correct URL
   const slugifiedTitle = post.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
-  if (params.title !== slugifiedTitle) {
-    redirect(`/portfolio/${postID}/${slugifiedTitle}`)
+  if (post.title !== slugifiedTitle) {
+    redirect(`/portfolio/${id}/${slugifiedTitle}`)
   }
 
   return (
@@ -31,13 +32,18 @@ export async function generateStaticParams() {
   const posts = await getAllPortfolioPosts()
 
   return posts!.map((post: PortfolioPost) => ({
-    post: post.id.toString(),
-    title: post.title.toLowerCase().replace(/\s+/g, '-'),
+    id: post.id.toString()
   }))
 }
 
-export async function generateMetadata({ params }: { params: { post: string } }) {
-  const post: PortfolioPost | null = await getPortfolioPost(params.post);
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const id = (await params).id
+
+  const post: PortfolioPost | null = await getPortfolioPost(id);
 
   if (!post) {
     return {
