@@ -155,6 +155,27 @@ export const getAllPortfolioPosts = cache(async (): Promise<PortfolioPost[] | nu
   return postsData;
 });
 
+export const getPortfolioPost = cache(async (id: string): Promise<PortfolioPost | null> => {
+
+  const { data: postsData, error: postsErr } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      post_tags (*)
+      `)
+    .eq('language', 'en')
+    .eq('post_type', 'portfolio')
+    .eq('id', id)
+    .order('created_at', { ascending: false });
+
+  if (postsErr) {
+    console.error('Error fetching posts:', postsErr);
+    return null;
+  }
+
+  return postsData[0];
+});
+
 /* export const getAllBlogPosts = cache(async (): Promise<BlogPost[] | null> => {
   const { data, error } = await supabase
     .from('posts')
