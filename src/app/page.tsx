@@ -49,7 +49,7 @@ export default async function Home() {
 
 
   return (
-    <div className="mx-auto md:max-w-7xl mt-10 md:mt-0">
+    <main className="mx-auto md:max-w-7xl mt-10 md:mt-0">
 
       {!heroSection ? <ErrorDiv>Error loading Header data</ErrorDiv> : <Hero heroSection={heroSection} />}
 
@@ -61,6 +61,6 @@ export default async function Home() {
 
       {!contactSection ? <ErrorDiv>Error loading Contacts data</ErrorDiv> : <Contacts contactSection={contactSection} />}
 
-    </div>
+    </main>
   );
 }

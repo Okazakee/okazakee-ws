@@ -42,7 +42,7 @@ export default async function Portfolio() {
   const posts = await getPortfolioPosts() as PortfolioPost[];
 
   return (
-    <section className="mt-24 flex justify-center">
+    <main className="mt-24 flex justify-center">
       <div className="xl:mx-16 text-center mb-20 max-w-[120rem]">
         {posts.length > 0 ?
         <>
@@ -67,6 +67,6 @@ export default async function Portfolio() {
         </div>
         }
       </div>
-    </section>
+    </main>
   );
 }
