@@ -135,17 +135,24 @@ export const getContactSection = cache(async (): Promise<ContactSection | null> 
   return data;
 });
 
-export const getAllPortfolioPosts = cache(async (): Promise<PortfolioPost[] | null> => {
+export const getPortfolioPosts = cache(async (limit?: number): Promise<PortfolioPost[] | null> => {
 
-  const { data: postsData, error: postsErr } = await supabase
+  const query = supabase
     .from('posts')
     .select(`
       *,
       post_tags (*)
-      `)
+    `)
     .eq('language', 'en')
     .eq('post_type', 'portfolio')
     .order('created_at', { ascending: false });
+
+  // Apply limit only if it's defined
+  if (limit !== undefined) {
+    query.limit(limit);
+  }
+
+  const { data: postsData, error: postsErr } = await query;
 
   if (postsErr) {
     console.error('Error fetching posts:', postsErr);

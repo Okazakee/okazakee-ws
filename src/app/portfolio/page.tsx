@@ -1,5 +1,5 @@
 import React from 'react';
-import { getAllPortfolioPosts } from '@/utils/getData';
+import { getPortfolioPosts } from '@/utils/getData';
 import { PortfolioPost } from '@/types/fetchedData.types';
 import { CircleX } from 'lucide-react';
 import { Metadata } from 'next';
@@ -21,7 +21,7 @@ export async function generateStaticParams() {
 
 export default async function Portfolio() {
 
-  const posts = await getAllPortfolioPosts() as PortfolioPost[];
+  const posts = await getPortfolioPosts() as PortfolioPost[];
 
   return (
     <section className="mt-24 flex justify-center">
