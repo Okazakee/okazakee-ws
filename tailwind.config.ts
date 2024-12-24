@@ -27,14 +27,18 @@ const config: Config = {
       colors: {
         'darktext': '#080808',
         'lighttext': '#e8e8e8',
+        'lighttext2': '#c8c8c8',
         'main': '#8B53FB',
         'secondary': '#533197',
+        'tertiary': '#361d66',
         'bglight': '#d4d4d4',
         'bgdark': '#0a0a0a',
         'cycling-colors': 'linear-gradient(to right, #8b53fb, #673ab7, #ff5722, #ff9800, #ffc107, #03a9f4, #8b53fb)',
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 };
 export default config;

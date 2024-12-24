@@ -15,4 +15,16 @@
     @apply cursor-text text-main;
   }
 
+  #post {
+    @apply leading-tight text-darktext dark:text-lighttext;
+  }
+
+  #post li::marker {
+    @apply text-darktext dark:text-lighttext;
+  }
+
+  #post pre {
+    @apply bg-darktext dark:bg-lighttext2 text-lighttext dark:text-darktext;
+  }
+
 }

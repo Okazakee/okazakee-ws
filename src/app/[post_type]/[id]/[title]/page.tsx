@@ -1,6 +1,9 @@
+import ShareClipboard from '@/components/common/ShareClipboard';
+import { Tags } from '@/components/common/Tags';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@/utils/getData';
-import { ExternalLink, Github, Tag } from 'lucide-react';
+import { Clock, ExternalLink, Github, Share2 } from 'lucide-react';
+import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -16,8 +19,7 @@ export default async function Page({
 
   const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
 
-  const postBody = await remark().use(html).processSync(post!.body).toString();
-
+  // checks
   if (!post) {
     notFound()
   }
@@ -28,23 +30,25 @@ export default async function Page({
     redirect(`/portfolio/${id}/${slugifiedTitle}`)
   }
 
+  const postBody = await remark().use(html).processSync(post!.body).toString();
+
+  const formattedDate = moment(post?.created_at).format('DD/MM/YYYY');
+
+  const postURL = `https://okazakee.dev/${post_type}/${id}/${slugifiedTitle}`;
+
   return (
     <article className="max-w-5xl mx-auto px-4 my-20 md:my-32">
-      {/* Simple Header */}
-      <header className="">
-        <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
-        <p className="text-xl">{post.description}</p>
+
+      <header className="flex justify-between">
+        <div>
+          <h1 className="md:text-4xl text-3xl font-bold mb-4">{post.title}</h1>
+          <p className="text-xl">{post.description}</p>
+        </div>
+        <ShareClipboard url={postURL} />
       </header>
 
       {/* Tech Stack */}
-      <div className="flex my-4">
-        { post.post_tags.map((tag, i) => (
-          <span key={i} className="bg-main text-lighttext rounded-md px-2 py-1.5 mr-2 flex items-center">
-            <Tag size={15} className='mr-2' />
-            {tag.tag}
-          </span>
-        ))}
-      </div>
+      <Tags tags={post.post_tags} />
 
       {/* Main Image */}
       <div className="w-full h-[16rem] md:h-[24rem] relative mx-auto">
@@ -61,25 +65,33 @@ export default async function Page({
       </div>
 
       {/* Quick Info */}
-      <div className="flex flex-wrap gap-4 my-8 text-lighttext">
+      <div className="flex flex-wrap md:gap-4 gap-2 my-8 text-lighttext items-center">
         <Link
+          target="_blank"
           href={post.source_link}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-main"
+          className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
         >
           <Github size={18} />
           View Source
         </Link>
         <Link
+          target="_blank"
           href={post.demo_link}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-main"
+          className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
         >
           <ExternalLink size={18} />
           Live Demo
         </Link>
+
+        <div className='flex items-center text-darktext dark:text-lighttext'>
+          <Clock size={20} className='mr-2' />
+          <span>{formattedDate}</span>
+        </div>
+
       </div>
 
       {/* Project Description */}
-      <div className="max-w-none text-xl space-y-4 prose prose-invert"
+      <div id='post' className="max-w-none text-xl space-y-4 prose dark:prose-invert text-left"
         dangerouslySetInnerHTML={{ __html: postBody }}>
       </div>
     </article>

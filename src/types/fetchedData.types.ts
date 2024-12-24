@@ -40,6 +40,7 @@ export type PortfolioSection = {
 
 export type PortfolioPost = {
   id: number;
+  created_at: string;
   title: string;
   image: string;
   source_link: string;
@@ -60,6 +61,7 @@ export type BlogSection = {
 
 export type BlogPost = {
   id: number;
+  created_at: string;
   title: string;
   image: string;
   source_link: string;
