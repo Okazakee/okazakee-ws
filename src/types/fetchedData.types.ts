@@ -42,6 +42,8 @@ export type PortfolioPost = {
   id: number;
   title: string;
   image: string;
+  source_link: string;
+  demo_link: string
   language: string;
   description: string;
   body: string;
@@ -60,6 +62,8 @@ export type BlogPost = {
   id: number;
   title: string;
   image: string;
+  source_link: string;
+  demo_link: string
   language: string;
   description: string;
   body: string;

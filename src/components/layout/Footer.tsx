@@ -2,6 +2,8 @@ import Link from 'next/link';
 import React from 'react';
 import { ArrowUpToLine } from 'lucide-react';
 
+// TODO make the vat click and copy it
+
 export default function Footer() {
   return (
     <footer id='contacts' className="border-t border-darktext dark:border-lighttext">

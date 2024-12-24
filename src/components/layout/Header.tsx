@@ -12,7 +12,7 @@ const Header = () => {
   const pathname = usePathname();
 
   return (
-    <div className="-mb-[66px] max-w-screen-2xl mx-auto">
+    <header className="-mb-[66px] max-w-screen-2xl mx-auto">
       <div className="flex justify-center items-center pt-5 mx-5">
         <Link
           href={"/"}
@@ -58,7 +58,7 @@ const Header = () => {
           <p className="md:hidden">menu here</p>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 
