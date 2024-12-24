@@ -2,7 +2,7 @@ import ShareClipboard from '@/components/common/ShareClipboard';
 import { Tags } from '@/components/common/Tags';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@/utils/getData';
-import { Clock, ExternalLink, Github, Share2 } from 'lucide-react';
+import { Clock, ExternalLink, Github } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
