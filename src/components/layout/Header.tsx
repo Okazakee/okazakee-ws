@@ -2,17 +2,17 @@
 
 import React from "react";
 import Image from "next/image";
-import ThemeToggle from "@components/ThemeToggle";
 import logo from "@public/logo.svg";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpenText, BriefcaseBusiness, Contact, Drill, House } from "lucide-react";
+import HamburgerMenu from "../common/HamburgerMenu";
 
 const Header = () => {
   const pathname = usePathname();
 
   return (
-    <header className="-mb-[66px] max-w-screen-2xl mx-auto">
+    <header className="-mb-[66px] max-w-screen-2xl mx-auto pt-2">
       <div className="flex justify-center items-center pt-5 mx-5">
         <Link
           href={"/"}
@@ -54,8 +54,7 @@ const Header = () => {
         )}
 
         <div className="ml-auto flex items-center">
-          <ThemeToggle />
-          <p className="md:hidden">menu here</p>
+          <HamburgerMenu className="md:hidden" />
         </div>
       </div>
     </header>
