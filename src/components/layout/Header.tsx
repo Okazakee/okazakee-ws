@@ -2,8 +2,8 @@ import React from "react";
 import Image from "next/image";
 import logo from "@public/logo.svg";
 import Link from "next/link";
-import { BookOpenText, BriefcaseBusiness, Contact, Drill, Home } from "lucide-react";
-import HamburgerMenu from "../common/HamburgerMenu";
+import { BookOpenText, Contact, Drill, Home, Briefcase } from "lucide-react";
+import MobileNav, { DesktopNav } from "./NavMenu";
 
 const Header = () => {
 
@@ -23,31 +23,10 @@ const Header = () => {
           />
         </Link>
 
-        <div className="hidden lg:flex text-xl">
-          <Link href={"/#about"} className="px-4 transition-all hover:text-main flex items-center">
-            <Home className="mr-2 -mt-1" />
-            Home
-          </Link>
-          <Link href={"/#skills"} className="px-4 transition-all hover:text-main flex items-center">
-            <Drill className="mr-2 -mt-1" />
-            Skills
-          </Link>
-          <Link href={"/portfolio"} className="px-4 transition-all hover:text-main flex items-center">
-            <BriefcaseBusiness className="mr-2 -mt-1" />
-            Portfolio
-          </Link>
-          <Link href={"/blog"} className="px-4 transition-all hover:text-main flex items-center">
-            <BookOpenText className="mr-2 -mt-1" />
-            Blog
-          </Link>
-          <Link href={"/#contacts"} className="px-4 transition-all hover:text-main flex items-center">
-            <Contact className="mr-2 -mt-1" />
-            Contacts
-          </Link>
-        </div>
+        <DesktopNav />
 
         <div className="ml-auto flex items-center md:hidden">
-          <HamburgerMenu className="" />
+          <MobileNav />
         </div>
       </div>
     </header>

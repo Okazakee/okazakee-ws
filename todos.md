@@ -8,6 +8,8 @@
 - Build hamburger menu for mobile layout navigation
 - Move darkmode selector in footer.
 - Build a language selector in footer, maybe use same main component as darkmode switcher.
+- Add links to main pages of tech stack in db to use as button link for skills.
+- source and demo buttons should be in a separate row in mobile, justified around
 
 # no priority todos
 - Small cms to edit most important data such as about description, propic, skills, posts, contacts.

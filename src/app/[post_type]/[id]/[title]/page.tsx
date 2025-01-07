@@ -2,7 +2,7 @@ import { PostTags } from '@/components/common/PostTags';
 import ShareButton from '@/components/common/ShareButton';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@/utils/getData';
-import { Clock, ExternalLink, Github, Star } from 'lucide-react';
+import { ChevronLeft, Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -19,11 +19,16 @@ export default async function Page({
 
   const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
 
-  const repoName = post?.source_link.split('/').pop();
+  let ghStars = 0;
 
-  const ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`)
-    .then((res) => res.json())
-    .then((data) => data.stargazers_count);
+  if (post_type === 'portfolio') {
+    console.log('adsadasddasas')
+    const repoName = post?.source_link.split('/').pop();
+
+    ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`)
+      .then((res) => res.json())
+      .then((data) => data.stargazers_count);
+  }
 
   // checks
   if (!post) {
@@ -43,9 +48,10 @@ export default async function Page({
   const postURL = `https://okazakee.dev/${post_type}/${id}/${slugifiedTitle}`;
 
   return (
-    <article className="max-w-5xl mx-auto px-4 my-20 md:my-32">
+    <article className="max-w-5xl mx-auto px-4 mb-20 md:mb-32 md:mt-16 mt-10">
 
-      <header className="flex justify-between">
+      <header className="flex">
+          <ChevronLeft size={35} />
         <div>
           <h1 className="md:text-4xl text-3xl font-bold mb-4">{post.title}</h1>
           <p className="text-xl">{post.description}</p>
@@ -70,8 +76,38 @@ export default async function Page({
       </div>
 
       {/* Quick Info */}
-      {/* <div className="flex flex-wrap md:gap-6 sm:gap-4 gap-2 my-8 text-lighttext items-center"> */}
-      <div className="flex justify-around md:justify-normal md:gap-6 sm:gap-4 my-8 text-lighttext items-center">
+      <div className="flex gap-5 md:justify-normal md:gap-6 sm:gap-4 my-4 md:my-8 text-lighttext items-center">
+
+      <div className='hidden md:flex gap-6'>
+          {post.source_link &&
+            <Link
+              target="_blank"
+              href={post.source_link}
+              className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+            >
+              <Github size={18} />
+              <div className='mt-0.5 md:mt-0'>
+                <span className="hidden md:inline">View </span>
+                Source
+              </div>
+            </Link>
+          }
+
+          {post.demo_link &&
+            <Link
+              target="_blank"
+              href={post.demo_link}
+              className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+            >
+              <ExternalLink size={18} />
+              <div className='mt-0.5 md:mt-0'>
+                <span className="hidden md:inline">Live </span>
+                Demo
+              </div>
+            </Link>
+          }
+        </div>
+
         <div className='flex items-center text-darktext dark:text-lighttext'>
           <Clock size={20} className='mr-2' />
           <span className='mt-0.5'>{formattedDate}</span>
@@ -84,17 +120,20 @@ export default async function Page({
           </div>
         }
 
-        <ShareButton buttonTitle='Copy post link' url={postURL} />
+        <ShareButton className='ml-auto' buttonTitle='Copy post link' url={postURL} />
 
+      </div>
+
+      <div className={`flex mb-4 md:hidden ${ post.source_link && post.demo_link ? 'justify-center' : 'justify-start'}`}>
         {post.source_link &&
           <Link
             target="_blank"
             href={post.source_link}
-            className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+            className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
           >
             <Github size={18} />
             <div className='mt-0.5 md:mt-0'>
-              <span className="hidden md:inline">View </span>
+              <span className=" md:inline">View </span>
               Source
             </div>
           </Link>
@@ -104,16 +143,15 @@ export default async function Page({
           <Link
             target="_blank"
             href={post.demo_link}
-            className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+            className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
           >
             <ExternalLink size={18} />
             <div className='mt-0.5 md:mt-0'>
-              <span className="hidden md:inline">Live </span>
+              <span className=" md:inline">Live </span>
               Demo
             </div>
           </Link>
         }
-
       </div>
 
       {/* Project Description */}

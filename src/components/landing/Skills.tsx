@@ -9,8 +9,6 @@ export default function Skills({
 }) {
   const { section_name, subtitle, skills_categories } = skillsSection;
 
-  //TODO add links to main pages of tech stack in db and here
-
   return (
     <section id="skills" className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh mt-20 md:mt-0 mb-20 md:mb-32">
       <div className="w-full h-full">
