@@ -23,7 +23,7 @@ const Header = () => {
           />
         </Link>
 
-        <div className="hidden lg:flex text-2xl">
+        <div className="hidden lg:flex text-xl">
           <Link href={"/#about"} className="px-4 transition-all hover:text-main flex items-center">
             <Home className="mr-2 -mt-1" />
             Home

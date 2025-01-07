@@ -1,8 +1,8 @@
 import { PostTags } from '@/components/common/PostTags';
-import ShareClipboard from '@/components/common/ShareClipboard';
+import ShareButton from '@/components/common/ShareButton';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@/utils/getData';
-import { Clock, ExternalLink, Github } from 'lucide-react';
+import { Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -18,6 +18,12 @@ export default async function Page({
   const { id, title, post_type } = await params;
 
   const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
+
+  const repoName = post?.source_link.split('/').pop();
+
+  const ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`)
+    .then((res) => res.json())
+    .then((data) => data.stargazers_count);
 
   // checks
   if (!post) {
@@ -44,7 +50,6 @@ export default async function Page({
           <h1 className="md:text-4xl text-3xl font-bold mb-4">{post.title}</h1>
           <p className="text-xl">{post.description}</p>
         </div>
-        <ShareClipboard url={postURL} />
       </header>
 
       {/* Tech Stack */}
@@ -60,33 +65,54 @@ export default async function Page({
             objectPosition: 'center',
           }}
           alt="post_image"
-          className="rounded-lg"
+          className="rounded-lg border-[3px] border-main"
         />
       </div>
 
       {/* Quick Info */}
-      <div className="flex flex-wrap md:gap-4 gap-2 my-8 text-lighttext items-center">
-        <Link
-          target="_blank"
-          href={post.source_link}
-          className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-        >
-          <Github size={18} />
-          View Source
-        </Link>
-        <Link
-          target="_blank"
-          href={post.demo_link}
-          className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-        >
-          <ExternalLink size={18} />
-          Live Demo
-        </Link>
-
+      {/* <div className="flex flex-wrap md:gap-6 sm:gap-4 gap-2 my-8 text-lighttext items-center"> */}
+      <div className="flex justify-around md:justify-normal md:gap-6 sm:gap-4 my-8 text-lighttext items-center">
         <div className='flex items-center text-darktext dark:text-lighttext'>
           <Clock size={20} className='mr-2' />
-          <span>{formattedDate}</span>
+          <span className='mt-0.5'>{formattedDate}</span>
         </div>
+
+        {post_type === 'portfolio' &&
+          <div className='flex items-center text-darktext dark:text-lighttext'>
+            <Star size={20} className='mr-2' />
+            <span className='mt-0.5'>{ghStars || 0}</span>
+          </div>
+        }
+
+        <ShareButton buttonTitle='Copy post link' url={postURL} />
+
+        {post.source_link &&
+          <Link
+            target="_blank"
+            href={post.source_link}
+            className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+          >
+            <Github size={18} />
+            <div className='mt-0.5 md:mt-0'>
+              <span className="hidden md:inline">View </span>
+              Source
+            </div>
+          </Link>
+        }
+
+        {post.demo_link &&
+          <Link
+            target="_blank"
+            href={post.demo_link}
+            className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+          >
+            <ExternalLink size={18} />
+            <div className='mt-0.5 md:mt-0'>
+              <span className="hidden md:inline">Live </span>
+              Demo
+            </div>
+          </Link>
+        }
 
       </div>
 
