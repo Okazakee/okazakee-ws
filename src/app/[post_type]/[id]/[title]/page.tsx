@@ -1,5 +1,5 @@
+import { PostTags } from '@/components/common/PostTags';
 import ShareClipboard from '@/components/common/ShareClipboard';
-import { Tags } from '@/components/common/Tags';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@/utils/getData';
 import { Clock, ExternalLink, Github } from 'lucide-react';
@@ -48,7 +48,7 @@ export default async function Page({
       </header>
 
       {/* Tech Stack */}
-      <Tags tags={post.post_tags} />
+      <PostTags tags={post.post_tags} />
 
       {/* Main Image */}
       <div className="w-full h-[16rem] md:h-[24rem] relative mx-auto">

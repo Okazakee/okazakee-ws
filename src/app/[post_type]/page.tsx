@@ -1,6 +1,6 @@
 import React from 'react';
-import { getPosts } from '@/utils/getData';
-import { PortfolioPost, BlogPost } from '@/types/fetchedData.types';
+import { getPosts, getBlogSection, getPortfolioSection } from '@/utils/getData';
+import { PortfolioPost, BlogPost, BlogSection, PortfolioSection } from '@/types/fetchedData.types';
 import { CircleX } from 'lucide-react';
 import Postcard from '@/components/common/Postcard';
 import Searchbar from '@/components/common/Searchbar';
@@ -55,19 +55,24 @@ export default async function PostsPage({
 }) {
   const { post_type } = await params;
 
+  const BlogSection = await getBlogSection() as BlogSection;
+  const PortfolioSection = await getPortfolioSection() as PortfolioSection;
+
+  const {subtitle: blogSubtitle, section_name: blogTitle} = BlogSection;
+  const {subtitle: portfolioSubtitle, section_name: portfolioTitle} = PortfolioSection;
+
   // Get posts based on the post_type
   const posts = await getPosts(post_type) as PortfolioPost[] | BlogPost[];
 
-  const title = post_type.charAt(0).toUpperCase() + post_type.slice(1);
-
   return (
-    <section className="mt-24 flex justify-center">
+    <section className="mt-20 flex justify-center">
       <div className="xl:mx-16 text-center mb-20 max-w-[120rem]">
         {posts.length > 0 ? (
           <>
-            <div className="text-5xl mb-5">
-              {title}
-            </div>
+            <h1 className="text-5xl mb-5">
+              {post_type === blogTitle.toLowerCase() ? blogTitle : portfolioTitle}
+            </h1>
+            <h3 className="mb-10 md:mb-10 md:mx-10 mx-5 text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: post_type === blogTitle.toLowerCase() ? blogSubtitle : portfolioSubtitle }}></h3>
             <Searchbar posts={posts} />
             <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
               {posts.map((post) => (
@@ -76,7 +81,7 @@ export default async function PostsPage({
             </div>
           </>
         ) : (
-          <div className='-mt-24 -mb-[7.5rem] h-lvh grid place-content-center text-5xl'>
+          <div className='-mt-20 -mb-[7.5rem] h-lvh grid place-content-center text-5xl'>
             <div className='flex items-center'>
               <CircleX size={65} className='stroke-main' />
               <h1 className='ml-5'>There are no posts available!</h1>

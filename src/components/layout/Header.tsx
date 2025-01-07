@@ -1,18 +1,14 @@
-"use client";
-
 import React from "react";
 import Image from "next/image";
 import logo from "@public/logo.svg";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BookOpenText, BriefcaseBusiness, Contact, Drill, House } from "lucide-react";
+import { BookOpenText, BriefcaseBusiness, Contact, Drill, Home } from "lucide-react";
 import HamburgerMenu from "../common/HamburgerMenu";
 
 const Header = () => {
-  const pathname = usePathname();
 
   return (
-    <header className="-mb-[66px] max-w-screen-2xl mx-auto pt-2">
+    <header className="max-w-screen-2xl mx-auto pt-2">
       <div className="flex justify-center items-center pt-5 mx-5">
         <Link
           href={"/"}
@@ -27,34 +23,31 @@ const Header = () => {
           />
         </Link>
 
-        {pathname === "/" ? (
-          <div className="hidden lg:flex text-2xl absolute left-1/2 transform -translate-x-1/2 space-x-5">
-            <Link href={"#skills"} className="px-3 transition-all hover:text-main flex items-center">
-              <Drill className="mr-2 -mt-1" />
-              Skills
-            </Link>
-            <Link href={"/portfolio"} className="px-3 transition-all hover:text-main flex items-center">
-              <BriefcaseBusiness className="mr-2 -mt-1" />
-              Portfolio
-            </Link>
-            <Link href={"/blog"} className="px-3 transition-all hover:text-main flex items-center">
-              <BookOpenText className="mr-2 -mt-1" />
-              Blog
-            </Link>
-            <Link href={"#contacts"} className="px-3 transition-all hover:text-main flex items-center">
-              <Contact className="mr-2 -mt-1" />
-              Contacts
-            </Link>
-          </div>
-        ) : (
-          <Link href={"/"} className="text-2xl absolute left-1/2 transform -translate-x-1/2 hover:text-main flex items-center">
-            <House className="mr-2 -mt-1" />
-            Go to Homepage
+        <div className="hidden lg:flex text-2xl">
+          <Link href={"/#about"} className="px-4 transition-all hover:text-main flex items-center">
+            <Home className="mr-2 -mt-1" />
+            Home
           </Link>
-        )}
+          <Link href={"/#skills"} className="px-4 transition-all hover:text-main flex items-center">
+            <Drill className="mr-2 -mt-1" />
+            Skills
+          </Link>
+          <Link href={"/portfolio"} className="px-4 transition-all hover:text-main flex items-center">
+            <BriefcaseBusiness className="mr-2 -mt-1" />
+            Portfolio
+          </Link>
+          <Link href={"/blog"} className="px-4 transition-all hover:text-main flex items-center">
+            <BookOpenText className="mr-2 -mt-1" />
+            Blog
+          </Link>
+          <Link href={"/#contacts"} className="px-4 transition-all hover:text-main flex items-center">
+            <Contact className="mr-2 -mt-1" />
+            Contacts
+          </Link>
+        </div>
 
-        <div className="ml-auto flex items-center">
-          <HamburgerMenu className="md:hidden" />
+        <div className="ml-auto flex items-center md:hidden">
+          <HamburgerMenu className="" />
         </div>
       </div>
     </header>

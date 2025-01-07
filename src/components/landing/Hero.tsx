@@ -9,15 +9,15 @@ function Hero({ heroSection }: { heroSection: HeroSection }){
   return (
     <section className="md:mx-10 mx-5 md:h-svh flex items-center">
         <div>
-          <div className="flex flex-col xl:flex-row items-center xl:justify-between">
+          <div className="flex flex-col xl:flex-row items-center xl:justify-around">
             <Image
               src={propic}
               width={400}
               height={400}
-              className='rounded-2xl xl:mr-10 w-[300px] xl:w-[360px] xl:mx-0 mb-10 md:mb-20 mt-14 md:mt-20 xl:py-0 border-[3px] border-main'
+              className='rounded-2xl xl:mr-10 w-[300px] xl:w-[340px] xl:mx-0 mb-10 md:mb-20 mt-14 md:mt-20 xl:py-0 border-[3px] border-main'
               alt="logo"
             />
-            <div className="text-center text-4xl lg:text-5xl xl:text-6xl">
+            <div className="text-center text-4xl lg:text-[3.5rem]">
               <h1 className="xl:mb-10 md:mb-12 mb-5" dangerouslySetInnerHTML={{ __html: name }}></h1>
               <h2 dangerouslySetInnerHTML={{ __html: job_position }}></h2>
             </div>

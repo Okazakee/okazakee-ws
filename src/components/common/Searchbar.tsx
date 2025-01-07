@@ -29,13 +29,13 @@ export default function Searchbar({ /* posts */ } : {posts: PortfolioPost[] | Bl
 
   return (
     <>
-      <div className="mb-10 mx-auto max-w-xl relative items-center">
+      <div className="mb-10 mx-10 sm:mx-auto max-w-xl relative items-center">
         <input
           type="text"
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
           placeholder="Search posts by title or tag..."
-          className="text-xl w-full p-3 pl-10 rounded-xl border-2 bg-lighttext border-main focus:outline-none placeholder:text-darktext placeholder:opacity-70 text-darktext"
+          className="md:text-xl w-full p-2 pl-10 rounded-xl border-2 bg-lighttext border-main focus:outline-none placeholder:text-darktext placeholder:opacity-70 text-darktext"
         />
         <Search
           className="absolute left-3 top-1/2 transform -translate-y-1/2 stroke-main"

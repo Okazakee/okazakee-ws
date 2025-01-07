@@ -28,3 +28,22 @@
   }
 
 }
+
+@keyframes carousel {
+  0%, 100% {
+    transform: translateX(1%);
+  }
+  50% {
+    transform: translateX(calc(var(--container-width) - var(--total-width)));
+  }
+}
+
+.animate-carousel {
+  animation: carousel 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-carousel {
+    animation: none;
+  }
+}
