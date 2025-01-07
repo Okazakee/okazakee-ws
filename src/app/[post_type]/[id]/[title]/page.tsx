@@ -22,7 +22,6 @@ export default async function Page({
   let ghStars = 0;
 
   if (post_type === 'portfolio') {
-    console.log('adsadasddasas')
     const repoName = post?.source_link.split('/').pop();
 
     ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`)
@@ -78,7 +77,7 @@ export default async function Page({
       {/* Quick Info */}
       <div className="flex gap-5 md:justify-normal md:gap-6 sm:gap-4 my-4 md:my-8 text-lighttext items-center">
 
-      <div className='hidden md:flex gap-6'>
+      <div className={`hidden gap-6 ${post_type === 'portfolio' && 'md:flex'}`}>
           {post.source_link &&
             <Link
               target="_blank"
