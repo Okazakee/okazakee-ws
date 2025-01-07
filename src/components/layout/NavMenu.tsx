@@ -53,7 +53,7 @@ export default function MobileNav({ className } : { className?: string }) {
 
 export function DesktopNav({ className } : { className?: string }) {
   return (
-    <div className="hidden lg:flex text-xl">
+    <div className={`${className} hidden lg:flex text-xl`}>
       {menuItems.map((button) => (
         <Link key={button.label} href={button.href} className="px-4 transition-all hover:text-main flex items-center">
           <button.icon className="mr-2 -mt-1" />

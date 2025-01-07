@@ -2,7 +2,6 @@ import React from "react";
 import Image from "next/image";
 import logo from "@public/logo.svg";
 import Link from "next/link";
-import { BookOpenText, Contact, Drill, Home, Briefcase } from "lucide-react";
 import MobileNav, { DesktopNav } from "./NavMenu";
 
 const Header = () => {
