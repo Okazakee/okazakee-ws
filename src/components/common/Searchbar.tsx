@@ -8,11 +8,12 @@ import validator from 'validator';
 
 export default function Searchbar({ post_type, SetPosts, initialPosts } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>; initialPosts: BlogPost[] | PortfolioPost[] }) {
   const [searchFilter, setSearchFilter] = useState('');
+  const [clientIP, setClientIP] = useState('');
 
   const debouncedSearch = useMemo(() =>
     debounce(async (searchQuery: string) => {
         // api call
-        const newPosts = await searchPosts(post_type, searchQuery, '12');
+        const newPosts = await searchPosts(post_type, searchQuery, clientIP);
 
         SetPosts(newPosts.posts || []);
 
@@ -20,6 +21,21 @@ export default function Searchbar({ post_type, SetPosts, initialPosts } : { post
     []
   );
 
+  useEffect(() => {
+    const getIP = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        setClientIP(data.ip);
+      } catch (error) {
+        console.error('Error fetching IP:', error);
+        // Fallback to a default value or local IP
+        setClientIP('127.0.0.1');
+      }
+    };
+
+    getIP();
+  }, []);
 
   useEffect(() => {
     if (searchFilter.length > 2 && searchFilter.length < 40) {
