@@ -170,8 +170,8 @@ export const getPosts = cache(async (
 
     const postIds = tagPosts.map(tagPost => tagPost.post_id);
 
-    // Now filter posts based on the search term in title or the fetched post IDs
-    query = query.or(`title.ilike.%${searchTerm}%,id.in.(${postIds.join(',')})`);
+    // Now filter posts based on the search term in title, description, or the fetched post IDs
+    query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,id.in.(${postIds.join(',')})`);
   }
 
   // Apply limit only if it's defined

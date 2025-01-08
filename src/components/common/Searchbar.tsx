@@ -4,24 +4,28 @@ import { useEffect, useState, useMemo, Dispatch, SetStateAction } from "react";
 import { debounce } from 'lodash';
 import { searchPosts } from "@/app/actions/search";
 import { BlogPost, PortfolioPost } from "@/types/fetchedData.types";
+import validator from 'validator';
 
-export default function Searchbar({ post_type, SetPosts } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>> }) {
+export default function Searchbar({ post_type, SetPosts, initialPosts } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>; initialPosts: BlogPost[] | PortfolioPost[] }) {
   const [searchFilter, setSearchFilter] = useState('');
 
   const debouncedSearch = useMemo(() =>
     debounce(async (searchQuery: string) => {
-      // api call
-      const newPosts = await searchPosts(post_type, searchQuery, '12');
+        // api call
+        const newPosts = await searchPosts(post_type, searchQuery, '12');
 
-      SetPosts(newPosts.posts || []);
+        SetPosts(newPosts.posts || []);
+
     }, 300),
     []
   );
 
 
   useEffect(() => {
-    if (searchFilter.length > 2) {
-      debouncedSearch(searchFilter);
+    if (searchFilter.length > 2 && searchFilter.length < 40) {
+      debouncedSearch(validator.escape(searchFilter));
+    } else if (searchFilter.length === 0) {
+      SetPosts(initialPosts);
     }
 
     // Cleanup function to cancel any pending debounced calls
