@@ -14,6 +14,8 @@ export const checkRateLimit = cache((identifier: string): boolean => {
   const now = Date.now();
   const entry = rateLimitStore.get(identifier);
 
+  console.log(identifier)
+
   if (!entry || now - entry.timestamp > RATE_LIMIT_DURATION) {
     rateLimitStore.set(identifier, { count: 1, timestamp: now });
     return true;

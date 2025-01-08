@@ -1,41 +1,35 @@
 'use client'
-import { Search } from "lucide-react";
-import { useEffect, useState, useMemo, Dispatch, SetStateAction } from "react";
+import { Search } from 'lucide-react';
+import { useEffect, useState, useMemo, Dispatch, SetStateAction, useRef } from "react";
 import { debounce } from 'lodash';
 import { searchPosts } from "@/app/actions/search";
 import { BlogPost, PortfolioPost } from "@/types/fetchedData.types";
 import validator from 'validator';
+import { TokenBucket } from "@/utils/tokenBucket"
 
-export default function Searchbar({ post_type, SetPosts, initialPosts } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>; initialPosts: BlogPost[] | PortfolioPost[] }) {
+export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRateLimited } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>; SetIsRateLimited: Dispatch<SetStateAction<boolean>>;  initialPosts: BlogPost[] | PortfolioPost[] }) {
   const [searchFilter, setSearchFilter] = useState('');
-  const [clientIP, setClientIP] = useState('');
+  const tokenBucketRef = useRef(new TokenBucket(5, 1)); // 5 tokens, refill 1 token per second
 
   const debouncedSearch = useMemo(() =>
     debounce(async (searchQuery: string) => {
-        // api call
-        const newPosts = await searchPosts(post_type, searchQuery, clientIP);
-
-        SetPosts(newPosts.posts || []);
-
+      if (tokenBucketRef.current.tryConsume()) {
+        SetIsRateLimited(false);
+        try {
+          const newPosts = await searchPosts(post_type, searchQuery);
+          SetPosts(newPosts.posts || []);
+        } catch (error) {
+          console.error('Search error:', error);
+          // Handle error (e.g., show error message to user)
+        }
+      } else {
+        SetIsRateLimited(true);
+        console.log('Rate limit exceeded. Please wait before searching again.');
+        // You could also show a user-friendly message here
+      }
     }, 300),
     []
   );
-
-  useEffect(() => {
-    const getIP = async () => {
-      try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        setClientIP(data.ip);
-      } catch (error) {
-        console.error('Error fetching IP:', error);
-        // Fallback to a default value or local IP
-        setClientIP('127.0.0.1');
-      }
-    };
-
-    getIP();
-  }, []);
 
   useEffect(() => {
     if (searchFilter.length > 2 && searchFilter.length < 40) {

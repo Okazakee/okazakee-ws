@@ -1,5 +1,4 @@
 # Major todos
-- Include brief desc in search params for posts.
 - Skeleton loading for fetched stuff like images or posts when using apis.
 - i18n implementation, english/italian.
 - Build hamburger menu for mobile layout navigation
