@@ -2,8 +2,7 @@ import React from 'react';
 import { getPosts, getBlogSection, getPortfolioSection } from '@/utils/getData';
 import { PortfolioPost, BlogPost, BlogSection, PortfolioSection } from '@/types/fetchedData.types';
 import { CircleX } from 'lucide-react';
-import Postcard from '@/components/common/Postcard';
-import Searchbar from '@/components/common/Searchbar';
+import PostList from '@/components/common/PostList';
 
 export async function generateMetadata({
   params
@@ -73,11 +72,8 @@ export default async function PostsPage({
               {post_type === blogTitle.toLowerCase() ? blogTitle : portfolioTitle}
             </h1>
             <h3 className="mb-10 md:mb-10 md:mx-10 mx-5 text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: post_type === blogTitle.toLowerCase() ? blogSubtitle : portfolioSubtitle }}></h3>
-            <Searchbar posts={posts} />
+            <PostList initialPosts={posts} post_type={post_type} />
             <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
-              {posts.map((post) => (
-                <Postcard key={post.id} post={post} />
-              ))}
             </div>
           </>
         ) : (

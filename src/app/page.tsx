@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import Contacts from "@components/landing/Contacts";
 import Skills from "@components/landing/Skills";
 import Hero from "@components/landing/Hero";
-import { getHeroSection, getSkillsSection, getPortfolioSection, getContactSection, getBlogSection } from "@/utils/getData";
+import { getHeroSection, getSkillsSection, getPortfolioSection, getContactsSection, getBlogSection } from "@/utils/getData";
 import PostsSection from "@/components/landing/PostsSections";
 import { ErrorDiv } from "@/components/common/ErrorDiv";
 
@@ -44,7 +44,7 @@ export default async function Home() {
   const skillsSection = await getSkillsSection();
   const portfolioSection = await getPortfolioSection();
   const blogSection = await getBlogSection();
-  const contactSection = await getContactSection();
+  const contactSection = await getContactsSection();
 
 
 

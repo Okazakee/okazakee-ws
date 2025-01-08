@@ -1,23 +1,26 @@
 'use client'
 import { Search } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
-import { debounce } from 'lodash'
-import { PortfolioPost, BlogPost } from "@/types/fetchedData.types";
+import { useEffect, useState, useMemo, Dispatch, SetStateAction } from "react";
+import { debounce } from 'lodash';
+import { searchPosts } from "@/app/actions/search";
+import { BlogPost, PortfolioPost } from "@/types/fetchedData.types";
 
-export default function Searchbar({ /* posts */ } : {posts: PortfolioPost[] | BlogPost[]}) {
+export default function Searchbar({ post_type, SetPosts } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>> }) {
   const [searchFilter, setSearchFilter] = useState('');
 
   const debouncedSearch = useMemo(() =>
-    debounce(async (value: string) => {
+    debounce(async (searchQuery: string) => {
       // api call
-      console.log(value);
+      const newPosts = await searchPosts(post_type, searchQuery, '12');
+
+      SetPosts(newPosts.posts || []);
     }, 300),
     []
   );
 
 
   useEffect(() => {
-    if (searchFilter.length >= 3) {
+    if (searchFilter.length > 2) {
       debouncedSearch(searchFilter);
     }
 

@@ -6,7 +6,8 @@ const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 
 // Initialize Supabase client
-const supabase = createClient(supabaseUrl!, supabaseKey!)
+const supabase = createClient(supabaseUrl!, supabaseKey!);
+
 export const getHeroSection = cache(async (): Promise<HeroSection | null> => {
   const { data, error } = await supabase
     .from('hero_section')
@@ -115,7 +116,7 @@ export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
   return sectionData;
 });
 
-export const getContactSection = cache(async (): Promise<ContactSection | null> => {
+export const getContactsSection = cache(async (): Promise<ContactSection | null> => {
   const { data, error } = await supabase
     .from('contacts_section')
     .select(`
@@ -135,9 +136,13 @@ export const getContactSection = cache(async (): Promise<ContactSection | null> 
   return data;
 });
 
-export const getPosts = cache(async ( type: string, limit?: number, lang?: string): Promise<BlogPost[] | PortfolioPost[] | null> => {
-
-  const query = supabase
+export const getPosts = cache(async (
+  type: string,
+  limit?: number,
+  lang?: string,
+  searchParams?: string
+): Promise<BlogPost[] | PortfolioPost[] | null> => {
+  let query = supabase
     .from('posts')
     .select(`
       *,
@@ -147,9 +152,31 @@ export const getPosts = cache(async ( type: string, limit?: number, lang?: strin
     .eq('post_type', type)
     .order('created_at', { ascending: false });
 
+  // Apply search if searchParams is present
+  if (searchParams) {
+    // Convert search parameter to lowercase for case-insensitive search
+    const searchTerm = searchParams.toLowerCase();
+
+    // First, fetch post IDs from post_tags that match the search term
+    const { data: tagPosts, error: tagPostsErr } = await supabase
+      .from('post_tags')
+      .select('post_id')
+      .ilike('tag', `%${searchTerm}%`);
+
+    if (tagPostsErr) {
+      console.error('Error fetching post tags:', tagPostsErr);
+      return null;
+    }
+
+    const postIds = tagPosts.map(tagPost => tagPost.post_id);
+
+    // Now filter posts based on the search term in title or the fetched post IDs
+    query = query.or(`title.ilike.%${searchTerm}%,id.in.(${postIds.join(',')})`);
+  }
+
   // Apply limit only if it's defined
   if (limit !== undefined) {
-    query.limit(limit);
+    query = query.limit(limit);
   }
 
   const { data: postsData, error: postsErr } = await query;

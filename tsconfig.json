@@ -33,7 +33,7 @@
       "@fonts/*": ["./src/fonts/*"],
       "@styles/*": ["./src/public/*.css"],
       "@config/*": ["./*config.ts"],
-      "@root/*": ["./*"]
+      "@libs/*": ["./src/libs/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

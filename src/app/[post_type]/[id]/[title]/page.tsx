@@ -1,7 +1,7 @@
 import { PostTags } from '@/components/common/PostTags';
 import ShareButton from '@/components/common/ShareButton';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
-import { getPosts, getPost } from '@/utils/getData';
+import { getPosts, getPost } from '@utils/getData';
 import { ChevronLeft, Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
@@ -123,7 +123,7 @@ export default async function Page({
 
       </div>
 
-      <div className={`flex mb-4 md:hidden ${ post.source_link && post.demo_link ? 'justify-center' : 'justify-start'}`}>
+      <div className={`${post_type === 'portfolio' ? 'flex mb-4 md:hidden' : 'hidden'}  ${ post.source_link && post.demo_link ? 'justify-center' : 'justify-start'}`}>
         {post.source_link &&
           <Link
             target="_blank"

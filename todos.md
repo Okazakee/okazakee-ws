@@ -1,5 +1,5 @@
 # Major todos
-- Initial posts in portfolio and blog pages should be server side components, if user interacts with search or infinitescroll, then use client-side posts list.
+- Include brief desc in search params for posts.
 - Skeleton loading for fetched stuff like images or posts when using apis.
 - i18n implementation, english/italian.
 - Build hamburger menu for mobile layout navigation
@@ -11,4 +11,5 @@
 - Better posts writing.
 - Add links to main pages of tech stack in db to use as button link for skills.
 - Refined meta tags.
+- Migrate folder structure from src to app, move all folders inside app.
 - Small cms to edit most important data such as about description, propic, skills, posts, contacts.
