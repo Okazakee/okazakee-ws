@@ -1,16 +1,38 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import useThemeStore from '@/store/themeStore';
-import { SunMoon } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 export default function ThemeToggle() {
-  const { toggleTheme } = useThemeStore();
+  const { toggleTheme, isDark } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; // or return a placeholder
+  }
 
   return (
-    <button onClick={toggleTheme} className="rounded-md space-x-2 flex items-center">
-      <SunMoon size={35} className='mr-2' />
-      <span className='text-3xl'>
-        Dark mode
+    <button
+      onClick={toggleTheme}
+      className="space-x-2 relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-[400ms] ease-in-out h-[4rem] w-[12rem]"
+    >
+      <div className='relative w-[1.875rem] text-darktext dark:text-lighttext'>
+        <Sun
+          size={30}
+          className={`transition-all text-lighttext duration-[400ms] ease-in-out absolute top-1/2 transform -translate-y-1/2 ${isDark ? 'opacity-100' : 'opacity-0'}`}
+        />
+        <Moon
+          size={30}
+          className={`transition-all text-darktext duration-[400ms] ease-in-out absolute top-1/2 transform -translate-y-1/2 ${isDark ? 'opacity-0' : 'opacity-100'}`}
+        />
+      </div>
+      <span className='text-xl text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[8rem]'>
+        {isDark ? 'Light' : 'Dark'} Mode
       </span>
     </button>
   );

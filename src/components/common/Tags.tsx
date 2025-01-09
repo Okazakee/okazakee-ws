@@ -44,7 +44,7 @@ export const Tags = ({ tags }: { tags: PostTag[] }) => {
     <div className="relative overflow-hidden w-full">
       <div
         ref={containerRef}
-        className={`flex whitespace-nowrap transition-all duration-300 ${
+        className={`flex whitespace-nowrap transition-all duration-[400ms] ease-in-out ${
           shouldAnimate ? 'animate-carousel' : 'flex-wrap'
         }`}
         style={

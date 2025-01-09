@@ -27,18 +27,18 @@ export default function ShareButton({
   return (
     <button
       onClick={handleCopy}
-      className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-300
+      className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-[400ms] ease-in-out
       ${copied ? 'w-[6rem]' : 'w-5'}`}
       title={buttonTitle}
     >
       <div className='flex absolute right-0'>
         <Check
-          className={`w-5 h-5 mr-2 text-green-500 transition-opacity duration-300 ${
+          className={`w-5 h-5 mr-2 text-green-500 transition-all duration-[400ms] ease-in-out ${
             copied ? 'opacity-100' : 'opacity-0'
           }`}
         />
         <span
-          className={`text-sm transition-opacity duration-200 ${
+          className={`text-sm transition-all duration-[400ms] ease-in-out ${
             copied ? 'opacity-100' : 'opacity-0'
           }`}
         >

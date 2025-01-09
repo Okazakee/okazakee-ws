@@ -34,7 +34,7 @@ export default function CopyLinkButton({
       {copied ? (
         <Check className="w-4 h-4 text-green-500" />
       ) : (
-        <Copy className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Copy className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
       )}
     </button>
   );

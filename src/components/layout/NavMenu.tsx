@@ -40,7 +40,7 @@ export default function MobileNav({ className }: { className?: string }) {
           </button>
         </div>
       <nav
-        className={`fixed mt-2 backdrop-blur-[70px] shadow-lg z-10 -top-1.5 left-1/2 transform -translate-x-1/2 w-[100vw] h-[100svh] max-w-full max-h-full right-auto flex justify-center items-center transition-all duration-300 ease-in-out ${
+        className={`fixed mt-2 backdrop-blur-[70px] shadow-lg z-10 -top-1.5 left-1/2 transform -translate-x-1/2 w-[100vw] h-[100vh] max-w-full max-h-full right-auto flex justify-center items-center transition-all duration-[400ms] ease-in-out ${
           isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
         }`}
       >
@@ -49,7 +49,7 @@ export default function MobileNav({ className }: { className?: string }) {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex text-3xl items-center space-x-2"
+                className="flex text-3xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out"
                 onClick={() => setIsOpen(false)}
               >
                 <item.icon size={35} className="mr-2" />
@@ -57,8 +57,10 @@ export default function MobileNav({ className }: { className?: string }) {
               </Link>
             </li>
           ))}
-          <ThemeToggle />
-          <LanguageToggle />
+          <div className='flex space-x-5 bottom-10 absolute left-1/2 transform -translate-x-1/2'>
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
         </ul>
       </nav>
     </div>
