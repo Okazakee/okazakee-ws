@@ -1,5 +1,5 @@
 # Prod ready todos
-- Build a language selector in footer, maybe use same main component as darkmode switcher.
+- Build lang selector and dark mode switch in mobile main menu, 2 buttons bottom middle, maybe same as github/demo buttons in post page.
 - Better posts writing.
 - Refined meta tags.
 - Add back button somehow in post pages.
