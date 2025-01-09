@@ -29,7 +29,7 @@ export default function PostsSection({
 
       {posts.length > 2 &&
         <Link href={isBlog ? '/blog' : '/portfolio'}>
-          <button className="md:bg-opacity-80 md:hover:bg-opacity-100 hover:scale-105 bg-main text-lighttext transition-all px-5 py-2 rounded-xl mt-10 text-xl">
+          <button className="md:bg-opacity-80 md:hover:bg-opacity-100 bg-main text-lighttext transition-all px-5 py-2 rounded-xl mt-10 text-xl">
             Explore more...
           </button>
         </Link>

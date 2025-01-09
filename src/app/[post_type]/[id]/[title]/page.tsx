@@ -49,8 +49,8 @@ export default async function Page({
   return (
     <article className="max-w-5xl mx-auto px-4 mb-20 md:mb-32 md:mt-16 mt-10">
 
-      <header className="flex">
-          <ChevronLeft size={35} />
+      <header className="flex relative mb-6 md:mb-0">
+          {/* <ChevronLeft className='absolute md:-ml-10 -ml-5' size={35} /> */}
         <div>
           <h1 className="md:text-4xl text-3xl font-bold mb-4">{post.title}</h1>
           <p className="text-xl">{post.description}</p>
@@ -61,7 +61,7 @@ export default async function Page({
       <PostTags tags={post.post_tags} />
 
       {/* Main Image */}
-      <div className="w-full h-[16rem] md:h-[24rem] relative mx-auto">
+      <div className="w-full h-[16rem] md:h-[24rem] relative mx-auto mt-6 md:mt-0">
         <Image
           placeholder='blur'
           blurDataURL={post.blurhashURL}
@@ -77,9 +77,9 @@ export default async function Page({
       </div>
 
       {/* Quick Info */}
-      <div className="flex gap-5 md:justify-normal md:gap-6 sm:gap-4 my-4 md:my-8 text-lighttext items-center">
+      <div className="flex gap-5 md:justify-normal md:gap-6 sm:gap-4 my-6 md:my-8 text-lighttext items-center">
 
-      <div className={`hidden gap-6 ${post_type === 'portfolio' && 'md:flex'}`}>
+        <div className={`hidden gap-6 ${post_type === 'portfolio' && 'md:flex'}`}>
           {post.source_link &&
             <Link
               target="_blank"
@@ -125,7 +125,7 @@ export default async function Page({
 
       </div>
 
-      <div className={`${post_type === 'portfolio' ? 'flex mb-4 md:hidden' : 'hidden'}  ${ post.source_link && post.demo_link ? 'justify-center' : 'justify-start'}`}>
+      <div className={`${post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'}  ${ post.source_link && post.demo_link ? 'justify-center' : 'justify-start'}`}>
         {post.source_link &&
           <Link
             target="_blank"

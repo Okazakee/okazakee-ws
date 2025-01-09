@@ -4,6 +4,7 @@
 - Build a language selector in footer, maybe use same main component as darkmode switcher.
 - Better posts writing.
 - Refined meta tags.
+- Add back button somehow in post pages.
 
 # no priority todos
 - i18n implementation, english/italian.
