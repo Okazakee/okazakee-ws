@@ -13,7 +13,7 @@ const config: Config = {
         'custom-hover': 'var(--tw-hover-bg-color)',
       },
       screens: {
-        'mdh': { raw: '(min-width: 768px) and (min-height: 900px)' },
+        'mdh': { raw: '(min-width: 768px) and (max-height: 1080px)' },
         '2xlh': { raw: '(min-width: 1536px) and (min-height: 1220px)' },
       },
       backgroundImage: {

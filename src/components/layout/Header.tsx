@@ -7,7 +7,7 @@ import MobileNav, { DesktopNav } from "./NavMenu";
 const Header = () => {
 
   return (
-    <header className="max-w-screen-2xl mx-auto pt-2">
+    <header className="max-w-screen-2xl mx-auto pt-2 mdh:scale-[90%]">
       <div className="flex justify-center items-center pt-5 mx-5">
         <Link
           href={"/"}

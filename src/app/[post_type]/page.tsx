@@ -64,7 +64,7 @@ export default async function PostsPage({
   const posts = await getPosts(post_type) as PortfolioPost[] | BlogPost[];
 
   return (
-    <section className="md:mt-20 mt-10 flex justify-center">
+    <section className="md:mt-20 mt-10 flex justify-center mdh:scale-[90%] mdh:-mt-10">
       <div className="xl:mx-16 text-center mb-20 max-w-[120rem]">
         {posts.length > 0 ? (
           <>

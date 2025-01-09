@@ -10,7 +10,7 @@ export default function Skills({
   const { section_name, subtitle, skills_categories } = skillsSection;
 
   return (
-    <section id="skills" className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh mt-20 md:mt-0 mb-20 md:mb-32">
+    <section id="skills" className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh mt-20 md:mt-0 mb-20 md:mb-32 mdh:scale-[90%]">
       <div className="w-full h-full">
         <h1 className="xl:text-6xl text-4xl mb-10 xl:mb-5">{section_name}</h1>
         <h3 className="xl:mb-20 md:text-2xl text-[1.3rem] mb-10"
