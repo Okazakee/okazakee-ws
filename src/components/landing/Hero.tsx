@@ -27,7 +27,7 @@ function Hero({ heroSection }: { heroSection: HeroSection }){
           </div>
           <div className="flex items-center text-center mt-10 md:mt-20">
             <div>
-              <h1 className="xl:text-5xl text-4xl mb-10" dangerouslySetInnerHTML={{ __html: section_name }}></h1>
+              <h1 className="xl:text-6xl text-4xl mb-10" dangerouslySetInnerHTML={{ __html: section_name }}></h1>
               <p className="text-left text-[1.3rem] tracking-[0.05em] lg:text-2xl" dangerouslySetInnerHTML={{ __html: desc }}></p>
             </div>
           </div>

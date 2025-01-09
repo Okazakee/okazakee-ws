@@ -11,7 +11,7 @@ const supabase = createClient(supabaseUrl!, supabaseKey!);
 export const getHeroSection = cache(async (): Promise<HeroSection | null> => {
   const { data, error } = await supabase
     .from('hero_section')
-    .select('id, propic, name, job_position, section_name, desc, language')
+    .select('id, propic, name, job_position, section_name, desc, language, blurhashURL')
     .eq('language', 'en')
     .single();
 
@@ -29,7 +29,7 @@ export const getSkillsSection = cache(async (): Promise<SkillsSection | null> =>
       id, section_name, subtitle, language,
       skills_categories: skills_categories (
         id, name, language, skills_section,
-        skills (id, title, icon, invert, category_id)
+        skills (id, title, icon, invert, category_id, blurhashURL)
       )
     `)
     .eq('language', 'en')

@@ -29,7 +29,7 @@ export default function Skills({
                     src={skill.icon}
                     width={80}
                     height={80}
-                    className={`mx-auto w-[70px] xl:w-[80px] ${skill.invert && "dark:invert"}`}
+                    className={`mx-auto rounded-xl w-[70px] xl:w-[80px] ${skill.invert && "dark:invert"}`}
                     alt={skill.title}
                   />
                   <h3 className="mt-5 text-xl xl:text-2xl">{skill.title}</h3>

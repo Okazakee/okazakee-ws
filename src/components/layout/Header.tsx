@@ -14,7 +14,6 @@ const Header = () => {
           className="xl:mr-auto xl:mx-0 xl:static"
         >
           <Image
-            placeholder="blur"
             src={logo}
             width={200}
             height={100}

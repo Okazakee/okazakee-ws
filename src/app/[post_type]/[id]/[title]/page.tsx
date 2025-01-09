@@ -63,9 +63,6 @@ export default async function Page({
       {/* Main Image */}
       <div className="w-full h-[16rem] md:h-[24rem] relative mx-auto">
         <Image
-          layout="intrinsic"
-          placeholder='blur'
-          blurDataURL={post.blurhashURL}
           src={post.image}
           fill
           style={{

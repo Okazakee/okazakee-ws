@@ -1,7 +1,6 @@
 'use server'
 
 import { getPosts } from '@/utils/getData'
-import { checkRateLimit } from '@/libs/rateLimiters'
 
 export async function searchPosts(
   post_type: string,
