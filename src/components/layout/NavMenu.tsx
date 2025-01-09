@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Menu, X, Home, Drill, Briefcase, BookOpenText, Contact, SquareMenu } from 'lucide-react'
+import { Menu, X, Home, Drill, Briefcase, BookOpenText, Contact } from 'lucide-react'
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
 
