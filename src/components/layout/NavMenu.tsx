@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, Home, Drill, Briefcase, BookOpenText, Contact } from 'lucide-react'
 
@@ -15,11 +15,22 @@ const menuItems = [
 export default function MobileNav({ className }: { className?: string }) {
   const [isOpen, setIsOpen] = useState(false)
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'; // Disable scrolling
+    } else {
+      document.body.style.overflow = 'auto'; // Enable scrolling
+    }
+    return () => {
+      document.body.style.overflow = 'auto'; // Ensure scroll is unlocked on unmount
+    };
+  }, [isOpen]);
+
   return (
     <div className={`${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-lighttext relative w-10 h-10"
+        className="p-2 text-lighttext relative w-10 h-10 z-20"
         aria-expanded={isOpen}
       >
         <div className="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out">
@@ -30,31 +41,30 @@ export default function MobileNav({ className }: { className?: string }) {
             aria-hidden="true"
           />
         </div>
-        <div className="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-in-out">
-          <X
-            className={`w-10 h-10 p-1 rounded-md bg-secondary transition-all duration-300 ${
-              isOpen ? 'opacity-100' : 'opacity-0'
-            }`}
-            aria-hidden="true"
-          />
-        </div>
       </button>
       <nav
-        className={`
-          mt-2 p-4 backdrop-blur-3xl rounded-lg shadow-lg absolute z-10 right-0 w-[12rem] flex justify-center
-          transition-all duration-300 ease-in-out
-          ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
-        `}
+        className={`fixed mt-2 backdrop-blur-3xl rounded-lg shadow-lg z-10 top-0 left-1/2 transform -translate-x-1/2 w-[95vw] h-[99svh] max-w-full max-h-full right-auto flex justify-center items-center border border-main transition-all duration-300 ease-in-out ${
+          isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+        }`}
       >
-        <ul className="space-y-2">
+        <div className="absolute top-4 right-4 z-30">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="text-white"
+            aria-label="Close menu"
+          >
+            <X className="w-10 h-10 p-1 rounded-md" />
+          </button>
+        </div>
+        <ul className="space-y-16 p-4">
           {menuItems.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex text-xl items-center space-x-2 text-white hover:text-gray-300 transition-colors duration-200"
+                className="flex text-3xl items-center space-x-2 text-white hover:text-gray-300 transition-colors duration-200"
                 onClick={() => setIsOpen(false)}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-8 w-8 mr-2" />
                 <span>{item.label}</span>
               </Link>
             </li>
