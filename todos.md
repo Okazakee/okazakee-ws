@@ -1,12 +1,12 @@
 # Prod ready todos
-- i18n implementation, english/italian.
 - Build hamburger menu for mobile layout navigation
-- Move darkmode selector in footer.f
+- Move darkmode selector in footer.
 - Build a language selector in footer, maybe use same main component as darkmode switcher.
 - Better posts writing.
 - Refined meta tags.
 
 # no priority todos
+- i18n implementation, english/italian.
 - Setup prettier.
 - Be sure of UI scaling, reducing inconsistence between LO-HI DPI screens.
 - Add links to main pages of tech stack in db to use as button link for skills.
