@@ -1,11 +1,28 @@
 'use client'
 import { useRef, useEffect, useState } from 'react';
-import { PostTag } from "@/types/fetchedData.types";
 import { Tag } from 'lucide-react';
+import { PostTag } from "@/types/fetchedData.types";
+
+const useWindowSize = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return { isMobile };
+};
 
 export const Tags = ({ tags }: { tags: PostTag[] }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [totalWidth, setTotalWidth] = useState(0);
+  const { isMobile } = useWindowSize();
 
   useEffect(() => {
     if (containerRef.current) {
@@ -19,13 +36,15 @@ export const Tags = ({ tags }: { tags: PostTag[] }) => {
   }, [tags]);
 
   const totalChars = tags.reduce((sum, tag) => sum + tag.tag.length, 0);
-  const shouldAnimate = totalChars > 40 && tags.length > 2;
+  const shouldAnimate = isMobile
+    ? (totalChars > 30 || tags.length > 3)
+    : (totalChars > 40 || tags.length > 4);
 
   return (
     <div className="relative overflow-hidden w-full">
       <div
         ref={containerRef}
-        className={`flex whitespace-nowrap ${
+        className={`flex whitespace-nowrap transition-all duration-300 ${
           shouldAnimate ? 'animate-carousel' : 'flex-wrap'
         }`}
         style={
@@ -50,3 +69,5 @@ export const Tags = ({ tags }: { tags: PostTag[] }) => {
     </div>
   );
 };
+
+export default Tags;
