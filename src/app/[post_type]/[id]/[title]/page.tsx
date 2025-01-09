@@ -2,7 +2,7 @@ import { PostTags } from '@/components/common/PostTags';
 import ShareButton from '@/components/common/ShareButton';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@utils/getData';
-import { ChevronLeft, Clock, ExternalLink, Github, Star } from 'lucide-react';
+import { Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
