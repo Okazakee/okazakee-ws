@@ -4,13 +4,16 @@ import { HeroSection } from '@/types/fetchedData.types';
 
 function Hero({ heroSection }: { heroSection: HeroSection }){
 
-  const { propic, name, job_position, section_name, desc } = heroSection;
+  const { propic, name, job_position, section_name, desc, blurhashURL } = heroSection;
 
   return (
     <section className="md:mx-10 mx-5 md:h-svh flex items-center">
         <div>
           <div className="flex flex-col xl:flex-row items-center xl:justify-around">
             <Image
+              layout="intrinsic"
+              placeholder='blur'
+              blurDataURL={blurhashURL}
               src={propic}
               width={400}
               height={400}

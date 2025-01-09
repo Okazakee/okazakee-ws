@@ -6,6 +6,7 @@ export type HeroSection = {
   section_name: string;
   desc: string;
   language: string;
+  blurhashURL: string;
 };
 
 export type SkillsSection = {
@@ -30,6 +31,7 @@ export type Skill = {
   icon: string;
   invert: boolean;
   category_id: number;
+  blurhashURL: string;
 };
 
 export type PortfolioSection = {
@@ -50,6 +52,7 @@ export type PortfolioPost = {
   body: string;
   post_type: string;
   portfolio_section: number;
+  blurhashURL: string;
   post_tags: PostTag[];
 };
 
@@ -71,6 +74,7 @@ export type BlogPost = {
   body: string;
   post_type: string;
   blog_section: number;
+  blurhashURL: string;
   post_tags: PostTag[];
 };
 

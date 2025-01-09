@@ -23,6 +23,9 @@ export default function Skills({
               {skillCategory.skills.map((skill, i) => (
                 <div key={i} className="hover:scale-110 transition-all mx-auto my-5 md:my-10 w-[calc(33.333%-1rem)]">
                   <Image
+                    layout="intrinsic"
+                    placeholder='blur'
+                    blurDataURL={skill.blurhashURL}
                     src={skill.icon}
                     width={80}
                     height={80}

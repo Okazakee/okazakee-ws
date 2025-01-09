@@ -14,6 +14,9 @@ export default function Postcard({ post } : { post: PortfolioPost | BlogPost }) 
     >
       <div className="w-full h-[12rem] md:h-[16rem] relative mx-auto mb-2">
         <Image
+          layout="intrinsic"
+          placeholder='blur'
+          blurDataURL={post.blurhashURL}
           src={post.image}
           fill
           style={{
