@@ -1,5 +1,4 @@
 # Prod ready todos
-- Build hamburger menu for mobile layout navigation
 - Move darkmode selector in footer.
 - Build a language selector in footer, maybe use same main component as darkmode switcher.
 - Better posts writing.
@@ -7,6 +6,7 @@
 - Add back button somehow in post pages.
 
 # no priority todos
+- Blur shapes background.
 - i18n implementation, english/italian.
 - Setup prettier.
 - Be sure of UI scaling, reducing inconsistence between LO-HI DPI screens.
