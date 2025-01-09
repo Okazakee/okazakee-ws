@@ -27,7 +27,7 @@ export default function ShareButton({
   return (
     <button
       onClick={handleCopy}
-      className={`${className} relative flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-300
+      className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-300
       ${copied ? 'w-[6rem]' : 'w-5'}`}
       title={buttonTitle}
     >

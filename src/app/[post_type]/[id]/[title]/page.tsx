@@ -125,7 +125,7 @@ export default async function Page({
 
       </div>
 
-      <div className={`${post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'}  ${ post.source_link && post.demo_link ? 'justify-center' : 'justify-start'}`}>
+      <div className={`text-lighttext ${post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'}  ${ post.source_link && post.demo_link ? 'justify-center' : 'justify-start'}`}>
         {post.source_link &&
           <Link
             target="_blank"
