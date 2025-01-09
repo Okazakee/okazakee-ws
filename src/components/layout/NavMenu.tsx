@@ -15,7 +15,7 @@ const menuItems = [
 ];
 
 export default function MobileNav({ className }: { className?: string }) {
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
