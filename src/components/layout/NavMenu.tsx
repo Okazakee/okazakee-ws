@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, Home, Drill, Briefcase, BookOpenText, Contact } from 'lucide-react'
+import ThemeToggle from './ThemeToggle';
+import LanguageToggle from './LanguageToggle';
 
 const menuItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -43,7 +45,7 @@ export default function MobileNav({ className }: { className?: string }) {
         </div>
       </button>
       <nav
-        className={`fixed mt-2 backdrop-blur-3xl rounded-lg shadow-lg z-10 top-0 left-1/2 transform -translate-x-1/2 w-[95vw] h-[99svh] max-w-full max-h-full right-auto flex justify-center items-center border border-main transition-all duration-300 ease-in-out ${
+        className={`fixed mt-2 backdrop-blur-3xl rounded-lg shadow-lg z-10 top-0 left-1/2 transform -translate-x-1/2 w-[100vw] h-[100svh] max-w-full max-h-full right-auto flex justify-center items-center transition-all duration-300 ease-in-out ${
           isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
         }`}
       >
@@ -53,7 +55,7 @@ export default function MobileNav({ className }: { className?: string }) {
             className="text-white"
             aria-label="Close menu"
           >
-            <X className="w-10 h-10 p-1 rounded-md" />
+            <X size={50} className="text-darktext dark:text-lighttext" />
           </button>
         </div>
         <ul className="space-y-16 p-4">
@@ -61,14 +63,16 @@ export default function MobileNav({ className }: { className?: string }) {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex text-3xl items-center space-x-2 text-white hover:text-gray-300 transition-colors duration-200"
+                className="flex text-3xl items-center space-x-2 transition-colors duration-200"
                 onClick={() => setIsOpen(false)}
               >
-                <item.icon className="h-8 w-8 mr-2" />
+                <item.icon size={35} className="mr-2" />
                 <span>{item.label}</span>
               </Link>
             </li>
           ))}
+          <ThemeToggle />
+          <LanguageToggle />
         </ul>
       </nav>
     </div>

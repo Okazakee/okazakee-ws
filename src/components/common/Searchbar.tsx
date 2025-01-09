@@ -51,7 +51,7 @@ export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRate
           type="text"
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
-          placeholder="Search posts by title or tag..."
+          placeholder="Search posts by title, desc or tag..."
           className="md:text-xl w-full p-2 pl-10 rounded-xl border-2 bg-lighttext border-main focus:outline-none placeholder:text-darktext placeholder:opacity-70 text-darktext"
         />
         <Search

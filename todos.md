@@ -1,5 +1,4 @@
 # Prod ready todos
-- Move darkmode selector in footer.
 - Build a language selector in footer, maybe use same main component as darkmode switcher.
 - Better posts writing.
 - Refined meta tags.

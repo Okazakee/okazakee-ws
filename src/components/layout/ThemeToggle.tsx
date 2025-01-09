@@ -7,8 +7,11 @@ export default function ThemeToggle() {
   const { toggleTheme } = useThemeStore();
 
   return (
-    <button onClick={toggleTheme} className="rounded-md">
-      <SunMoon size={30} className='md:hover:stroke-main' />
+    <button onClick={toggleTheme} className="rounded-md space-x-2 flex items-center">
+      <SunMoon size={35} className='mr-2' />
+      <span className='text-3xl'>
+        Dark mode
+      </span>
     </button>
   );
 }
