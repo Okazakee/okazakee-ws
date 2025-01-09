@@ -17,7 +17,7 @@ const Header = () => {
             src={logo}
             width={200}
             height={100}
-            className="dark:invert -mt-0.5 xl:w-[200px] w-[150px] transition-all duration-300"
+            className="dark:invert -mt-0.5 xl:w-[200px] w-[160px] transition-all duration-300"
             alt="logo"
           />
         </Link>
