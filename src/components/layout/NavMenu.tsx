@@ -72,7 +72,7 @@ export function DesktopNav({ className } : { className?: string }) {
   return (
     <nav className={`${className} hidden lg:flex text-xl`}>
       {menuItems.map((button) => (
-        <Link key={button.label} href={button.href} className="px-4 transition-all hover:text-main flex items-center">
+        <Link key={button.label} href={button.href} className="mx-4 transition-all hover:text-main flex items-center">
           <button.icon className="mr-2 -mt-1" />
           {button.label}
         </Link>
