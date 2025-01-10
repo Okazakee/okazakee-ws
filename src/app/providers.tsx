@@ -8,7 +8,7 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     // Toggle dark class on the HTML element
-    document.documentElement.classList.toggle('dark', isDark);
+    document.body.classList.toggle('dark', isDark);
   }, [isDark]);
 
   return <>{children}</>;

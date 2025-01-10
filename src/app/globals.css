@@ -9,7 +9,25 @@
   }
   body {
     @apply dark:text-lighttext text-darktext bg-bglight dark:bg-bgdark;
+    position: relative;
+    overflow: hidden;
   }
+
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url('./public/grain.png');
+    background-repeat: repeat;
+    filter: blur(0.7px);
+    z-index: -1;
+  }
+
+  body.dark::before {
+    background-image: url('./public/grain_dark.png');
+    opacity: 30%;
+  }
+
 
   label {
     @apply cursor-text text-main;
