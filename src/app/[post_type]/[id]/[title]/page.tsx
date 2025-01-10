@@ -130,10 +130,10 @@ export default async function Page({
           <Link
             target="_blank"
             href={post.source_link}
-            className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 xs:py-3 rounded-lg bg-secondary`}
+            className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
           >
-            <Github size={18} className='xs:w-[1.5rem] sm:w-auto h-auto' />
-            <div className='mt-0.5 md:mt-0 xs:text-lg text-base'>
+            <Github size={18} />
+            <div className='mt-0.5 md:mt-0'>
               <span className=" md:inline">View </span>
               Source
             </div>
@@ -144,10 +144,10 @@ export default async function Page({
           <Link
             target="_blank"
             href={post.demo_link}
-            className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 xs:py-3 rounded-lg bg-secondary`}
+            className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
           >
-            <ExternalLink size={18} className='xs:w-[1.5rem] sm:w-auto h-auto' />
-            <div className='mt-0.5 md:mt-0 xs:text-lg text-base'>
+            <ExternalLink size={18} />
+            <div className='mt-0.5 md:mt-0'>
               <span className=" md:inline">Live </span>
               Demo
             </div>

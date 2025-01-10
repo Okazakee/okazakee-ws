@@ -1,6 +1,5 @@
 # Prod ready todos
 - i18n implementation, english/italian.
-- Refined meta tags, check titles.
 - Better posts writing.
 
 # no priority todos
