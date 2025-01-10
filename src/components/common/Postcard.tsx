@@ -12,7 +12,7 @@ export default function Postcard({ post } : { post: PortfolioPost | BlogPost }) 
     <Link href={`/${post.post_type}/${post.id}/${slugifiedTitle}`}
       className={`hover:bg-tertiary bg-[#c5c5c5] dark:bg-[#0e0e0e] hover:text-lighttext border-2 p-3 border-secondary rounded-xl overflow-hidden cursor-pointer transition-all text-left flex flex-col justify-between md:w-[32rem] w-full max-w-[21rem] xs:min-w-[24rem] md:max-w-xl hover:scale-105`}
     >
-      <div className="w-full h-[12rem] md:h-[16rem] relative mx-auto mb-2">
+      <div className="w-full h-[12rem] md:h-[16rem] relative mx-auto mb-3">
         <Image
           placeholder='blur'
           blurDataURL={post.blurhashURL}

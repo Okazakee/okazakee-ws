@@ -25,7 +25,7 @@
 
   body.dark::before {
     background-image: url('./public/grain_dark.png');
-    opacity: 30%;
+    opacity: 40%;
   }
 
 

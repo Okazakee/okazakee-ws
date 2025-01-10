@@ -47,10 +47,9 @@ export default async function Page({
   const postURL = `https://okazakee.dev/${post_type}/${id}/${slugifiedTitle}`;
 
   return (
-    <article className="max-w-5xl mx-auto px-4 mb-20 md:mb-32 md:mt-16 mt-10 mdh:scale-[90%] mdh:-my-52">
+    <article className="max-w-5xl mx-auto px-4 mb-20 md:mb-32 md:mt-16 mt-10">
 
       <header className="flex relative mb-6 md:mb-0">
-          {/* <ChevronLeft className='absolute md:-ml-10 -ml-5' size={35} /> */}
         <div>
           <h1 className="md:text-4xl text-2xl xs:text-3xl sm:text-3xl font-bold mb-4">{post.title}</h1>
           <p className="xs:text-xl sm:text-xl">{post.description}</p>

@@ -38,7 +38,7 @@ export const Tags = ({ tags }: { tags: PostTag[] }) => {
   const totalChars = tags.reduce((sum, tag) => sum + tag.tag.length, 0);
   const shouldAnimate = isMobile
     ? (totalChars > 30 || tags.length > 3)
-    : (totalChars > 40 || tags.length > 4);
+    : (totalChars > 34 || tags.length > 4);
 
   return (
     <div className="relative overflow-hidden w-full">
