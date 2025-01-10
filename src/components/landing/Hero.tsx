@@ -7,7 +7,7 @@ function Hero({ heroSection }: { heroSection: HeroSection }){
   const { propic, name, job_position, section_name, desc, blurhashURL } = heroSection;
 
   return (
-    <section className="md:mx-10 mx-5 md:h-svh flex items-center mdh:scale-[90%]">
+    <section className="md:mx-10 mx-5 md:h-svh flex items-center mdh:mt-20">
         <div>
           <div className="flex flex-col xl:flex-row items-center xl:justify-around">
             <Image

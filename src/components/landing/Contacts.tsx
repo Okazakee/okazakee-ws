@@ -27,7 +27,7 @@ export default function Contacts({
   };
 
   return (
-    <section className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh my-20 md:my-0 mdh:scale-[90%]">
+    <section className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh my-20 md:my-0 mdh:mt-40">
         <div>
           <h1 className="xl:text-6xl text-4xl xs:text-5xl mb-5">{section_name}</h1>
           <h3 className="md:mb-20 mb-10 text-lg xs:text-[1.4rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>

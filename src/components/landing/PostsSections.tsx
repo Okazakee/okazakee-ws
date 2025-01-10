@@ -17,7 +17,7 @@ export default function PostsSection({
     const isBlog = 'blog_posts' in section;
 
   return (
-    <section id={isBlog ? 'blog' : 'portfolio'} className="text-center sm:mx-20 md:mx-auto md:min-h-lvh md:w-full mt-20 md:mt-0 mdh:scale-[90%]">
+    <section id={isBlog ? 'blog' : 'portfolio'} className="text-center sm:mx-20 md:mx-auto md:min-h-lvh md:w-full mt-20 md:mt-0 mdh:mt-40">
       <h1 className="xl:text-6xl md:text-5xl text-4xl xs:text-5xl mb-5">{section_name}</h1>
       <h3 className="mb-10 md:mb-20 text-lg xs:text-[1.4rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}></h3>
 
