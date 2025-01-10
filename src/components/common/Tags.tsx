@@ -59,7 +59,7 @@ export const Tags = ({ tags }: { tags: PostTag[] }) => {
         {tags.map((tag, i) => (
           <span
             key={i}
-            className="tag bg-secondary text-lighttext text-md gap-2 md:px-2 px-2 py-1 rounded-lg flex items-center mr-2 mb-1 mt-2"
+            className="tag bg-secondary text-lighttext text-base gap-2 px-2 xs:py-1 sm:py-1 pt-0.5 rounded-lg flex items-center mr-2 xs:mb-1 sm:mb-1 sm:mt-2 xs:mt-2 mt-1"
           >
             <Tag size={15} />
             {tag.tag}

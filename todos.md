@@ -1,5 +1,4 @@
 # Prod ready todos
-- Be sure of UI scaling, reducing inconsistence between LO-HI DPI screens.
 - i18n implementation, english/italian.
 - Refined meta tags, check titles.
 - Better posts writing.

@@ -17,9 +17,9 @@ export default function PostsSection({
     const isBlog = 'blog_posts' in section;
 
   return (
-    <section id="blog" className="text-center mx-5 sm:mx-20 md:mx-auto md:min-h-lvh md:w-full mt-20 md:mt-0 mdh:scale-[90%]">
-      <h1 className="xl:text-6xl md:text-5xl text-4xl mb-5">{section_name}</h1>
-      <h3 className="mb-10 md:mb-20 text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}></h3>
+    <section id={isBlog ? 'blog' : 'portfolio'} className="text-center sm:mx-20 md:mx-auto md:min-h-lvh md:w-full mt-20 md:mt-0 mdh:scale-[90%]">
+      <h1 className="xl:text-6xl md:text-5xl text-4xl xs:text-5xl mb-5">{section_name}</h1>
+      <h3 className="mb-10 md:mb-20 text-lg xs:text-[1.4rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}></h3>
 
     <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
       {posts.map((post: BlogPost | PortfolioPost) => (
@@ -29,7 +29,7 @@ export default function PostsSection({
 
       {posts.length > 2 &&
         <Link href={isBlog ? '/blog' : '/portfolio'}>
-          <button className="md:bg-opacity-80 md:hover:bg-opacity-100 bg-main text-lighttext transition-all px-5 py-2 rounded-xl mt-10 text-xl">
+          <button className="md:bg-opacity-80 md:hover:bg-opacity-100 bg-main text-lighttext transition-all px-5 py-2 rounded-xl mt-10 text-xl scale-[85%] sm:scale-100 xs:scale-100">
             Explore more...
           </button>
         </Link>

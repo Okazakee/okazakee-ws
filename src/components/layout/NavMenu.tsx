@@ -33,7 +33,7 @@ export default function MobileNav({ className }: { className?: string }) {
       <div className="absolute top-4 right-4 z-30">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className=""
+            className="scale-[85%] xs:scale-100"
             aria-label="Close menu"
           >
             {isOpen ? <X size={40} className="" /> : <Menu size={40} className="" />}
@@ -44,7 +44,7 @@ export default function MobileNav({ className }: { className?: string }) {
           isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
         }`}
       >
-        <ul className="space-y-16 p-4">
+        <ul className="space-y-16 p-4 scale-[85%] xs:scale-100">
           {menuItems.map((item) => (
             <li key={item.href}>
               <Link
@@ -57,11 +57,12 @@ export default function MobileNav({ className }: { className?: string }) {
               </Link>
             </li>
           ))}
-          <div className='flex space-x-5 bottom-10 absolute left-1/2 transform -translate-x-1/2'>
-            <LanguageToggle />
-            <ThemeToggle />
-          </div>
+          <li></li>
         </ul>
+        <div className='flex space-x-5 bottom-10 absolute left-1/2 transform -translate-x-1/2 scale-[85%] xs:scale-100'>
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </nav>
     </div>
   )

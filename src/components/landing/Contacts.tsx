@@ -29,8 +29,8 @@ export default function Contacts({
   return (
     <section className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh my-20 md:my-0 mdh:scale-[90%]">
         <div>
-          <h1 className="text-6xl mb-5">{section_name}</h1>
-          <h3 className="md:mb-20 mb-10 text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>
+          <h1 className="xl:text-6xl text-4xl xs:text-5xl mb-5">{section_name}</h1>
+          <h3 className="md:mb-20 mb-10 text-lg xs:text-[1.4rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: subtitle }}>
           </h3>
           <div className="flex md:flex-row flex-col justify-between">
             {contacts.map(({ id, label, icon, link, bg_color }) => {
@@ -53,11 +53,11 @@ export default function Contacts({
                     {IconComponent ? (
                       <div className="h-full flex md:flex-col justify-center items-center">
                         <IconComponent
-                          className="md:mr-0 mr-5 dark:text-lighttext md:w-[100px] w-[5rem] md:h-auto h-[5rem]"
-                          size={128}
+                          className="md:mr-0 mr-5 dark:text-lighttext md:w-[100px] w-[5rem] md:h-auto h-[3.5rem] xs:h-[5rem] bg-w"
+                          size={80}
                           strokeWidth={1}
                         />
-                        <h3 className="text-2xl text-left w-28 md:text-center md:w-auto">{label}</h3>
+                        <h3 className="text-xl xs:text-2xl text-left w-28 md:text-center md:w-auto">{label}</h3>
                       </div>
                     ) : (
                       <div>No Icon Available</div>

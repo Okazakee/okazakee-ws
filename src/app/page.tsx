@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Home - Okazakee WS",
   description: "Personal website with portfolio and blog",
   openGraph: {
-    title: "Okazakee WS - Home",
+    title: "Home - Okazakee WS",
     description: "Personal website with portfolio and blog",
     images: [
       {

@@ -67,15 +67,13 @@ export default async function PostsPage({
     <section className="md:mt-20 mt-10 flex justify-center mdh:scale-[90%] mdh:-mt-10">
       <div className="xl:mx-16 text-center mb-20 max-w-[120rem]">
         {posts.length > 0 ? (
-          <>
-            <h1 className="text-5xl mb-5">
+          <div className=''>
+            <h1 className="text-3xl xs:text-4xl xl:text-5xl mb-5">
               {post_type === blogTitle.toLowerCase() ? blogTitle : portfolioTitle}
             </h1>
-            <h3 className="mb-10 md:mb-10 md:mx-10 mx-5 text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: post_type === blogTitle.toLowerCase() ? blogSubtitle : portfolioSubtitle }}></h3>
+            <h3 className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: post_type === blogTitle.toLowerCase() ? blogSubtitle : portfolioSubtitle }}></h3>
             <PostList initialPosts={posts} post_type={post_type} />
-            <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
-            </div>
-          </>
+          </div>
         ) : (
           <div className='-mt-20 -mb-[7.5rem] h-lvh grid place-content-center text-5xl'>
             <div className='flex items-center'>

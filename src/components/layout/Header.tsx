@@ -17,16 +17,14 @@ const Header = () => {
             src={logo}
             width={200}
             height={100}
-            className="dark:invert -mt-0.5 xl:w-[200px] w-[160px] transition-all duration-[400ms] ease-in-out"
+            className="dark:invert -mt-0.5 xl:w-[200px] w-[130px] xs:w-[160px] transition-all duration-[400ms] ease-in-out"
             alt="logo"
           />
         </Link>
 
         <DesktopNav />
 
-        <div className="ml-auto flex items-center md:hidden">
-          <MobileNav />
-        </div>
+        <MobileNav className="ml-auto flex items-center md:hidden" />
       </div>
     </header>
   );

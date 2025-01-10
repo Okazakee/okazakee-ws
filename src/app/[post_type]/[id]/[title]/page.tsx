@@ -52,8 +52,8 @@ export default async function Page({
       <header className="flex relative mb-6 md:mb-0">
           {/* <ChevronLeft className='absolute md:-ml-10 -ml-5' size={35} /> */}
         <div>
-          <h1 className="md:text-4xl text-3xl font-bold mb-4">{post.title}</h1>
-          <p className="text-xl">{post.description}</p>
+          <h1 className="md:text-4xl text-2xl xs:text-3xl sm:text-3xl font-bold mb-4">{post.title}</h1>
+          <p className="xs:text-xl sm:text-xl">{post.description}</p>
         </div>
       </header>
 
@@ -130,10 +130,10 @@ export default async function Page({
           <Link
             target="_blank"
             href={post.source_link}
-            className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+            className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 xs:py-3 rounded-lg bg-secondary`}
           >
-            <Github size={18} />
-            <div className='mt-0.5 md:mt-0'>
+            <Github size={18} className='xs:w-[1.5rem] sm:w-auto h-auto' />
+            <div className='mt-0.5 md:mt-0 xs:text-lg text-base'>
               <span className=" md:inline">View </span>
               Source
             </div>
@@ -144,10 +144,10 @@ export default async function Page({
           <Link
             target="_blank"
             href={post.demo_link}
-            className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+            className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 xs:py-3 rounded-lg bg-secondary`}
           >
-            <ExternalLink size={18} />
-            <div className='mt-0.5 md:mt-0'>
+            <ExternalLink size={18} className='xs:w-[1.5rem] sm:w-auto h-auto' />
+            <div className='mt-0.5 md:mt-0 xs:text-lg text-base'>
               <span className=" md:inline">Live </span>
               Demo
             </div>
@@ -156,7 +156,7 @@ export default async function Page({
       </div>
 
       {/* Project Description */}
-      <div id='post' className="max-w-none text-xl space-y-4 prose dark:prose-invert text-left"
+      <div id='post' className="max-w-none xs:text-lg sm:text-xl space-y-4 prose dark:prose-invert text-left"
         dangerouslySetInnerHTML={{ __html: postBody }}>
       </div>
     </article>
@@ -203,11 +203,13 @@ export async function generateMetadata({
     };
   }
 
+  const type = post.post_type.charAt(0).toUpperCase() + post.post_type.slice(1);
+
   return {
-    title: `${post.title} - ${post.post_type}`,
+    title: `${post.title} - ${type}`,
     description: post.description,
     openGraph: {
-      title: `${post.title} - Portfolio`,
+      title: `${post.title} - ${type}`,
       description: post.description,
       images: [
         {
@@ -220,7 +222,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${post.title} - Portfolio`,
+      title: `${post.title} - ${type}`,
       description: post.description,
       images: [post.image],
     },
