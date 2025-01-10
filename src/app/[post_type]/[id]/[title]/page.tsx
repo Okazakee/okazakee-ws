@@ -60,7 +60,7 @@ export default async function Page({
       <PostTags tags={post.post_tags} />
 
       {/* Main Image */}
-      <div className="w-full h-[16rem] md:h-[24rem] relative mx-auto mt-6 md:mt-0">
+      <div className="w-full h-[14rem] md:h-[24rem] relative mx-auto mt-6 md:mt-0">
         <Image
           placeholder='blur'
           blurDataURL={post.blurhashURL}
@@ -202,13 +202,11 @@ export async function generateMetadata({
     };
   }
 
-  const type = post.post_type.charAt(0).toUpperCase() + post.post_type.slice(1);
-
   return {
-    title: `${post.title} - ${type}`,
+    title: `${post.title} - Okazakee WS`,
     description: post.description,
     openGraph: {
-      title: `${post.title} - ${type}`,
+      title: `${post.title} - Okazakee WS`,
       description: post.description,
       images: [
         {
@@ -218,12 +216,6 @@ export async function generateMetadata({
           alt: post.title,
         },
       ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${post.title} - ${type}`,
-      description: post.description,
-      images: [post.image],
-    },
+    }
   };
 }

@@ -28,13 +28,7 @@ export async function generateMetadata({
           alt: 'logo',
         },
       ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${title} - Okazakee WS`,
-      description: `My ${post_type} showcasing ${post_type === 'portfolio' ? 'projects i worked on' : 'my thoughts and experiences'}`,
-      images: ['https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png'],
-    },
+    }
   };
 }
 

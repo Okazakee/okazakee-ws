@@ -21,13 +21,7 @@ export const metadata: Metadata = {
         alt: 'logo',
       },
     ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `Home - Okazakee WS`,
-    description: "Personal website with portfolio and blog",
-    images: ['https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png'],
-  },
+  }
 };
 
 export const revalidate = 3600; // Revalidate every hour
