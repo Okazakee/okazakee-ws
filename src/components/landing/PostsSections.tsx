@@ -28,8 +28,8 @@ export default function PostsSection({
     </div>
 
       {posts.length > 2 &&
-        <Link href={isBlog ? '/blog' : '/portfolio'}>
-          <button className="md:bg-opacity-80 md:hover:bg-opacity-100 bg-main text-lighttext transition-all px-5 py-2 rounded-xl mt-10 text-xl scale-[85%] sm:scale-100 xs:scale-100">
+        <Link href={isBlog ? '/blog' : '/portfolio'} className="">
+          <button className="mt-10 md:mt-20 bg-secondary hover:bg-tertiary text-lighttext transition-all px-5 py-2 rounded-lg text-xl scale-[85%] sm:scale-100 xs:scale-100">
             Explore more...
           </button>
         </Link>
