@@ -1,12 +1,38 @@
 import { createClient } from '@supabase/supabase-js'
 import { BlogPost, BlogSection, ContactSection, HeroSection, PortfolioPost, PortfolioSection, SkillsSection } from "@/types/fetchedData.types";
-import { cache } from 'react'
+import { cache } from 'react';
+import { set } from 'lodash';
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl!, supabaseKey!);
+
+function transformToNested(input: { [s: string]: unknown; } | ArrayLike<unknown>) {
+  const output = {};
+  Object.entries(input).forEach(([key, value]) => {
+    set(output, key, value);
+  });
+  return output;
+}
+
+export async function getTranslations(locale: string) {
+  const { data, error } = await supabase
+    .from('i18n_translations')
+    .select('translations')
+    .eq('language', locale)
+    .single();
+
+  if (error) {
+    console.error('Error fetching translations:', error);
+    return {};
+  }
+
+  const translations = data?.translations ? data.translations : {};
+  return transformToNested(translations);
+
+}
 
 export const getHeroSection = cache(async (): Promise<HeroSection | null> => {
   const { data, error } = await supabase

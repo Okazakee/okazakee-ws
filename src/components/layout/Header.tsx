@@ -24,7 +24,8 @@ const Header = () => {
 
         <DesktopNav />
 
-        <MobileNav className="ml-auto flex items-center md:hidden" />
+        {/* <MobileNav className="ml-auto flex items-center md:hidden" /> */}
+        <MobileNav className="ml-auto flex items-center" />
       </div>
     </header>
   );

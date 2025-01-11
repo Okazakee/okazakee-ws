@@ -13,7 +13,7 @@ export default function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return null; // or return a placeholder
+    return null;
   }
 
   return (
@@ -31,10 +31,10 @@ export default function ThemeToggle() {
           className={`transition-all text-darktext duration-[400ms] ease-in-out absolute top-1/2 transform -translate-y-1/2 ${isDark ? 'opacity-0' : 'opacity-100'}`}
         />
       </div>
-      <span className={`text-xl text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[8rem] relative ${isDark ? 'opacity-100' : 'opacity-0'}`}>
+      <span className={`text-xl text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[8rem] relative ${isDark ? 'opacity-0' : 'opacity-100'}`}>
         Light Mode
       </span>
-      <span className={`text-xl text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[8rem] absolute right-3 ${isDark ? 'opacity-0' : 'opacity-100'}`}>
+      <span className={`text-xl text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[8rem] absolute right-3 ${isDark ? 'opacity-100' : 'opacity-0'}`}>
         Dark Mode
       </span>
     </button>

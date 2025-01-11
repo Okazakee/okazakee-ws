@@ -1,24 +1,33 @@
 'use client';
 
-import useLanguageStore from '@/store/languageStore';
+import { usePathname, useRouter } from 'next/navigation';
 import { Languages } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function LanguageToggle() {
-  const { toggleLanguage, isItalian } = useLanguageStore();
+  const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const isItalian = pathname.startsWith('/it');
 
   useEffect(() => {
-      setMounted(true);
-    }, []);
+    setMounted(true);
+  }, []);
 
-    if (!mounted) {
-      return null;
-    }
+  const switchLanguage = useCallback(() => {
+    const newLocale = isItalian ? 'en' : 'it';
+    const pathSegments = pathname.split('/');
+    pathSegments[1] = newLocale;
+    const newPath = pathSegments.join('/');
+
+    router.push(newPath);
+  }, [pathname, router, isItalian]);
+
+  if (!mounted) return null;
 
   return (
     <button
-      onClick={toggleLanguage}
+      onClick={switchLanguage}
       className="space-x-2 relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-[400ms] ease-in-out h-[4rem] w-[12rem]"
     >
       <div className="relative w-[1.8rem]">

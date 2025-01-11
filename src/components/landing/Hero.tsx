@@ -1,17 +1,19 @@
 import React from 'react'
 import Image from 'next/image'
 import { HeroSection } from '@/types/fetchedData.types';
+import { getTranslations } from 'next-intl/server';
 
-function Hero({ heroSection }: { heroSection: HeroSection }){
+async function Hero({ heroSection }: { heroSection: HeroSection }){
 
   const { propic, name, job_position, section_name, desc, blurhashURL } = heroSection;
+
+  const t = await getTranslations('hero');
 
   return (
     <section className="md:mx-10 mx-5 md:h-svh flex items-center mdh:mt-20">
         <div>
           <div className="flex flex-col xl:flex-row items-center xl:justify-around">
             <Image
-              layout="intrinsic"
               placeholder='blur'
               blurDataURL={blurhashURL}
               src={propic}
@@ -27,7 +29,7 @@ function Hero({ heroSection }: { heroSection: HeroSection }){
           </div>
           <div className="flex items-center text-center mt-10 md:mt-20">
             <div>
-              <h1 className="xl:text-6xl text-3xl xs:text-4xl mb-10" dangerouslySetInnerHTML={{ __html: section_name }}></h1>
+              <h1 className="xl:text-6xl text-3xl xs:text-4xl mb-10">{t('title')}</h1>
               <p className="text-left  xs:text-[1.4rem] tracking-[0.02em] xs:leading-snug md:leading-normal lg:text-2xl" dangerouslySetInnerHTML={{ __html: desc }}></p>
             </div>
           </div>

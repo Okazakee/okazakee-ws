@@ -27,9 +27,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600; // Revalidate every hour
 
 export async function generateStaticParams() {
-  // This function is empty because we're only generating one page
-  // If you had multiple languages or other parameters, you'd generate them here
-  return [];
+  return [{ locale: 'en' }, { locale: 'it' }];
 }
 
 export default async function Home() {
@@ -39,8 +37,6 @@ export default async function Home() {
   const portfolioSection = await getPortfolioSection();
   const blogSection = await getBlogSection();
   const contactSection = await getContactsSection();
-
-
 
   return (
     <main className="mx-auto md:max-w-7xl mt-10 md:mt-0">
