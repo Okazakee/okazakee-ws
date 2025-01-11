@@ -5,7 +5,7 @@ import { getTranslations } from 'next-intl/server';
 
 async function Hero({ heroSection }: { heroSection: HeroSection }){
 
-  const { propic, name, job_position, section_name, desc, blurhashURL } = heroSection;
+  const { propic, name, job_position, desc, blurhashURL } = heroSection;
 
   const t = await getTranslations('hero');
 
