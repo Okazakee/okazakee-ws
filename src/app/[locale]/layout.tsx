@@ -24,8 +24,6 @@ export default async function RootLayout({
 
   const messages = await getTranslations(locale);
 
-  console.log(JSON.stringify(messages), 'adaasdasas')
-
   return (
     <html lang={ locale }>
       <Providers>

@@ -36,8 +36,10 @@ export const revalidate = 3600; // Revalidate every hour
 
 export async function generateStaticParams() {
   return [
-    { post_type: 'portfolio' },
-    { post_type: 'blog' },
+    { locale: 'en', post_type: 'portfolio' },
+    { locale: 'it', post_type: 'portfolio' },
+    { locale: 'en', post_type: 'blog' },
+    { locale: 'it', post_type: 'blog' },
   ];
 }
 
