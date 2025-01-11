@@ -9,13 +9,12 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
-function transformToNested(input: { [s: string]: unknown; } | ArrayLike<unknown>) {
-  const output = {};
-  Object.entries(input).forEach(([key, value]) => {
-    set(output, key, value);
+export const formatLabels = (text: string) => {
+  // Replace all instances of `****...****` with `<label>...</label>`
+  return text.replace(/(\*\*\*\*([^\*]+)\*\*\*\*)/g, (match, p1, p2) => {
+    return `<label>${p2}</label>`;
   });
-  return output;
-}
+};
 
 export async function getTranslations(locale: string) {
   const { data, error } = await supabase
@@ -30,7 +29,8 @@ export async function getTranslations(locale: string) {
   }
 
   const translations = data?.translations ? data.translations : {};
-  return transformToNested(translations);
+
+  return translations;
 
 }
 
