@@ -6,6 +6,7 @@ import { searchPosts } from "@/app/actions/search";
 import { BlogPost, PortfolioPost } from "@/types/fetchedData.types";
 import validator from 'validator';
 import { TokenBucket } from "@/utils/tokenBucket"
+import { useTranslations } from 'next-intl';
 
 export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRateLimited } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>; SetIsRateLimited: Dispatch<SetStateAction<boolean>>;  initialPosts: BlogPost[] | PortfolioPost[] }) {
   const [searchFilter, setSearchFilter] = useState('');
@@ -44,6 +45,8 @@ export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRate
     };
   }, [searchFilter, debouncedSearch, SetPosts, initialPosts]);
 
+  const t = useTranslations('posts-section');
+
   return (
     <>
       <div className="mb-10 mx-10 sm:mx-auto max-w-xl relative items-center">
@@ -51,7 +54,7 @@ export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRate
           type="text"
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
-          placeholder="Search posts by title, desc or tag..."
+          placeholder={t('searchbar')}
           className="md:text-xl w-full p-2 pl-10 rounded-xl border-2 bg-lighttext border-main focus:outline-none placeholder:text-darktext placeholder:opacity-70 text-darktext focus:placeholder:opacity-0 placeholder:text-sm xs:placeholder:text-base sm:placeholder:text-xl"
         />
         <Search

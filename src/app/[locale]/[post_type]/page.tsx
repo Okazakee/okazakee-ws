@@ -1,8 +1,10 @@
 import React from 'react';
-import { getPosts, getBlogSection, getPortfolioSection } from '@/utils/getData';
-import { PortfolioPost, BlogPost, BlogSection, PortfolioSection } from '@/types/fetchedData.types';
+import { getPosts } from '@/utils/getData';
+import { PortfolioPost, BlogPost } from '@/types/fetchedData.types';
 import { CircleX } from 'lucide-react';
 import PostList from '@/components/common/PostList';
+import { getTranslations } from 'next-intl/server';
+import { formatLabels } from '@/utils/formatLabels';
 
 export async function generateMetadata({
   params
@@ -50,11 +52,7 @@ export default async function PostsPage({
 }) {
   const { post_type, locale } = await params;
 
-  const BlogSection = await getBlogSection() as BlogSection;
-  const PortfolioSection = await getPortfolioSection() as PortfolioSection;
-
-  const {subtitle: blogSubtitle, section_name: blogTitle} = BlogSection;
-  const {subtitle: portfolioSubtitle, section_name: portfolioTitle} = PortfolioSection;
+  const t = await getTranslations('posts-section')
 
   // Get posts based on the post_type
   const posts = await getPosts(post_type) as PortfolioPost[] | BlogPost[];
@@ -63,18 +61,18 @@ export default async function PostsPage({
     <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
       <div className="xl:mx-16 text-center mb-20 max-w-[120rem]">
         {posts.length > 0 ? (
-          <div className=''>
+          <>
             <h1 className="text-3xl xs:text-4xl xl:text-5xl mb-5">
-              {post_type === blogTitle.toLowerCase() ? blogTitle : portfolioTitle}
+              {post_type === 'blog' ? t('title2') : t('title1')}
             </h1>
-            <h3 className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: post_type === blogTitle.toLowerCase() ? blogSubtitle : portfolioSubtitle }}></h3>
+            <h3 className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: post_type === 'blog' ?  formatLabels(t('subtitle2')) : formatLabels(t('subtitle1')) }}></h3>
             <PostList initialPosts={posts} post_type={post_type} locale={locale} />
-          </div>
+          </>
         ) : (
           <div className='-mt-20 -mb-[7.5rem] h-lvh grid place-content-center text-5xl'>
             <div className='flex items-center'>
               <CircleX size={65} className='stroke-main' />
-              <h1 className='ml-5'>There are no posts available!</h1>
+              <h1 className='ml-5'>{t('no-posts')}</h1>
             </div>
           </div>
         )}

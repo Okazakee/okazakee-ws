@@ -5,14 +5,15 @@ import Link from 'next/link'
 import { Menu, X, Home, Drill, Briefcase, BookOpenText, Contact } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
+import {useTranslations} from 'next-intl';
 
 // Function to create menu items with the current locale
 const createMenuItems = (locale: string) => [
-  { href: `/${locale}`, label: 'Home', icon: Home },
-  { href: `/${locale}/#skills`, label: 'Skills', icon: Drill },
-  { href: `/${locale}/portfolio`, label: 'Portfolio', icon: Briefcase },
-  { href: `/${locale}/blog`, label: 'Blog', icon: BookOpenText },
-  { href: `/${locale}/#contacts`, label: 'Contacts', icon: Contact },
+  { href: `/${locale}`, icon: Home },
+  { href: `/${locale}/#skills`, icon: Drill },
+  { href: `/${locale}/portfolio`, icon: Briefcase },
+  { href: `/${locale}/blog`, icon: BookOpenText },
+  { href: `/${locale}/#contacts`, icon: Contact },
 ];
 
 export default function MobileNav({
@@ -24,6 +25,8 @@ export default function MobileNav({
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const menuItems = createMenuItems(locale);
+
+  const t = useTranslations('header');
 
   useEffect(() => {
     if (isOpen) {
@@ -53,7 +56,7 @@ export default function MobileNav({
         }`}
       >
         <ul className="space-y-16 p-4 scale-[85%] xs:scale-100">
-          {menuItems.map((item) => (
+          {menuItems.map((item, i) => (
             <li key={item.href}>
               <Link
                 href={item.href}
@@ -61,7 +64,7 @@ export default function MobileNav({
                 onClick={() => setIsOpen(false)}
               >
                 <item.icon size={35} className="mr-2" />
-                <span>{item.label}</span>
+                <span>{t(`buttons.${i}`)}</span>
               </Link>
             </li>
           ))}
@@ -85,16 +88,18 @@ export function DesktopNav({
 }) {
   const menuItems = createMenuItems(locale);
 
+  const t = useTranslations('header')
+
   return (
     <nav className={`${className} hidden lg:flex text-xl`}>
-      {menuItems.map((button) => (
+      {menuItems.map((button, i) => (
         <Link
-          key={button.label}
+          key={button.href}
           href={button.href}
           className="mx-4 transition-all hover:text-main flex items-center"
         >
           <button.icon className="mr-2 -mt-1" />
-          {button.label}
+          {t(`buttons.${i}`)}
         </Link>
       ))}
     </nav>

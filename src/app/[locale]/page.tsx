@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import Contacts from "@components/landing/Contacts";
 import Skills from "@components/landing/Skills";
 import Hero from "@components/landing/Hero";
-import { getHeroSection, getSkillsSection, getPortfolioSection, getContactsSection, getBlogSection } from "@/utils/getData";
+import { getHeroSection, getPortfolioSection, getContacts, getBlogSection } from "@/utils/getData";
 import PostsSection from "@/components/landing/PostsSections";
 import { ErrorDiv } from "@/components/common/ErrorDiv";
 
@@ -39,23 +39,22 @@ export default async function Home({
   const { locale } = await params;
 
   const heroSection = await getHeroSection();
-  const skillsSection = await getSkillsSection();
   const portfolioSection = await getPortfolioSection();
   const blogSection = await getBlogSection();
-  const contactSection = await getContactsSection();
+  const contactSection = await getContacts();
 
   return (
     <main className="mx-auto md:max-w-7xl mt-10 md:mt-0">
 
-      {!heroSection ? <ErrorDiv>Error loading Header data</ErrorDiv> : <Hero heroSection={heroSection} />}
+      {!heroSection ? <ErrorDiv>Error loading Hero data</ErrorDiv> : <Hero heroSection={heroSection} />}
 
-      {!skillsSection ? <ErrorDiv>Error loading Skills data</ErrorDiv> : <Skills skillsSection={skillsSection} />}
+      <Skills />
 
       {!portfolioSection ? <ErrorDiv>Error loading Portfolio data</ErrorDiv> : <PostsSection section={portfolioSection} locale={locale} />}
 
       {!blogSection ? <ErrorDiv>Error loading Blog data</ErrorDiv> : <PostsSection section={blogSection} locale={locale} />}
 
-      {!contactSection ? <ErrorDiv>Error loading Contacts data</ErrorDiv> : <Contacts contactSection={contactSection} />}
+      <Contacts />
 
     </main>
   );

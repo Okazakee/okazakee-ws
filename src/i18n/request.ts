@@ -1,4 +1,4 @@
-import { getTranslations } from "@/utils/getData";
+import { getTranslationsSupabase } from "@/utils/getData";
 
 export default async function request({ requestLocale }: { requestLocale: Promise<string | undefined> }) {
 let locale = await requestLocale;
@@ -7,7 +7,7 @@ let locale = await requestLocale;
     locale = 'en';
   }
 
-  const messages = await getTranslations(locale);
+  const messages = await getTranslationsSupabase(locale);
 
   return {
     locale,

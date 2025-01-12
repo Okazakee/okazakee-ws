@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { BlogPost, BlogSection, ContactSection, HeroSection, PortfolioPost, PortfolioSection, SkillsSection } from "@/types/fetchedData.types";
+import { BlogPost, BlogSection, Contact, HeroSection, PortfolioPost, PortfolioSection, SkillsCategory } from "@/types/fetchedData.types";
 import { cache } from 'react';
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
@@ -8,14 +8,7 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
-export const formatLabels = (text: string) => {
-  // Replace all instances of `****...****` with `<label>...</label>`
-  return text.replace(/(\*\*\*\*([^\*]+)\*\*\*\*)/g, (match, p1, p2) => {
-    return `<label>${p2}</label>`;
-  });
-};
-
-export async function getTranslations(locale: string) {
+export async function getTranslationsSupabase(locale: string) {
   const { data, error } = await supabase
     .from('i18n_translations')
     .select('translations')
@@ -36,8 +29,7 @@ export async function getTranslations(locale: string) {
 export const getHeroSection = cache(async (): Promise<HeroSection | null> => {
   const { data, error } = await supabase
     .from('hero_section')
-    .select('id, propic, name, job_position, section_name, desc, language, blurhashURL')
-    .eq('language', 'en')
+    .select('id, propic, blurhashURL')
     .single();
 
   if (error) {
@@ -47,23 +39,27 @@ export const getHeroSection = cache(async (): Promise<HeroSection | null> => {
   return data;
 });
 
-export const getSkillsSection = cache(async (): Promise<SkillsSection | null> => {
+export const getSkillsCategories = cache(async (): Promise<SkillsCategory[] | null> => {
   const { data, error } = await supabase
-    .from('skills_section')
+    .from('skills_categories')
     .select(`
-      id, section_name, subtitle, language,
-      skills_categories: skills_categories (
-        id, name, language, skills_section,
-        skills (id, title, icon, invert, category_id, blurhashURL)
+      id,
+      name,
+      skills (
+        id,
+        title,
+        icon,
+        invert,
+        category_id,
+        blurhashURL
       )
-    `)
-    .eq('language', 'en')
-    .single();
+    `);
 
   if (error) {
     console.error(error);
     return null;
   }
+
   return data;
 });
 
@@ -71,7 +67,6 @@ export const getPortfolioSection = cache(async (): Promise<PortfolioSection | nu
   const { data: sectionMainData, error } = await supabase
   .from('portfolio_section')
   .select('*')
-  .eq('language', 'en')
   .single();
 
   if (error) {
@@ -85,7 +80,6 @@ export const getPortfolioSection = cache(async (): Promise<PortfolioSection | nu
       *,
       post_tags (*)
       `)
-    .eq('language', 'en')
     .eq('post_type', 'portfolio')
     .order('created_at', { ascending: false })
     .limit(3);
@@ -108,7 +102,6 @@ export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
   const { data: sectionMainData, error } = await supabase
   .from('blog_section')
   .select('*')
-  .eq('language', 'en')
   .single();
 
   if (error) {
@@ -122,7 +115,6 @@ export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
       *,
       post_tags (*)
       `)
-    .eq('language', 'en')
     .eq('post_type', 'blog')
     .order('created_at', { ascending: false })
     .limit(3);
@@ -141,18 +133,10 @@ export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
   return sectionData;
 });
 
-export const getContactsSection = cache(async (): Promise<ContactSection | null> => {
+export const getContacts = cache(async (): Promise<Contact[] | null> => {
   const { data, error } = await supabase
-    .from('contacts_section')
-    .select(`
-      id, section_name, subtitle, language,
-      contacts (
-        *
-      )
-    `)
-    .eq('language', 'en')
-    .order('id', { foreignTable: 'contacts' })
-    .single();
+    .from('contacts')
+    .select(`*`);
 
   if (error) {
     console.error(error);
@@ -173,7 +157,6 @@ export const getPosts = cache(async (
       *,
       post_tags (*)
     `)
-    .eq('language', 'en')
     .eq('post_type', type)
     .order('created_at', { ascending: false });
 
@@ -222,7 +205,6 @@ export const getPost = cache(async (id: string, type: string): Promise<Portfolio
       *,
       post_tags (*)
       `)
-    .eq('language', 'en')
     .eq('post_type', type)
     .eq('id', id)
     .order('created_at', { ascending: false });

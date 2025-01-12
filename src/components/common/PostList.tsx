@@ -5,10 +5,13 @@ import React, { useState } from 'react'
 import Postcard from './Postcard';
 import Searchbar from './Searchbar';
 import { ErrorDiv } from './ErrorDiv';
+import {useTranslations} from 'next-intl';
 
 export default function PostList({ initialPosts, post_type, locale } : { initialPosts: PortfolioPost[] | BlogPost[]; post_type: string; locale: string; }) {
   const [posts, SetPosts] = useState(initialPosts);
   const [isRateLimited, SetIsRateLimited] = useState(false);
+
+  const t = useTranslations('posts-section');
 
   return (
     <>
@@ -19,7 +22,7 @@ export default function PostList({ initialPosts, post_type, locale } : { initial
         ? posts.map((post) => (
             <Postcard key={post.id} post={post} locale={locale} />
           ))
-        : isRateLimited ? <ErrorDiv>Too many requests! Please wait and retry.</ErrorDiv> : <ErrorDiv>No posts found!</ErrorDiv>
+        : isRateLimited ? <ErrorDiv>{t('ratelimit')}</ErrorDiv> : <ErrorDiv>{t('no-posts')}</ErrorDiv>
         }
       </div>
     </>

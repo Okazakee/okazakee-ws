@@ -4,7 +4,7 @@ import { Providers } from "../providers";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { NextIntlClientProvider } from 'next-intl';
-import { getTranslations } from '@/utils/getData';
+import { getTranslationsSupabase } from '@/utils/getData';
 
 const whiteRabbit = localFont({
   src: "../fonts/whiterabbit.woff",
@@ -22,7 +22,7 @@ export default async function RootLayout({
 
   const { locale } = await params;
 
-  const messages = await getTranslations(locale);
+  const messages = await getTranslationsSupabase(locale);
 
   return (
     <html lang={ locale }>

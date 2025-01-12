@@ -4,7 +4,7 @@ import logo from "@public/logo.svg";
 import Link from "next/link";
 import MobileNav, { DesktopNav } from "./NavMenu";
 
-const Header = ( { locale } : { locale: string } ) => {
+export default function Header( { locale } : { locale: string } ) {
 
   return (
     <header className="max-w-screen-2xl mx-auto pt-2">
@@ -30,5 +30,3 @@ const Header = ( { locale } : { locale: string } ) => {
     </header>
   );
 };
-
-export default Header;
