@@ -30,7 +30,11 @@ export async function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'it' }];
 }
 
-export default async function Home({ params }: { params: { locale: string }}) {
+export default async function Home({
+  params
+}: {
+  params: Promise<{ post_type: string; locale: string }>
+}) {
 
   const { locale } = await params;
 
