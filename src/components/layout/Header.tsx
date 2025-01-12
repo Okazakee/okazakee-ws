@@ -4,7 +4,7 @@ import logo from "@public/logo.svg";
 import Link from "next/link";
 import MobileNav, { DesktopNav } from "./NavMenu";
 
-const Header = () => {
+const Header = ( { locale } : { locale: string } ) => {
 
   return (
     <header className="max-w-screen-2xl mx-auto pt-2">
@@ -22,10 +22,10 @@ const Header = () => {
           />
         </Link>
 
-        <DesktopNav />
+        <DesktopNav locale={locale} />
 
         {/* <MobileNav className="ml-auto flex items-center md:hidden" /> */}
-        <MobileNav className="ml-auto flex items-center" />
+        <MobileNav locale={locale} className="ml-auto flex items-center" />
       </div>
     </header>
   );

@@ -46,9 +46,9 @@ export async function generateStaticParams() {
 export default async function PostsPage({
   params
 }: {
-  params: Promise<{ post_type: string }>
+  params: Promise<{ post_type: string; locale: string }>
 }) {
-  const { post_type } = await params;
+  const { post_type, locale } = await params;
 
   const BlogSection = await getBlogSection() as BlogSection;
   const PortfolioSection = await getPortfolioSection() as PortfolioSection;
@@ -68,7 +68,7 @@ export default async function PostsPage({
               {post_type === blogTitle.toLowerCase() ? blogTitle : portfolioTitle}
             </h1>
             <h3 className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: post_type === blogTitle.toLowerCase() ? blogSubtitle : portfolioSubtitle }}></h3>
-            <PostList initialPosts={posts} post_type={post_type} />
+            <PostList initialPosts={posts} post_type={post_type} locale={locale} />
           </div>
         ) : (
           <div className='-mt-20 -mb-[7.5rem] h-lvh grid place-content-center text-5xl'>

@@ -30,7 +30,9 @@ export async function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'it' }];
 }
 
-export default async function Home() {
+export default async function Home({ params }: { params: { locale: string }}) {
+
+  const { locale } = await params;
 
   const heroSection = await getHeroSection();
   const skillsSection = await getSkillsSection();
@@ -45,9 +47,9 @@ export default async function Home() {
 
       {!skillsSection ? <ErrorDiv>Error loading Skills data</ErrorDiv> : <Skills skillsSection={skillsSection} />}
 
-      {!portfolioSection ? <ErrorDiv>Error loading Portfolio data</ErrorDiv> : <PostsSection section={portfolioSection} />}
+      {!portfolioSection ? <ErrorDiv>Error loading Portfolio data</ErrorDiv> : <PostsSection section={portfolioSection} locale={locale} />}
 
-      {!blogSection ? <ErrorDiv>Error loading Blog data</ErrorDiv> : <PostsSection section={blogSection} />}
+      {!blogSection ? <ErrorDiv>Error loading Blog data</ErrorDiv> : <PostsSection section={blogSection} locale={locale} />}
 
       {!contactSection ? <ErrorDiv>Error loading Contacts data</ErrorDiv> : <Contacts contactSection={contactSection} />}
 

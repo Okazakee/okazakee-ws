@@ -29,7 +29,7 @@ export default async function RootLayout({
       <Providers>
         <body id="about" className={`${whiteRabbit.variable} transition-colors duration-[400ms] ease-in-out font-whiterabt antialiased rounded-xl scroll-smooth w-full relative`}>
           <NextIntlClientProvider messages={messages} locale={locale}>
-            <Header />
+            <Header locale={locale} />
               {children}
             <Footer />
           </NextIntlClientProvider>

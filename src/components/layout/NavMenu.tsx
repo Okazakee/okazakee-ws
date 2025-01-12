@@ -3,19 +3,27 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Menu, X, Home, Drill, Briefcase, BookOpenText, Contact } from 'lucide-react'
-import ThemeToggle from './ThemeToggle';
-import LanguageToggle from './LanguageToggle';
+import ThemeToggle from './ThemeToggle'
+import LanguageToggle from './LanguageToggle'
 
-const menuItems = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/#skills', label: 'Skills', icon: Drill },
-  { href: '/portfolio', label: 'Portfolio', icon: Briefcase },
-  { href: '/blog', label: 'Blog', icon: BookOpenText },
-  { href: '/#contacts', label: 'Contacts', icon: Contact },
+// Function to create menu items with the current locale
+const createMenuItems = (locale: string) => [
+  { href: `/${locale}`, label: 'Home', icon: Home },
+  { href: `/${locale}/#skills`, label: 'Skills', icon: Drill },
+  { href: `/${locale}/portfolio`, label: 'Portfolio', icon: Briefcase },
+  { href: `/${locale}/blog`, label: 'Blog', icon: BookOpenText },
+  { href: `/${locale}/#contacts`, label: 'Contacts', icon: Contact },
 ];
 
-export default function MobileNav({ className }: { className?: string }) {
+export default function MobileNav({
+  className,
+  locale
+}: {
+  className?: string;
+  locale: string;
+}) {
   const [isOpen, setIsOpen] = useState(false)
+  const menuItems = createMenuItems(locale);
 
   useEffect(() => {
     if (isOpen) {
@@ -68,11 +76,23 @@ export default function MobileNav({ className }: { className?: string }) {
   )
 }
 
-export function DesktopNav({ className } : { className?: string }) {
+export function DesktopNav({
+  className,
+  locale
+}: {
+  className?: string;
+  locale: string;
+}) {
+  const menuItems = createMenuItems(locale);
+
   return (
     <nav className={`${className} hidden lg:flex text-xl`}>
       {menuItems.map((button) => (
-        <Link key={button.label} href={button.href} className="mx-4 transition-all hover:text-main flex items-center">
+        <Link
+          key={button.label}
+          href={button.href}
+          className="mx-4 transition-all hover:text-main flex items-center"
+        >
           <button.icon className="mr-2 -mt-1" />
           {button.label}
         </Link>

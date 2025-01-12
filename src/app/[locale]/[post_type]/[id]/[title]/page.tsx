@@ -13,9 +13,9 @@ import html from 'remark-html';
 export default async function Page({
   params
 }: {
-  params: Promise<{ post_type: string, id: string, title: string }>
+  params: Promise<{ post_type: string, id: string, title: string, locale: string }>
 }) {
-  const { id, title, post_type } = await params;
+  const { id, title, post_type, locale } = await params;
 
   const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
 
@@ -44,7 +44,7 @@ export default async function Page({
 
   const formattedDate = moment(post?.created_at).format('DD/MM/YYYY');
 
-  const postURL = `https://okazakee.dev/${post_type}/${id}/${slugifiedTitle}`;
+  const postURL = `https://okazakee.dev/${locale}/${post_type}/${id}/${slugifiedTitle}`;
 
   return (
     <article className="max-w-5xl mx-auto px-4 mb-20 md:mb-32 md:mt-16 mt-10">
@@ -165,24 +165,28 @@ export default async function Page({
 export const revalidate = 3600; // Revalidate every hour
 
 export async function generateStaticParams() {
-  // Get both types of posts
+  const locales = ['en', 'it'];
   const portfolioPosts = await getPosts('portfolio', 100) as PortfolioPost[];
   const blogPosts = await getPosts('blog', 100) as BlogPost[];
 
-  // Create params for both types of posts
-  const portfolioParams = portfolioPosts!.map((post: PortfolioPost) => ({
-    post_type: 'portfolio',
-    id: post.id.toString(),
-    title: post.title.toLowerCase().replace(/\s+/g, '-'),
-  }));
+  const portfolioParams = portfolioPosts!.flatMap((post: PortfolioPost) =>
+    locales.map((locale) => ({
+      locale,
+      post_type: 'portfolio',
+      id: post.id.toString(),
+      title: post.title.toLowerCase().replace(/\s+/g, '-'),
+    }))
+  );
 
-  const blogParams = blogPosts!.map((post: BlogPost) => ({
-    post_type: 'blog',
-    id: post.id.toString(),
-    title: post.title.toLowerCase().replace(/\s+/g, '-'),
-  }));
+  const blogParams = blogPosts!.flatMap((post: BlogPost) =>
+    locales.map((locale) => ({
+      locale,
+      post_type: 'blog',
+      id: post.id.toString(),
+      title: post.title.toLowerCase().replace(/\s+/g, '-'),
+    }))
+  );
 
-  // Combine and return all params
   return [...portfolioParams, ...blogParams];
 }
 

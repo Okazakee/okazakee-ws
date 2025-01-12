@@ -173,7 +173,7 @@ export const getPosts = cache(async (
       *,
       post_tags (*)
     `)
-    .eq('language', lang || 'en')
+    .eq('language', 'en')
     .eq('post_type', type)
     .order('created_at', { ascending: false });
 
@@ -214,7 +214,7 @@ export const getPosts = cache(async (
   return postsData;
 });
 
-export const getPost = cache(async (id: string, type: string, lang?: string): Promise<PortfolioPost | BlogPost | null> => {
+export const getPost = cache(async (id: string, type: string): Promise<PortfolioPost | BlogPost | null> => {
 
   const { data: postsData, error: postsErr } = await supabase
     .from('posts')
@@ -222,7 +222,7 @@ export const getPost = cache(async (id: string, type: string, lang?: string): Pr
       *,
       post_tags (*)
       `)
-    .eq('language', lang || 'en')
+    .eq('language', 'en')
     .eq('post_type', type)
     .eq('id', id)
     .order('created_at', { ascending: false });
