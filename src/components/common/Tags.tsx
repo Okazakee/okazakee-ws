@@ -1,6 +1,7 @@
 'use client'
 import { useRef, useEffect, useState } from 'react';
 import { Tag } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 const useWindowSize = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -22,6 +23,7 @@ export const Tags = ({ tags }: { tags: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [totalWidth, setTotalWidth] = useState(0);
   const { isMobile } = useWindowSize();
+  const pathname = usePathname();
 
   const reworkedTags = tags ? Array.from(tags.matchAll(/"([^"]*?)"/g), match => match[1]) : [];
 
@@ -37,9 +39,16 @@ export const Tags = ({ tags }: { tags: string }) => {
   }, [tags]);
 
   const totalChars = reworkedTags.reduce((sum, tag) => sum + tag.length, 0);
-  const shouldAnimate = isMobile
-    ? (totalChars > 30 || reworkedTags.length > 3)
-    : (totalChars > 34 || reworkedTags.length > 4);
+
+  const regex = /^\/(it\/)?(portfolio|blog)\/\d+\/.+$/;
+
+  const isPostPage = regex.test(pathname);
+
+  const shouldAnimate = isPostPage
+  ? isMobile // Only animate if it's a post page and we're on mobile
+    : (isMobile
+        ? (totalChars > 30 || reworkedTags.length > 3)
+        : (totalChars > 34 || reworkedTags.length > 4));
 
   return (
     <div className="relative overflow-hidden w-full">

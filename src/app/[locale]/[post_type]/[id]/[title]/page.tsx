@@ -17,8 +17,6 @@ export default async function Page({
 }) {
   const { id, title, post_type, locale } = await params;
 
-  console.log(id, title, post_type, locale)
-
   const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
 
   let ghStars = 0;
@@ -61,12 +59,14 @@ export default async function Page({
       <header className="flex relative mb-6 md:mb-0">
         <div>
           <h1 className="md:text-4xl text-2xl xs:text-3xl sm:text-3xl font-bold mb-4">{post.title_en}</h1>
-          <p className="xs:text-xl sm:text-xl">{postDescription}</p>
+          <p className="xs:text-xl sm:text-xl">{post[postDescription]}</p>
         </div>
       </header>
 
-      {/* Tech Stack */}
-      <Tags tags={post.post_tags} />
+      {/* TAGS */}
+      <div className='my-4'>
+        <Tags tags={post.post_tags + post.post_tags} />
+      </div>
 
       {/* Main Image */}
       <div className="w-full h-[14rem] md:h-[24rem] relative mx-auto mt-6 md:mt-0">
