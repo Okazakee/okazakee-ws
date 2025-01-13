@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const locales = ['en', 'it'];
 
-// Handles routes with locales
+// Pre-compile the locale regex pattern for better performance
+const localePattern = new RegExp(`^/(${locales.join('|')})(?:/|$)`);
+
 const handleI18n = createMiddleware({
   locales,
   defaultLocale: 'en',
@@ -11,36 +13,48 @@ const handleI18n = createMiddleware({
 });
 
 export default function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  const { pathname } = request.nextUrl;
 
-  // Check if the pathname starts with a locale
-  const pathnameHasLocale = locales.some(
-    locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
-
-  if (pathnameHasLocale) {
+  // Fast path: if path already has locale, handle it immediately
+  if (localePattern.test(pathname)) {
     return handleI18n(request);
   }
 
-  // Handle paths without locale
-  // Get user's preferred language from headers
-  const userLocale = request.headers.get('accept-language')?.split(',')[0].split('-')[0];
+  // Skip locale redirect for static assets and API routes
+  if (
+    pathname.includes('.') || // Static files
+    pathname.startsWith('/_next/') || // Next.js internals
+    pathname.startsWith('/api/') // API routes
+  ) {
+    return;
+  }
 
-  // Set locale based on user preference, defaulting to 'en'
+  // For paths without locale, check cookie first
+  const savedLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  if (savedLocale && locales.includes(savedLocale)) {
+    return NextResponse.redirect(
+      new URL(`/${savedLocale}${pathname}`, request.url)
+    );
+  }
+
+  // Last resort: system language
+  const userLocale = request.headers.get('accept-language')?.split(',')[0].split('-')[0];
   const locale = userLocale && locales.includes(userLocale) ? userLocale : 'en';
 
-  // Create new URL with locale
-  const newUrl = new URL(`/${locale}${pathname}`, request.url);
-
-  // Preserve query parameters
-  newUrl.search = request.nextUrl.search;
-
-  return NextResponse.redirect(newUrl);
+  return NextResponse.redirect(
+    new URL(`/${locale}${pathname}`, request.url)
+  );
 }
 
+// More specific matcher to reduce unnecessary middleware runs
 export const config = {
   matcher: [
-    // Matches all pathnames except those starting with:
-    '/((?!api|_next|_vercel|.*\\.).*)' 
+    /*
+     * Match all request paths except:
+     * - static files (which have file extensions)
+     * - _next (Next.js internals)
+     * - api (API routes)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)'
   ]
 };
