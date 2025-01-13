@@ -64,7 +64,7 @@ export default async function Page({
       </header>
 
       {/* TAGS */}
-      <div className='my-4'>
+      <div className='my-2 md:my-4'>
         <Tags tags={post.post_tags} />
       </div>
 
