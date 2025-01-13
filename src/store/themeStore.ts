@@ -7,14 +7,19 @@ interface ThemeState {
 }
 
 const useThemeStore = create<ThemeState>((set) => ({
+  // Initialize the theme based on localStorage, otherwise use system preference
   isDark: typeof window !== 'undefined'
-    ? (window.localStorage.getItem('isDark') === 'true' ? true : (window.matchMedia('(prefers-color-scheme: dark)').matches ? true : false))
-    : false, // Default to system theme when no localStorage or system preference is available
+    ? localStorage.getItem('isDark') === 'true'
+      ? true
+      : (localStorage.getItem('isDark') === 'false'
+        ? false
+        : window.matchMedia('(prefers-color-scheme: dark)').matches)
+    : false,
 
-  toggleTheme: () => set((state: { isDark: boolean }) => {
+  toggleTheme: () => set((state) => {
     const newTheme = !state.isDark;
-    localStorage.setItem('isDark', newTheme ? 'true' : 'false');
-    document.documentElement.classList.toggle('dark', newTheme);
+    localStorage.setItem('isDark', newTheme ? 'true' : 'false'); // Persist theme in localStorage
+    document.documentElement.classList.toggle('dark', newTheme); // Apply theme to the document
     return { isDark: newTheme };
   }),
 }));
@@ -23,13 +28,16 @@ const useThemeStore = create<ThemeState>((set) => ({
 if (typeof window !== 'undefined') {
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-  mediaQuery.addEventListener('change', () => {
-    // Remove the 'isDark' item from localStorage when system theme changes
-    localStorage.removeItem('isDark');
-    // Check system preference and update the theme
-    const systemPrefersDark = mediaQuery.matches;
-    document.documentElement.classList.toggle('dark', systemPrefersDark);
-  });
+  const handleSystemThemeChange = () => {
+    if (localStorage.getItem('isDark') === null) {
+      // Only change theme based on system preference if no user preference is set
+      const systemPrefersDark = mediaQuery.matches;
+      document.documentElement.classList.toggle('dark', systemPrefersDark);
+    }
+  };
+
+  mediaQuery.addEventListener('change', handleSystemThemeChange);
+  handleSystemThemeChange(); // Initial check when the page loads
 }
 
 export default useThemeStore;
