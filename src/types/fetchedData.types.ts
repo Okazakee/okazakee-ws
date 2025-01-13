@@ -36,7 +36,7 @@ export type PortfolioPost = {
 };
 
 export type BlogPost = {
-  title: any;
+  title: string;
   id: number;
   created_at: string;
   title_en: string;

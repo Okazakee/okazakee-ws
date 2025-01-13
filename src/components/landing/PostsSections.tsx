@@ -1,5 +1,4 @@
 import React from "react";
-import { BlogPost, PortfolioPost } from "@/types/fetchedData.types";
 import Link from "next/link";
 import Postcard from "../common/Postcard";
 import { getTranslations } from "next-intl/server";

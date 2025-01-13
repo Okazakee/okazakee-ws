@@ -1,4 +1,3 @@
-import { PostTags } from '@/components/common/PostTags';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';

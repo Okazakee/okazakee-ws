@@ -29,7 +29,7 @@ export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRate
         // You could also show a user-friendly message here
       }
     }, 300),
-    [SetIsRateLimited, SetPosts, post_type]
+    [SetIsRateLimited, SetPosts, post_type, locale]
   );
 
   useEffect(() => {

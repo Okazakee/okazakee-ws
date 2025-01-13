@@ -1,6 +1,5 @@
 import React from 'react'
 import Image from 'next/image'
-import { HeroSection } from '@/types/fetchedData.types';
 import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
 import { getHeroSection } from '@/utils/getData';
