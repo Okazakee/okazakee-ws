@@ -44,13 +44,11 @@ export const Tags = ({ tags }: { tags: string }) => {
 
   const isPostPage = regex.test(pathname);
 
-  console.log(pathname)
-
   const shouldAnimate = isPostPage
-  ? isMobile // Only animate if it's a post page and we're on mobile
-    : (isMobile
-        ? (totalChars > 30 || reworkedTags.length > 3)
-        : (totalChars > 34 || reworkedTags.length > 4));
+  ? (isMobile && (totalChars > 50 || reworkedTags.length > 3)) // Post page: only animate on mobile with conditions
+  : (isMobile
+    ? (totalChars > 30 || reworkedTags.length > 3) // Post card mobile conditions
+    : (totalChars > 34 || reworkedTags.length > 4)); // Post card desktop conditions
 
   return (
     <div className="relative overflow-hidden w-full">

@@ -27,8 +27,7 @@ export default function ShareButton({
   return (
     <button
       onClick={handleCopy}
-      className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-[400ms] ease-in-out
-      ${copied ? 'w-[6rem]' : 'w-5'}`}
+      className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-[400ms] ease-in-out w-5`}
       title={buttonTitle}
     >
       <div className='flex absolute right-0'>
@@ -46,9 +45,9 @@ export default function ShareButton({
         </span>
       </div>
 
-      {!copied && (
-        <Share2 className="absolute left-1/2 transform -translate-x-1/2 w-5 h-5 opacity-100" />
-      )}
+      <Share2 className={`absolute left-1/2 transform transition-all duration-[400ms] ease-in-out -translate-x-1/2 w-5 h-5 ${copied ? 'opacity-0' : 'opacity-100'}`} />
+
+
     </button>
   );
 }
