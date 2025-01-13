@@ -19,52 +19,35 @@ export type Skill = {
   blurhashURL: string;
 };
 
-export type PortfolioSection = {
-  section_name: string;
-  portfolio_posts: PortfolioPost[];
-};
-
 export type PortfolioPost = {
   id: number;
   created_at: string;
-  title: string;
+  title_en: string;
+  title_it: string;
   image: string;
   source_link: string;
   demo_link: string
-  language: string;
-  description: string;
-  body: string;
-  post_type: string;
-  portfolio_section: number;
+  description_en: string;
+  description_it: string;
+  body_en: string;
+  body_it: string;
   blurhashURL: string;
-  post_tags: PostTag[];
-};
-
-export type BlogSection = {
-  section_name: string;
-  blog_posts: BlogPost[];
+  post_tags: string;
 };
 
 export type BlogPost = {
+  title: any;
   id: number;
   created_at: string;
-  title: string;
+  title_en: string;
+  title_it: string;
   image: string;
-  source_link: string;
-  demo_link: string
-  language: string;
-  description: string;
-  body: string;
-  post_type: string;
-  blog_section: number;
+  description_en: string;
+  description_it: string;
+  body_en: string;
+  body_it: string;
   blurhashURL: string;
-  post_tags: PostTag[];
-};
-
-export type PostTag = {
-  id: number;
-  tag: string;
-  post_id: number;
+  post_tags: string;
 };
 
 export type Contact = {

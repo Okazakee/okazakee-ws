@@ -15,7 +15,7 @@ export default function PostList({ initialPosts, post_type, locale } : { initial
 
   return (
     <>
-      <Searchbar post_type={post_type} SetPosts={SetPosts} initialPosts={initialPosts} SetIsRateLimited={SetIsRateLimited} />
+      <Searchbar post_type={post_type} SetPosts={SetPosts} initialPosts={initialPosts} SetIsRateLimited={SetIsRateLimited} locale={locale} />
 
       <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
         {posts.length > 0

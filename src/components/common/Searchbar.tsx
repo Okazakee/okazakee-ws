@@ -8,7 +8,7 @@ import validator from 'validator';
 import { TokenBucket } from "@/utils/tokenBucket"
 import { useTranslations } from 'next-intl';
 
-export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRateLimited } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>; SetIsRateLimited: Dispatch<SetStateAction<boolean>>;  initialPosts: BlogPost[] | PortfolioPost[] }) {
+export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRateLimited, locale } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>; SetIsRateLimited: Dispatch<SetStateAction<boolean>>;  initialPosts: BlogPost[] | PortfolioPost[]; locale: string }) {
   const [searchFilter, setSearchFilter] = useState('');
   const tokenBucketRef = useRef(new TokenBucket(5, 1)); // 5 tokens, refill 1 token per second
 
@@ -17,7 +17,7 @@ export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRate
       if (tokenBucketRef.current.tryConsume()) {
         SetIsRateLimited(false);
         try {
-          const newPosts = await searchPosts(post_type, searchQuery);
+          const newPosts = await searchPosts(post_type, searchQuery, locale);
           SetPosts(newPosts.posts || []);
         } catch (error) {
           console.error('Search error:', error);

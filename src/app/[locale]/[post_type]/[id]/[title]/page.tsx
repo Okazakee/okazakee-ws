@@ -1,5 +1,6 @@
 import { PostTags } from '@/components/common/PostTags';
 import ShareButton from '@/components/common/ShareButton';
+import Tags from '@/components/common/Tags';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@utils/getData';
 import { Clock, ExternalLink, Github, Star } from 'lucide-react';
@@ -17,17 +18,21 @@ export default async function Page({
 }) {
   const { id, title, post_type, locale } = await params;
 
+  console.log(id, title, post_type, locale)
+
   const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
 
   let ghStars = 0;
 
-  if (post_type === 'portfolio') {
-    const repoName = post?.source_link.split('/').pop();
+  if (post_type === 'portfolio' && post) {
+    const portfolioPost = post as PortfolioPost; // Type assertion
+    const repoName = portfolioPost.source_link.split('/').pop();
 
     ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`)
       .then((res) => res.json())
       .then((data) => data.stargazers_count);
   }
+
 
   // checks
   if (!post) {
@@ -35,12 +40,17 @@ export default async function Page({
   }
 
   // If the provided title doesn't match the actual post title, redirect to the correct URL
-  const slugifiedTitle = post.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  const slugifiedTitle = post.title_en.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+
   if (title !== slugifiedTitle) {
     redirect(`/portfolio/${id}/${slugifiedTitle}`)
   }
 
-  const postBody = await remark().use(html).processSync(post!.body).toString();
+  const localeKey = `body_${locale}` as keyof typeof post;
+
+  const postBody = await remark().use(html).processSync(String(post![localeKey])).toString();
+
+  const postDescription = `description_${locale}` as keyof typeof post;
 
   const formattedDate = moment(post?.created_at).format('DD/MM/YYYY');
 
@@ -51,13 +61,13 @@ export default async function Page({
 
       <header className="flex relative mb-6 md:mb-0">
         <div>
-          <h1 className="md:text-4xl text-2xl xs:text-3xl sm:text-3xl font-bold mb-4">{post.title}</h1>
-          <p className="xs:text-xl sm:text-xl">{post.description}</p>
+          <h1 className="md:text-4xl text-2xl xs:text-3xl sm:text-3xl font-bold mb-4">{post.title_en}</h1>
+          <p className="xs:text-xl sm:text-xl">{postDescription}</p>
         </div>
       </header>
 
       {/* Tech Stack */}
-      <PostTags tags={post.post_tags} />
+      <Tags tags={post.post_tags} />
 
       {/* Main Image */}
       <div className="w-full h-[14rem] md:h-[24rem] relative mx-auto mt-6 md:mt-0">
@@ -79,7 +89,7 @@ export default async function Page({
       <div className="flex gap-5 md:justify-normal md:gap-6 sm:gap-4 my-6 md:my-8 text-lighttext items-center">
 
         <div className={`hidden gap-6 ${post_type === 'portfolio' && 'md:flex'}`}>
-          {post.source_link &&
+          {post_type === 'portfolio' && post && 'source_link' in post && post.source_link && post.source_link !== null &&
             <Link
               target="_blank"
               href={post.source_link}
@@ -93,7 +103,7 @@ export default async function Page({
             </Link>
           }
 
-          {post.demo_link &&
+          {post_type === 'portfolio' && post && 'demo_link' in post && post.demo_link && post.demo_link !== null &&
             <Link
               target="_blank"
               href={post.demo_link}
@@ -106,6 +116,7 @@ export default async function Page({
               </div>
             </Link>
           }
+
         </div>
 
         <div className='flex items-center text-darktext dark:text-lighttext'>
@@ -124,11 +135,11 @@ export default async function Page({
 
       </div>
 
-      <div className={`text-lighttext ${post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'}  ${ post.source_link && post.demo_link ? 'justify-center' : 'justify-start'}`}>
-        {post.source_link &&
+      <div className={`text-lighttext ${post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'}  ${ post_type === 'portfolio' && post && 'source_link' in post && 'demo_link' in post ? 'justify-center' : 'justify-start'}`}>
+        {post_type === 'portfolio' && post && 'source_link' in post && post.source_link && post.source_link !== null &&
           <Link
             target="_blank"
-            href={post.source_link}
+            href={post.source_link || ''}
             className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
           >
             <Github size={18} />
@@ -139,7 +150,7 @@ export default async function Page({
           </Link>
         }
 
-        {post.demo_link &&
+        {post_type === 'portfolio' && post && 'demo_link' in post && post.demo_link && post.demo_link !== null &&
           <Link
             target="_blank"
             href={post.demo_link}
@@ -166,15 +177,15 @@ export const revalidate = 3600; // Revalidate every hour
 
 export async function generateStaticParams() {
   const locales = ['en', 'it'];
-  const portfolioPosts = await getPosts('portfolio', 100) as PortfolioPost[];
-  const blogPosts = await getPosts('blog', 100) as BlogPost[];
+  const portfolioPosts = await getPosts('portfolio', undefined, undefined, 100) as PortfolioPost[];
+  const blogPosts = await getPosts('blog', undefined, undefined, 100) as BlogPost[];
 
   const portfolioParams = portfolioPosts!.flatMap((post: PortfolioPost) =>
     locales.map((locale) => ({
       locale,
       post_type: 'portfolio',
       id: post.id.toString(),
-      title: post.title.toLowerCase().replace(/\s+/g, '-'),
+      title: post.title_en.toLowerCase().replace(/\s+/g, '-'),
     }))
   );
 
@@ -183,7 +194,7 @@ export async function generateStaticParams() {
       locale,
       post_type: 'blog',
       id: post.id.toString(),
-      title: post.title.toLowerCase().replace(/\s+/g, '-'),
+      title: post.title_en.toLowerCase().replace(/\s+/g, '-'),
     }))
   );
 
@@ -193,9 +204,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params
 }: {
-  params: Promise<{ post_type: string, id: string, title: string }>
+  params: Promise<{ post_type: string, id: string, title: string, locale: string }>
 }) {
-  const { id, post_type } = await params;
+  const { id, post_type, locale } = await params;
 
   const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
 
@@ -206,18 +217,20 @@ export async function generateMetadata({
     };
   }
 
+  const postDescription = `description_${locale}` as keyof typeof post;
+
   return {
-    title: `${post.title} - Okazakee WS`,
-    description: post.description,
+    title: `${post.title_en} - Okazakee WS`,
+    description: postDescription,
     openGraph: {
-      title: `${post.title} - Okazakee WS`,
-      description: post.description,
+      title: `${post.title_en} - Okazakee WS`,
+      description: postDescription,
       images: [
         {
           url: post.image,
           width: 1200,
           height: 630,
-          alt: post.title,
+          alt: post.title_en,
         },
       ],
     }

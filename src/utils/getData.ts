@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { BlogPost, BlogSection, Contact, HeroSection, PortfolioPost, PortfolioSection, SkillsCategory } from "@/types/fetchedData.types";
+import { BlogPost, Contact, HeroSection, PortfolioPost, SkillsCategory } from "@/types/fetchedData.types";
 import { cache } from 'react';
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
@@ -63,74 +63,38 @@ export const getSkillsCategories = cache(async (): Promise<SkillsCategory[] | nu
   return data;
 });
 
-export const getPortfolioSection = cache(async (): Promise<PortfolioSection | null> => {
-  const { data: sectionMainData, error } = await supabase
-  .from('portfolio_section')
-  .select('*')
-  .single();
+export const getPortfolioPosts = cache(async (): Promise<PortfolioPost[] | null> => {
+
+  const { data, error } = await supabase
+    .from('portfolio_posts')
+    .select(`
+      *
+    `)
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching portfolio section:', error);
+    console.error('Error fetching posts:', error);
     return null;
   }
 
-  const { data: postsData, error: postsErr } = await supabase
-    .from('posts')
-    .select(`
-      *,
-      post_tags (*)
-      `)
-    .eq('post_type', 'portfolio')
-    .order('created_at', { ascending: false })
-    .limit(3);
-
-  if (postsErr) {
-    console.error('Error fetching portfolio posts:', postsErr);
-    return null;
-  }
-
-  const sectionData = {
-    section_name: sectionMainData.section_name,
-    subtitle: sectionMainData.subtitle,
-    portfolio_posts: postsData
-  }
-
-  return sectionData;
+  return data
 });
 
-export const getBlogSection = cache(async (): Promise<BlogSection | null> => {
-  const { data: sectionMainData, error } = await supabase
-  .from('blog_section')
-  .select('*')
-  .single();
+export const getBlogPosts = cache(async (): Promise<BlogPost[] | null> => {
+
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select(`
+      *
+    `)
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching blog section:', error);
+    console.error('Error fetching posts:', error);
     return null;
   }
 
-  const { data: postsData, error: postsErr } = await supabase
-    .from('posts')
-    .select(`
-      *,
-      post_tags (*)
-      `)
-    .eq('post_type', 'blog')
-    .order('created_at', { ascending: false })
-    .limit(3);
-
-  if (postsErr) {
-    console.error('Error fetching blog posts:', postsErr);
-    return null;
-  }
-
-  const sectionData = {
-    section_name: sectionMainData.section_name as string,
-    subtitle: sectionMainData.subtitle as string,
-    blog_posts: postsData as BlogPost[]
-  }
-
-  return sectionData;
+  return data
 });
 
 export const getContacts = cache(async (): Promise<Contact[] | null> => {
@@ -147,39 +111,23 @@ export const getContacts = cache(async (): Promise<Contact[] | null> => {
 
 export const getPosts = cache(async (
   type: string,
-  limit?: number,
-  lang?: string,
-  searchParams?: string
+  searchQuery?: string,
+  locale?: string,
+  limit?: number
 ): Promise<BlogPost[] | PortfolioPost[] | null> => {
+  // Determine the table to query based on the type
+  const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
+
   let query = supabase
-    .from('posts')
-    .select(`
-      *,
-      post_tags (*)
-    `)
-    .eq('post_type', type)
+    .from(table)
+    .select('*')
     .order('created_at', { ascending: false });
 
   // Apply search if searchParams is present
-  if (searchParams) {
-    // Convert search parameter to lowercase for case-insensitive search
-    const searchTerm = searchParams.toLowerCase();
+  if (searchQuery) {
+    const searchTerm = searchQuery.toLowerCase();
 
-    // First, fetch post IDs from post_tags that match the search term
-    const { data: tagPosts, error: tagPostsErr } = await supabase
-      .from('post_tags')
-      .select('post_id')
-      .ilike('tag', `%${searchTerm}%`);
-
-    if (tagPostsErr) {
-      console.error('Error fetching post tags:', tagPostsErr);
-      return null;
-    }
-
-    const postIds = tagPosts.map(tagPost => tagPost.post_id);
-
-    // Now filter posts based on the search term in title, description, or the fetched post IDs
-    query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,id.in.(${postIds.join(',')})`);
+    query = query.or(`title_en.ilike.%${searchTerm}%,description_${locale}.ilike.%${searchTerm}%,post_tags.ilike.%${searchTerm}%`);
   }
 
   // Apply limit only if it's defined
@@ -197,22 +145,24 @@ export const getPosts = cache(async (
   return postsData;
 });
 
-export const getPost = cache(async (id: string, type: string): Promise<PortfolioPost | BlogPost | null> => {
+export const getPost = cache(async (
+  id: string,
+  type: string
+): Promise<PortfolioPost | BlogPost | null> => {
+  const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 
-  const { data: postsData, error: postsErr } = await supabase
-    .from('posts')
+  const { data, error } = await supabase
+    .from(tableName)
     .select(`
-      *,
-      post_tags (*)
-      `)
-    .eq('post_type', type)
+      *
+    `)
     .eq('id', id)
-    .order('created_at', { ascending: false });
+    .single();
 
-  if (postsErr) {
-    console.error('Error fetching posts:', postsErr);
+  if (error) {
+    console.error(`Error fetching ${type} post:`, error);
     return null;
   }
 
-  return postsData[0];
+  return data;
 });

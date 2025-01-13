@@ -3,12 +3,16 @@ import Image from 'next/image'
 import { HeroSection } from '@/types/fetchedData.types';
 import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
+import { getHeroSection } from '@/utils/getData';
+import { ErrorDiv } from '../common/ErrorDiv';
 
-export default async function Hero({ heroSection }: { heroSection: HeroSection }){
+export default async function Hero() {
 
-  const { propic, blurhashURL } = heroSection;
+  const heroSection = await getHeroSection();
 
   const t = await getTranslations('hero-section');
+
+  if (!heroSection) return <ErrorDiv>Error loading Hero data</ErrorDiv>;
 
   return (
     <section className="md:mx-10 mx-5 md:h-svh flex items-center mdh:mt-20">
@@ -16,8 +20,8 @@ export default async function Hero({ heroSection }: { heroSection: HeroSection }
           <div className="flex flex-col xl:flex-row items-center xl:justify-around">
             <Image
               placeholder='blur'
-              blurDataURL={blurhashURL}
-              src={propic}
+              blurDataURL={heroSection.blurhashURL}
+              src={heroSection.propic}
               width={340}
               height={340}
               className='rounded-2xl xl:mr-10 w-[230px] xs:w-[250px] xl:w-[340px] xl:mx-0 mb-10 md:mb-20 mt-14 md:mt-20 xl:py-0 border-[3px] border-main'

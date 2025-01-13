@@ -1,10 +1,8 @@
 # Prod ready todos
-- i18n implementation, english/italian.
 - Write at least 2 blog posts.
 - Umami analytics implementation.
 
 # no priority todos
-- Major database schema rebuild.
 - Major query functions refactoring
 - Tags carousel in post page for mobile.
 - Blur shapes background.

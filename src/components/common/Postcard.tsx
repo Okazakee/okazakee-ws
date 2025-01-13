@@ -6,10 +6,20 @@ import { Tags } from './Tags';
 
 export default function Postcard({ post, locale } : { post: PortfolioPost | BlogPost; locale: string }) {
 
-  const slugifiedTitle = post.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  /* const title = post[`title_${locale}` as keyof typeof post]; */
+
+  const description = post[`description_${locale}` as keyof typeof post];
+
+  const slugifiedTitle = String(post.title_en).toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+
+  const isPortfolioPost = (post: PortfolioPost | BlogPost): post is PortfolioPost => {
+    return 'source_link' in post;
+  };
+
+  const checkPostType = isPortfolioPost(post) ? 'portfolio' : 'blog';
 
   return (
-    <Link href={`/${locale}/${post.post_type}/${post.id}/${slugifiedTitle}`}
+    <Link href={`/${locale}/${checkPostType}/${post.id}/${slugifiedTitle}`}
       className={`hover:bg-tertiary bg-[#c5c5c5] dark:bg-[#0e0e0e] hover:text-lighttext border-2 p-3 border-secondary rounded-xl overflow-hidden cursor-pointer transition-all text-left flex flex-col justify-between md:w-[32rem] w-full max-w-[21rem] xs:min-w-[24rem] md:max-w-xl hover:scale-105`}
     >
       <div className="w-full h-[12rem] md:h-[16rem] relative mx-auto mb-3">
@@ -27,8 +37,8 @@ export default function Postcard({ post, locale } : { post: PortfolioPost | Blog
         />
       </div>
       <div className=''>
-        <h3 className="font-bold text-xl xs:text-2xl sm:text-2xl">{post.title}</h3>
-        <h2 className="md:truncate tracking-tighter md:tracking-normal xs:text-lg sm:text-lg min-h-10 flex items-center justify-start">{post.description}</h2>
+        <h3 className="font-bold text-xl xs:text-2xl sm:text-2xl">{post.title_en}</h3>
+        <h2 className="md:truncate tracking-tighter md:tracking-normal xs:text-lg sm:text-lg min-h-10 flex items-center justify-start">{description}</h2>
         <Tags tags={post.post_tags} />
       </div>
     </Link>
