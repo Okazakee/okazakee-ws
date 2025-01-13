@@ -4,7 +4,6 @@
 
 # no priority todos
 - Major query functions refactoring
-- Tags carousel in post page for mobile.
 - Blur shapes background.
 - Setup prettier.
 - Add links to main pages of tech stack in db to use as button link for skills.

@@ -5,6 +5,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { NextIntlClientProvider } from 'next-intl';
 import { getTranslationsSupabase } from '@/utils/getData';
+import Script from "next/script";
+import ScrollTop from "@/components/common/ScrollTop";
 
 const whiteRabbit = localFont({
   src: "../fonts/whiterabbit.woff",
@@ -31,10 +33,12 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages} locale={locale}>
             <Header locale={locale} />
               {children}
+              <ScrollTop />
             <Footer />
           </NextIntlClientProvider>
         </body>
       </Providers>
+      <Script src="https://umami.okazakee.dev/script.js" data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c" strategy="afterInteractive" />
     </html>
   );
 }

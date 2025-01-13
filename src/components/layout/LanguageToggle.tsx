@@ -28,24 +28,24 @@ export default function LanguageToggle() {
   return (
     <button
       onClick={switchLanguage}
-      className="space-x-2 relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-[400ms] ease-in-out h-[4rem] w-[12rem]"
+      className="space-x-2 relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-[400ms] ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-32"
     >
       <div className="relative w-[1.8rem]">
         <Languages
           size={30}
-          className="transition-all text-darktext dark:text-lighttext duration-[400ms] ease-in-out absolute top-1/2 transform -translate-y-1/2"
+          className="transition-all text-darktext dark:text-lighttext duration-[400ms] ease-in-out absolute top-1/2 transform -translate-y-1/2 lg:w-5 lg:ml-2"
         />
       </div>
-      <div className="text-xl text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[7rem] flex items-center pointer-events-none">
+      <div className="text-xl lg:text-lg text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[7rem] flex items-center pointer-events-none">
         <span
-          className={`absolute -left-2 transform translate-x-[100%] transition-opacity duration-[400ms] ease-in-out ${
+          className={`absolute -left-2 transform translate-x-[100%] transition-opacity duration-[400ms] ease-in-out lg:translate-x-11 ${
             isItalian ? 'opacity-0' : 'opacity-100'
           }`}
         >
           English
         </span>
         <span
-          className={`absolute -left-2 transform translate-x-[100%] transition-opacity duration-[400ms] ease-in-out ${
+          className={`absolute -left-2 transform translate-x-[100%] transition-opacity duration-[400ms] ease-in-out lg:translate-x-11 ${
             isItalian ? 'opacity-100' : 'opacity-0'
           }`}
         >
