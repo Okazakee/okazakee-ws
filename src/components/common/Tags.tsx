@@ -40,9 +40,11 @@ export const Tags = ({ tags }: { tags: string }) => {
 
   const totalChars = reworkedTags.reduce((sum, tag) => sum + tag.length, 0);
 
-  const regex = /^\/(it\/)?(portfolio|blog)\/\d+\/.+$/;
+  const regex = /^\/(it|en)\/(portfolio|blog)\/\d+\/.+$/;
 
   const isPostPage = regex.test(pathname);
+
+  console.log(pathname)
 
   const shouldAnimate = isPostPage
   ? isMobile // Only animate if it's a post page and we're on mobile

@@ -102,6 +102,8 @@ export function DesktopNav({
           {t(`buttons.${i}`)}
         </Link>
       ))}
+      <LanguageToggle />
+      <ThemeToggle />
     </nav>
   )
 }

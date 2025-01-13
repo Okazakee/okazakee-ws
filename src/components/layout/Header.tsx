@@ -24,8 +24,7 @@ export default function Header( { locale } : { locale: string } ) {
 
         <DesktopNav locale={locale} />
 
-        {/* <MobileNav className="ml-auto flex items-center md:hidden" /> */}
-        <MobileNav locale={locale} className="ml-auto flex items-center" />
+        <MobileNav locale={locale} className="ml-auto flex items-center md:hidden" />
       </div>
     </header>
   );

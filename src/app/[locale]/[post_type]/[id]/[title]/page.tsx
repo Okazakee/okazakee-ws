@@ -65,7 +65,7 @@ export default async function Page({
 
       {/* TAGS */}
       <div className='my-4'>
-        <Tags tags={post.post_tags + post.post_tags} />
+        <Tags tags={post.post_tags} />
       </div>
 
       {/* Main Image */}
