@@ -93,6 +93,8 @@ export default async function Page({
               target="_blank"
               href={post.source_link}
               className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+              data-umami-event="View Source Code button"
+              data-umami-event-post={title}
             >
               <Github size={18} />
               <div className='mt-0.5 md:mt-0'>
@@ -107,6 +109,8 @@ export default async function Page({
               target="_blank"
               href={post.demo_link}
               className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+              data-umami-event="View Demo button"
+              data-umami-event-post={title}
             >
               <ExternalLink size={18} />
               <div className='mt-0.5 md:mt-0'>
@@ -130,7 +134,7 @@ export default async function Page({
           </div>
         }
 
-        <ShareButton className='ml-auto' buttonTitle='Copy post link' url={postURL} />
+        <ShareButton className='ml-auto' buttonTitle={locale === 'en' ? 'Copy post url' : 'Copia url del post'} url={postURL} title={post.title_en} />
 
       </div>
 
@@ -140,6 +144,8 @@ export default async function Page({
             target="_blank"
             href={post.source_link || ''}
             className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+            data-umami-event="View Source Code button"
+            data-umami-event-post={title}
           >
             <Github size={18} />
             <div className='mt-0.5 md:mt-0'>
@@ -154,6 +160,8 @@ export default async function Page({
             target="_blank"
             href={post.demo_link}
             className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+            data-umami-event="View Demo button"
+            data-umami-event-post={title}
           >
             <ExternalLink size={18} />
             <div className='mt-0.5 md:mt-0'>

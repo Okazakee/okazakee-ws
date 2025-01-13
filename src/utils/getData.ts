@@ -166,3 +166,19 @@ export const getPost = cache(async (
 
   return data;
 });
+
+export const getResumeLink = cache(async (): Promise<string | null> => {
+
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('link')
+    .eq('label', 'Resume')
+    .single();
+
+  if (error) {
+    console.error(`Error fetching resume link:`, error);
+    return null;
+  }
+
+  return data.link;
+});

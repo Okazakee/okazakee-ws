@@ -3,8 +3,11 @@ import Image from "next/image";
 import logo from "@public/logo.svg";
 import Link from "next/link";
 import MobileNav, { DesktopNav } from "./NavMenu";
+import { getResumeLink } from "@/utils/getData";
 
-export default function Header( { locale } : { locale: string } ) {
+export default async function Header( { locale } : { locale: string } ) {
+
+  const resume = await getResumeLink();
 
   return (
     <header className="max-w-screen-2xl mx-auto pt-2">
@@ -22,9 +25,9 @@ export default function Header( { locale } : { locale: string } ) {
           />
         </Link>
 
-        <DesktopNav locale={locale} />
+        <DesktopNav locale={locale} resumeLink={resume!} />
 
-        <MobileNav locale={locale} className="ml-auto flex items-center md:hidden" />
+        <MobileNav locale={locale} resumeLink={resume!} className="ml-auto flex items-center md:hidden" />
       </div>
     </header>
   );

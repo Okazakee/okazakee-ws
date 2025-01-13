@@ -41,6 +41,7 @@ export default async function Contacts() {
 
                 return (
                   <Link
+                    data-umami-event={`${label} button`}
                     key={id}
                     style={{
                       "--dyn-color": `${bg_color}99`,
@@ -50,7 +51,7 @@ export default async function Contacts() {
                     target="_blank"
                     className={`text-lighttext mb-5 md:mb-0 last:mb-0 transition-all hover:scale-105 border-2
                       border-main rounded-2xl bg-[var(--hover-color)] md:bg-[var(--dyn-color)] md:hover:bg-[var(--hover-color)]
-                      ${label === 'Resume' && 'md:hidden'}`}
+                      ${label === 'Resume' && 'hidden'}`}
                   >
                     <div className="transition-all ease-in-out md:my-0 my-2 md:w-40 md:h-40">
                       {IconComponent ? (

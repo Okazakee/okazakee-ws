@@ -6,7 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { NextIntlClientProvider } from 'next-intl';
 import { getTranslationsSupabase } from '@/utils/getData';
 import Script from "next/script";
-import ScrollTop from "@/components/common/ScrollTop";
+import ScrollTop from "@/components/layout/ScrollTop";
 
 const whiteRabbit = localFont({
   src: "../fonts/whiterabbit.woff",
