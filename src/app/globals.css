@@ -60,22 +60,12 @@
   animation: carousel 8s ease-in-out infinite;
 }
 
+.animate-carousel-slow {
+  animation: carousel 20s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-carousel {
     animation: none;
   }
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-.animate-marquee {
-  animation: marquee 15s linear infinite;
-  display: inline-block; /* Ensure it's treated as a block for transform animation */
 }

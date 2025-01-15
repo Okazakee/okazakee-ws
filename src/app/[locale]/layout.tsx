@@ -38,7 +38,7 @@ export default async function RootLayout({
           </NextIntlClientProvider>
         </body>
       </Providers>
-      <Script src="https://umami.okazakee.dev/script.js" data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c" strategy="afterInteractive" />
+      {process.env.UMAMI_ENABLED && <Script src="https://umami.okazakee.dev/script.js" data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c" strategy="afterInteractive" />}
     </html>
   );
 }

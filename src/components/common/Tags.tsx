@@ -47,7 +47,7 @@ export const Tags = ({ tags }: { tags: string }) => {
   const shouldAnimate = isPostPage
   ? (isMobile && (totalChars > 50 || reworkedTags.length > 3)) // Post page: only animate on mobile with conditions
   : (isMobile
-    ? (totalChars > 30 || reworkedTags.length > 3) // Post card mobile conditions
+    ? (totalChars > 18 || reworkedTags.length > 3) // Post card mobile conditions
     : (totalChars > 34 || reworkedTags.length > 4)); // Post card desktop conditions
 
   return (
