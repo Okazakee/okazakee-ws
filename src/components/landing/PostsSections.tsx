@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
-import Postcard from "../common/PostCard";
 import { getTranslations } from "next-intl/server";
 import { formatLabels } from "@/utils/formatLabels";
 import { getBlogPosts, getPortfolioPosts } from "@/utils/getData";
 import { ErrorDiv } from "../common/ErrorDiv";
+import PostCard from "../common/PostCard";
 
 export default async function PostsSection({locale} : {locale: string;}) {
 
@@ -40,7 +40,7 @@ export default async function PostsSection({locale} : {locale: string;}) {
             />
             <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
               {postsCheck.map((post) => (
-                <Postcard
+                <PostCard
                   key={post.id}
                   post={post}
                   locale={locale}
