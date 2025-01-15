@@ -3,10 +3,9 @@ import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Tags } from './Tags';
+import DescriptionCarousel from '../atoms/DescriptionCarousel';
 
 export default function Postcard({ post, locale } : { post: PortfolioPost | BlogPost; locale: string }) {
-
-  /* const title = post[`title_${locale}` as keyof typeof post]; */
 
   const description = post[`description_${locale}` as keyof typeof post];
 
@@ -38,7 +37,7 @@ export default function Postcard({ post, locale } : { post: PortfolioPost | Blog
       </div>
       <div className=''>
         <h3 className="font-bold text-xl xs:text-2xl sm:text-2xl">{post.title_en}</h3>
-        <h2 className="md:truncate tracking-tighter md:tracking-normal xs:text-lg sm:text-lg min-h-10 flex items-center justify-start">{description}</h2>
+        <DescriptionCarousel>{description}</DescriptionCarousel>
         <Tags tags={post.post_tags} />
       </div>
     </Link>

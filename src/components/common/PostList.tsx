@@ -2,7 +2,7 @@
 
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types'
 import React, { useState } from 'react'
-import Postcard from './Postcard';
+import Postcard from './PostCard';
 import Searchbar from './Searchbar';
 import { ErrorDiv } from './ErrorDiv';
 import {useTranslations} from 'next-intl';

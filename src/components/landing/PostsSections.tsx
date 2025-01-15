@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import Postcard from "../common/Postcard";
+import Postcard from "../common/PostCard";
 import { getTranslations } from "next-intl/server";
 import { formatLabels } from "@/utils/formatLabels";
 import { getBlogPosts, getPortfolioPosts } from "@/utils/getData";
