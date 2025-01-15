@@ -11,7 +11,7 @@ export default async function Header( { locale } : { locale: string } ) {
 
   return (
     <header className="max-w-screen-2xl mx-auto pt-2">
-      <div className="flex justify-center items-center pt-5 mx-5">
+      <div className="flex justify-between items-center pt-5 mx-5">
         <Link
           href={"/"}
           className="xl:mr-auto xl:mx-0 xl:static"
