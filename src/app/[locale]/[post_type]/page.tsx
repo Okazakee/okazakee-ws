@@ -59,7 +59,7 @@ export default async function PostsPage({
 
   return (
     <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
-      <div className="xl:mx-16 text-center mb-20 max-w-[120rem]">
+      <div className={`xl:mx-16 text-center mb-20 max-w-[120rem] ${posts.length < 2 && 'h-screen'}`}>
         {posts.length > 0 ? (
           <>
             <h1 className="text-3xl xs:text-4xl xl:text-5xl mb-5">
