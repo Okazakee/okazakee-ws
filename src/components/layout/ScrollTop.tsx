@@ -38,28 +38,17 @@ export default function ScrollTop() {
 
   return (
     showLink && (
-      <>
-        <button
-          className="hidden fixed right-8 md:flex items-center text-base xs:text-lg sm:text-lg bg-darktext text-lighttext dark:bg-lighttext dark:text-darktext px-4 py-2 rounded-xl shadow-lg transition-opacity duration-[400ms]"
-          style={{
-            bottom: `${buttonOffset}px`,
-            opacity: opacity,
-          }}
-          onClick={() => scrollToSection('about')}
-        >
-          {t('right')} <ArrowUpToLine className="ml-2" />
-        </button>
-        <button
-          className="lg:hidden fixed right-4 flex items-center text-base xs:text-lg sm:text-lg bg-darktext text-lighttext dark:bg-lighttext dark:text-darktext p-3 rounded-xl shadow-lg transition-opacity duration-[400ms]"
-          style={{
-            bottom: `${buttonOffset}px`,
-            opacity: opacity,
-          }}
-          onClick={() => scrollToSection('about')}
-        >
-          <ArrowUpToLine className="" />
-        </button>
-      </>
+      <button
+        className="fixed right-4 md:right-8 flex items-center justify-center text-base xs:text-lg sm:text-lg bg-darktext text-lighttext dark:bg-lighttext dark:text-darktext p-3 md:px-4 md:py-2 rounded-xl shadow-lg transition-opacity duration-[400ms]"
+        style={{
+          bottom: `${buttonOffset}px`,
+          opacity: opacity,
+        }}
+        onClick={() => scrollToSection('about')}
+      >
+        <span className="hidden md:inline">{t('right')}</span>
+        <ArrowUpToLine className="ml-0 md:ml-2" />
+      </button>
     )
   );
 }
