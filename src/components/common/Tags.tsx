@@ -47,7 +47,7 @@ export const Tags = ({ tags }: { tags: string }) => {
   const shouldAnimate = isPostPage
   ? (isMobile && (totalChars > 50 || reworkedTags.length > 3)) // Post page: only animate on mobile with conditions
   : (isMobile
-    ? (totalChars > 18 || reworkedTags.length > 3) // Post card mobile conditions
+    ? (totalChars > 25 || reworkedTags.length > 3) // Post card mobile conditions
     : (totalChars > 34 || reworkedTags.length > 4)); // Post card desktop conditions
 
   return (
@@ -69,9 +69,9 @@ export const Tags = ({ tags }: { tags: string }) => {
         {reworkedTags.map((tag, i) => (
           <span
             key={i}
-            className="tag bg-secondary text-lighttext text-base gap-2 px-2 xs:py-1 sm:py-1 pt-0.5 rounded-lg flex items-center mr-2 xs:mb-1 sm:mb-1 sm:mt-2 xs:mt-2 mt-1"
+            className="tag bg-secondary text-lighttext text-sm xs:text-base sm:text-base gap-2 px-2 py-1 rounded-lg flex items-center mr-2 xs:mb-1 sm:mb-1 sm:mt-2 xs:mt-2 mt-1"
           >
-            <Tag size={15} />
+            <Tag size={15} className='w-[14px] xs:w-[15px] sm:w-[15px]' />
             {tag}
           </span>
         ))}
