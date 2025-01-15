@@ -70,6 +70,7 @@ export const getPortfolioPosts = cache(async (): Promise<PortfolioPost[] | null>
     .select(`
       *
     `)
+    .limit(3)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -87,6 +88,7 @@ export const getBlogPosts = cache(async (): Promise<BlogPost[] | null> => {
     .select(`
       *
     `)
+    .limit(3)
     .order('created_at', { ascending: false });
 
   if (error) {

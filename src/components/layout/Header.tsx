@@ -20,6 +20,7 @@ export default async function Header( { locale } : { locale: string } ) {
             src={logo}
             width={200}
             height={100}
+            priority
             className="dark:invert -mt-0.5 xl:w-[200px] w-[130px] xs:w-[160px] transition-all duration-[400ms] ease-in-out"
             alt="logo"
           />

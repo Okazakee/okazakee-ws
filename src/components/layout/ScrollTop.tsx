@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { ArrowUpToLine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { scrollToSection } from '@/utils/scrollToSection';
 
 export default function ScrollTop() {
   const [showLink, setShowLink] = useState(false);
@@ -39,26 +39,26 @@ export default function ScrollTop() {
   return (
     showLink && (
       <>
-        <Link
+        <button
           className="hidden fixed right-8 md:flex items-center text-base xs:text-lg sm:text-lg bg-darktext text-lighttext dark:bg-lighttext dark:text-darktext px-4 py-2 rounded-xl shadow-lg transition-opacity duration-[400ms]"
           style={{
             bottom: `${buttonOffset}px`,
             opacity: opacity,
           }}
-          href={'#about'}
+          onClick={() => scrollToSection('about')}
         >
           {t('right')} <ArrowUpToLine className="ml-2" />
-        </Link>
-        <Link
+        </button>
+        <button
           className="lg:hidden fixed right-4 flex items-center text-base xs:text-lg sm:text-lg bg-darktext text-lighttext dark:bg-lighttext dark:text-darktext p-3 rounded-xl shadow-lg transition-opacity duration-[400ms]"
           style={{
             bottom: `${buttonOffset}px`,
             opacity: opacity,
           }}
-          href={'#about'}
+          onClick={() => scrollToSection('about')}
         >
           <ArrowUpToLine className="" />
-        </Link>
+        </button>
       </>
     )
   );

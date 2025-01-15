@@ -1,9 +1,9 @@
 # Prod ready todos
 - Write at least 2 blog posts.
-- Umami analytics implementation.
 
 # no priority todos
-- Major query functions refactoring
+- Check and better implement ISR fallbacking.
+- Major query functions refactoring.
 - Blur shapes background.
 - Setup prettier.
 - Add links to main pages of tech stack in db to use as button link for skills.
