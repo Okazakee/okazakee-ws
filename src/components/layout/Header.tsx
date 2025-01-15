@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import logo from "@public/logo.svg";
 import Link from "next/link";
-import MobileNav, { DesktopNav } from "./NavMenu";
+import NavMenu from "./NavMenu";
 import { getResumeLink } from "@/utils/getData";
 
 export default async function Header( { locale } : { locale: string } ) {
@@ -26,9 +26,8 @@ export default async function Header( { locale } : { locale: string } ) {
           />
         </Link>
 
-        <DesktopNav locale={locale} resumeLink={resume!} />
+        <NavMenu locale={locale} resumeLink={resume!} />
 
-        <MobileNav locale={locale} resumeLink={resume!} className="ml-auto flex items-center md:hidden" />
       </div>
     </header>
   );
