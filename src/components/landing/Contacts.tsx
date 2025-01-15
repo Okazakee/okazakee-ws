@@ -57,7 +57,7 @@ export default async function Contacts() {
                       {IconComponent ? (
                         <div className="h-full flex md:flex-col justify-center items-center">
                           <IconComponent
-                            className="md:mr-0 mr-5 dark:text-lighttext md:w-[100px] w-[5rem] md:h-auto h-[3.5rem] xs:h-[5rem] bg-w"
+                            className="md:mr-0 mr-5 dark:text-lighttext md:w-[100px] w-[4rem] md:h-auto h-[3.5rem] xs:h-[4rem] bg-w"
                             size={80}
                             strokeWidth={1}
                           />
