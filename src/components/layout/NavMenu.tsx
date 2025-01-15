@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Menu, X, Home, Drill, Briefcase, BookOpenText, Contact, FileUser } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import LanguageToggle from './LanguageToggle'
-import { useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl'
 
 const createMenuItems = (locale: string) => [
   { href: `/${locale}`, icon: Home, isAnchor: false },
@@ -27,54 +27,75 @@ export default function ResponsiveNav({
   resumeLink: string;
 }) {
   const [isOpen, setIsOpen] = useState(false)
-  const menuItems = createMenuItems(locale);
-  const t = useTranslations('header');
-  const pathname = usePathname();
-  const isHomePage = pathname === `/${locale}`;
+  const [pendingScroll, setPendingScroll] = useState<string | null>(null)
+  const menuItems = createMenuItems(locale)
+  const t = useTranslations('header')
+  const pathname = usePathname()
+  const router = useRouter()
+  const isHomePage = pathname === `/${locale}`
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, isAnchor: boolean) => {
-    if (!isAnchor) return;
-    
-    if (isHomePage) {
-      e.preventDefault();
-      const element = document.getElementById(href);
+  useEffect(() => {
+    // Handle scrolling when we're on the home page and have a pending scroll target
+    if (isHomePage && pendingScroll) {
+      const element = document.getElementById(pendingScroll)
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-        setIsOpen(false);
+        element.scrollIntoView({ behavior: 'smooth' })
+        setPendingScroll(null) // Clear the pending scroll
       }
     }
-  };
+  }, [isHomePage, pendingScroll])
+
+  const handleClick = async (e: React.MouseEvent<HTMLAnchorElement>, href: string, isAnchor: boolean) => {
+    if (!isAnchor) return
+
+    e.preventDefault()
+    setIsOpen(false)
+
+    if (isHomePage) {
+      // If we're already on the home page, just scroll
+      const element = document.getElementById(href)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      }
+    } else {
+      // If we're on another page, navigate to home first and set pending scroll
+      setPendingScroll(href)
+      router.push(`/${locale}`)
+    }
+  }
 
   const getHref = (item: { href: string; isAnchor: boolean }) => {
-    if (item.href === 'resume') return resumeLink;
+    if (item.href === 'resume') return resumeLink
     if (item.isAnchor) {
-      return isHomePage ? `#${item.href}` : `/${locale}#${item.href}`;
+      // For anchor links, we'll handle the navigation in onClick
+      // but we still need a valid href for the link
+      return `/${locale}`
     }
-    return item.href;
-  };
+    return item.href
+  }
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = 'auto'
     }
     return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isOpen]);
+      document.body.style.overflow = 'auto'
+    }
+  }, [isOpen])
 
   return (
     <>
       {/* Desktop Navigation */}
       <nav className={`${className} hidden lg:flex text-xl`}>
         {menuItems.map((button, i) => {
-          const hasUmamiTracking = button.href === 'resume';
-          const href = getHref(button);
-          
+          const hasUmamiTracking = button.href === 'resume'
+          const href = getHref(button)
+
           return (
             <Link
-              key={href}
+              key={i}
               href={href}
               className="mx-4 transition-all hover:text-main flex items-center"
               onClick={(e) => handleClick(e, button.href, button.isAnchor)}
@@ -108,17 +129,17 @@ export default function ResponsiveNav({
         >
           <ul className="space-y-16 p-4 scale-[85%] xs:scale-100">
             {menuItems.map((item, i) => {
-              const hasUmamiTracking = item.href === 'resume';
-              const href = getHref(item);
+              const hasUmamiTracking = item.href === 'resume'
+              const href = getHref(item)
 
               return (
-                <li key={href}>
+                <li key={i}>
                   <Link
                     href={href}
                     className="flex text-3xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out"
                     onClick={(e) => {
-                      handleClick(e, item.href, item.isAnchor);
-                      setIsOpen(false);
+                      handleClick(e, item.href, item.isAnchor)
+                      setIsOpen(false)
                     }}
                     {...(hasUmamiTracking && {
                       'data-umami-event': 'Resume Clicked'
