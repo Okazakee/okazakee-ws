@@ -4,6 +4,7 @@ import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@utils/getData';
 import { Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
+import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -18,6 +19,8 @@ export default async function Page({
   const { id, title, post_type, locale } = await params;
 
   const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
+
+  const t = await getTranslations('posts-section');
 
   let ghStars = 0;
 
@@ -98,8 +101,7 @@ export default async function Page({
             >
               <Github size={18} />
               <div className='mt-0.5 md:mt-0'>
-                <span className="hidden md:inline">View </span>
-                Source
+                {t('source')}
               </div>
             </Link>
           }
@@ -114,8 +116,7 @@ export default async function Page({
             >
               <ExternalLink size={18} />
               <div className='mt-0.5 md:mt-0'>
-                <span className="hidden md:inline">Live </span>
-                Demo
+                {t('demo')}
               </div>
             </Link>
           }
@@ -149,8 +150,7 @@ export default async function Page({
           >
             <Github size={18} />
             <div className='mt-0.5 md:mt-0'>
-              <span className=" md:inline">View </span>
-              Source
+              {t('source')}
             </div>
           </Link>
         }
@@ -165,8 +165,7 @@ export default async function Page({
           >
             <ExternalLink size={18} />
             <div className='mt-0.5 md:mt-0'>
-              <span className=" md:inline">Live </span>
-              Demo
+              {t('demo')}
             </div>
           </Link>
         }
@@ -228,10 +227,10 @@ export async function generateMetadata({
 
   return {
     title: `${post.title_en} - Okazakee WS`,
-    description: postDescription,
+    description: post[postDescription],
     openGraph: {
       title: `${post.title_en} - Okazakee WS`,
-      description: postDescription,
+      description: post[postDescription],
       images: [
         {
           url: post.image,
