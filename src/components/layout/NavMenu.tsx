@@ -136,7 +136,7 @@ export default function ResponsiveNav({
                 <li key={i}>
                   <Link
                     href={href}
-                    className="flex text-3xl items-center space-x-2 text-darktext dark:text-lighttext"
+                    className="flex text-3xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out"
                     onClick={(e) => {
                       handleClick(e, item.href, item.isAnchor)
                       setIsOpen(false)
