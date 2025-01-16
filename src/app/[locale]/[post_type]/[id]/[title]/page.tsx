@@ -179,7 +179,7 @@ export default async function Page({
   )
 }
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = process.env.ISR_REVALIDATION;
 
 export async function generateStaticParams() {
   const locales = ['en', 'it'];

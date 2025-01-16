@@ -38,7 +38,7 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = process.env.ISR_REVALIDATION;
 
 export async function generateStaticParams() {
   return [
