@@ -33,19 +33,19 @@ export default function LanguageToggle() {
       <div className="relative w-[1.8rem]">
         <Languages
           size={30}
-          className="transition-all text-darktext dark:text-lighttext duration-[400ms] ease-in-out absolute top-1/2 transform -translate-y-1/2 lg:w-5 lg:ml-2"
+          className="transition-all text-darktext dark:text-lighttext duration-[400ms] ease-in-out absolute top-1/2 transform-gpu -translate-y-1/2 lg:w-5 lg:ml-2"
         />
       </div>
       <div className="text-xl lg:text-lg text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[7rem] flex items-center pointer-events-none">
         <span
-          className={`absolute -left-2 transform translate-x-[100%] transition-opacity duration-[400ms] ease-in-out lg:translate-x-11 ${
+          className={`absolute -left-2 transform-gpu translate-x-[100%] transition-opacity duration-[400ms] ease-in-out lg:translate-x-11 ${
             isItalian ? 'opacity-0' : 'opacity-100'
           }`}
         >
           English
         </span>
         <span
-          className={`absolute -left-2 transform translate-x-[100%] transition-opacity duration-[400ms] ease-in-out lg:translate-x-11 ${
+          className={`absolute -left-2 transform-gpu translate-x-[100%] transition-opacity duration-[400ms] ease-in-out lg:translate-x-11 ${
             isItalian ? 'opacity-100' : 'opacity-0'
           }`}
         >

@@ -24,11 +24,11 @@ export default function ThemeToggle() {
       <div className='relative w-[1.875rem] text-darktext dark:text-lighttext'>
         <Sun
           size={30}
-          className={`transition-all text-darktext duration-[400ms] ease-in-out absolute top-1/2 transform -translate-y-1/2 lg:w-5 lg:ml-2 ${isDark ? 'opacity-0' : 'opacity-100'}`}
+          className={`transition-all text-darktext duration-[400ms] ease-in-out absolute top-1/2 transform-gpu -translate-y-1/2 lg:w-5 lg:ml-2 ${isDark ? 'opacity-0' : 'opacity-100'}`}
         />
         <Moon
           size={30}
-          className={`transition-all text-lighttext duration-[400ms] ease-in-out absolute top-1/2 transform -translate-y-1/2 lg:w-5 lg:ml-2 ${isDark ? 'opacity-100' : 'opacity-0'}`}
+          className={`transition-all text-lighttext duration-[400ms] ease-in-out absolute top-1/2 transform-gpu -translate-y-1/2 lg:w-5 lg:ml-2 ${isDark ? 'opacity-100' : 'opacity-0'}`}
         />
       </div>
       <span className={`text-xl lg:text-[1rem] lg:-left-1.5 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out w-[8rem] relative ${isDark ? 'opacity-0' : 'opacity-100'}`}>

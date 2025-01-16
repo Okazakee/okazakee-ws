@@ -49,7 +49,7 @@ export default function ShareButton({
         </span>
       </div>
 
-      <Share2 className={`absolute left-1/2 transform transition-all duration-[400ms] ease-in-out -translate-x-1/2 w-5 h-5 ${copied ? 'opacity-0' : 'opacity-100'}`} />
+      <Share2 className={`absolute left-1/2 transform-gpu transition-all duration-[400ms] ease-in-out -translate-x-1/2 w-5 h-5 ${copied ? 'opacity-0' : 'opacity-100'}`} />
 
 
     </button>
