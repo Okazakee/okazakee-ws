@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { BlogPost, Contact, HeroSection, PortfolioPost, SkillsCategory } from "@/types/fetchedData.types";
-import { cache } from 'react';
+import { unstable_cache } from 'next/cache'
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
@@ -8,179 +8,193 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
-export async function getTranslationsSupabase(locale: string) {
-  const { data, error } = await supabase
-    .from('i18n_translations')
-    .select('translations')
-    .eq('language', locale)
-    .single();
+export const getTranslationsSupabase = unstable_cache(
+  async (locale: string) => {
+    const { data, error } = await supabase
+      .from('i18n_translations')
+      .select('translations')
+      .eq('language', locale)
+      .single();
 
-  if (error) {
-    console.error('Error fetching translations:', error);
-    return {};
-  }
+    if (error) {
+      console.error('Error fetching translations:', error);
+      return {};
+    }
 
-  const translations = data?.translations ? data.translations : {};
+    return data?.translations ? data.translations : {};
+  },
+  ['translations'],
+  { revalidate: 3600, tags: ['translations'] }
+);
 
-  return translations;
+export const getHeroSection = unstable_cache(
+  async (): Promise<HeroSection | null> => {
+    const { data, error } = await supabase
+      .from('hero_section')
+      .select('id, propic, blurhashURL')
+      .single();
 
-}
+    if (error) {
+      console.error(error);
+      return null;
+    }
+    return data;
+  },
+  ['hero-section'],
+  { revalidate: 3600, tags: ['hero'] }
+);
 
-export const getHeroSection = cache(async (): Promise<HeroSection | null> => {
-  const { data, error } = await supabase
-    .from('hero_section')
-    .select('id, propic, blurhashURL')
-    .single();
-
-  if (error) {
-    console.error(error);
-    return null;
-  }
-  return data;
-});
-
-export const getSkillsCategories = cache(async (): Promise<SkillsCategory[] | null> => {
-  const { data, error } = await supabase
-    .from('skills_categories')
-    .select(`
-      id,
-      name,
-      skills (
+export const getSkillsCategories = unstable_cache(
+  async (): Promise<SkillsCategory[] | null> => {
+    const { data, error } = await supabase
+      .from('skills_categories')
+      .select(`
         id,
-        title,
-        icon,
-        invert,
-        category_id,
-        blurhashURL
-      )
-    `);
+        name,
+        skills (
+          id,
+          title,
+          icon,
+          invert,
+          category_id,
+          blurhashURL
+        )
+      `);
 
-  if (error) {
-    console.error(error);
-    return null;
-  }
+    if (error) {
+      console.error(error);
+      return null;
+    }
+    return data;
+  },
+  ['skills-categories'],
+  { revalidate: 3600, tags: ['skills'] }
+);
 
-  return data;
-});
+export const getPortfolioPosts = unstable_cache(
+  async (): Promise<PortfolioPost[] | null> => {
+    const { data, error } = await supabase
+      .from('portfolio_posts')
+      .select(`*`)
+      .limit(3)
+      .order('created_at', { ascending: false });
 
-export const getPortfolioPosts = cache(async (): Promise<PortfolioPost[] | null> => {
+    if (error) {
+      console.error('Error fetching posts:', error);
+      return null;
+    }
+    return data;
+  },
+  ['portfolio-posts-recent'],
+  { revalidate: 3600, tags: ['portfolio'] }
+);
 
-  const { data, error } = await supabase
-    .from('portfolio_posts')
-    .select(`
-      *
-    `)
-    .limit(3)
-    .order('created_at', { ascending: false });
+export const getBlogPosts = unstable_cache(
+  async (): Promise<BlogPost[] | null> => {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select(`*`)
+      .limit(3)
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching posts:', error);
-    return null;
-  }
+    if (error) {
+      console.error('Error fetching posts:', error);
+      return null;
+    }
+    return data;
+  },
+  ['blog-posts-recent'],
+  { revalidate: 3600, tags: ['blog'] }
+);
 
-  return data
-});
+export const getContacts = unstable_cache(
+  async (): Promise<Contact[] | null> => {
+    const { data, error } = await supabase
+      .from('contacts')
+      .select(`*`);
 
-export const getBlogPosts = cache(async (): Promise<BlogPost[] | null> => {
+    if (error) {
+      console.error(error);
+      return null;
+    }
+    return data;
+  },
+  ['contacts'],
+  { revalidate: 3600, tags: ['contacts'] }
+);
 
-  const { data, error } = await supabase
-    .from('blog_posts')
-    .select(`
-      *
-    `)
-    .limit(3)
-    .order('created_at', { ascending: false });
+export const getPosts = unstable_cache(
+  async (
+    type: string,
+    searchQuery?: string,
+    locale?: string,
+    limit?: number
+  ): Promise<BlogPost[] | PortfolioPost[] | null> => {
+    const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
 
-  if (error) {
-    console.error('Error fetching posts:', error);
-    return null;
-  }
+    let query = supabase
+      .from(table)
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  return data
-});
+    if (searchQuery) {
+      const searchTerm = searchQuery.toLowerCase();
+      query = query.or(`title_en.ilike.%${searchTerm}%,description_${locale}.ilike.%${searchTerm}%,post_tags.ilike.%${searchTerm}%`);
+    }
 
-export const getContacts = cache(async (): Promise<Contact[] | null> => {
-  const { data, error } = await supabase
-    .from('contacts')
-    .select(`*`);
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
 
-  if (error) {
-    console.error(error);
-    return null;
-  }
-  return data;
-});
+    const { data: postsData, error: postsErr } = await query;
 
-export const getPosts = cache(async (
-  type: string,
-  searchQuery?: string,
-  locale?: string,
-  limit?: number
-): Promise<BlogPost[] | PortfolioPost[] | null> => {
-  // Determine the table to query based on the type
-  const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
+    if (postsErr) {
+      console.error('Error fetching posts:', postsErr);
+      return null;
+    }
+    return postsData;
+  },
+  ['posts'], // Simple key since the cache will be shared across all getPosts calls
+  { revalidate: 3600, tags: ['posts'] }
+);
 
-  let query = supabase
-    .from(table)
-    .select('*')
-    .order('created_at', { ascending: false });
+export const getPost = unstable_cache(
+  async (
+    id: string,
+    type: string
+  ): Promise<PortfolioPost | BlogPost | null> => {
+    const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 
-  // Apply search if searchParams is present
-  if (searchQuery) {
-    const searchTerm = searchQuery.toLowerCase();
+    const { data, error } = await supabase
+      .from(tableName)
+      .select(`*`)
+      .eq('id', id)
+      .single();
 
-    query = query.or(`title_en.ilike.%${searchTerm}%,description_${locale}.ilike.%${searchTerm}%,post_tags.ilike.%${searchTerm}%`);
-  }
+    if (error) {
+      console.error(`Error fetching ${type} post:`, error);
+      return null;
+    }
+    return data;
+  },
+  ['post'], // Simple key since the cache will be shared across all getPost calls
+  { revalidate: 3600, tags: ['post'] }
+);
 
-  // Apply limit only if it's defined
-  if (limit !== undefined) {
-    query = query.limit(limit);
-  }
+export const getResumeLink = unstable_cache(
+  async (): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('link')
+      .eq('label', 'Resume')
+      .single();
 
-  const { data: postsData, error: postsErr } = await query;
-
-  if (postsErr) {
-    console.error('Error fetching posts:', postsErr);
-    return null;
-  }
-
-  return postsData;
-});
-
-export const getPost = cache(async (
-  id: string,
-  type: string
-): Promise<PortfolioPost | BlogPost | null> => {
-  const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
-
-  const { data, error } = await supabase
-    .from(tableName)
-    .select(`
-      *
-    `)
-    .eq('id', id)
-    .single();
-
-  if (error) {
-    console.error(`Error fetching ${type} post:`, error);
-    return null;
-  }
-
-  return data;
-});
-
-export const getResumeLink = cache(async (): Promise<string | null> => {
-
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('link')
-    .eq('label', 'Resume')
-    .single();
-
-  if (error) {
-    console.error(`Error fetching resume link:`, error);
-    return null;
-  }
-
-  return data.link;
-});
+    if (error) {
+      console.error(`Error fetching resume link:`, error);
+      return null;
+    }
+    return data.link;
+  },
+  ['resume-link'],
+  { revalidate: 3600, tags: ['resume', 'contacts'] }
+);
