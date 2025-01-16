@@ -9,19 +9,23 @@ import { formatLabels } from '@/utils/formatLabels';
 export async function generateMetadata({
   params
 }: {
-  params: Promise<{ post_type: string }>
+  params: Promise<{ post_type: string; locale: string }>
 }) {
 
-  const { post_type } = await params;
+  const { post_type, locale } = await params;
 
   const title = post_type.charAt(0).toUpperCase() + post_type.slice(1);
 
+  const tagDesc = locale === 'en' ?
+  `My ${post_type} showcasing ${post_type === 'portfolio' ? 'projects i worked on' : 'my thoughts and experiences'}` :
+  `Il mio ${post_type} mostra ${post_type === 'portfolio' ? 'progetti a cui ho lavorato' : 'le mie riflessioni ed esperienze'}`;
+
   return {
     title: `${title} - Okazakee WS`,
-    description: `My ${post_type} showcasing ${post_type === 'portfolio' ? 'projects i worked on' : 'my thoughts and experiences'}`,
+    description: tagDesc,
     openGraph: {
       title: `${title} - Okazakee WS`,
-      description: `My ${post_type} showcasing ${post_type === 'portfolio' ? 'projects i worked on' : 'my thoughts and experiences'}`,
+      description: tagDesc,
       images: [
         {
           url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png',
