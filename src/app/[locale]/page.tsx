@@ -5,22 +5,33 @@ import Skills from "@components/landing/Skills";
 import Hero from "@components/landing/Hero";
 import PostsSection from "@/components/landing/PostsSections";
 
-export const metadata: Metadata = {
-  title: "Home - Okazakee WS",
-  description: "Personal website with portfolio and blog",
-  openGraph: {
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ locale: string }>
+}) {
+
+  const { locale } = await params;
+
+  const pageDesc = locale === 'en' ? 'Personal website with portfolio and blog' : 'Sito personale con portfolio e blog';
+
+  return {
     title: "Home - Okazakee WS",
-    description: "Personal website with portfolio and blog",
-    images: [
-      {
-        url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png',
-        width: 1200,
-        height: 630,
-        alt: 'logo',
-      },
-    ],
-  }
-};
+    description: pageDesc,
+    openGraph: {
+      title: "Home - Okazakee WS",
+      description: pageDesc,
+      images: [
+        {
+          url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png',
+          width: 1200,
+          height: 630,
+          alt: 'logo',
+        },
+      ],
+    }
+  };
+}
 
 export const revalidate = 3600; // Revalidate every hour
 
