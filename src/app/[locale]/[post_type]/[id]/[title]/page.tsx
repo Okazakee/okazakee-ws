@@ -179,7 +179,7 @@ export default async function Page({
   )
 }
 
-export const revalidate = process.env.ISR_REVALIDATION;
+export const revalidate = parseInt(process.env.ISR_REVALIDATION as string);
 
 export async function generateStaticParams() {
   const locales = ['en', 'it'];

@@ -38,7 +38,7 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = process.env.ISR_REVALIDATION;
+export const revalidate = parseInt(process.env.ISR_REVALIDATION as string);
 
 export async function generateStaticParams() {
   return [
