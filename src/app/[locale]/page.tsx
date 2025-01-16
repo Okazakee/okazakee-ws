@@ -1,5 +1,4 @@
 import React from "react";
-import { Metadata } from "next";
 import Contacts from "@components/landing/Contacts";
 import Skills from "@components/landing/Skills";
 import Hero from "@components/landing/Hero";
