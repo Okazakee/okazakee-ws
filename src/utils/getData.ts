@@ -8,9 +8,9 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl!, supabaseKey!);
 
-const revalTime = 3600;
-
 const production = JSON.parse(process.env.UMAMI_ENABLED!);
+
+const revalTime = production ? 3600 : 60;
 
 const timeOfRevalidation = new Date().toISOString();
 
@@ -22,9 +22,14 @@ export const getTranslationsSupabase = unstable_cache(
       .eq('language', locale)
       .single();
 
+    // Check if it's specifically a "no rows returned" error
+    if (error?.code === 'PGRST116') {
+      return null;
+    }
+
     if (error) {
       console.error('Error fetching translations:', error);
-      return {};
+      throw error;
     }
 
     return data?.translations ? data.translations : {};
@@ -40,9 +45,14 @@ export const getHeroSection = unstable_cache(
       .select('id, propic, blurhashURL')
       .single();
 
+    // Check if it's specifically a "no rows returned" error
+    if (error?.code === 'PGRST116') {
+      return null;
+    }
+
     if (error) {
       console.error(error);
-      return null;
+      throw error;
     }
     return data;
   },
@@ -69,7 +79,7 @@ export const getSkillsCategories = unstable_cache(
 
     if (error) {
       console.error(error);
-      return null;
+      throw error;
     }
     return data;
   },
@@ -93,7 +103,7 @@ export const getPortfolioPosts = unstable_cache(
 
     if (error) {
       console.error('Error fetching posts:', error);
-      return null;
+      throw error;
     }
     return data;
   },
@@ -117,7 +127,7 @@ export const getBlogPosts = unstable_cache(
 
     if (error) {
       console.error('Error fetching posts:', error);
-      return null;
+      throw error;
     }
     return data;
   },
@@ -133,7 +143,7 @@ export const getContacts = unstable_cache(
 
     if (error) {
       console.error(error);
-      return null;
+      throw error;
     }
     return data;
   },
@@ -171,7 +181,7 @@ export const getPosts = unstable_cache(
 
     if (postsErr) {
       console.error('Error fetching posts:', postsErr);
-      return null;
+      throw postsErr;
     }
     return postsData;
   },
@@ -198,10 +208,15 @@ export const getPost = unstable_cache(
 
     const { data, error } = await query.single();
 
+    // Check if it's specifically a "no rows returned" error
+    if (error?.code === 'PGRST116') {
+      return null;
+    }
+
 
     if (error) {
       console.error(`Error fetching ${type} post:`, error);
-      return null;
+      throw error;
     }
     return data;
   },
@@ -218,9 +233,14 @@ export const getResumeLink = unstable_cache(
       .select('resume_en, resume_it')
       .single();
 
+    // Check if it's specifically a "no rows returned" error
+    if (error?.code === 'PGRST116') {
+      return null;
+    }
+
     if (error) {
       console.error(`Error fetching resume link:`, error);
-      return null;
+      throw error;
     }
 
     return data[`resume_${locale}` as keyof ResumeData];

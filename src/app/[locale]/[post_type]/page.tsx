@@ -5,6 +5,7 @@ import { CircleX } from 'lucide-react';
 import PostList from '@/components/common/PostList';
 import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
+import { redirect } from 'next/navigation';
 
 export async function generateMetadata({
   params
@@ -40,6 +41,8 @@ export async function generateMetadata({
 
 export const revalidate = 3600;
 
+const validPostTypes = ['portfolio', 'blog'];
+
 export async function generateStaticParams() {
   return [
     { locale: 'en', post_type: 'portfolio' },
@@ -60,6 +63,10 @@ export default async function PostsPage({
 
   // Get posts based on the post_type
   const posts = await getPosts(post_type) as PortfolioPost[] | BlogPost[];
+
+  if (!validPostTypes.includes(post_type)) {
+    redirect(`/${locale}`);
+  }
 
   return (
     <section className={`md:mt-20 mt-10 flex mx-auto max-w-7xl`}>
