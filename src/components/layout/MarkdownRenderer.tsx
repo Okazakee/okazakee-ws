@@ -1,5 +1,8 @@
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from "rehype-raw"
 import NextImage from '@/components/layout/NextImage';
+import type { Element } from 'hast';
+import PreCustom, { PreChild } from './PreCustom';
 
 const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
 
@@ -12,7 +15,28 @@ const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
 
   return (
     <ReactMarkdown
+      rehypePlugins={[rehypeRaw]}
       components={{
+        p: ({ children, ...props }) => {
+          const node = props.node as Element;
+
+          // Check if paragraph contains ONLY images (one or more)
+          const isOnlyImages = node.children.every(child =>
+            child.type === 'element' &&
+            (child as Element).tagName === 'img'
+          );
+
+          if (isOnlyImages) {
+            return <>{children}</>;
+          }
+
+          return <p>{children}</p>;
+        },
+        pre: ({ children }) => {
+          return (
+            <PreCustom>{children as PreChild}</PreCustom>
+          );
+        },
         img: ({ src, alt }) => {
 
           const data = alt!.split('-');

@@ -41,10 +41,6 @@
     @apply text-darktext dark:text-lighttext;
   }
 
-  #post pre {
-    @apply bg-darktext dark:bg-lighttext2 text-lighttext dark:text-darktext;
-  }
-
 }
 
 @keyframes carousel {

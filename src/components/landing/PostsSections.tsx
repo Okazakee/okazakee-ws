@@ -28,7 +28,7 @@ export default async function PostsSection({locale} : {locale: string;}) {
           <section
             key={section}
             id={section}
-            className={`text-center sm:mx-20 md:mx-auto md:w-full mt-20 md:mt-0 mdh:mt-40 ${postsCheck.length > 2 && 'md:min-h-lvh'}`}>
+            className={`text-center sm:mx-20 md:mx-auto mx-5 md:w-full mt-20 md:mt-0 mdh:mt-40 ${postsCheck.length > 2 && 'md:min-h-lvh'}`}>
             <h1 className="xl:text-6xl md:text-5xl text-4xl xs:text-5xl mb-5">
               {t(isBlog ? 'title2' : 'title1')}
             </h1>

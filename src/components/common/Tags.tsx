@@ -1,54 +1,33 @@
-'use client'
+'use client';
 import { useRef, useEffect, useState } from 'react';
 import { Tag } from 'lucide-react';
-import { usePathname } from 'next/navigation';
-
-const useWindowSize = () => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  return { isMobile };
-};
 
 export const Tags = ({ tags }: { tags: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [totalWidth, setTotalWidth] = useState(0);
-  const { isMobile } = useWindowSize();
-  const pathname = usePathname();
+  const [containerWidth, setContainerWidth] = useState(0);
 
   const reworkedTags = tags ? Array.from(tags.matchAll(/"([^"]*?)"/g), match => match[1]) : [];
 
   useEffect(() => {
-    if (containerRef.current) {
-      const tagElements = containerRef.current.querySelectorAll('.tag');
-      let width = 0;
-      tagElements.forEach((el) => {
-        width += el.getBoundingClientRect().width + 8;
-      });
-      setTotalWidth(width);
-    }
+    const calculateWidths = () => {
+      if (containerRef.current) {
+        const tagElements = containerRef.current.querySelectorAll('.tag');
+        let width = 0;
+        tagElements.forEach((el) => {
+          width += el.getBoundingClientRect().width + 8; // Include spacing
+        });
+        setTotalWidth(width);
+        setContainerWidth(containerRef.current.offsetWidth); // Update container width
+      }
+    };
+
+    calculateWidths();
+    window.addEventListener('resize', calculateWidths);
+    return () => window.removeEventListener('resize', calculateWidths);
   }, [tags]);
 
-  const totalChars = reworkedTags.reduce((sum, tag) => sum + tag.length, 0);
-
-  const regex = /^\/(it|en)\/(portfolio|blog)\/\d+\/.+$/;
-
-  const isPostPage = regex.test(pathname);
-
-  const shouldAnimate = isPostPage
-  ? (isMobile && (totalChars > 40 || reworkedTags.length > 4)) // Post page: only animate on mobile with conditions
-  : (isMobile
-    ? (totalChars > 25 || reworkedTags.length > 3) // Post card mobile conditions
-    : (totalChars > 34 || reworkedTags.length > 4)); // Post card desktop conditions
+  const shouldAnimate = totalWidth > containerWidth;
 
   return (
     <div className="relative overflow-hidden w-full">
@@ -71,7 +50,7 @@ export const Tags = ({ tags }: { tags: string }) => {
             key={i}
             className="tag bg-secondary text-lighttext text-sm xs:text-base sm:text-base gap-1.5 xs:gap-2 sm:gap-2 px-2 py-1 rounded-lg flex items-center mr-2 xs:mb-1 sm:mb-1 sm:mt-2 xs:mt-2 mt-1"
           >
-            <Tag size={15} className='w-[14px] xs:w-[15px] sm:w-[15px]' />
+            <Tag size={15} className="w-[14px] xs:w-[15px] sm:w-[15px]" />
             {tag}
           </span>
         ))}

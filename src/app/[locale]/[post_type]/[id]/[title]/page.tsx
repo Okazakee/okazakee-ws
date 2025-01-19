@@ -147,12 +147,13 @@ export default async function Page({
 
       </div>
 
+      {/* mobile btns */}
       <div className={`text-lighttext ${post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'}  ${ post_type === 'portfolio' && post && 'source_link' in post && 'demo_link' in post ? 'justify-center' : 'justify-start'}`}>
         {post_type === 'portfolio' && post && 'source_link' in post && post.source_link && post.source_link !== null &&
           <Link
             target="_blank"
             href={post.source_link || ''}
-            className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+            className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
             data-umami-event="View Source Code button"
             data-umami-event-post={title}
           >
@@ -167,7 +168,7 @@ export default async function Page({
           <Link
             target="_blank"
             href={post.demo_link}
-            className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+            className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
             data-umami-event="View Demo button"
             data-umami-event-post={title}
           >
@@ -180,7 +181,7 @@ export default async function Page({
       </div>
 
       {/* Project Description */}
-      <div id='post' className="max-w-none xs:text-lg sm:text-xl space-y-4 prose dark:prose-invert text-left">
+      <div id='post' className='space-y-4 max-w-none xs:text-lg sm:text-xl prose dark:prose-invert text-left'>
         <MarkdownRenderer markdown={String(post![localeKey])} />
       </div>
     </article>
