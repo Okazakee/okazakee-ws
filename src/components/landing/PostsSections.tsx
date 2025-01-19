@@ -24,15 +24,15 @@ export default async function PostsSection({locale} : {locale: string;}) {
         const postsCheck = isBlog ? blogPosts : portfolioPosts;
 
         return (
+          postsCheck.length > 0 &&
           <section
             key={section}
             id={section}
-            className="text-center sm:mx-20 md:mx-auto md:min-h-lvh md:w-full mt-20 md:mt-0 mdh:mt-40"
-          >
+            className={`text-center sm:mx-20 md:mx-auto md:w-full mt-20 md:mt-0 mdh:mt-40 ${postsCheck.length > 2 && 'md:min-h-lvh'}`}>
             <h1 className="xl:text-6xl md:text-5xl text-4xl xs:text-5xl mb-5">
               {t(isBlog ? 'title2' : 'title1')}
             </h1>
-            <h3
+            <h2
               className="mb-10 md:mb-20 text-lg xs:text-[1.4rem] md:text-2xl"
               dangerouslySetInnerHTML={{
                 __html: formatLabels(t(isBlog ? 'subtitle2' : 'subtitle1'))
@@ -47,13 +47,11 @@ export default async function PostsSection({locale} : {locale: string;}) {
                 />
               ))}
             </div>
-            {postsCheck.length > 2 && (
-              <Link href={`/${locale}/${isBlog ? 'blog' : 'portfolio'}`}>
-                <button className="mt-10 md:mt-20 bg-secondary hover:bg-tertiary text-lighttext transition-all px-5 py-2 rounded-lg text-xl scale-[85%] sm:scale-100 xs:scale-100">
-                  {t('button')}
-                </button>
-              </Link>
-            )}
+            <Link href={`/${locale}/${isBlog ? 'blog' : 'portfolio'}`}>
+              <button className="mt-10 md:mt-20 bg-secondary hover:bg-tertiary text-lighttext transition-all px-5 py-2 rounded-lg text-xl scale-[85%] sm:scale-100 xs:scale-100">
+                {t('button')}
+              </button>
+            </Link>
           </section>
         );
       })}

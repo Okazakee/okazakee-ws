@@ -52,8 +52,14 @@ export type BlogPost = {
 
 export type Contact = {
   id: number;
+  position: number;
   label: string;
   icon: string;
   link: string;
   bg_color: string;
+};
+
+export type ResumeData = {
+  resume_en: string;
+  resume_it: string;
 };

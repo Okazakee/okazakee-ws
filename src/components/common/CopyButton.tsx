@@ -6,10 +6,12 @@ import { Check, Copy } from 'lucide-react';
 export default function CopyLinkButton({
   copyValue,
   buttonTitle,
+  className,
   children,
 }: {
   copyValue: string;
   buttonTitle: string;
+  className: string;
   children: React.ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
@@ -27,7 +29,7 @@ export default function CopyLinkButton({
   return (
     <button
       onClick={handleCopy}
-      className="text-xs xs:text-base sm:text-base md:absolute md:left-1/2 md:transform-gpu md:-translate-x-1/2 my-4 md:my-0 flex items-center gap-2 hover:text-main transition-colors group"
+      className={className + '  text-xs xs:text-base sm:text-base my-4 md:my-0 flex items-center gap-2 hover:text-main transition-all duration-0 group'}
       title={buttonTitle}
       data-umami-event="P.IVA Copy"
     >
@@ -35,7 +37,7 @@ export default function CopyLinkButton({
       {copied ? (
         <Check className="w-4 h-4 text-green-500" />
       ) : (
-        <Copy className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
+        <Copy className="w-4 h-4 opacity-0 group-hover:opacity-100 " />
       )}
     </button>
   );

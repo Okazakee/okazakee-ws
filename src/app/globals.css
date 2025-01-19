@@ -8,7 +8,7 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply dark:text-lighttext text-darktext bg-bglight dark:bg-bgdark;
+    @apply dark:text-lighttext text-darktext bg-bglight dark:bg-bgdark transition-all duration-[400ms];
     position: relative;
     overflow: hidden;
   }

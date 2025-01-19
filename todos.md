@@ -1,10 +1,9 @@
-# Prod ready todos
-- Write at least 2 blog posts.
-
-# no priority todos
+- Images in post should be less wide when vertical and viceversa.
+- Add a modal on images click in posts to inspect the full image.
+- Change Tags component appproach on should animate condition, check if overflowing to condition the carousel.
 - Check and better implement ISR fallbacking.
 - Major query functions refactoring.
-- Blur shapes background.
+- Blur shapes background test.
 - Setup prettier.
 - Add links to main pages of tech stack in db to use as button link for skills.
 - Migrate folder structure from src to app, move all folders inside app.

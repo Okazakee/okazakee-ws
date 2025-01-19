@@ -8,7 +8,9 @@ import { ErrorDiv } from '../common/ErrorDiv';
 
 export default async function Contacts() {
 
-  const contacts = await getContacts();
+  let contacts = await getContacts();
+
+  contacts = contacts ? [...contacts].sort((a, b) => a.position - b.position) : null;
 
   const t = await getTranslations('contacts-section');
 
@@ -30,12 +32,12 @@ export default async function Contacts() {
 
   return (
     contacts ?
-      <section className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh my-20 md:my-0 mdh:mt-40">
+      <section id='contacts' className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh my-20 md:my-0 mdh:mt-40">
           <div>
             <h1 className="xl:text-6xl text-4xl xs:text-5xl mb-5">{t('title')}</h1>
-            <h3 className="md:mb-20 mb-10 text-lg xs:text-[1.4rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}>
-            </h3>
-            <div className="flex md:flex-row flex-col md:gap-8 mx-12 md:mx-0 justify-between">
+            <h2 className="md:mb-20 mb-10 text-lg xs:text-[1.4rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}>
+            </h2>
+            <div className="flex md:flex-row flex-col md:gap-8 mx-12 md:mx-0 justify-between drop-shadow-xl md:drop-shadow-2xl dark:drop-shadow-none">
               {contacts.map(({ id, label, icon, link, bg_color }) => {
                 const IconComponent = getIconComponent(icon);
 
@@ -50,14 +52,13 @@ export default async function Contacts() {
                     href={link}
                     target="_blank"
                     className={`text-lighttext mb-5 md:mb-0 last:mb-0 transition-all hover:scale-105 border-2
-                      border-main rounded-2xl bg-[var(--hover-color)] md:bg-[var(--dyn-color)] md:hover:bg-[var(--hover-color)]
-                      ${label === 'Resume' && 'hidden'}`}
+                      border-main rounded-2xl bg-[var(--hover-color)] md:bg-[var(--dyn-color)] md:hover:bg-[var(--hover-color)]`}
                   >
                     <div className="transition-all ease-in-out md:my-0 my-2 md:w-40 md:h-40">
                       {IconComponent ? (
                         <div className="h-full flex md:flex-col justify-center items-center">
                           <IconComponent
-                            className="md:mr-0 mr-5 dark:text-lighttext md:w-[100px] w-[4rem] md:h-auto h-[3.5rem] xs:h-[4rem] bg-w"
+                            className="md:mr-0 mr-5 dark:text-lighttext md:w-[100px] w-[4rem] md:h-auto h-[3.5rem] xs:h-[4rem]"
                             size={80}
                             strokeWidth={1}
                           />

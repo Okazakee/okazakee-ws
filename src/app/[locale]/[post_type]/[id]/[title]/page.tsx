@@ -1,5 +1,6 @@
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
+import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@utils/getData';
 import { Clock, ExternalLink, Github, Star } from 'lucide-react';
@@ -8,8 +9,8 @@ import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { remark } from 'remark';
-import html from 'remark-html';
+
+/* ONLY PORTFOLIO POSTS USE title_en AS TITLE FOR BOTH LANGS, BLOG POSTS CAN SWAP title_en and title_it */
 
 export default async function Page({
   params
@@ -39,29 +40,31 @@ export default async function Page({
     notFound()
   }
 
+  type LocaleKey = 'title_en' | 'title_it';
+
+  const initTitle = post_type === 'portfolio' ? post.title_en : post[`title_${locale}` as LocaleKey];
+
   // If the provided title doesn't match the actual post title, redirect to the correct URL
-  const slugifiedTitle = post.title_en.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  const slugifiedTitle = initTitle.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
 
   if (title !== slugifiedTitle) {
-    redirect(`/portfolio/${id}/${slugifiedTitle}`)
+    redirect(`/${post_type}/${id}/${slugifiedTitle}`)
   }
 
   const localeKey = `body_${locale}` as keyof typeof post;
-
-  const postBody = await remark().use(html).processSync(String(post![localeKey])).toString();
 
   const postDescription = `description_${locale}` as keyof typeof post;
 
   const formattedDate = moment(post?.created_at).format('DD/MM/YYYY');
 
-  const postURL = `https://okazakee.dev/${locale}/${post_type}/${id}/${slugifiedTitle}`;
+  const postURL = `${process.env.DOMAIN_URL}/${locale}/${post_type}/${id}/${slugifiedTitle}`;
 
   return (
     <article className="max-w-5xl mx-auto px-4 mb-20 md:mb-32 md:mt-16 mt-10">
 
       <header className="flex relative mb-6 md:mb-0">
         <div>
-          <h1 className="md:text-4xl text-2xl xs:text-3xl sm:text-3xl font-bold mb-4">{post.title_en}</h1>
+          <h1 className="md:text-4xl text-2xl xs:text-3xl sm:text-3xl font-bold mb-4">{initTitle}</h1>
           <p className="xs:text-xl sm:text-xl">{post[postDescription]}</p>
         </div>
       </header>
@@ -78,6 +81,11 @@ export default async function Page({
           blurDataURL={post.blurhashURL}
           src={post.image}
           fill
+          priority
+          fetchPriority="high"
+          loading="eager"
+          decoding="sync"
+          sizes="100vw"
           style={{
             objectFit: 'cover',
             objectPosition: 'center',
@@ -172,8 +180,8 @@ export default async function Page({
       </div>
 
       {/* Project Description */}
-      <div id='post' className="max-w-none xs:text-lg sm:text-xl space-y-4 prose dark:prose-invert text-left"
-        dangerouslySetInnerHTML={{ __html: postBody }}>
+      <div id='post' className="max-w-none xs:text-lg sm:text-xl space-y-4 prose dark:prose-invert text-left">
+        <MarkdownRenderer markdown={String(post![localeKey])} />
       </div>
     </article>
   )
@@ -200,7 +208,7 @@ export async function generateStaticParams() {
       locale,
       post_type: 'blog',
       id: post.id.toString(),
-      title: post.title_en.toLowerCase().replace(/\s+/g, '-'),
+      title: locale === 'en' ? post.title_en.toLowerCase().replace(/\s+/g, '-') : post.title_it.toLowerCase().replace(/\s+/g, '-'),
     }))
   );
 
@@ -218,25 +226,26 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: "Post Not Found",
-      description: "The requested post could not be found.",
+      title: locale === 'en' ? "Post Not Found" : "Post non trovato",
+      description: locale === 'en' ? "The requested post could not be found." : "Il post richiesto non è stato trovato",
     };
   }
 
   const postDescription = `description_${locale}` as keyof typeof post;
+  const postTitle = post_type === 'blog' ? `title_${locale}` as keyof typeof post : 'title_en';
 
   return {
-    title: `${post.title_en} - Okazakee WS`,
+    title: `${post[postTitle]} - Okazakee WS`,
     description: post[postDescription],
     openGraph: {
-      title: `${post.title_en} - Okazakee WS`,
+      title: `${post[postTitle]} - Okazakee WS`,
       description: post[postDescription],
       images: [
         {
           url: post.image,
           width: 1200,
           height: 630,
-          alt: post.title_en,
+          alt: post[postTitle],
         },
       ],
     }

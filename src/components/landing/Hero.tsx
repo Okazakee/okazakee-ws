@@ -18,15 +18,20 @@ export default async function Hero() {
         <div>
           <div className="flex flex-col xl:flex-row items-center xl:justify-around">
             <Image
+              priority
+              fetchPriority="high"
+              loading="eager"
+              decoding="sync"
               placeholder='blur'
               blurDataURL={heroSection.blurhashURL}
               src={heroSection.propic}
               width={340}
               height={340}
-              className='rounded-2xl xl:mr-10 w-[230px] xs:w-[250px] xl:w-[340px] xl:mx-0 mb-10 md:mb-20 mt-14 md:mt-20 xl:py-0 border-[3px] border-main'
+              sizes="(min-width: 1280px) 340px, (min-width: 475px) 250px, 230px"
+              className='drop-shadow-2xl dark:drop-shadow-none rounded-2xl xl:mr-10 w-[230px] xs:w-[250px] xl:w-[340px] xl:mx-0 mb-10 md:mb-20 mt-14 md:mt-20 xl:py-0 border-[3px] border-main'
               alt="logo"
             />
-            <div className="text-center text-3xl xs:text-4xl lg:text-[3.5rem]">
+            <div className="text-center text-3xl xs:text-4xl lg:text-[3.5rem] drop-shadow-2xl dark:drop-shadow-none">
               <h1 className="xl:mb-10 md:mb-12 mb-5" dangerouslySetInnerHTML={{ __html: formatLabels(t('top.name')) }}></h1>
               <h2 dangerouslySetInnerHTML={{ __html: formatLabels(t('top.role')) }}></h2>
             </div>

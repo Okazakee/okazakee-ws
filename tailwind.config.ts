@@ -12,6 +12,9 @@ const config: Config = {
       backgroundColor: {
         'custom-hover': 'var(--tw-hover-bg-color)',
       },
+      dropShadow: {
+        '3xl': '0px 5px 45px rgba(0, 0, 0, 0.8)',
+      },
       screens: {
         'mdh': { raw: '(min-width: 768px) and (max-height: 1080px)' },
         '2xlh': { raw: '(min-width: 1536px) and (min-height: 1220px)' },
@@ -32,7 +35,7 @@ const config: Config = {
         'main': '#8B53FB',
         'secondary': '#533197',
         'tertiary': '#361d66',
-        'bglight': '#b0b0b0',
+        'bglight': '#d4d4d4',
         'bgdark': '#0a0a0a',
         'cycling-colors': 'linear-gradient(to right, #8b53fb, #673ab7, #ff5722, #ff9800, #ffc107, #03a9f4, #8b53fb)',
       },
