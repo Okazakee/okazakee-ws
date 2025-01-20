@@ -1,4 +1,3 @@
-- CalypsoPi article.
 - Add links to main pages of tech stack in db to use as button link for skills.
 - Better style error and notfound pages for posts.
 - Major query functions refactoring.

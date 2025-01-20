@@ -22,7 +22,7 @@ export async function generateMetadata({
       description: pageDesc,
       images: [
         {
-          url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/biography/logo.png',
+          url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/Website%20Assets/logo.png',
           width: 1200,
           height: 630,
           alt: 'logo',

@@ -45,7 +45,7 @@ export default function LanguageToggle() {
           English
         </span>
         <span
-          className={`absolute -left-2 transform-gpu translate-x-[100%] transition-opacity duration-[400ms] ease-in-out lg:translate-x-11 ${
+          className={`absolute -left-6 md:-left-2 md:text-[1rem] transform-gpu translate-x-[100%] transition-opacity duration-[400ms] ease-in-out lg:translate-x-11 ${
             isItalian ? 'opacity-100' : 'opacity-0'
           }`}
         >
