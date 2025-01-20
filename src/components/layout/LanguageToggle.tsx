@@ -49,7 +49,7 @@ export default function LanguageToggle() {
             isItalian ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          Italian
+          Italiano
         </span>
       </div>
     </button>
