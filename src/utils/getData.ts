@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 import { BlogPost, Contact, HeroSection, PortfolioPost, ResumeData, SkillsCategory } from "@/types/fetchedData.types";
 import { unstable_cache } from 'next/cache'
 
@@ -6,7 +6,7 @@ const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 
 // Initialize Supabase client
-const supabase = createClient(supabaseUrl!, supabaseKey!);
+export const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 const production = JSON.parse(process.env.UMAMI_ENABLED!);
 

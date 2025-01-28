@@ -5,5 +5,4 @@
 - Setup prettier.
 - GDPR cuckie banner for Umami implementation.
 - Better reeadme.
-- Blur shapes background test.
 - Small cms to edit most important data such as about description, propic, skills, posts, contacts.
