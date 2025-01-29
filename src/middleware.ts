@@ -18,8 +18,8 @@ export default async function middleware(request: NextRequest) {
   const userLocale = request.headers.get('accept-language')?.split(',')[0].split('-')[0];
   const locale = userLocale && locales.includes(userLocale) ? userLocale : 'en';
 
-  // Handle CMS routes and authentication
-  if (pathname.startsWith(`/${locale}/cms`)) {
+  // Handle CMS routes and authentication for all locales
+  if (pathname.match(/^\/(en|it)\/cms(\/|$)/)) {
     const response = await updateSession(request, locale);
     if (response) return response; // Return the response if redirection happens
   }
@@ -28,8 +28,7 @@ export default async function middleware(request: NextRequest) {
   if (
     pathname.includes('.') || // Static files
     pathname.startsWith('/_next/') || // Next.js internals
-    pathname.startsWith('/api/') || // API routes
-    pathname.startsWith(`/${locale}/cms/login`) // Login page
+    pathname.startsWith('/api/') // API routes
   ) {
     return NextResponse.next();
   }
