@@ -26,7 +26,7 @@ const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
           objectFit: 'cover',
           objectPosition: 'center',
         }}
-        className={`rounded-xl cursor-pointer border-[1px] border-main mx-auto max-h-[50rem] w-auto`}
+        className="rounded-xl cursor-pointer border-[1px] border-main mx-auto max-h-[50rem] w-auto"
         onClick={() => setIsModalOpen(true)}
       />
       {isModalOpen && (

@@ -22,16 +22,16 @@ export default async function Skills() {
         <h2
           className="xl:mb-20 text-lg xs:text-[1.4rem] md:text-2xl mb-10"
           dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
-        ></h2>
+        />
         {skills_categories.map((skillCategory, index) => (
-          <div key={index} className="">
+          <div key={skillCategory.id} className="">
             <h2 className="text-[1.4rem] xs:text-[1.7rem] md:text-[2.33rem] xs:tracking-wider my-5">
-              {t('skills.' + skillCategory.name)}
+              {t(`skills.${skillCategory.name}`)}
             </h2>
             <div className="flex xl:flex-nowrap flex-wrap justify-center items-center">
               {skillCategory.skills.map((skill, i) => (
                 <div
-                  key={i}
+                  key={skill.id}
                   className="md:drop-shadow-3xl drop-shadow-xl dark:drop-shadow-none hover:scale-110 transition-all mx-auto my-5 md:my-10 w-[calc(33.333%-1rem)]"
                 >
                   <Image

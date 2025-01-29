@@ -1,6 +1,6 @@
 'use client';
 
-import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import React, { useState } from 'react';
 import Postcard from './PostCard';
 import Searchbar from './Searchbar';

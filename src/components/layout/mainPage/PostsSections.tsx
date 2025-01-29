@@ -45,7 +45,10 @@ export default async function PostsSection({ locale }: { locale: string }) {
                 ))}
               </div>
               <Link href={`/${locale}/${isBlog ? 'blog' : 'portfolio'}`}>
-                <button className="mt-10 md:mt-20 bg-secondary hover:bg-tertiary text-lighttext transition-all px-5 py-2 rounded-lg text-xl scale-[85%] sm:scale-100 xs:scale-100">
+                <button
+                  type="button"
+                  className="mt-10 md:mt-20 bg-secondary hover:bg-tertiary text-lighttext transition-all px-5 py-2 rounded-lg text-xl scale-[85%] sm:scale-100 xs:scale-100"
+                >
                   {t('button')}
                 </button>
               </Link>

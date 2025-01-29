@@ -46,6 +46,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm -top-4">
       <div className="relative w-full h-full max-w-screen-2xl">
         <button
+          type="button"
           onClick={onClose}
           className="absolute top-4 md:top-10 right-4 md:right-0 z-10 p-2 dark:bg-lighttext bg-darktext dark:text-darktext text-lighttext rounded-md"
           aria-label="Close modal"

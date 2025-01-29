@@ -2,7 +2,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import NextImage from '@/components/layout/NextImage';
 import type { Element } from 'hast';
-import PreCustom, { PreChild } from './PreCustom';
+import PreCustom, { type PreChild } from './PreCustom';
 
 const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
   /*
@@ -35,13 +35,15 @@ const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
           return <PreCustom>{children as PreChild}</PreCustom>;
         },
         img: ({ src, alt }) => {
-          const data = alt!.split('-');
+          if (!alt) throw new Error('alt should never be undefined');
 
+          const data = alt.split('-');
           const altText = data[0];
-
           const blurhash = data[1];
 
-          return <NextImage src={src!} alt={altText} blurhash={blurhash} />;
+          return (
+            <NextImage src={src || ''} alt={altText} blurhash={blurhash} />
+          );
         },
       }}
     >

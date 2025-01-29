@@ -1,6 +1,6 @@
 import React from 'react';
 import { getPosts } from '@/utils/getData';
-import { PortfolioPost, BlogPost } from '@/types/fetchedData.types';
+import type { PortfolioPost, BlogPost } from '@/types/fetchedData.types';
 import { CircleX } from 'lucide-react';
 import PostList from '@/components/common/PostList';
 import { getTranslations } from 'next-intl/server';
@@ -69,8 +69,8 @@ export default async function PostsPage({
   }
 
   return (
-    <section className={`md:mt-20 mt-10 flex mx-auto max-w-7xl`}>
-      <div className={`xl:mx-16 text-center mb-20 max-w-[120rem] w-full`}>
+    <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
+      <div className="xl:mx-16 text-center mb-20 max-w-[120rem] w-full">
         <h1 className="text-3xl xs:text-4xl xl:text-5xl mb-5">
           {post_type === 'blog' ? t('title2') : t('title1')}
         </h1>
@@ -82,7 +82,7 @@ export default async function PostsPage({
                 ? formatLabels(t('subtitle2'))
                 : formatLabels(t('subtitle1')),
           }}
-        ></h3>
+        />
         {posts.length > 0 ? (
           <PostList
             initialPosts={posts}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideProps } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
@@ -43,7 +43,7 @@ export default async function Contacts() {
         <h2
           className="md:mb-20 mb-10 text-lg xs:text-[1.4rem] md:text-2xl"
           dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
-        ></h2>
+        />
         <div className="flex md:flex-row flex-col md:gap-8 mx-12 md:mx-0 justify-between drop-shadow-xl md:drop-shadow-2xl dark:drop-shadow-none">
           {contacts.map(({ id, label, icon, link, bg_color }) => {
             const IconComponent = getIconComponent(icon);

@@ -28,6 +28,7 @@ export default function ShareButton({
 
   return (
     <button
+      type="button"
       onClick={handleCopy}
       className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-[400ms] ease-in-out w-5`}
       title={buttonTitle}

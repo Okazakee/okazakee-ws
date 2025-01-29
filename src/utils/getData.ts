@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import {
+import type {
   BlogPost,
   Contact,
   HeroSection,
@@ -13,9 +13,9 @@ const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
 
 // Initialize Supabase client
-export const supabase = createClient(supabaseUrl!, supabaseKey!);
+export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
-const production = JSON.parse(process.env.UMAMI_ENABLED!);
+const production = JSON.parse(process.env.UMAMI_ENABLED || '');
 
 const revalTime = production ? 3600 : 60;
 
@@ -94,7 +94,7 @@ export const getSkillsCategories = unstable_cache(
 
 export const getPortfolioPosts = unstable_cache(
   async (): Promise<PortfolioPost[] | null> => {
-    let query = supabase.from('portfolio_posts').select(`*`).limit(3);
+    let query = supabase.from('portfolio_posts').select('*').limit(3);
 
     if (production) {
       query = query.lte('created_at', timeOfRevalidation);
@@ -116,7 +116,7 @@ export const getPortfolioPosts = unstable_cache(
 
 export const getBlogPosts = unstable_cache(
   async (): Promise<BlogPost[] | null> => {
-    let query = supabase.from('blog_posts').select(`*`).limit(3);
+    let query = supabase.from('blog_posts').select('*').limit(3);
 
     if (production) {
       query = query.lte('created_at', timeOfRevalidation);
@@ -138,7 +138,7 @@ export const getBlogPosts = unstable_cache(
 
 export const getContacts = unstable_cache(
   async (): Promise<Contact[] | null> => {
-    const { data, error } = await supabase.from('contacts').select(`*`);
+    const { data, error } = await supabase.from('contacts').select('*');
 
     if (error) {
       console.error(error);
@@ -198,7 +198,7 @@ export const getPost = unstable_cache(
   ): Promise<PortfolioPost | BlogPost | null> => {
     const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 
-    let query = supabase.from(tableName).select(`*`).eq('id', id);
+    let query = supabase.from(tableName).select('*').eq('id', id);
 
     // Be sure to return unreleased posts only in dev, not in prod
     if (production) {
@@ -235,7 +235,7 @@ export const getResumeLink = unstable_cache(
     }
 
     if (error) {
-      console.error(`Error fetching resume link:`, error);
+      console.error('Error fetching resume link:', error);
       throw error;
     }
 

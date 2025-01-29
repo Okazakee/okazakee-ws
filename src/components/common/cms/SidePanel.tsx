@@ -20,6 +20,7 @@ const SidePanel = () => {
       <div className="flex-1 p-4 mt-10">
         {['hero', 'skills', 'posts', 'contacts'].map((section) => (
           <button
+            type="button"
             key={section}
             className={`w-full p-2 mb-2 rounded ${
               activeButton === section ? 'bg-darkgray' : 'bg-darkergray'

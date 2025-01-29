@@ -1,4 +1,4 @@
-import { User } from '@/types/fetchedData.types';
+import type { User } from '@/types/fetchedData.types';
 import { create } from 'zustand';
 
 interface LayoutState {

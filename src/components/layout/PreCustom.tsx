@@ -1,6 +1,7 @@
 'use client';
 import { Check, Copy } from 'lucide-react';
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 export type PreChild = React.ReactElement & {
@@ -20,7 +21,7 @@ export default function PreCustom({ children }: PreCustomProps) {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(children!.props.children);
+      await navigator.clipboard.writeText(children?.props.children);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -41,11 +42,11 @@ export default function PreCustom({ children }: PreCustomProps) {
           <Copy
             className={`w-5 h-5 cursor-pointer absolute right-0 transition-opacity duration-300 ${copied ? 'opacity-0' : 'opacity-100'}`}
             onClick={handleCopy}
-          ></Copy>
+          />
           <Check
             className={`w-6 h-6 rounded-md cursor-pointer right-0 transition-opacity duration-300 ${copied ? 'opacity-100' : 'opacity-0'}`}
             onClick={handleCopy}
-          ></Check>
+          />
         </div>
       </div>
       <pre className="bg-bgdark dark:bg-lighttext2 text-lighttext dark:text-darktext relative w-full rounded-t-none">

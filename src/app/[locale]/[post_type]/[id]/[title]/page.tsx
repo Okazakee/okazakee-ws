@@ -1,7 +1,7 @@
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
-import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@utils/getData';
 import { Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
@@ -210,7 +210,7 @@ export default async function Page({
         id="post"
         className="space-y-4 max-w-none xs:text-lg sm:text-xl prose dark:prose-invert text-left"
       >
-        <MarkdownRenderer markdown={String(post![localeKey])} />
+        <MarkdownRenderer markdown={String(post[localeKey])} />
       </div>
     </article>
   );
@@ -235,7 +235,7 @@ export async function generateStaticParams() {
     100
   )) as BlogPost[];
 
-  const portfolioParams = portfolioPosts!.flatMap((post: PortfolioPost) =>
+  const portfolioParams = portfolioPosts.flatMap((post: PortfolioPost) =>
     locales.map((locale) => ({
       locale,
       post_type: 'portfolio',
@@ -244,7 +244,7 @@ export async function generateStaticParams() {
     }))
   );
 
-  const blogParams = blogPosts!.flatMap((post: BlogPost) =>
+  const blogParams = blogPosts.flatMap((post: BlogPost) =>
     locales.map((locale) => ({
       locale,
       post_type: 'blog',

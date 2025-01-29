@@ -4,13 +4,13 @@ import {
   useEffect,
   useState,
   useMemo,
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useRef,
 } from 'react';
 import { debounce } from 'lodash';
 import { searchPosts } from '@/app/actions/search';
-import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import validator from 'validator';
 import { TokenBucket } from '@/utils/tokenBucket';
 import { useTranslations } from 'next-intl';

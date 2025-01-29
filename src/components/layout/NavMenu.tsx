@@ -43,9 +43,9 @@ export default function ResponsiveNav({
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === `/${locale}`;
-  const isCms = pathname.includes(`/cms`);
-  const isLogin = pathname.includes(`/cms/login`);
-  const isRegister = pathname.includes(`/cms/register`);
+  const isCms = pathname.includes('/cms');
+  const isLogin = pathname.includes('/cms/login');
+  const isRegister = pathname.includes('/cms/register');
 
   useEffect(() => {
     // Handle scrolling when we're on the home page and have a pending scroll target
@@ -114,7 +114,7 @@ export default function ResponsiveNav({
 
               return (
                 <Link
-                  key={i}
+                  key={String(button.icon)}
                   href={href}
                   className="mx-4 transition-all hover:text-main flex items-center"
                   onClick={(e) => handleClick(e, button.href, button.isAnchor)}
@@ -133,6 +133,7 @@ export default function ResponsiveNav({
           <div className={`${className} lg:hidden`}>
             <div className="absolute top-4 right-4 z-30">
               <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="scale-[85%] xs:scale-100"
                 aria-label="Toggle menu"
@@ -156,7 +157,7 @@ export default function ResponsiveNav({
                   const href = getHref(item);
 
                   return (
-                    <li key={i}>
+                    <li key={String(item.icon)}>
                       <Link
                         href={href}
                         className="flex text-3xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out"
@@ -198,6 +199,7 @@ export default function ResponsiveNav({
             </Link>
             {!isLogin && !isRegister && (
               <button
+                type="button"
                 onClick={() => logout()}
                 className="mx-4 transition-all hover:text-main flex items-center"
               >

@@ -18,6 +18,7 @@ export default function ThemeToggle() {
 
   return (
     <button
+      type="button"
       onClick={toggleTheme}
       className="space-x-2 relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-[400ms] ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-[9rem]"
     >

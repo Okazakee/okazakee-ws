@@ -1,5 +1,5 @@
 import React from 'react';
-import { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Tags } from './Tags';
@@ -32,7 +32,7 @@ export default function Postcard({
   return (
     <Link
       href={href}
-      className={`hover:bg-tertiary bg-[#c5c5c5] dark:bg-[#0e0e0e] drop-shadow-2xl dark:drop-shadow-none hover:text-lighttext border-2 p-3 border-secondary rounded-xl overflow-hidden cursor-pointer transition-all text-left flex flex-col justify-between md:w-[32rem] w-full max-w-[21rem] xs:min-w-[24rem] md:max-w-xl hover:scale-105`}
+      className="hover:bg-tertiary bg-[#c5c5c5] dark:bg-[#0e0e0e] drop-shadow-2xl dark:drop-shadow-none hover:text-lighttext border-2 p-3 border-secondary rounded-xl overflow-hidden cursor-pointer transition-all text-left flex flex-col justify-between md:w-[32rem] w-full max-w-[21rem] xs:min-w-[24rem] md:max-w-xl hover:scale-105"
     >
       <div className="w-full h-[11rem] md:h-[15rem] relative mx-auto mb-3">
         <Image

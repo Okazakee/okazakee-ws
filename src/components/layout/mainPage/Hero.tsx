@@ -34,10 +34,10 @@ export default async function Hero() {
             <h1
               className="xl:mb-10 md:mb-12 mb-5"
               dangerouslySetInnerHTML={{ __html: formatLabels(t('top.name')) }}
-            ></h1>
+            />
             <h2
               dangerouslySetInnerHTML={{ __html: formatLabels(t('top.role')) }}
-            ></h2>
+            />
           </div>
         </div>
         <div className="flex items-center text-center mt-10 md:mt-20">
@@ -45,13 +45,13 @@ export default async function Hero() {
             <h1
               className="xl:text-6xl text-3xl xs:text-4xl mb-10"
               dangerouslySetInnerHTML={{ __html: t('aboutme.title') }}
-            ></h1>
+            />
             <p
               className="text-left  xs:text-[1.4rem] tracking-[0.02em] xs:leading-snug md:leading-normal lg:text-2xl"
               dangerouslySetInnerHTML={{
                 __html: formatLabels(t('aboutme.paragraph')),
               }}
-            ></p>
+            />
           </div>
         </div>
       </div>
