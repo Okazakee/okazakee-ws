@@ -8,21 +8,32 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
 
   return (
-    <div className='flex gap-2'>
-      <h1>Login</h1>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={() => login(email, password)}>Login</button>
-    </div>
+    <section className="my-52 flex items-center justify-center">
+      <div className="px-8 py-16 rounded-xl w-full max-w-md border border-main">
+        <h1 className="text-2xl font-bold mb-12 text-center">Login</h1>
+        <div className="">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-md px-4 py-2 border focus:outline-none mb-5 text-darktext"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-md px-4 py-2 border focus:outline-none mb-5 text-darktext"
+          />
+          <button
+            onClick={() => login(email, password)}
+            className="w-full bg-secondary text-white py-2 rounded-lg hover:bg-main focus:outline-none transition-colors"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
