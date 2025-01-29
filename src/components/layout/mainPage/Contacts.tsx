@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
 import { getContacts } from '@/utils/getData';
-import { ErrorDiv } from '../common/ErrorDiv';
+import { ErrorDiv } from '@components/common/ErrorDiv';
 
 export default async function Contacts() {
 

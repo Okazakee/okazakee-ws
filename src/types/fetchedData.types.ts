@@ -63,3 +63,10 @@ export type ResumeData = {
   resume_en: string;
   resume_it: string;
 };
+
+export type User = {
+  id: string;
+  role: string;
+  email: string;
+  propic: string;
+};

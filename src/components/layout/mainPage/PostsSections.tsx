@@ -3,8 +3,8 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { formatLabels } from "@/utils/formatLabels";
 import { getBlogPosts, getPortfolioPosts } from "@/utils/getData";
-import { ErrorDiv } from "../common/ErrorDiv";
-import PostCard from "../common/PostCard";
+import { ErrorDiv } from '@components/common/ErrorDiv';
+import PostCard from "@components/common/PostCard";
 
 export default async function PostsSection({locale} : {locale: string;}) {
 

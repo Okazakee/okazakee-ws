@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { useZoom } from '@utils/useZoom'
+import { useZoom } from '@/app/hooks/useZoom'
 import { X } from 'lucide-react'
 import { useEffect } from 'react'
 

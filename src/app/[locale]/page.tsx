@@ -1,8 +1,8 @@
 import React from "react";
-import Contacts from "@components/landing/Contacts";
-import Skills from "@components/landing/Skills";
-import Hero from "@components/landing/Hero";
-import PostsSection from "@/components/landing/PostsSections";
+import Contacts from "@layout/mainPage/Contacts";
+import Skills from "@layout/mainPage/Skills";
+import Hero from "@layout/mainPage/Hero";
+import PostsSection from "@layout/mainPage/PostsSections";
 
 export async function generateMetadata({
   params

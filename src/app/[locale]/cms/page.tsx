@@ -1,27 +1,33 @@
-// app/cms/page.tsx
-'use client'; // Mark as a Client Component
+'use client'
 
-import { useState } from 'react';
+import { getUser } from '@/app/actions/getUser';
+import SidePanel from '@/components/common/cms/SidePanel';
+import { useLayoutStore } from '@/store/layoutStore';
+import React, { useEffect } from 'react';
 
-export default function CMSDashboard() {
-  const [activeSection, setActiveSection] = useState('hero');
+export default function CMS() {
+
+  // Zustand store
+    const { setUser, activeSection } = useLayoutStore();
+
+    // Fetch user on mount
+    useEffect(() => {
+      const fetchUser = async () => {
+        const fetchedUser = await getUser();
+        setUser(fetchedUser);
+      };
+      fetchUser();
+    }, []);
 
   return (
-    <div className='flex flex-col justify-center max-w-screen-2xl text-center my-10 mx-auto'>
-      <div className='mx-5 flex justify-between'>
-        <nav className='flex flex-col gap-8 mr-auto text-3xl'>
-          <button onClick={() => setActiveSection('hero')}>Hero Section</button>
-          <button onClick={() => setActiveSection('portfolio')}>Portfolio</button>
-          <button onClick={() => setActiveSection('blog')}>Blog Posts</button>
-          <button onClick={() => setActiveSection('i18n')}>i18n Strings</button>
-        </nav>
-        <div className='content right'>
-          {activeSection === 'hero' && <div>section sjaodha</div>}
-          {activeSection === 'portfolio' && <div>section sjaodha</div>}
-          {activeSection === 'blog' && <div>section sjaodha</div>}
-          {activeSection === 'i18n' && <div>section sjaodha</div>}
-        </div>
-      </div>
-    </div>
+    <section className='flex h-[90vh]'>
+      <SidePanel />
+      <main className="flex-1 md:max-w-7xl mt-20 md:mt-10 h-full">
+        {activeSection === 'hero' && <div className=''>hero sec</div>}
+        {activeSection === 'skills' && <div>skills sec</div>}
+        {activeSection === 'posts' && <div>3</div>}
+        {activeSection === 'contacts' && <div>4</div>}
+      </main>
+    </section>
   );
 }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { login } from '@/app/actions/login';
 import { CircleUserRound } from 'lucide-react';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
