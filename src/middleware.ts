@@ -1,10 +1,8 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
-import { updateSession } from '@/utils/supabase/middleware'
+import { updateSession } from '@/utils/supabase/middleware';
 
 const locales = ['en', 'it'];
-
-// Pre-compile the locale regex pattern for better performance
 const localePattern = new RegExp(`^/(${locales.join('|')})(?:/|$)`);
 
 const handleI18n = createMiddleware({
@@ -15,16 +13,15 @@ const handleI18n = createMiddleware({
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const response = NextResponse.next();
 
   // Extract user locale from headers
   const userLocale = request.headers.get('accept-language')?.split(',')[0].split('-')[0];
   const locale = userLocale && locales.includes(userLocale) ? userLocale : 'en';
 
-  // Check for CMS routes and handle authentication
+  // Handle CMS routes and authentication
   if (pathname.startsWith(`/${locale}/cms`)) {
     const response = await updateSession(request, locale);
-    if (response) return response
+    if (response) return response; // Return the response if redirection happens
   }
 
   // Skip locale redirect for static assets, API routes, and login page
@@ -34,7 +31,7 @@ export default async function middleware(request: NextRequest) {
     pathname.startsWith('/api/') || // API routes
     pathname.startsWith(`/${locale}/cms/login`) // Login page
   ) {
-    return response;
+    return NextResponse.next();
   }
 
   // Fast path: if path already has locale, handle it immediately
@@ -52,15 +49,8 @@ export default async function middleware(request: NextRequest) {
   return NextResponse.redirect(new URL(`/${locale}${pathname}`, request.url));
 }
 
-// More specific matcher to reduce unnecessary middleware runs
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - static files (which have file extensions)
-     * - _next (Next.js internals)
-     * - api (API routes)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)',
   ],
 };

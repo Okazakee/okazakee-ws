@@ -8,7 +8,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
 
   return (
-    <div>
+    <div className='flex gap-2'>
       <h1>Login</h1>
       <input
         type="email"
