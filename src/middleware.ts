@@ -15,7 +15,10 @@ export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Extract user locale from headers
-  const userLocale = request.headers.get('accept-language')?.split(',')[0].split('-')[0];
+  const userLocale = request.headers
+    .get('accept-language')
+    ?.split(',')[0]
+    .split('-')[0];
   const locale = userLocale && locales.includes(userLocale) ? userLocale : 'en';
 
   // Handle CMS routes and authentication for all locales
@@ -41,7 +44,9 @@ export default async function middleware(request: NextRequest) {
   // For paths without locale, check cookie first
   const savedLocale = request.cookies.get('NEXT_LOCALE')?.value;
   if (savedLocale && locales.includes(savedLocale)) {
-    return NextResponse.redirect(new URL(`/${savedLocale}${pathname}`, request.url));
+    return NextResponse.redirect(
+      new URL(`/${savedLocale}${pathname}`, request.url)
+    );
   }
 
   // Last resort: system language
@@ -49,7 +54,5 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)'],
 };

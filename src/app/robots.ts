@@ -1,4 +1,4 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -12,10 +12,10 @@ export default function robots(): MetadataRoute.Robots {
         '/store/',
         '/utils/',
         '/*.json$',
-        '/fonts/'
+        '/fonts/',
       ],
     },
     sitemap: `${process.env.DOMAIN_URL}/sitemap.xml`,
-    host: process.env.DOMAIN_URL
-  }
+    host: process.env.DOMAIN_URL,
+  };
 }

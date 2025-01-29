@@ -26,7 +26,7 @@ export type PortfolioPost = {
   title_it: string;
   image: string;
   source_link: string;
-  demo_link: string
+  demo_link: string;
   description_en: string;
   description_it: string;
   body_en: string;

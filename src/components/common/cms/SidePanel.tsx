@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import Image from "next/image";
-import { useLayoutStore } from "@/store/layoutStore";
+import React, { useState } from 'react';
+import Image from 'next/image';
+import { useLayoutStore } from '@/store/layoutStore';
 
 const SidePanel = () => {
-  const [activeButton, setActiveButton] = useState("hero");
+  const [activeButton, setActiveButton] = useState('hero');
 
   // Zustand store
   const { setActiveSection, user } = useLayoutStore();
@@ -18,11 +18,11 @@ const SidePanel = () => {
   return (
     <div className="w-64 bg-darkestgray text-lighttext flex flex-col h-full rounded-xl">
       <div className="flex-1 p-4 mt-10">
-        {["hero", "skills", "posts", "contacts"].map((section) => (
+        {['hero', 'skills', 'posts', 'contacts'].map((section) => (
           <button
             key={section}
             className={`w-full p-2 mb-2 rounded ${
-              activeButton === section ? "bg-darkgray" : "bg-darkergray"
+              activeButton === section ? 'bg-darkgray' : 'bg-darkergray'
             }`}
             onClick={() => handleButtonClick(section)}
           >

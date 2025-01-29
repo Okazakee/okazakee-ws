@@ -11,11 +11,13 @@ export default function RegisterPage() {
   return (
     <section className="my-52 flex items-center justify-center">
       <div className="p-8 rounded-xl w-full max-w-md border border-main">
-        <CircleUserRound size={100} className='mx-auto mb-6' />
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          login(email, password);
-        }}>
+        <CircleUserRound size={100} className="mx-auto mb-6" />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            login(email, password);
+          }}
+        >
           <input
             type="email"
             placeholder="Email"

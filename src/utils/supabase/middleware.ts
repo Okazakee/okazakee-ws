@@ -15,7 +15,9 @@ export async function updateSession(request: NextRequest, locale: string) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
@@ -29,11 +31,18 @@ export async function updateSession(request: NextRequest, locale: string) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && !request.nextUrl.pathname.startsWith(`/${locale}/cms/login`) && !request.nextUrl.pathname.startsWith(`/${locale}/cms/register`)) {
+  if (
+    !user &&
+    !request.nextUrl.pathname.startsWith(`/${locale}/cms/login`) &&
+    !request.nextUrl.pathname.startsWith(`/${locale}/cms/register`)
+  ) {
     return NextResponse.redirect(new URL(`/${locale}/cms/login`, request.url));
   }
 
-  if (user && request.nextUrl.pathname.startsWith(`/${locale}/cms/login`) || request.nextUrl.pathname.startsWith(`/${locale}/cms/register`)) {
+  if (
+    (user && request.nextUrl.pathname.startsWith(`/${locale}/cms/login`)) ||
+    request.nextUrl.pathname.startsWith(`/${locale}/cms/register`)
+  ) {
     return NextResponse.redirect(new URL(`/${locale}/cms`, request.url));
   }
 

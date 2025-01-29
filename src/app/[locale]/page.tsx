@@ -1,24 +1,26 @@
-import React from "react";
-import Contacts from "@layout/mainPage/Contacts";
-import Skills from "@layout/mainPage/Skills";
-import Hero from "@layout/mainPage/Hero";
-import PostsSection from "@layout/mainPage/PostsSections";
+import React from 'react';
+import Contacts from '@layout/mainPage/Contacts';
+import Skills from '@layout/mainPage/Skills';
+import Hero from '@layout/mainPage/Hero';
+import PostsSection from '@layout/mainPage/PostsSections';
 
 export async function generateMetadata({
-  params
+  params,
 }: {
-  params: Promise<{ locale: string }>
+  params: Promise<{ locale: string }>;
 }) {
-
   const { locale } = await params;
 
-  const pageDesc = locale === 'en' ? 'Personal website with portfolio and blog' : 'Sito personale con portfolio e blog';
+  const pageDesc =
+    locale === 'en'
+      ? 'Personal website with portfolio and blog'
+      : 'Sito personale con portfolio e blog';
 
   return {
-    title: "Home - Okazakee WS",
+    title: 'Home - Okazakee WS',
     description: pageDesc,
     openGraph: {
-      title: "Home - Okazakee WS",
+      title: 'Home - Okazakee WS',
       description: pageDesc,
       images: [
         {
@@ -28,7 +30,7 @@ export async function generateMetadata({
           alt: 'logo',
         },
       ],
-    }
+    },
   };
 }
 
@@ -39,16 +41,14 @@ export async function generateStaticParams() {
 }
 
 export default async function Home({
-  params
+  params,
 }: {
-  params: Promise<{ post_type: string; locale: string }>
+  params: Promise<{ post_type: string; locale: string }>;
 }) {
-
   const { locale } = await params;
 
   return (
     <main className="mx-auto md:max-w-7xl mt-10 md:mt-0">
-
       <Hero />
 
       <Skills />
@@ -56,7 +56,6 @@ export default async function Home({
       <PostsSection locale={locale} />
 
       <Contacts />
-
     </main>
   );
 }

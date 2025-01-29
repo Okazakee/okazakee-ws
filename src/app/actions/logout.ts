@@ -5,14 +5,14 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function logout() {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    redirect('/error')
+    redirect('/error');
   }
 
-  revalidatePath('/cms')
-  redirect('/cms')
+  revalidatePath('/cms');
+  redirect('/cms');
 }

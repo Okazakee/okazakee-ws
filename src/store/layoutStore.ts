@@ -1,5 +1,5 @@
-import { User } from "@/types/fetchedData.types";
-import { create } from "zustand";
+import { User } from '@/types/fetchedData.types';
+import { create } from 'zustand';
 
 interface LayoutState {
   user: User | null;

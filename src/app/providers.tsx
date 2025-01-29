@@ -3,7 +3,9 @@
 import React, { useEffect } from 'react';
 import useThemeStore from '../store/themeStore';
 
-const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isDark } = useThemeStore();
 
   useEffect(() => {

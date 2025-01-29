@@ -5,18 +5,18 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function login(email: string, password: string) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // type-casting here for convenience
   // in practice, you should validate your inputs
-  const data = { email, password }
+  const data = { email, password };
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
-    redirect('/')
+    redirect('/');
   }
 
-  revalidatePath('/cms')
-  redirect('/cms')
+  revalidatePath('/cms');
+  redirect('/cms');
 }

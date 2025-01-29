@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { BlogPost, Contact, HeroSection, PortfolioPost, ResumeData, SkillsCategory } from "@/types/fetchedData.types";
-import { unstable_cache } from 'next/cache'
+import {
+  BlogPost,
+  Contact,
+  HeroSection,
+  PortfolioPost,
+  ResumeData,
+  SkillsCategory,
+} from '@/types/fetchedData.types';
+import { unstable_cache } from 'next/cache';
 
 const supabaseUrl = process.env.SUPABASE_URL as string;
 const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
@@ -62,9 +69,7 @@ export const getHeroSection = unstable_cache(
 
 export const getSkillsCategories = unstable_cache(
   async (): Promise<SkillsCategory[] | null> => {
-    const { data, error } = await supabase
-      .from('skills_categories')
-      .select(`
+    const { data, error } = await supabase.from('skills_categories').select(`
         id,
         name,
         skills (
@@ -89,17 +94,15 @@ export const getSkillsCategories = unstable_cache(
 
 export const getPortfolioPosts = unstable_cache(
   async (): Promise<PortfolioPost[] | null> => {
-
-    let query = supabase
-    .from('portfolio_posts')
-    .select(`*`)
-    .limit(3);
+    let query = supabase.from('portfolio_posts').select(`*`).limit(3);
 
     if (production) {
       query = query.lte('created_at', timeOfRevalidation);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query.order('created_at', {
+      ascending: false,
+    });
 
     if (error) {
       console.error('Error fetching posts:', error);
@@ -113,17 +116,15 @@ export const getPortfolioPosts = unstable_cache(
 
 export const getBlogPosts = unstable_cache(
   async (): Promise<BlogPost[] | null> => {
-
-    let query = supabase
-    .from('blog_posts')
-    .select(`*`)
-    .limit(3);
+    let query = supabase.from('blog_posts').select(`*`).limit(3);
 
     if (production) {
       query = query.lte('created_at', timeOfRevalidation);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await query.order('created_at', {
+      ascending: false,
+    });
 
     if (error) {
       console.error('Error fetching posts:', error);
@@ -137,9 +138,7 @@ export const getBlogPosts = unstable_cache(
 
 export const getContacts = unstable_cache(
   async (): Promise<Contact[] | null> => {
-    const { data, error } = await supabase
-      .from('contacts')
-      .select(`*`);
+    const { data, error } = await supabase.from('contacts').select(`*`);
 
     if (error) {
       console.error(error);
@@ -160,9 +159,7 @@ export const getPosts = unstable_cache(
   ): Promise<BlogPost[] | PortfolioPost[] | null> => {
     const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
 
-    let query = supabase
-      .from(table)
-      .select('*');
+    let query = supabase.from(table).select('*');
 
     if (production) {
       query = query.lte('created_at', timeOfRevalidation);
@@ -170,14 +167,19 @@ export const getPosts = unstable_cache(
 
     if (searchQuery) {
       const searchTerm = searchQuery.toLowerCase();
-      query = query.or(`title_en.ilike.%${searchTerm}%,description_${locale}.ilike.%${searchTerm}%,post_tags.ilike.%${searchTerm}%`);
+      query = query.or(
+        `title_en.ilike.%${searchTerm}%,description_${locale}.ilike.%${searchTerm}%,post_tags.ilike.%${searchTerm}%`
+      );
     }
 
     if (limit !== undefined) {
       query = query.limit(limit);
     }
 
-    const { data: postsData, error: postsErr } = await query.order('created_at', { ascending: false });
+    const { data: postsData, error: postsErr } = await query.order(
+      'created_at',
+      { ascending: false }
+    );
 
     if (postsErr) {
       console.error('Error fetching posts:', postsErr);
@@ -196,10 +198,7 @@ export const getPost = unstable_cache(
   ): Promise<PortfolioPost | BlogPost | null> => {
     const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 
-    let query = supabase
-    .from(tableName)
-    .select(`*`)
-    .eq('id', id);
+    let query = supabase.from(tableName).select(`*`).eq('id', id);
 
     // Be sure to return unreleased posts only in dev, not in prod
     if (production) {
@@ -213,7 +212,6 @@ export const getPost = unstable_cache(
       return null;
     }
 
-
     if (error) {
       console.error(`Error fetching ${type} post:`, error);
       throw error;
@@ -225,9 +223,7 @@ export const getPost = unstable_cache(
 );
 
 export const getResumeLink = unstable_cache(
-  async (
-    locale: string
-  ): Promise<string | null> => {
+  async (locale: string): Promise<string | null> => {
     const { data, error } = await supabase
       .from('hero_section')
       .select('resume_en, resume_it')

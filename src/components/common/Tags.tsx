@@ -7,7 +7,9 @@ export const Tags = ({ tags }: { tags: string }) => {
   const [totalWidth, setTotalWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  const reworkedTags = tags ? Array.from(tags.matchAll(/"([^"]*?)"/g), match => match[1]) : [];
+  const reworkedTags = tags
+    ? Array.from(tags.matchAll(/"([^"]*?)"/g), (match) => match[1])
+    : [];
 
   useEffect(() => {
     const calculateWidths = () => {

@@ -1,33 +1,46 @@
-import Image from 'next/image'
-import { useZoom } from '@/app/hooks/useZoom'
-import { X } from 'lucide-react'
-import { useEffect } from 'react'
+import Image from 'next/image';
+import { useZoom } from '@/app/hooks/useZoom';
+import { X } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface ImageModalProps {
-  src: string
-  alt: string
-  blurDataURL: string
-  onClose: () => void
+  src: string;
+  alt: string;
+  blurDataURL: string;
+  onClose: () => void;
 }
 
-export const ImageModal: React.FC<ImageModalProps> = ({ src, alt, blurDataURL, onClose }) => {
-  const { scale, position, handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd, blockScroll } = useZoom()
+export const ImageModal: React.FC<ImageModalProps> = ({
+  src,
+  alt,
+  blurDataURL,
+  onClose,
+}) => {
+  const {
+    scale,
+    position,
+    handleWheel,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    blockScroll,
+  } = useZoom();
 
   useEffect(() => {
-    const unblock = blockScroll()
+    const unblock = blockScroll();
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose()
+        onClose();
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleEscape)
+    window.addEventListener('keydown', handleEscape);
 
     return () => {
-      unblock()
-      window.removeEventListener('keydown', handleEscape)
-    }
-  }, [blockScroll, onClose])
+      unblock();
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [blockScroll, onClose]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm -top-4">
@@ -67,5 +80,5 @@ export const ImageModal: React.FC<ImageModalProps> = ({ src, alt, blurDataURL, o
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
