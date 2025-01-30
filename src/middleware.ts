@@ -22,12 +22,16 @@ export default async function middleware(request: NextRequest) {
   const locale = userLocale && locales.includes(userLocale) ? userLocale : 'en';
 
   // Handle CMS routes and authentication for all locales
-  if (pathname.match(/^\/(en|it)\/cms(\/|$)/)) {
-    const response = await updateSession(request, locale);
+  if (pathname.match(/^\/(en|it)\/cms(\/.*)?$/)) {
+    // Extract the current locale from the pathname
+    const currentLocale = pathname.split('/')[1]; // Extracts 'en' or 'it' from the path
+
+    // Pass the current locale to updateSession to ensure redirects respect the locale
+    const response = await updateSession(request, currentLocale);
     if (response) return response; // Return the response if redirection happens
   }
 
-  // Skip locale redirect for static assets, API routes, and login page
+  // Skip locale redirect for static assets, API routes
   if (
     pathname.includes('.') || // Static files
     pathname.startsWith('/_next/') || // Next.js internals

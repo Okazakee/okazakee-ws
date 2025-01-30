@@ -36,7 +36,7 @@ export default function RegisterPage() {
             type="submit"
             className="w-full text-xl bg-secondary text-lighttext transition-all py-3 rounded-lg hover:bg-main focus:outline-nonescale-[85%] sm:scale-100 xs:scale-100"
           >
-            Accedi
+            Register
           </button>
         </form>
       </div>

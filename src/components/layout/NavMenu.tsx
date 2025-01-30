@@ -114,7 +114,7 @@ export default function ResponsiveNav({
 
               return (
                 <Link
-                  key={String(button.icon)}
+                  key={i}
                   href={href}
                   className="mx-4 transition-all hover:text-main flex items-center"
                   onClick={(e) => handleClick(e, button.href, button.isAnchor)}
@@ -157,7 +157,7 @@ export default function ResponsiveNav({
                   const href = getHref(item);
 
                   return (
-                    <li key={String(item.icon)}>
+                    <li key={i}>
                       <Link
                         href={href}
                         className="flex text-3xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out"

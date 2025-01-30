@@ -42,8 +42,9 @@ export async function updateSession(request: NextRequest, locale: string) {
   }
 
   if (
-    (user && request.nextUrl.pathname.startsWith(`/${locale}/cms/login`)) ||
-    request.nextUrl.pathname.startsWith(`/${locale}/cms/register`)
+    user &&
+    (request.nextUrl.pathname.includes('login') ||
+      request.nextUrl.pathname.includes('register'))
   ) {
     return NextResponse.redirect(new URL(`/${locale}/cms`, request.url));
   }
