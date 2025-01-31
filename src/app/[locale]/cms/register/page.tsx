@@ -1,62 +1,68 @@
-"use client"
+'use client';
 
-import { useState, type FormEvent } from "react"
-import { login } from "@/app/actions/cms/login"
-import { CircleUserRound } from "lucide-react"
+import { useState, type FormEvent } from 'react';
+import { login } from '@/app/actions/cms/login';
+import { CircleUserRound } from 'lucide-react';
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [errors, setErrors] = useState<{ [key: string]: string }>({})
-  const [passwordStrength, setPasswordStrength] = useState(0)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [passwordStrength, setPasswordStrength] = useState(0);
 
   const validateEmail = (email: string) => {
-    return /^\S+@\S+$/i.test(email)
-  }
+    return /^\S+@\S+$/i.test(email);
+  };
 
   const validatePassword = (password: string) => {
-    const minLength = 8
-    const hasUpperCase = /[A-Z]/.test(password)
-    const hasLowerCase = /[a-z]/.test(password)
-    const hasNumbers = /\d/.test(password)
-    const hasNonalphas = /\W/.test(password)
-    return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasNonalphas
-  }
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasNonalphas = /\W/.test(password);
+    return (
+      password.length >= minLength &&
+      hasUpperCase &&
+      hasLowerCase &&
+      hasNumbers &&
+      hasNonalphas
+    );
+  };
 
   const checkPasswordStrength = (password: string) => {
-    let strength = 0
-    if (password.length >= 8) strength++
-    if (password.match(/[A-Z]/)) strength++
-    if (password.match(/[a-z]/)) strength++
-    if (password.match(/[0-9]/)) strength++
-    if (password.match(/[^A-Za-z0-9]/)) strength++
-    setPasswordStrength(strength)
-  }
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (password.match(/[A-Z]/)) strength++;
+    if (password.match(/[a-z]/)) strength++;
+    if (password.match(/[0-9]/)) strength++;
+    if (password.match(/[^A-Za-z0-9]/)) strength++;
+    setPasswordStrength(strength);
+  };
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    const newErrors: { [key: string]: string } = {}
+    e.preventDefault();
+    const newErrors: { [key: string]: string } = {};
 
     if (!validateEmail(email)) {
-      newErrors.email = "Please enter a valid email address"
+      newErrors.email = 'Please enter a valid email address';
     }
 
     if (!validatePassword(password)) {
       newErrors.password =
-        "Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character"
+        'Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character';
     }
 
     if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match"
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     if (Object.keys(newErrors).length === 0) {
-      login(email, password)
+      login(email, password);
     } else {
-      setErrors(newErrors)
+      setErrors(newErrors);
     }
-  }
+  };
 
   return (
     <section className="my-52 flex items-center justify-center">
@@ -72,7 +78,9 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full"
             />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div>
@@ -82,17 +90,19 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => {
-                setPassword(e.target.value)
-                checkPasswordStrength(e.target.value)
+                setPassword(e.target.value);
+                checkPasswordStrength(e.target.value);
               }}
               className="w-full"
             />
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
             <div className="flex mt-2">
               {[...Array(5)].map((_, i) => (
                 <div
                   key={i}
-                  className={`h-2 w-full mr-1 rounded-full ${i < passwordStrength ? "bg-green-500" : "bg-gray-200"}`}
+                  className={`h-2 w-full mr-1 rounded-full ${i < passwordStrength ? 'bg-green-500' : 'bg-gray-200'}`}
                 />
               ))}
             </div>
@@ -107,7 +117,11 @@ export default function RegisterPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full"
             />
-            {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.confirmPassword}
+              </p>
+            )}
           </div>
 
           <button
@@ -119,6 +133,5 @@ export default function RegisterPage() {
         </form>
       </div>
     </section>
-  )
+  );
 }
-

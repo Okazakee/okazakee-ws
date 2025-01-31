@@ -9,7 +9,15 @@ import { useLayoutStore } from '@/store/layoutStore';
 import React, { useEffect } from 'react';
 
 export default function CMS() {
-  const { setUser, activeSection, setHeroSection, setLoading, setError, loading, error } = useLayoutStore();
+  const {
+    setUser,
+    activeSection,
+    setHeroSection,
+    setLoading,
+    setError,
+    loading,
+    error,
+  } = useLayoutStore();
 
   useEffect(() => {
     const fetchHeroSection = async () => {
