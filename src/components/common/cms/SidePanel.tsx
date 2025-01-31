@@ -16,9 +16,9 @@ const SidePanel = () => {
   };
 
   return (
-    <div className="w-64 bg-darkestgray text-lighttext flex flex-col h-full rounded-xl">
+    <div className="w-64 bg-darkestgray text-lighttext flex flex-col mt-10 rounded-xl">
       <div className="flex-1 p-4 mt-10">
-        {['hero', 'skills', 'posts', 'contacts'].map((section) => (
+        {['hero', 'skills categories', 'skills', 'portfolio', 'blog', 'contacts', 'i18n strings'].map((section) => (
           <button
             type="button"
             key={section}

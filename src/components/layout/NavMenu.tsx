@@ -16,7 +16,7 @@ import {
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
-import { logout } from '@/app/actions/logout';
+import { logout } from '@/app/actions/cms/logout';
 
 const createMenuItems = (locale: string) => [
   { href: `/${locale}`, icon: Home, isAnchor: false },

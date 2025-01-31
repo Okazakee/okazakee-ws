@@ -9,13 +9,13 @@ import type {
 } from '@/types/fetchedData.types';
 import { unstable_cache } from 'next/cache';
 
-const supabaseUrl = process.env.SUPABASE_URL as string;
-const supabaseKey = process.env.SUPABASE_ANON_KEY as string;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 
 // Initialize Supabase client
 export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
-const production = JSON.parse(process.env.UMAMI_ENABLED || '');
+const production = JSON.parse(process.env.UMAMI_ENABLED || 'false');
 
 const revalTime = production ? 3600 : 60;
 
@@ -223,7 +223,7 @@ export const getPost = unstable_cache(
 );
 
 export const getResumeLink = unstable_cache(
-  async (locale: string): Promise<string | null> => {
+  async (locale?: string): Promise<ResumeData | null> => {
     const { data, error } = await supabase
       .from('hero_section')
       .select('resume_en, resume_it')
@@ -239,7 +239,11 @@ export const getResumeLink = unstable_cache(
       throw error;
     }
 
-    return data[`resume_${locale}` as keyof ResumeData];
+    if (locale) {
+      return data[`resume_${locale}` as keyof ResumeData];
+    }
+
+    return data;
   },
   ['resume-link'],
   { revalidate: revalTime, tags: ['resume', 'hero_section'] }

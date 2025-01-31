@@ -23,7 +23,7 @@ export default async function Header({ locale }: { locale: string }) {
           />
         </Link>
 
-        <NavMenu locale={locale} resumeLink={resume || ''} />
+        <NavMenu locale={locale} resumeLink={String(resume)} />
       </div>
     </header>
   );
