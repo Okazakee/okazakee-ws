@@ -10,7 +10,7 @@ const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 const production = JSON.parse(process.env.UMAMI_ENABLED!);
 
-const revalTime = production ? 3600 : 60;
+const revalTime = production ? 86400 : 60;
 
 const timeOfRevalidation = new Date().toISOString();
 

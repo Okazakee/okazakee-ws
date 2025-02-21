@@ -39,7 +39,7 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 const validPostTypes = ['portfolio', 'blog'];
 
