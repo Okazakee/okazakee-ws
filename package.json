@@ -17,6 +17,7 @@
     "@types/unist": "^3.0.3",
     "@types/validator": "^13.12.2",
     "@vercel/speed-insights": "^1.1.0",
+    "blurhash": "^2.0.5",
     "lodash": "^4.17.21",
     "lucide-react": "^0.460.0",
     "moment": "^2.30.1",
