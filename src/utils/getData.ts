@@ -12,7 +12,7 @@ const production = JSON.parse(process.env.UMAMI_ENABLED!);
 
 const revalTime = production ? 86400 : 60;
 
-const timeOfRevalidation = new Date().toISOString();
+const getCurrentTime = () => new Date().toISOString();
 
 export const getTranslationsSupabase = unstable_cache(
   async (locale: string) => {
@@ -96,7 +96,7 @@ export const getPortfolioPosts = unstable_cache(
     .limit(3);
 
     if (production) {
-      query = query.lte('created_at', timeOfRevalidation);
+      query = query.lte('created_at', getCurrentTime());
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -120,7 +120,7 @@ export const getBlogPosts = unstable_cache(
     .limit(3);
 
     if (production) {
-      query = query.lte('created_at', timeOfRevalidation);
+      query = query.lte('created_at', getCurrentTime());
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -165,7 +165,7 @@ export const getPosts = unstable_cache(
       .select('*');
 
     if (production) {
-      query = query.lte('created_at', timeOfRevalidation);
+      query = query.lte('created_at', getCurrentTime());
     }
 
     if (searchQuery) {
@@ -203,7 +203,7 @@ export const getPost = unstable_cache(
 
     // Be sure to return unreleased posts only in dev, not in prod
     if (production) {
-      query = query.lte('created_at', timeOfRevalidation);
+      query = query.lte('created_at', getCurrentTime());
     }
 
     const { data, error } = await query.single();
