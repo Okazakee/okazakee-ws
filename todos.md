@@ -2,8 +2,6 @@
 - Better style error and notfound pages for posts.
 - Major query functions refactoring.
 - Migrate folder structure from src to app, move all folders inside app.
-- Setup prettier.
 - GDPR cuckie banner for Umami implementation.
 - Better reeadme.
-- Blur shapes background test.
 - Small cms to edit most important data such as about description, propic, skills, posts, contacts.

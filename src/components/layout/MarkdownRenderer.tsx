@@ -1,11 +1,10 @@
 import ReactMarkdown from 'react-markdown';
-import rehypeRaw from "rehype-raw"
+import rehypeRaw from 'rehype-raw';
 import NextImage from '@/components/layout/NextImage';
 import type { Element } from 'hast';
-import PreCustom, { PreChild } from './PreCustom';
+import PreCustom, { type PreChild } from './PreCustom';
 
 const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
-
   /*
     Alt prop in img is taken from markdown, an example image is like this:
     "![alt-data:image/png;base64,BLURHASHVALUE](imageurl)"
@@ -21,9 +20,9 @@ const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
           const node = props.node as Element;
 
           // Check if paragraph contains ONLY images (one or more)
-          const isOnlyImages = node.children.every(child =>
-            child.type === 'element' &&
-            (child as Element).tagName === 'img'
+          const isOnlyImages = node.children.every(
+            (child) =>
+              child.type === 'element' && (child as Element).tagName === 'img'
           );
 
           if (isOnlyImages) {
@@ -33,24 +32,17 @@ const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
           return <p>{children}</p>;
         },
         pre: ({ children }) => {
-          return (
-            <PreCustom>{children as PreChild}</PreCustom>
-          );
+          return <PreCustom>{children as PreChild}</PreCustom>;
         },
         img: ({ src, alt }) => {
+          if (!alt) throw new Error('alt should never be undefined');
 
-          const data = alt!.split('-');
-
+          const data = alt.split('-');
           const altText = data[0];
-
           const blurhash = data[1];
 
           return (
-            <NextImage
-              src={src!}
-              alt={altText}
-              blurhash={blurhash}
-            />
+            <NextImage src={src || ''} alt={altText} blurhash={blurhash} />
           );
         },
       }}

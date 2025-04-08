@@ -1,6 +1,7 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 
 export default function CopyLinkButton({
@@ -28,13 +29,14 @@ export default function CopyLinkButton({
 
   return (
     <button
+      type="button"
       onClick={handleCopy}
-      className={className + '  relative text-xs xs:text-base sm:text-base my-4 md:my-0 flex items-center gap-2 hover:text-main transition-all duration-0 group'}
+      className={`${className}  relative text-xs xs:text-base sm:text-base my-4 md:my-0 flex items-center gap-2 hover:text-main transition-all duration-0 group`}
       title={buttonTitle}
       data-umami-event="P.IVA Copy"
     >
       <span>{children}</span>
-      <div className='absolute -right-6'>
+      <div className="absolute -right-6">
         {copied ? (
           <Check className="w-4 h-4 text-green-500" />
         ) : (

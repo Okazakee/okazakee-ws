@@ -1,32 +1,48 @@
 import createMiddleware from 'next-intl/middleware';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import { updateSession } from '@/utils/supabase/middleware';
 
 const locales = ['en', 'it'];
-
-// Pre-compile the locale regex pattern for better performance
 const localePattern = new RegExp(`^/(${locales.join('|')})(?:/|$)`);
 
 const handleI18n = createMiddleware({
   locales,
   defaultLocale: 'en',
-  localeDetection: true
+  localeDetection: true,
 });
 
-export default function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Fast path: if path already has locale, handle it immediately
-  if (localePattern.test(pathname)) {
-    return handleI18n(request);
+  // Extract user locale from headers
+  const userLocale = request.headers
+    .get('accept-language')
+    ?.split(',')[0]
+    .split('-')[0];
+  const locale = userLocale && locales.includes(userLocale) ? userLocale : 'en';
+
+  // Handle CMS routes and authentication for all locales
+  if (pathname.match(/^\/(en|it)\/cms(\/.*)?$/)) {
+    // Extract the current locale from the pathname
+    const currentLocale = pathname.split('/')[1]; // Extracts 'en' or 'it' from the path
+
+    // Pass the current locale to updateSession to ensure redirects respect the locale
+    const response = await updateSession(request, currentLocale);
+    if (response) return response; // Return the response if redirection happens
   }
 
-  // Skip locale redirect for static assets and API routes
+  // Skip locale redirect for static assets, API routes
   if (
     pathname.includes('.') || // Static files
     pathname.startsWith('/_next/') || // Next.js internals
     pathname.startsWith('/api/') // API routes
   ) {
-    return;
+    return NextResponse.next();
+  }
+
+  // Fast path: if path already has locale, handle it immediately
+  if (localePattern.test(pathname)) {
+    return handleI18n(request);
   }
 
   // For paths without locale, check cookie first
@@ -38,23 +54,9 @@ export default function middleware(request: NextRequest) {
   }
 
   // Last resort: system language
-  const userLocale = request.headers.get('accept-language')?.split(',')[0].split('-')[0];
-  const locale = userLocale && locales.includes(userLocale) ? userLocale : 'en';
-
-  return NextResponse.redirect(
-    new URL(`/${locale}${pathname}`, request.url)
-  );
+  return NextResponse.redirect(new URL(`/${locale}${pathname}`, request.url));
 }
 
-// More specific matcher to reduce unnecessary middleware runs
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - static files (which have file extensions)
-     * - _next (Next.js internals)
-     * - api (API routes)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)'
-  ]
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)'],
 };

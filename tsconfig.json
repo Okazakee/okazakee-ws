@@ -27,6 +27,7 @@
       "@portfolio/*": ["./src/portfolio/*"],
       "@public/*": ["./src/app/public/*"],
       "@components/*": ["./src/components/*"],
+      "@layout/*": ["./src/components/layout/*"],
       "@store/*": ["./src/store/*"],
       "@types/*": ["./src/types/*"],
       "@utils/*": ["./src/utils/*"],

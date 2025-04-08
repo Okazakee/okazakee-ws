@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState } from 'react';
 import { Check, Share2 } from 'lucide-react';
@@ -7,7 +7,7 @@ export default function ShareButton({
   url,
   buttonTitle,
   title,
-  className
+  className,
 }: {
   url: string;
   buttonTitle: string;
@@ -28,13 +28,14 @@ export default function ShareButton({
 
   return (
     <button
+      type="button"
       onClick={handleCopy}
       className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-[400ms] ease-in-out w-5`}
       title={buttonTitle}
       data-umami-event="Share button"
       data-umami-event-post={title}
     >
-      <div className='flex absolute right-0'>
+      <div className="flex absolute right-0">
         <Check
           className={`w-5 h-5 mr-2 text-green-500 transition-all duration-[400ms] ease-in-out ${
             copied ? 'opacity-100' : 'opacity-0'
@@ -49,9 +50,9 @@ export default function ShareButton({
         </span>
       </div>
 
-      <Share2 className={`absolute left-1/2 transform-gpu transition-all duration-[400ms] ease-in-out -translate-x-1/2 w-5 h-5 ${copied ? 'opacity-0' : 'opacity-100'}`} />
-
-
+      <Share2
+        className={`absolute left-1/2 transform-gpu transition-all duration-[400ms] ease-in-out -translate-x-1/2 w-5 h-5 ${copied ? 'opacity-0' : 'opacity-100'}`}
+      />
     </button>
   );
 }

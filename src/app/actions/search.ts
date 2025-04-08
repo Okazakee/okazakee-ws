@@ -1,13 +1,12 @@
-'use server'
+'use server';
 
-import { getPosts } from '@/utils/getData'
+import { getPosts } from '@/utils/getData';
 
 export async function searchPosts(
   post_type: string,
   searchQuery: string,
   locale: string
 ) {
-
   try {
     const posts = await getPosts(post_type, searchQuery, locale);
     return { posts };

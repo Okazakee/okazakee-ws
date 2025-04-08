@@ -1,34 +1,56 @@
-'use client'
+'use client';
 import { Search } from 'lucide-react';
-import { useEffect, useState, useMemo, Dispatch, SetStateAction, useRef } from "react";
+import {
+  useEffect,
+  useState,
+  useMemo,
+  type Dispatch,
+  type SetStateAction,
+  useRef,
+} from 'react';
 import { debounce } from 'lodash';
-import { searchPosts } from "@/app/actions/search";
-import { BlogPost, PortfolioPost } from "@/types/fetchedData.types";
+import { searchPosts } from '@/app/actions/search';
+import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import validator from 'validator';
-import { TokenBucket } from "@/utils/tokenBucket"
+import { TokenBucket } from '@/utils/tokenBucket';
 import { useTranslations } from 'next-intl';
 
-export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRateLimited, locale } : { post_type: string; SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>; SetIsRateLimited: Dispatch<SetStateAction<boolean>>;  initialPosts: BlogPost[] | PortfolioPost[]; locale: string }) {
+export default function Searchbar({
+  post_type,
+  SetPosts,
+  initialPosts,
+  SetIsRateLimited,
+  locale,
+}: {
+  post_type: string;
+  SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>;
+  SetIsRateLimited: Dispatch<SetStateAction<boolean>>;
+  initialPosts: BlogPost[] | PortfolioPost[];
+  locale: string;
+}) {
   const [searchFilter, setSearchFilter] = useState('');
   const tokenBucketRef = useRef(new TokenBucket(5, 1)); // 5 tokens, refill 1 token per second
 
-  const debouncedSearch = useMemo(() =>
-    debounce(async (searchQuery: string) => {
-      if (tokenBucketRef.current.tryConsume()) {
-        SetIsRateLimited(false);
-        try {
-          const newPosts = await searchPosts(post_type, searchQuery, locale);
-          SetPosts(newPosts.posts || []);
-        } catch (error) {
-          console.error('Search error:', error);
-          // Handle error (e.g., show error message to user)
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (searchQuery: string) => {
+        if (tokenBucketRef.current.tryConsume()) {
+          SetIsRateLimited(false);
+          try {
+            const newPosts = await searchPosts(post_type, searchQuery, locale);
+            SetPosts(newPosts.posts || []);
+          } catch (error) {
+            console.error('Search error:', error);
+            // Handle error (e.g., show error message to user)
+          }
+        } else {
+          SetIsRateLimited(true);
+          console.log(
+            'Rate limit exceeded. Please wait before searching again.'
+          );
+          // You could also show a user-friendly message here
         }
-      } else {
-        SetIsRateLimited(true);
-        console.log('Rate limit exceeded. Please wait before searching again.');
-        // You could also show a user-friendly message here
-      }
-    }, 300),
+      }, 300),
     [SetIsRateLimited, SetPosts, post_type, locale]
   );
 
@@ -64,5 +86,5 @@ export default function Searchbar({ post_type, SetPosts, initialPosts, SetIsRate
         />
       </div>
     </>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import Image from 'next/image';
 import { ImageModal } from '../common/ImageModal';
 import { useState } from 'react';
@@ -10,7 +10,6 @@ interface NextImageProps {
 }
 
 const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
-
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -20,14 +19,14 @@ const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
         alt={alt}
         width={1280}
         height={720}
-        title='Click to view'
-        placeholder='blur'
+        title="Click to view"
+        placeholder="blur"
         blurDataURL={blurhash}
         style={{
           objectFit: 'cover',
           objectPosition: 'center',
         }}
-        className={`rounded-xl cursor-pointer border-[1px] border-main mx-auto max-h-[50rem] w-auto`}
+        className="rounded-xl cursor-pointer border-[1px] border-main mx-auto max-h-[50rem] w-auto"
         onClick={() => setIsModalOpen(true)}
       />
       {isModalOpen && (

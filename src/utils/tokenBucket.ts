@@ -19,7 +19,7 @@ export class TokenBucket {
     this.lastRefill = now;
   }
 
-  tryConsume(tokens: number = 1): boolean {
+  tryConsume(tokens = 1): boolean {
     this.refill();
     if (this.tokens >= tokens) {
       this.tokens -= tokens;

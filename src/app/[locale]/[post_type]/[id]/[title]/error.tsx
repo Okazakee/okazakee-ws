@@ -1,6 +1,6 @@
 'use client';
 
-export default function Error() {
+export default function ErrorPage() {
   return (
     <div className="error-container">
       <h1>Something went wrong</h1>

@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 @layer base {
-
   html {
     scroll-behavior: smooth;
   }
@@ -17,17 +16,16 @@
     content: "";
     position: absolute;
     inset: 0;
-    background-image: url('./public/grain.png');
+    background-image: url("./public/grain.png");
     background-repeat: repeat;
     filter: blur(0.7px);
     z-index: -1;
   }
 
   body.dark::before {
-    background-image: url('./public/grain_dark.png');
+    background-image: url("./public/grain_dark.png");
     opacity: 40%;
   }
-
 
   label {
     @apply cursor-text text-main;
@@ -40,11 +38,11 @@
   #post li::marker {
     @apply text-darktext dark:text-lighttext;
   }
-
 }
 
 @keyframes carousel {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(1%);
   }
   50% {

@@ -26,7 +26,7 @@ export type PortfolioPost = {
   title_it: string;
   image: string;
   source_link: string;
-  demo_link: string
+  demo_link: string;
   description_en: string;
   description_it: string;
   body_en: string;
@@ -62,4 +62,11 @@ export type Contact = {
 export type ResumeData = {
   resume_en: string;
   resume_it: string;
+};
+
+export type User = {
+  id: string;
+  role: string;
+  email: string;
+  propic: string;
 };

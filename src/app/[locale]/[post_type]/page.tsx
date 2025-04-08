@@ -1,6 +1,6 @@
 import React from 'react';
 import { getPosts } from '@/utils/getData';
-import { PortfolioPost, BlogPost } from '@/types/fetchedData.types';
+import type { PortfolioPost, BlogPost } from '@/types/fetchedData.types';
 import { CircleX } from 'lucide-react';
 import PostList from '@/components/common/PostList';
 import { getTranslations } from 'next-intl/server';
@@ -8,18 +8,18 @@ import { formatLabels } from '@/utils/formatLabels';
 import { redirect } from 'next/navigation';
 
 export async function generateMetadata({
-  params
+  params,
 }: {
-  params: Promise<{ post_type: string; locale: string }>
+  params: Promise<{ post_type: string; locale: string }>;
 }) {
-
   const { post_type, locale } = await params;
 
   const title = post_type.charAt(0).toUpperCase() + post_type.slice(1);
 
-  const tagDesc = locale === 'en' ?
-  `My ${post_type} showcasing ${post_type === 'portfolio' ? 'projects i worked on' : 'my thoughts and experiences'}` :
-  `Il mio ${post_type} mostra ${post_type === 'portfolio' ? 'progetti a cui ho lavorato' : 'le mie riflessioni ed esperienze'}`;
+  const tagDesc =
+    locale === 'en'
+      ? `My ${post_type} showcasing ${post_type === 'portfolio' ? 'projects i worked on' : 'my thoughts and experiences'}`
+      : `Il mio ${post_type} mostra ${post_type === 'portfolio' ? 'progetti a cui ho lavorato' : 'le mie riflessioni ed esperienze'}`;
 
   return {
     title: `${title} - Okazakee WS`,
@@ -35,7 +35,7 @@ export async function generateMetadata({
           alt: 'logo',
         },
       ],
-    }
+    },
   };
 }
 
@@ -53,34 +53,49 @@ export async function generateStaticParams() {
 }
 
 export default async function PostsPage({
-  params
+  params,
 }: {
-  params: Promise<{ post_type: string; locale: string }>
+  params: Promise<{ post_type: string; locale: string }>;
 }) {
   const { post_type, locale } = await params;
 
-  const t = await getTranslations('posts-section')
+  const t = await getTranslations('posts-section');
 
   // Get posts based on the post_type
-  const posts = await getPosts(post_type) as PortfolioPost[] | BlogPost[];
+  const posts = (await getPosts(post_type)) as PortfolioPost[] | BlogPost[];
 
   if (!validPostTypes.includes(post_type)) {
     redirect(`/${locale}`);
   }
 
   return (
-    <section className={`md:mt-20 mt-10 flex mx-auto max-w-7xl`}>
-      <div className={`xl:mx-16 text-center mb-20 max-w-[120rem] w-full`}>
+    <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
+      <div className="xl:mx-16 text-center mb-20 max-w-[120rem] w-full">
         <h1 className="text-3xl xs:text-4xl xl:text-5xl mb-5">
           {post_type === 'blog' ? t('title2') : t('title1')}
         </h1>
-        <h3 className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-[1.3rem] md:text-2xl" dangerouslySetInnerHTML={{ __html: post_type === 'blog' ?  formatLabels(t('subtitle2')) : formatLabels(t('subtitle1')) }}></h3>
+        <h3
+          className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-[1.3rem] md:text-2xl"
+          dangerouslySetInnerHTML={{
+            __html:
+              post_type === 'blog'
+                ? formatLabels(t('subtitle2'))
+                : formatLabels(t('subtitle1')),
+          }}
+        />
         {posts.length > 0 ? (
-          <PostList initialPosts={posts} post_type={post_type} locale={locale} />
+          <PostList
+            initialPosts={posts}
+            post_type={post_type}
+            locale={locale}
+          />
         ) : (
-          <div className='flex flex-col lg:flex-row justify-center items-center text-lg lg:text-5xl lg:mt-52 py-32 lg:py-0 lg:mb-52'>
-            <CircleX size={65} className='stroke-main w-[80px] h-auto mb-12 lg:mb-0' />
-            <h1 className='lg:ml-5'>{t('no-posts')}</h1>
+          <div className="flex flex-col lg:flex-row justify-center items-center text-lg lg:text-5xl lg:mt-52 py-32 lg:py-0 lg:mb-52">
+            <CircleX
+              size={65}
+              className="stroke-main w-[80px] h-auto mb-12 lg:mb-0"
+            />
+            <h1 className="lg:ml-5">{t('no-posts')}</h1>
           </div>
         )}
       </div>

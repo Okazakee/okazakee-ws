@@ -1,11 +1,11 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   darkMode: 'selector',
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -16,33 +16,38 @@ const config: Config = {
         '3xl': '0px 5px 45px rgba(0, 0, 0, 0.8)',
       },
       screens: {
-        'mdh': { raw: '(min-width: 768px) and (max-height: 1080px)' },
+        mdh: { raw: '(min-width: 768px) and (max-height: 1080px)' },
         '2xlh': { raw: '(min-width: 1536px) and (min-height: 1220px)' },
-        'xs': { raw: '(min-width: 400px) and (max-width: 1100px)'}
+        xs: { raw: '(min-width: 400px) and (max-width: 1100px)' },
       },
       backgroundImage: {
-        'gradient-wrapper-dark': 'radial-gradient(circle at bottom left, #000000, #010101 20%, #030303 40%, #080808 60%, #121212 80%, #1a1a1a 100%, #252525)',
-        'gradient-wrapper': 'radial-gradient(circle at -20% 120%, #ffffff, #f6f6f6, #eeeeee, #e5e5e5, #dcdcdc, #d4d4d4, #cbcbcb, #c3c3c3)',
-        'cycling-colors': 'linear-gradient(to right, #8b53fb, #673ab7, #ff5722, #ff9800, #ffc107, #03a9f4, #8b53fb)',
+        'gradient-wrapper-dark':
+          'radial-gradient(circle at bottom left, #000000, #010101 20%, #030303 40%, #080808 60%, #121212 80%, #1a1a1a 100%, #252525)',
+        'gradient-wrapper':
+          'radial-gradient(circle at -20% 120%, #ffffff, #f6f6f6, #eeeeee, #e5e5e5, #dcdcdc, #d4d4d4, #cbcbcb, #c3c3c3)',
+        'cycling-colors':
+          'linear-gradient(to right, #8b53fb, #673ab7, #ff5722, #ff9800, #ffc107, #03a9f4, #8b53fb)',
       },
       fontFamily: {
-        'whiterabt': 'var(--font-whiterabt)',
+        whiterabt: 'var(--font-whiterabt)',
       },
       colors: {
-        'darktext': '#080808',
-        'lighttext': '#e8e8e8',
-        'lighttext2': '#c8c8c8',
-        'main': '#8B53FB',
-        'secondary': '#533197',
-        'tertiary': '#361d66',
-        'bglight': '#d4d4d4',
-        'bgdark': '#0a0a0a',
-        'cycling-colors': 'linear-gradient(to right, #8b53fb, #673ab7, #ff5722, #ff9800, #ffc107, #03a9f4, #8b53fb)',
+        darktext: '#080808',
+        lighttext: '#e8e8e8',
+        lighttext2: '#c8c8c8',
+        main: '#8B53FB',
+        secondary: '#533197',
+        tertiary: '#361d66',
+        bglight: '#d4d4d4',
+        bgdark: '#0a0a0a',
+        darkgray: '#2b2b2b',
+        darkergray: '#1c1c1c',
+        darkestgray: '#0d0d0d',
+        'cycling-colors':
+          'linear-gradient(to right, #8b53fb, #673ab7, #ff5722, #ff9800, #ffc107, #03a9f4, #8b53fb)',
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [require('@tailwindcss/typography')],
 };
 export default config;

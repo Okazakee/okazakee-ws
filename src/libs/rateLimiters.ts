@@ -1,9 +1,9 @@
-import { cache } from 'react'
+import { cache } from 'react';
 
 type RateLimitEntry = {
   count: number;
   timestamp: number;
-}
+};
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
