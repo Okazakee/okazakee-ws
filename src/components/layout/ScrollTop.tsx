@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowUpToLine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { scrollToSection } from '@/utils/scrollToSection';
@@ -11,27 +11,27 @@ export default function ScrollTop() {
   const [opacity, setOpacity] = useState(0); // Start with opacity 0
   const t = useTranslations('footer');
 
+  const handleScroll = useCallback(() => {
+    const scrollY = window.scrollY;
+    const viewportHeight = window.innerHeight;
+    const totalHeight = document.body.scrollHeight;
+
+    setShowLink(scrollY > 50); // Start showing link earlier (at 50px down)
+
+    // Adjust opacity based on scroll position (fade in as user scrolls down)
+    const fadeInThreshold = 200;
+    const opacityValue = Math.min(1, (scrollY - 50) / (fadeInThreshold - 50)); // Gradual fade-in effect
+    setOpacity(opacityValue);
+
+    // Adjust button offset when near the bottom
+    if (scrollY + viewportHeight >= totalHeight - 200) {
+      setButtonOffset(100 - (totalHeight - (scrollY + viewportHeight)));
+    } else {
+      setButtonOffset(16); // Reset to default offset
+    }
+  }, []);
+
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const totalHeight = document.body.scrollHeight;
-
-      setShowLink(scrollY > 50); // Start showing link earlier (at 50px down)
-
-      // Adjust opacity based on scroll position (fade in as user scrolls down)
-      const fadeInThreshold = 200;
-      const opacityValue = Math.min(1, (scrollY - 50) / (fadeInThreshold - 50)); // Gradual fade-in effect
-      setOpacity(opacityValue);
-
-      // Adjust button offset when near the bottom
-      if (scrollY + viewportHeight >= totalHeight - 200) {
-        setButtonOffset(100 - (totalHeight - (scrollY + viewportHeight)));
-      } else {
-        setButtonOffset(16); // Reset to default offset
-      }
-    };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);

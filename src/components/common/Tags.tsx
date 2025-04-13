@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { Tag } from 'lucide-react';
 
 export const Tags = ({ tags }: { tags: string }) => {
@@ -7,9 +7,9 @@ export const Tags = ({ tags }: { tags: string }) => {
   const [totalWidth, setTotalWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  const reworkedTags = tags
-    ? Array.from(tags.matchAll(/"([^"]*?)"/g), (match) => match[1])
-    : [];
+  const reworkedTags = useMemo(() => {
+    return tags ? Array.from(tags.matchAll(/"([^"]*?)"/g), match => match[1]) : [];
+  }, [tags]);
 
   useEffect(() => {
     const calculateWidths = () => {
@@ -31,7 +31,9 @@ export const Tags = ({ tags }: { tags: string }) => {
     return () => window.removeEventListener('resize', calculateWidths);
   }, []);
 
-  const shouldAnimate = totalWidth > containerWidth;
+  const shouldAnimate = useMemo(() => {
+    return totalWidth > containerWidth;
+  }, [totalWidth, containerWidth]);
 
   return (
     <div className="relative overflow-hidden w-full">

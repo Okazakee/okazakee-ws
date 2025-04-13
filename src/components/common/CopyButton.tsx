@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 
 export default function CopyLinkButton({
@@ -17,7 +17,7 @@ export default function CopyLinkButton({
 }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(copyValue);
       setCopied(true);
@@ -25,7 +25,7 @@ export default function CopyLinkButton({
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
-  };
+  }, [copyValue]);
 
   return (
     <button
