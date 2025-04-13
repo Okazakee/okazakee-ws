@@ -33,6 +33,7 @@ export type PortfolioPost = {
   body_it: string;
   blurhashURL: string;
   post_tags: string;
+  store_link: string;
 };
 
 export type BlogPost = {

@@ -17,7 +17,7 @@ export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 const production = JSON.parse(process.env.UMAMI_ENABLED || 'false');
 
-const revalTime = production ? 60 : 60;
+const revalTime = production ? 3600 : 60;
 
 const getCurrentTime = () => new Date().toISOString();
 

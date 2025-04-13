@@ -3,7 +3,7 @@ import Tags from '@/components/common/Tags';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts, getPost } from '@utils/getData';
-import { Clock, ExternalLink, Github, Star } from 'lucide-react';
+import { CirclePlay, Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
@@ -144,6 +144,22 @@ export default async function Page({
                 <div className="mt-0.5 md:mt-0">{t('demo')}</div>
               </Link>
             )}
+          {post_type === 'portfolio' &&
+            post &&
+            'store_link' in post &&
+            post.store_link &&
+            post.store_link !== null && (
+              <Link
+                target="_blank"
+                href={post.store_link}
+                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                data-umami-event="Play Store button"
+                data-umami-event-post={title}
+              >
+                <CirclePlay size={18} />
+                <div className="mt-0.5 md:mt-0">{t('store')}</div>
+              </Link>
+            )}
         </div>
 
         <div className="flex items-center text-darktext dark:text-lighttext">
@@ -178,7 +194,7 @@ export default async function Page({
             <Link
               target="_blank"
               href={post.source_link || ''}
-              className={`flex ${post.source_link && post.demo_link ? 'w-full mr-5' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+              className={`flex ${post.source_link && post.demo_link || post.source_link && post.store_link ? 'w-full mr-5' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
               data-umami-event="View Source Code button"
               data-umami-event-post={title}
             >
@@ -201,6 +217,22 @@ export default async function Page({
             >
               <ExternalLink size={18} />
               <div className="mt-0.5 md:mt-0">{t('demo')}</div>
+            </Link>
+          )}
+        {post_type === 'portfolio' &&
+          post &&
+          'store_link' in post &&
+          post.store_link &&
+          post.store_link !== null && (
+            <Link
+              target="_blank"
+              href={post.store_link}
+              className={`flex ${post.store_link && post.store_link ? 'w-full' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+              data-umami-event="Play Store button"
+              data-umami-event-post={title}
+            >
+              <CirclePlay size={18} />
+              <div className="mt-0.5 md:mt-0">{t('store')}</div>
             </Link>
           )}
       </div>
