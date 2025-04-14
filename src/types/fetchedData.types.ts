@@ -76,9 +76,9 @@ export type RemoteType = 'full' | 'hybrid' | 'onSite';
 
 export type CareerEntry = {
   id: number;
+  position: number;
   title: string;
   company: string;
-  website_url: string;
   logo: string;
   blurhashURL: string;
   location_en: string;

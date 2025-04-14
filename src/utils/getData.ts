@@ -279,7 +279,7 @@ export const getCareerEntries = unstable_cache(
     const { data, error } = await supabase
       .from('career_entries')
       .select('*')
-      .order('id', { ascending: false });
+      .order('position', { ascending: true });
 
     if (error) {
       console.error('Error fetching career entries:', error);
