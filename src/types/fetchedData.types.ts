@@ -71,3 +71,25 @@ export type User = {
   email: string;
   propic: string;
 };
+
+export type RemoteType = 'full' | 'hybrid' | 'onSite';
+
+export type CareerEntry = {
+  id: number;
+  position: number;
+  title: string;
+  company: string;
+  logo: string;
+  blurhashURL: string;
+  location_en: string;
+  location_it: string;
+  remote: RemoteType;
+  startDate: string;
+  endDate: string | null;
+  description_en: string;
+  description_it: string;
+  skills: string;
+  company_description_en: string;
+  company_description_it: string;
+  created_at: string;
+};
