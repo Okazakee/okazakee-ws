@@ -26,6 +26,7 @@ const SidePanel = () => {
           'blog',
           'contacts',
           'i18n strings',
+          'settings',
         ].map((section) => (
           <button
             type="button"

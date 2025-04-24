@@ -61,6 +61,7 @@ export default function CMS() {
         {activeSection === 'skills' && <div>skills sec</div>}
         {activeSection === 'posts' && <div>3</div>}
         {activeSection === 'contacts' && <div>4</div>}
+        {activeSection === 'settings' && <div>4</div>}
       </main>
     </section>
   );
