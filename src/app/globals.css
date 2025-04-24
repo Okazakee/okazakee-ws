@@ -40,6 +40,15 @@
   }
 }
 
+@layer components {
+  .clip-pebble {
+    clip-path: url(#pebble-clip);
+    -webkit-clip-path: url(#pebble-clip);
+    position: relative;
+    overflow: visible !important;
+  }
+}
+
 @keyframes carousel {
   0%,
   100% {
