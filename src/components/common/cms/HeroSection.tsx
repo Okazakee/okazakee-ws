@@ -43,19 +43,19 @@ export default function HeroSection() {
       img.crossOrigin = 'anonymous';
       img.src = imageUrl;
       await img.decode();
-      
+
       // Create canvas to get image data
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Could not get canvas context');
-      
+
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      
+
       const imageData = ctx.getImageData(0, 0, img.width, img.height);
       const blurhash = encode(imageData.data, imageData.width, imageData.height, 4, 4);
-      
+
       handleInputChange('blurhashURL', blurhash);
     } catch (error) {
       setError('Failed to generate blurhash');
@@ -88,7 +88,7 @@ export default function HeroSection() {
 
       console.log('Update result:', result);
       if (!result.success) {
-        throw new Error(result.error || 'Failed to update hero section');
+        throw new Error(error || 'Failed to update hero section');
       }
 
       // Update local state to reflect changes

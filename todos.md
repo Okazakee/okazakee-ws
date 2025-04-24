@@ -1,4 +1,3 @@
-- Add links to main pages of tech stack in db to use as button link for skills.
 - Better style error and notfound pages for posts.
 - Major query functions refactoring.
 - Migrate folder structure from src to app, move all folders inside app.

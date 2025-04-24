@@ -12,7 +12,7 @@
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.48.1",
+    "@supabase/supabase-js": "^2.49.4",
     "@types/lodash": "^4.17.13",
     "@types/unist": "^3.0.3",
     "@types/validator": "^13.12.2",

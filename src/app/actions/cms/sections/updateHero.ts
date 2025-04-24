@@ -1,6 +1,5 @@
 'use server';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
 
 export async function updateHero(updateData: {
   mainImage?: string;
@@ -8,22 +7,26 @@ export async function updateHero(updateData: {
   resume_en?: string;
   resume_it?: string;
 }) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = await createClient();
 
   try {
     const { data, error } = await supabase
-      .from('hero')
-      .update(updateData)
-      .eq('id', 1)  // Assuming there's only one hero record with id 1
-      .select();
+      .from('hero_section')
+      .update(updateData) // Use the dynamic updateData
+      .eq('id', 1)
+      .select()
 
-    if (error) throw error;
-
-    console.log('Supabase update result:', data);
+    if (error) throw error; // Throw the error if it exists
 
     return { success: true, data };
   } catch (error) {
+    // Log the entire error object for debugging
     console.error('Error updating hero in Supabase:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error occurred' };
+
+    // Provide a fallback error message
+    return {
+      success: false,
+      error: error || 'An unknown error occurred'
+    };
   }
 }
