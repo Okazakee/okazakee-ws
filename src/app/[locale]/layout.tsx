@@ -7,9 +7,10 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getTranslationsSupabase } from '@/utils/getData';
 import Script from 'next/script';
 import ScrollTop from '@/components/layout/ScrollTop';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const whiteRabbit = localFont({
-  src: '../fonts/whiterabbit.woff',
+  src: '../public/fonts/whiterabbit.woff2',
   variable: '--font-whiterabt',
   weight: '400',
 });
@@ -38,6 +39,7 @@ export default async function RootLayout({
             <ScrollTop />
             <Footer />
           </NextIntlClientProvider>
+          <SpeedInsights />
         </body>
       </Providers>
       {process.env.UMAMI_ENABLED && (
