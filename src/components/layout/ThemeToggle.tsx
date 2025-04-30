@@ -49,7 +49,7 @@ export default function ThemeToggle({
 
   const buttonClass = compact
     ? 'flex items-center justify-center rounded-2xl border-2 border-main transition-all duration-300 ease-in-out w-fit px-3 h-10'
-    : 'relative flex justify-center items-center border-2 border-main rounded-2xl transition-all duration-300 ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-[12rem]';
+    : 'flex justify-center items-center border-2 border-white dark:border-white rounded-2xl transition-all duration-300 ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-[12rem] lg:border-main';
 
   // Helper function to cycle through modes: auto -> light -> dark -> auto
   const cycleThemeMode = () => {
@@ -86,23 +86,29 @@ export default function ThemeToggle({
 
   return (
     <button type="button" onClick={cycleThemeMode} className={buttonClass}>
-      <div className="flex items-center gap-3">
-        <div className="relative w-[1.875rem] h-[1.875rem] flex items-center justify-center">
-          {mode === 'auto' && (
-            <Monitor
+      <div className="flex items-center justify-center w-full">
+        <div className="relative w-6 h-6 flex items-center justify-center mr-2">
+          <div
+            className={`absolute transition-opacity duration-300 ${mode === 'auto' ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <Smartphone
               size={24}
-              strokeWidth={0}
-              className={`z-10 ${isActuallyDark ? 'text-lighttext' : 'text-darktext'}`}
+              strokeWidth={2}
+              className={`${isActuallyDark ? 'text-lighttext' : 'text-darktext'}`}
             />
-          )}
-          {mode === 'light' && (
-            <Sun size={24} strokeWidth={0} className="text-darktext" />
-          )}
-          {mode === 'dark' && (
-            <Moon size={24} strokeWidth={0} className="text-lighttext" />
-          )}
+          </div>
+          <div
+            className={`absolute transition-opacity duration-300 ${mode === 'light' ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <Sun size={24} strokeWidth={2} className="text-darktext" />
+          </div>
+          <div
+            className={`absolute transition-opacity duration-300 ${mode === 'dark' ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <Moon size={24} strokeWidth={2} className="text-lighttext" />
+          </div>
         </div>
-        <div className="text-base text-darktext dark:text-lighttext transition-all duration-300 ease-in-out">
+        <div className="text-darktext dark:text-lighttext whitespace-nowrap">
           {mode === 'light' && 'Light Mode'}
           {mode === 'dark' && 'Dark Mode'}
           {mode === 'auto' && 'Auto'}

@@ -145,11 +145,11 @@ export default function ResponsiveNav({
                 aria-label="Settings"
                 type="button"
               >
-                <Settings className="h-5 w-5" />
+                <Settings size={25} />
               </button>
 
               {isSettingsOpen && (
-                <div className="absolute right-0 mt-2 py-4 px-5 bg-white dark:bg-darkergray shadow-lg rounded-xl z-50 min-w-[150px] border border-gray-100 dark:border-gray-800 transform-gpu origin-top-right transition-all duration-200 ease-out">
+                <div className="absolute right-0 mt-2 py-4 px-5 bg-white dark:bg-darkergray shadow-lg rounded-xl z-50 min-w-[180px] border border-gray-100 dark:border-gray-800 transform-gpu origin-top-right transition-all duration-200 ease-out">
                   <h3 className="text-base font-medium mb-3 text-gray-500 dark:text-gray-400 text-center">
                     {t('settings')}
                   </h3>
@@ -220,8 +220,8 @@ export default function ResponsiveNav({
               <div
                 className={`flex space-x-2 xs:space-x-5 sm:space-x-5 bottom-10 absolute left-1/2 transform-gpu -translate-x-1/2 scale-[85%] xs:scale-100 transition-all duration-[400ms] ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
               >
-                <LanguageToggle />
-                <ThemeToggle />
+                <LanguageToggle compact={false} />
+                <ThemeToggle compact={false} />
               </div>
             </nav>
           </div>
