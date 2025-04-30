@@ -3,17 +3,25 @@ import type { LucideProps } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
-import { getContacts } from '@/utils/getData';
+import { getContacts, getResumeLink } from '@/utils/getData';
 import { ErrorDiv } from '@components/common/ErrorDiv';
+import ResumeButton from '@/components/common/ResumeButton';
+import type { ResumeData } from '@/types/fetchedData.types';
 
-export default async function Contacts() {
+export default async function Contacts({ locale }: { locale: string }) {
   let contacts = await getContacts();
+  const resumeData = (await getResumeLink()) as ResumeData;
 
   contacts = contacts
     ? [...contacts].sort((a, b) => a.position - b.position)
     : null;
 
   const t = await getTranslations('contacts-section');
+
+  // Get the correct resume link based on locale
+  const resumeLink = resumeData
+    ? resumeData[`resume_${locale}` as keyof ResumeData]
+    : null;
 
   const getIconComponent = (iconName: string) => {
     // Dynamic import of the icon, explicitly cast to React.ComponentType
@@ -82,6 +90,9 @@ export default async function Contacts() {
               </Link>
             );
           })}
+
+          {/* Resume Link Button */}
+          {resumeLink && <ResumeButton resumeLink={resumeLink} />}
         </div>
       </div>
     </section>

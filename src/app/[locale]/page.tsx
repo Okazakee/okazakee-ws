@@ -55,7 +55,7 @@ export default async function Home({
 
       <PostsSection locale={locale} />
 
-      <Contacts />
+      <Contacts locale={locale} />
     </main>
   );
 }

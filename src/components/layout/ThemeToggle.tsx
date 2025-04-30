@@ -48,8 +48,8 @@ export default function ThemeToggle({
   const isActuallyDark = mode === 'dark' || (mode === 'auto' && systemIsDark);
 
   const buttonClass = compact
-    ? 'flex items-center justify-center rounded-xl border-2 border-darktext dark:border-lighttext transition-colors duration-300 ease-in-out w-fit px-3 h-10'
-    : 'relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-300 ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-[12rem]';
+    ? 'flex items-center justify-center rounded-2xl border-2 border-main transition-all duration-300 ease-in-out w-fit px-3 h-10'
+    : 'relative flex justify-center items-center border-2 border-main rounded-2xl transition-all duration-300 ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-[12rem]';
 
   // Helper function to cycle through modes: auto -> light -> dark -> auto
   const cycleThemeMode = () => {
@@ -69,30 +69,17 @@ export default function ThemeToggle({
 
   if (compact) {
     return (
-      <button type="button" onClick={cycleThemeMode} className={buttonClass}>
-        <div className="flex items-center gap-2">
-          <div className="relative w-[20px] h-[20px] flex items-center justify-center">
-            <Monitor
-              size={18}
-              className={`transition-all duration-300 ease-in-out absolute left-0 z-10 ${
-                mode === 'auto' ? 'opacity-100' : 'opacity-0'
-              } ${isActuallyDark ? 'text-lighttext' : 'text-darktext'}`}
-            />
-            <Sun
-              size={18}
-              className={`transition-all text-darktext duration-300 ease-in-out absolute left-0 ${mode === 'light' ? 'opacity-100' : 'opacity-0'}`}
-            />
-            <Moon
-              size={18}
-              className={`transition-all text-lighttext duration-300 ease-in-out absolute left-0 ${mode === 'dark' ? 'opacity-100' : 'opacity-0'}`}
-            />
-          </div>
-          <span className="text-sm font-medium text-darktext dark:text-lighttext -mb-0.5 transition-all duration-300 ease-in-out">
-            {mode === 'auto' && 'Auto'}
-            {mode === 'light' && 'Light'}
-            {mode === 'dark' && 'Dark'}
-          </span>
-        </div>
+      <button
+        type="button"
+        onClick={cycleThemeMode}
+        className={buttonClass}
+        data-umami-event="Theme toggle"
+      >
+        <span className="text-sm font-medium text-darktext dark:text-lighttext transition-all duration-300 ease-in-out">
+          {mode === 'auto' && 'Auto'}
+          {mode === 'light' && 'Light'}
+          {mode === 'dark' && 'Dark'}
+        </span>
       </button>
     );
   }
@@ -104,11 +91,16 @@ export default function ThemeToggle({
           {mode === 'auto' && (
             <Monitor
               size={24}
+              strokeWidth={0}
               className={`z-10 ${isActuallyDark ? 'text-lighttext' : 'text-darktext'}`}
             />
           )}
-          {mode === 'light' && <Sun size={24} className="text-darktext" />}
-          {mode === 'dark' && <Moon size={24} className="text-lighttext" />}
+          {mode === 'light' && (
+            <Sun size={24} strokeWidth={0} className="text-darktext" />
+          )}
+          {mode === 'dark' && (
+            <Moon size={24} strokeWidth={0} className="text-lighttext" />
+          )}
         </div>
         <div className="text-base text-darktext dark:text-lighttext transition-all duration-300 ease-in-out">
           {mode === 'light' && 'Light Mode'}

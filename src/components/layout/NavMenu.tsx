@@ -12,6 +12,7 @@ import {
   BookOpenText,
   Contact,
   FileUser,
+  Settings,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
@@ -24,20 +25,19 @@ const createMenuItems = (locale: string) => [
   { href: `/${locale}/portfolio`, icon: Briefcase, isAnchor: false },
   { href: `/${locale}/blog`, icon: BookOpenText, isAnchor: false },
   { href: 'contacts', icon: Contact, isAnchor: true },
-  { href: 'resume', icon: FileUser, isAnchor: false },
+  // Resume button removed from main navigation
 ];
 
 export default function ResponsiveNav({
   className,
   locale,
-  resumeLink,
 }: {
   className?: string;
   locale: string;
-  resumeLink: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const menuItems = createMenuItems(locale);
   const t = useTranslations('header');
   const pathname = usePathname();
@@ -46,6 +46,7 @@ export default function ResponsiveNav({
   const isCms = pathname.includes('/cms');
   const isLogin = pathname.includes('/cms/login');
   const isRegister = pathname.includes('/cms/register');
+  const isItalian = locale === 'it';
 
   useEffect(() => {
     // Handle scrolling when we're on the home page and have a pending scroll target
@@ -82,7 +83,6 @@ export default function ResponsiveNav({
   };
 
   const getHref = (item: { href: string; isAnchor: boolean }) => {
-    if (item.href === 'resume') return resumeLink;
     if (item.isAnchor) {
       // For anchor links, we'll handle the navigation in onClick
       // but we still need a valid href for the link
@@ -90,6 +90,21 @@ export default function ResponsiveNav({
     }
     return item.href;
   };
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isSettingsOpen && !target.closest('.settings-dropdown')) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSettingsOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -109,7 +124,6 @@ export default function ResponsiveNav({
           {/* Desktop Navigation */}
           <nav className={`${className} hidden lg:flex text-xl`}>
             {menuItems.map((button, i) => {
-              const hasUmamiTracking = button.href === 'resume';
               const href = getHref(button);
 
               return (
@@ -118,18 +132,45 @@ export default function ResponsiveNav({
                   href={href}
                   className="mx-4 transition-all hover:text-main flex items-center"
                   onClick={(e) => handleClick(e, button.href, button.isAnchor)}
-                  {...(hasUmamiTracking && {
-                    'data-umami-event': 'Resume Button',
-                  })}
                 >
                   <button.icon className="mr-2 -mt-1" />
                   {t(`buttons.${i}`)}
                 </Link>
               );
             })}
-            <div className="flex items-center ml-4 space-x-4">
-              <LanguageToggle compact={true} />
-              <ThemeToggle compact={true} />
+            <div className="relative ml-4 settings-dropdown">
+              <button
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                className={`transition-all hover:text-main flex items-center justify-center p-2 rounded-full ${isSettingsOpen ? 'bg-gray-100 dark:bg-gray-800 text-main' : ''}`}
+                aria-label="Settings"
+                type="button"
+              >
+                <Settings className="h-5 w-5" />
+              </button>
+
+              {isSettingsOpen && (
+                <div className="absolute right-0 mt-2 py-4 px-5 bg-white dark:bg-darkergray shadow-lg rounded-xl z-50 min-w-[150px] border border-gray-100 dark:border-gray-800 transform-gpu origin-top-right transition-all duration-200 ease-out">
+                  <h3 className="text-base font-medium mb-3 text-gray-500 dark:text-gray-400 text-center">
+                    {t('settings')}
+                  </h3>
+
+                  <div className="mb-4 flex justify-between items-center">
+                    <span className="text-base font-medium">
+                      {t('language')}:
+                    </span>
+                    <span className="flex justify-end min-w-[40px]">
+                      <LanguageToggle compact={true} />
+                    </span>
+                  </div>
+
+                  <div className="pt-2 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
+                    <span className="text-base font-medium">{t('theme')}:</span>
+                    <span className="flex justify-end min-w-[40px]">
+                      <ThemeToggle compact={true} />
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </nav>
 
@@ -157,7 +198,6 @@ export default function ResponsiveNav({
                 className={`space-y-[4rem] p-4 scale-[85%] xs:scale-100 -mt-16 transition-all duration-[400ms] ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
               >
                 {menuItems.map((item, i) => {
-                  const hasUmamiTracking = item.href === 'resume';
                   const href = getHref(item);
 
                   return (
@@ -169,9 +209,6 @@ export default function ResponsiveNav({
                           handleClick(e, item.href, item.isAnchor);
                           setIsOpen(false);
                         }}
-                        {...(hasUmamiTracking && {
-                          'data-umami-event': 'Resume Clicked',
-                        })}
                       >
                         <item.icon size={35} className="mr-2" />
                         <span>{t(`buttons.${i}`)}</span>

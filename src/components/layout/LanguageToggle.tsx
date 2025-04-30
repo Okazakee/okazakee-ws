@@ -30,26 +30,26 @@ export default function LanguageToggle({
 
   // Use compact styling when in desktop header
   const buttonClass = compact
-    ? 'flex items-center justify-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-300 ease-in-out w-fit px-3 h-10'
-    : 'space-x-2 relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-300 ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-32';
+    ? 'flex items-center justify-center border-2 border-main rounded-2xl transition-all duration-300 ease-in-out w-[38px] h-[30px] hover:scale-105'
+    : 'space-x-2 relative flex justify-center items-center border-2 border-main rounded-2xl transition-all duration-300 ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-32 hover:scale-105';
 
   return (
-    <button type="button" onClick={switchLanguage} className={buttonClass}>
+    <button
+      type="button"
+      onClick={switchLanguage}
+      className={buttonClass}
+      data-umami-event="Language toggle"
+    >
       {compact ? (
-        <div className="flex items-center gap-2">
-          <Languages
-            size={18}
-            className="transition-all text-darktext dark:text-lighttext duration-300 ease-in-out"
-          />
-          <span className="text-sm font-medium text-darktext dark:text-lighttext -mb-0.5 transition-all duration-300 ease-in-out">
-            {isItalian ? 'IT' : 'EN'}
-          </span>
-        </div>
+        <span className="text-sm font-medium text-darktext dark:text-lighttext transition-all duration-300 ease-in-out">
+          {isItalian ? 'IT' : 'EN'}
+        </span>
       ) : (
         <>
           <div className="relative w-[1.8rem]">
             <Languages
               size={30}
+              strokeWidth={0}
               className="transition-all text-darktext dark:text-lighttext duration-300 ease-in-out absolute top-1/2 transform-gpu -translate-y-1/2 lg:w-5 lg:ml-2"
             />
           </div>
