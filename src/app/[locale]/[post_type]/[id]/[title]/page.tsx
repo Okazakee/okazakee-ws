@@ -194,7 +194,7 @@ export default async function Page({
             <Link
               target="_blank"
               href={post.source_link || ''}
-              className={`flex ${post.source_link && post.demo_link || post.source_link && post.store_link ? 'w-full mr-5' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+              className={`flex ${(post.source_link && post.demo_link) || (post.source_link && post.store_link) ? 'w-full mr-5' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
               data-umami-event="View Source Code button"
               data-umami-event-post={title}
             >

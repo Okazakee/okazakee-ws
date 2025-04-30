@@ -23,7 +23,7 @@ function getPreferredLocale(request: NextRequest): string {
     if (savedLocale && localeSet.has(savedLocale)) {
       return savedLocale;
     }
-    
+
     // Then check Accept-Language header
     const acceptLanguage = request.headers.get('accept-language');
     if (acceptLanguage) {
@@ -35,7 +35,7 @@ function getPreferredLocale(request: NextRequest): string {
   } catch (error) {
     console.error('Error determining locale:', error);
   }
-  
+
   return defaultLocale;
 }
 
@@ -46,8 +46,8 @@ export default async function middleware(request: NextRequest) {
     // Skip processing for static assets, API routes - fastest path
     if (
       staticAssetPattern.test(pathname) || // Static files
-      pathname.startsWith('/_next/') ||    // Next.js internals
-      pathname.startsWith('/api/')         // API routes
+      pathname.startsWith('/_next/') || // Next.js internals
+      pathname.startsWith('/api/') // API routes
     ) {
       return NextResponse.next();
     }
@@ -59,7 +59,7 @@ export default async function middleware(request: NextRequest) {
     if (hasLocale && cmsPattern.test(pathname)) {
       // Extract the current locale more efficiently
       const currentLocale = pathname.substring(1, 3);
-      
+
       // Handle auth with locale-aware redirects
       const response = await updateSession(request, currentLocale);
       if (response) return response;
@@ -85,6 +85,6 @@ export default async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Match everything except static files, API routes, and Next.js internals
-    '/((?!api|_next/static|_next/image|_next/font|favicon.ico|assets|fonts|images|.*\\.).*)' 
+    '/((?!api|_next/static|_next/image|_next/font|favicon.ico|assets|fonts|images|.*\\.).*)',
   ],
 };

@@ -8,7 +8,9 @@ export const Tags = ({ tags }: { tags: string }) => {
   const [containerWidth, setContainerWidth] = useState(0);
 
   const reworkedTags = useMemo(() => {
-    return tags ? Array.from(tags.matchAll(/"([^"]*?)"/g), match => match[1]) : [];
+    return tags
+      ? Array.from(tags.matchAll(/"([^"]*?)"/g), (match) => match[1])
+      : [];
   }, [tags]);
 
   useEffect(() => {

@@ -33,8 +33,8 @@ export default function HeroSection() {
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setEditedData(prev => ({ ...prev, [field]: value }));
-    setModifiedFields(prev => new Set(prev).add(field));
+    setEditedData((prev) => ({ ...prev, [field]: value }));
+    setModifiedFields((prev) => new Set(prev).add(field));
   };
 
   const generateBlurhash = async (imageUrl: string) => {
@@ -54,7 +54,13 @@ export default function HeroSection() {
       ctx.drawImage(img, 0, 0);
 
       const imageData = ctx.getImageData(0, 0, img.width, img.height);
-      const blurhash = encode(imageData.data, imageData.width, imageData.height, 4, 4);
+      const blurhash = encode(
+        imageData.data,
+        imageData.width,
+        imageData.height,
+        4,
+        4
+      );
 
       handleInputChange('blurhashURL', blurhash);
     } catch (error) {
@@ -94,13 +100,15 @@ export default function HeroSection() {
       // Update local state to reflect changes
       useLayoutStore.getState().setHeroSection({
         ...heroSection,
-        ...updateData
+        ...updateData,
       });
       setModifiedFields(new Set());
       alert('Hero section updated successfully!');
     } catch (error) {
       console.error('Error updating hero section:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update hero section');
+      setError(
+        error instanceof Error ? error.message : 'Failed to update hero section'
+      );
     } finally {
       setIsUpdating(false);
     }
@@ -165,12 +173,10 @@ export default function HeroSection() {
         </label>
       </div>
 
-      {error && (
-        <div className="text-red-500">{error}</div>
-      )}
+      {error && <div className="text-red-500">{error}</div>}
 
       <button
-        type='submit'
+        type="submit"
         className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-300"
         disabled={modifiedFields.size === 0 || isUpdating}
         onClick={handleApplyChanges}

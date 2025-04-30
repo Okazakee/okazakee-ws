@@ -32,11 +32,12 @@ export default async function Hero() {
       <div>
         <div className="flex flex-col xl:flex-row items-center xl:justify-around">
           {/* Image Container */}
-          <div className="relative
+          <div
+            className="relative
               w-[230px] xs:w-[250px] xl:w-[340px]
               h-[230px] xs:h-[250px] xl:h-[340px]
-              xl:mr-10 mb-10 md:mb-20 mt-14 md:mt-20">
-
+              xl:mr-10 mb-10 md:mb-20 mt-14 md:mt-20"
+          >
             {/* Pebble Border (separate layer) */}
             <svg
               viewBox="0 0 500 500"
@@ -44,7 +45,7 @@ export default async function Hero() {
               style={{
                 transform: 'scale(1.15)',
                 overflow: 'visible',
-                pointerEvents: 'none'
+                pointerEvents: 'none',
               }}
             >
               <title>background svg</title>

@@ -14,7 +14,7 @@ export async function updateHero(updateData: {
       .from('hero_section')
       .update(updateData) // Use the dynamic updateData
       .eq('id', 1)
-      .select()
+      .select();
 
     if (error) throw error; // Throw the error if it exists
 
@@ -26,7 +26,7 @@ export async function updateHero(updateData: {
     // Provide a fallback error message
     return {
       success: false,
-      error: error || 'An unknown error occurred'
+      error: error || 'An unknown error occurred',
     };
   }
 }
