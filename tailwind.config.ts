@@ -46,6 +46,30 @@ const config: Config = {
         'cycling-colors':
           'linear-gradient(to right, #8b53fb, #673ab7, #ff5722, #ff9800, #ffc107, #03a9f4, #8b53fb)',
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            h1: {
+              color: '#8B53FB',
+            },
+            h2: {
+              color: '#8B53FB',
+            },
+            h3: {
+              color: '#8B53FB',
+            },
+            h4: {
+              color: '#8B53FB',
+            },
+            h5: {
+              color: '#8B53FB',
+            },
+            h6: {
+              color: '#8B53FB',
+            },
+          },
+        },
+      },
     },
   },
   plugins: [require('@tailwindcss/typography')],

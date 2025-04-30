@@ -45,6 +45,30 @@ export const getTranslationsSupabase = unstable_cache(
   { revalidate: revalTime, tags: ['translations'] }
 );
 
+export const getPrivacyPolicy = unstable_cache(
+  async (locale: string): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from('i18n_translations')
+      .select('privacy_policy')
+      .eq('language', locale)
+      .single();
+
+    // Check if it's specifically a "no rows returned" error
+    if (error?.code === 'PGRST116') {
+      return null;
+    }
+
+    if (error) {
+      console.error('Error fetching privacy policy:', error);
+      throw error;
+    }
+
+    return data?.privacy_policy || null;
+  },
+  ['privacy-policy'],
+  { revalidate: revalTime, tags: ['privacy-policy'] }
+);
+
 export const getHeroSection = unstable_cache(
   async (): Promise<HeroSection | null> => {
     const { data, error } = await supabase

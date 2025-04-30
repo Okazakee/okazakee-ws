@@ -33,6 +33,15 @@ export default async function Footer() {
         >
           {t('middle')} - 02863310815
         </CopyLinkButton>
+
+        <div className="text-xs xs:text-base sm:text-base md:my-0 w-fit lg:mr-5">
+          <Link
+            href="/privacy-policy"
+            className="hover:text-main text-xs xs:text-sm md:text-base text-right transition-colors duration-0"
+          >
+            {t('privacyPolicy')}
+          </Link>
+        </div>
       </div>
     </footer>
   );

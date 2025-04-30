@@ -4,7 +4,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Languages } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-export default function LanguageToggle({ compact = false }: { compact?: boolean }) {
+export default function LanguageToggle({
+  compact = false,
+}: { compact?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -27,16 +29,12 @@ export default function LanguageToggle({ compact = false }: { compact?: boolean 
   if (!mounted) return null;
 
   // Use compact styling when in desktop header
-  const buttonClass = compact 
-    ? "flex items-center justify-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-300 ease-in-out w-fit px-3 h-10"
-    : "space-x-2 relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-300 ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-32";
+  const buttonClass = compact
+    ? 'flex items-center justify-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-300 ease-in-out w-fit px-3 h-10'
+    : 'space-x-2 relative flex justify-center items-center border-2 border-darktext dark:border-lighttext rounded-xl transition-colors duration-300 ease-in-out h-[4rem] w-[12rem] lg:h-10 lg:w-32';
 
   return (
-    <button
-      type="button"
-      onClick={switchLanguage}
-      className={buttonClass}
-    >
+    <button type="button" onClick={switchLanguage} className={buttonClass}>
       {compact ? (
         <div className="flex items-center gap-2">
           <Languages
