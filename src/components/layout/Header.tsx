@@ -3,10 +3,8 @@ import Image from 'next/image';
 import logo from '@public/logo.svg';
 import Link from 'next/link';
 import NavMenu from './NavMenu';
-import { getResumeLink } from '@/utils/getData';
 
 export default async function Header({ locale }: { locale: string }) {
-  const resume = await getResumeLink(locale);
 
   return (
     <header className="max-w-screen-2xl mx-auto pt-2">
@@ -23,7 +21,7 @@ export default async function Header({ locale }: { locale: string }) {
           />
         </Link>
 
-        <NavMenu locale={locale} resumeLink={String(resume)} />
+        <NavMenu locale={locale} />
       </div>
     </header>
   );
