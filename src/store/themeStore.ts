@@ -1,44 +1,86 @@
-import { create } from 'zustand';
+import { create } from "zustand";
+
+export type ThemeMode = "auto" | "light" | "dark";
 
 interface ThemeState {
-  isDark: boolean;
-  toggleTheme: () => void;
+  mode: ThemeMode;
+  isDark: boolean; // Computed property for backward compatibility
+  setThemeMode: (mode: ThemeMode) => void;
+  toggleTheme: () => void; // Keep for backward compatibility
 }
 
-const useThemeStore = create<ThemeState>((set) => ({
-  // Initialize the theme based on localStorage, otherwise use system preference
-  isDark:
-    typeof window !== 'undefined'
-      ? localStorage.getItem('isDark') === 'true'
-        ? true
-        : localStorage.getItem('isDark') === 'false'
-          ? false
-          : window.matchMedia('(prefers-color-scheme: dark)').matches
-      : false,
+const useThemeStore = create<ThemeState>((set, get) => {
+  // Helper function to determine if dark mode is active
+  const isDarkActive = (mode: ThemeMode): boolean => {
+    if (mode === "dark") return true;
+    if (mode === "light") return false;
+    // For 'auto' mode, check system preference
+    return (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
+  };
 
-  toggleTheme: () =>
-    set((state) => {
-      const newTheme = !state.isDark;
-      localStorage.setItem('isDark', newTheme ? 'true' : 'false'); // Persist theme in localStorage
-      document.documentElement.classList.toggle('dark', newTheme); // Apply theme to the document
-      return { isDark: newTheme };
-    }),
-}));
+  // Apply theme to document based on mode
+  const applyTheme = (mode: ThemeMode) => {
+    const isDark = isDarkActive(mode);
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", isDark);
+    }
+    return isDark;
+  };
 
-// Detect system theme change and update accordingly
-if (typeof window !== 'undefined') {
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  // Initialize mode from localStorage or default to 'auto'
+  const storedMode =
+    typeof window !== "undefined"
+      ? (localStorage.getItem("themeMode") as ThemeMode)
+      : null;
+  const initialMode: ThemeMode =
+    storedMode && ["auto", "light", "dark"].includes(storedMode)
+      ? (storedMode as ThemeMode)
+      : "auto";
+
+  // Initialize isDark based on mode
+  const initialIsDark = applyTheme(initialMode);
+
+  return {
+    mode: initialMode,
+    isDark: initialIsDark,
+
+    setThemeMode: (newMode: ThemeMode) => {
+      localStorage.setItem("themeMode", newMode);
+      const isDark = applyTheme(newMode);
+      set({ mode: newMode, isDark });
+    },
+
+    // For backward compatibility
+    toggleTheme: () => {
+      const { mode } = get();
+      const newMode: ThemeMode = mode === "light" ? "dark" : "light";
+      localStorage.setItem("themeMode", newMode);
+      const isDark = applyTheme(newMode);
+      set({ mode: newMode, isDark });
+    },
+  };
+});
+
+// Listen for system theme changes when in auto mode
+if (typeof window !== "undefined") {
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
   const handleSystemThemeChange = () => {
-    if (localStorage.getItem('isDark') === null) {
-      // Only change theme based on system preference if no user preference is set
-      const systemPrefersDark = mediaQuery.matches;
-      document.documentElement.classList.toggle('dark', systemPrefersDark);
+    const currentMode =
+      (localStorage.getItem("themeMode") as ThemeMode) || "auto";
+    if (currentMode === "auto") {
+      const store = useThemeStore.getState();
+      const isDark = mediaQuery.matches;
+      document.documentElement.classList.toggle("dark", isDark);
+      store.setThemeMode("auto"); // This will update the isDark state
     }
   };
 
-  mediaQuery.addEventListener('change', handleSystemThemeChange);
-  handleSystemThemeChange(); // Initial check when the page loads
+  mediaQuery.addEventListener("change", handleSystemThemeChange);
+  handleSystemThemeChange(); // Initial check
 }
 
 export default useThemeStore;

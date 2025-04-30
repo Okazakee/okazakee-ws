@@ -127,6 +127,10 @@ export default function ResponsiveNav({
                 </Link>
               );
             })}
+            <div className="flex items-center ml-4 space-x-4">
+              <LanguageToggle compact={true} />
+              <ThemeToggle compact={true} />
+            </div>
           </nav>
 
           {/* Mobile Navigation */}

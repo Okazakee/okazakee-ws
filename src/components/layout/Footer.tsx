@@ -2,8 +2,6 @@ import Link from 'next/link';
 import React from 'react';
 import CopyLinkButton from '../common/CopyButton';
 import { getTranslations } from 'next-intl/server';
-import LanguageToggle from './LanguageToggle';
-import ThemeToggle from './ThemeToggle';
 
 export default async function Footer() {
   const t = await getTranslations('footer');
@@ -35,11 +33,6 @@ export default async function Footer() {
         >
           {t('middle')} - 02863310815
         </CopyLinkButton>
-
-        <div className="lg:flex gap-5 hidden lg:mr-5">
-          <LanguageToggle />
-          <ThemeToggle />
-        </div>
       </div>
     </footer>
   );
