@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import useThemeStore, { type ThemeMode } from '@/store/themeStore';
 import { Sun, Moon, Smartphone, Monitor } from 'lucide-react';
 
@@ -10,28 +10,18 @@ export default function ThemeToggle({
   const { mode, setThemeMode, isDark } = useThemeStore();
   const [mounted, setMounted] = useState(false);
   // Initialize systemIsDark using the same check from the store
-  const initialIsDark =
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const [systemIsDark, setSystemIsDark] = useState(initialIsDark);
-  const initialRender = useRef(true);
+  const [systemIsDark, setSystemIsDark] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
-    // Force a re-render to ensure correct dark mode detection
-    if (initialRender.current) {
-      initialRender.current = false;
-      const darkModePreference = window.matchMedia(
-        '(prefers-color-scheme: dark)'
-      );
-      setSystemIsDark(darkModePreference.matches);
-    }
-
-    // Listen for changes in system preference
+    // Get system preference after hydration
     const darkModePreference = window.matchMedia(
       '(prefers-color-scheme: dark)'
     );
+    setSystemIsDark(darkModePreference.matches);
+
+    // Listen for changes in system preference
     const handleChange = (event: MediaQueryListEvent) => {
       setSystemIsDark(event.matches);
     };
@@ -53,12 +43,14 @@ export default function ThemeToggle({
 
   // Helper function to cycle through modes: auto -> light -> dark -> auto
   const cycleThemeMode = () => {
-    // Also update system state on click to ensure it's current
-    const systemDark = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches;
-    if (systemDark !== systemIsDark) {
-      setSystemIsDark(systemDark);
+    // Also update system state on click to ensure it's current, after hydration
+    if (typeof window !== "undefined") {
+      const systemDark = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches;
+      if (systemDark !== systemIsDark) {
+        setSystemIsDark(systemDark);
+      }
     }
 
     const modes: ThemeMode[] = ['auto', 'light', 'dark'];
