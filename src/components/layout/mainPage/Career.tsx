@@ -28,7 +28,7 @@ interface CareerEntry {
 }
 
 export default async function Career() {
-  const careerEntries = await getCareerEntries() as unknown as CareerEntry[];
+  const careerEntries = (await getCareerEntries()) as unknown as CareerEntry[];
   const t = await getTranslations('career-section');
 
   const formatDate = (dateString: MomentInput) => {
@@ -42,17 +42,13 @@ export default async function Career() {
     const months = end.diff(start, 'months');
 
     if (months < 12) {
-      return months === 1
-        ? `1 ${t('month')}`
-        : `${months} ${t('months')}`;
+      return months === 1 ? `1 ${t('month')}` : `${months} ${t('months')}`;
     } else {
       const years = Math.floor(months / 12);
       const remainingMonths = months % 12;
 
       if (remainingMonths === 0) {
-        return years === 1
-          ? `1 ${t('year')}`
-          : `${years} ${t('years')}`;
+        return years === 1 ? `1 ${t('year')}` : `${years} ${t('years')}`;
       } else {
         const yearText = years === 1 ? t('year') : t('years');
         const monthText = remainingMonths === 1 ? t('month') : t('months');
@@ -89,7 +85,9 @@ export default async function Career() {
 
             return (
               <div key={entry.id} className="mb-0 md:mb-8 relative">
-                <div className={`hidden md:flex items-center ${isEven ? 'flex-row' : 'flex-row-reverse'}`}>
+                <div
+                  className={`hidden md:flex items-center ${isEven ? 'flex-row' : 'flex-row-reverse'}`}
+                >
                   {!isLast && (
                     <div
                       className={`absolute top-1/2 left-1/2 w-10 h-20 ${isEven ? '-translate-x-full' : 'translate-x-0'} -translate-y-1/2`}
@@ -97,16 +95,22 @@ export default async function Career() {
                         borderTop: '2px solid #8B53FB',
                         borderRight: isEven ? 'none' : '2px solid #8B53FB',
                         borderLeft: isEven ? '2px solid #8B53FB' : 'none',
-                        borderRadius: isEven ? '8px 0 0 0' : '0 8px 0 0'
+                        borderRadius: isEven ? '8px 0 0 0' : '0 8px 0 0',
                       }}
                     />
                   )}
 
-                  <div className={`w-1/2 ${isEven ? 'pr-16 text-right' : 'pl-16 text-left'}`}>
-                    <h3 className="text-2xl font-bold text-main">{entry.title}</h3>
+                  <div
+                    className={`w-1/2 ${isEven ? 'pr-16 text-right' : 'pl-16 text-left'}`}
+                  >
+                    <h3 className="text-2xl font-bold text-main">
+                      {entry.title}
+                    </h3>
                     <h4 className="text-xl mb-2">{entry.company}</h4>
 
-                    <div className={`flex items-center mb-2 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`flex items-center mb-2 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                    >
                       <MapPin size={16} className="inline" />
                       <span>{entry[`location_${locale}`]}</span>
                       <span className="px-1 text-main">•</span>
@@ -115,23 +119,36 @@ export default async function Career() {
                       </span>
                     </div>
 
-                    <div className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                    >
                       <Calendar size={16} className="inline" />
                       <span>
-                        {formatDate(entry.startDate)} — {formatDate(entry.endDate)}
+                        {formatDate(entry.startDate)} —{' '}
+                        {formatDate(entry.endDate)}
                       </span>
                       <span className="px-1 text-main">•</span>
-                      <span>{calculateDuration(entry.startDate, entry.endDate)}</span>
+                      <span>
+                        {calculateDuration(entry.startDate, entry.endDate)}
+                      </span>
                     </div>
 
-                    <div className={"mb-4 prose dark:prose-invert max-w-none text-left"}>
+                    <div
+                      className={
+                        'mb-4 prose dark:prose-invert max-w-none text-left'
+                      }
+                    >
                       <ReactMarkdown rehypePlugins={[rehypeRaw]}>
                         {entry[`description_${locale}`]}
                       </ReactMarkdown>
                     </div>
 
-                    <div className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
-                      <SkillsCarousel skills={JSON.parse(entry.skills) as string[]} />
+                    <div
+                      className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <SkillsCarousel
+                        skills={JSON.parse(entry.skills) as string[]}
+                      />
                     </div>
                   </div>
 
@@ -158,7 +175,9 @@ export default async function Career() {
                         </div>
                       </div>
                       <div className="text-center">
-                        <h5 className="font-semibold text-gray-900 dark:text-white mb-3 text-lg">{entry.company}</h5>
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-3 text-lg">
+                          {entry.company}
+                        </h5>
                         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                           {entry[`company_description_${locale}`]}
                         </p>
@@ -173,7 +192,7 @@ export default async function Career() {
                   <div className="relative w-full max-w-md flex">
                     {/* Vertical line (full height of container) */}
                     <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-main -translate-x-1/2 z-0" />
-                    
+
                     {/* Card with dot */}
                     <div className="relative w-full flex flex-col items-center">
                       {/* Dot */}
@@ -199,8 +218,12 @@ export default async function Career() {
                                 className="rounded-xl shadow-md h-auto max-h-[120px] w-auto"
                               />
                             </div>
-                            <h3 className="text-xl font-bold text-main mb-2">{entry.title}</h3>
-                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{entry.company}</h4>
+                            <h3 className="text-xl font-bold text-main mb-2">
+                              {entry.title}
+                            </h3>
+                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {entry.company}
+                            </h4>
                           </div>
                         </Link>
                         <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed text-center mb-4">
@@ -231,15 +254,20 @@ export default async function Career() {
                         <div className="flex items-center justify-center mb-5 text-xs text-gray-500 dark:text-gray-400 gap-1">
                           <Calendar size={14} className="inline mb-1" />
                           <span>
-                            {formatDate(entry.startDate)} — {formatDate(entry.endDate)}
+                            {formatDate(entry.startDate)} —{' '}
+                            {formatDate(entry.endDate)}
                           </span>
                           <span className="px-1 text-main">•</span>
-                          <span>{calculateDuration(entry.startDate, entry.endDate)}</span>
+                          <span>
+                            {calculateDuration(entry.startDate, entry.endDate)}
+                          </span>
                         </div>
 
                         {/* Skills */}
                         <div className="flex flex-wrap gap-2 justify-center">
-                          <SkillsCarousel skills={JSON.parse(entry.skills) as string[]} />
+                          <SkillsCarousel
+                            skills={JSON.parse(entry.skills) as string[]}
+                          />
                         </div>
                       </div>
                       {/* Connector: show only if not last card */}

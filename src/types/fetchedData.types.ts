@@ -72,7 +72,7 @@ export type User = {
   propic: string;
 };
 
-export type RemoteType = "full" | "hybrid" | "onSite";
+export type RemoteType = 'full' | 'hybrid' | 'onSite';
 
 export type CareerEntry = {
   id: number;

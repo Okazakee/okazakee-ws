@@ -9,7 +9,8 @@ export const SkillsCarousel = ({ skills }: { skills: string[] }) => {
   useEffect(() => {
     const calculateWidths = () => {
       if (containerRef.current) {
-        const skillElements = containerRef.current.querySelectorAll('.skill-tag');
+        const skillElements =
+          containerRef.current.querySelectorAll('.skill-tag');
         let width = 0;
 
         for (const el of skillElements) {
@@ -35,7 +36,9 @@ export const SkillsCarousel = ({ skills }: { skills: string[] }) => {
       <div
         ref={containerRef}
         className={`flex whitespace-nowrap transition-all duration-[400ms] ease-in-out ${
-          shouldAnimate ? 'animate-carousel' : 'flex-wrap justify-center md:justify-start'
+          shouldAnimate
+            ? 'animate-carousel'
+            : 'flex-wrap justify-center md:justify-start'
         }`}
         style={
           shouldAnimate
@@ -57,4 +60,4 @@ export const SkillsCarousel = ({ skills }: { skills: string[] }) => {
       </div>
     </div>
   );
-}; 
+};
