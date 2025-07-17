@@ -65,7 +65,7 @@ export default async function Career() {
   return (
     <section
       id="career"
-      className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-screen my-20 md:my-0"
+      className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-screen my-20 md:my-0 mb-20 md:mb-32"
     >
       <div className="w-full max-w-6xl">
         <h1 className="xl:text-6xl text-3xl xs:text-4xl mb-10 xl:mb-5">
@@ -103,7 +103,7 @@ export default async function Career() {
                     <h3 className="text-2xl font-bold text-main">{entry.title}</h3>
                     <h4 className="text-xl mb-2">{entry.company}</h4>
 
-                    <div className="flex items-center mb-2 text-sm text-gray-500 dark:text-gray-400 gap-2 justify-end">
+                    <div className={`flex items-center mb-2 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
                       <MapPin size={16} className="inline" />
                       <span>{entry[`location_${locale}`]}</span>
                       <span className="px-1 text-main">•</span>
@@ -112,7 +112,7 @@ export default async function Career() {
                       </span>
                     </div>
 
-                    <div className="flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 justify-end">
+                    <div className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
                       <Calendar size={16} className="inline" />
                       <span>
                         {formatDate(entry.startDate)} — {formatDate(entry.endDate)}
@@ -121,13 +121,13 @@ export default async function Career() {
                       <span>{calculateDuration(entry.startDate, entry.endDate)}</span>
                     </div>
 
-                    <div className="mb-4 text-left prose dark:prose-invert max-w-none">
+                    <div className={`mb-4 prose dark:prose-invert max-w-none ${isEven ? 'text-right' : 'text-left'}`}>
                       <ReactMarkdown rehypePlugins={[rehypeRaw]}>
                         {entry[`description_${locale}`]}
                       </ReactMarkdown>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 justify-end">
+                    <div className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
                       {(JSON.parse(entry.skills) as string[]).map((skill) => (
                         <span key={skill} className="bg-secondary text-white px-2 py-1 rounded-md text-sm">
                           {skill}
@@ -139,7 +139,7 @@ export default async function Career() {
                   <div className="absolute left-1/2 top-8 transform -translate-x-1/2 w-6 h-6 bg-main rounded-full z-10 border-2 border-white dark:border-gray-900" />
 
                   <div className={`w-1/2 ${isEven ? 'pl-16' : 'pr-16'}`}>
-                    <div className={`bg-gray-100 dark:bg-gray-800 p-6 rounded-xl shadow-lg ${isEven ? 'ml-auto' : 'mr-auto'} max-w-xs`}>
+                    <div className={`bg-gray-100 dark:bg-gray-800 p-6 rounded-xl shadow-lg ${isEven ? 'mr-auto' : 'ml-auto'} max-w-xs`}>
                       <Image
                         src={entry.logo}
                         alt={entry.company}
@@ -196,7 +196,7 @@ export default async function Career() {
                       {entry[`description_${locale}`]}
                     </p>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className={`flex flex-wrap gap-2 ${isEven ? '' : 'justify-start'}`}>
                       {(JSON.parse(entry.skills) as string[]).map((skill) => (
                         <span key={skill} className="bg-secondary text-white px-2 py-1 rounded-md text-xs">
                           {skill}
