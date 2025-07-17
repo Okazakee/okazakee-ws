@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
 import { getCareerEntries } from '@/utils/getData';
 import { ErrorDiv } from '@components/common/ErrorDiv';
+import { SkillsCarousel } from '@components/common/SkillsCarousel';
 import Image from 'next/image';
 import { ExternalLink, MapPin, Calendar } from 'lucide-react';
 import moment, { type MomentInput } from 'moment';
@@ -87,7 +88,7 @@ export default async function Career() {
             const locale = t('locale');
 
             return (
-              <div key={entry.id} className="mb-16 md:mb-8 relative">
+              <div key={entry.id} className="mb-0 md:mb-8 relative">
                 <div className={`hidden md:flex items-center ${isEven ? 'flex-row' : 'flex-row-reverse'}`}>
                   {!isLast && (
                     <div
@@ -130,11 +131,7 @@ export default async function Career() {
                     </div>
 
                     <div className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
-                      {(JSON.parse(entry.skills) as string[]).map((skill) => (
-                        <span key={skill} className="bg-secondary text-white px-2 py-1 rounded-md text-sm">
-                          {skill}
-                        </span>
-                      ))}
+                      <SkillsCarousel skills={JSON.parse(entry.skills) as string[]} />
                     </div>
                   </div>
 
@@ -170,52 +167,87 @@ export default async function Career() {
                   </div>
                 </div>
 
-                <div className="md:hidden flex flex-col items-center">
-                  <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-4 w-full">
-                    <div className="flex items-center mb-4">
-                      <Image
-                        src={entry.logo}
-                        alt={entry.company}
-                        width={60}
-                        height={60}
-                        placeholder="blur"
-                        blurDataURL={entry.blurhashurl}
-                        className="rounded-md mr-4"
-                      />
-                      <div>
-                        <h3 className="text-xl font-bold text-main">{entry.title}</h3>
-                        <h4 className="text-lg">{entry.company}</h4>
+                {/* MOBILE */}
+                <div className="md:hidden flex flex-col items-center w-full">
+                  {/* Timeline container */}
+                  <div className="relative w-full max-w-md flex">
+                    {/* Vertical line (full height of container) */}
+                    <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-main -translate-x-1/2 z-0" />
+                    
+                    {/* Card with dot */}
+                    <div className="relative w-full flex flex-col items-center">
+                      {/* Dot */}
+                      <div className="absolute left-1/2 -top-4 w-4 h-4 bg-main rounded-full border-2 border-white dark:border-gray-900 z-10 -translate-x-1/2" />
+                      {/* Card */}
+                      <div className="bg-[#c5c5c5] dark:bg-[#0e0e0e] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mt-2 w-full max-w-[21rem] xs:min-w-[24rem] md:max-w-xl mx-auto z-10">
+                        {/* Company logo and info */}
+                        <Link
+                          href={entry.website_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <div className="text-center mb-2">
+                            <div className="relative inline-block mb-4">
+                              <Image
+                                src={entry.logo}
+                                alt={entry.company}
+                                width={120}
+                                height={0}
+                                placeholder="blur"
+                                blurDataURL={entry.blurhashurl}
+                                className="rounded-xl shadow-md h-auto max-h-[80px] w-auto"
+                              />
+                            </div>
+                            <h3 className="text-xl font-bold text-main mb-2">{entry.title}</h3>
+                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{entry.company}</h4>
+                          </div>
+                        </Link>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed text-center mb-4">
+                          {entry[`company_description_${locale}`]}
+                        </p>
+
+                        {/* Divider */}
+                        <div className="w-16 h-px bg-gray-300 dark:bg-gray-600 mx-auto mb-4" />
+
+                        {/* Description */}
+                        <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
+                          <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                            {entry[`description_${locale}`]}
+                          </ReactMarkdown>
+                        </div>
+
+                        {/* Location and remote info */}
+                        <div className="flex items-center justify-center mb-2 text-xs text-gray-500 dark:text-gray-400 gap-1">
+                          <MapPin size={14} className="inline mb-1" />
+                          <span>{entry[`location_${locale}`]}</span>
+                          <span className="px-1 text-main">•</span>
+                          <span className="bg-secondary text-white px-1.5 py-0.5 rounded-md text-xs">
+                            {t(`remote.${entry.remote}`)}
+                          </span>
+                        </div>
+
+                        {/* Date and duration */}
+                        <div className="flex items-center justify-center mb-5 text-xs text-gray-500 dark:text-gray-400 gap-1">
+                          <Calendar size={14} className="inline mb-1" />
+                          <span>
+                            {formatDate(entry.startDate)} — {formatDate(entry.endDate)}
+                          </span>
+                          <span className="px-1 text-main">•</span>
+                          <span>{calculateDuration(entry.startDate, entry.endDate)}</span>
+                        </div>
+
+                        {/* Skills */}
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          <SkillsCarousel skills={JSON.parse(entry.skills) as string[]} />
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="flex items-center mb-2 text-sm text-gray-500 dark:text-gray-400">
-                      <MapPin size={16} className="inline mr-1" />
-                      <span>{entry[`location_${locale}`]}</span>
-                      <span className="px-1 text-main">•</span>
-                      <span className="bg-secondary text-white px-2 py-0.5 rounded-md text-xs">
-                        {t(`remote.${entry.remote}`)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400">
-                      <Calendar size={16} className="inline mr-1" />
-                      <span>
-                        {formatDate(entry.startDate)} — {formatDate(entry.endDate)}
-                      </span>
-                      <span className="px-1 text-main">•</span>
-                      <span>{calculateDuration(entry.startDate, entry.endDate)}</span>
-                    </div>
-
-                    <p className="mb-4 text-sm">
-                      {entry[`description_${locale}`]}
-                    </p>
-
-                    <div className={`flex flex-wrap gap-2 ${isEven ? '' : 'justify-start'}`}>
-                      {(JSON.parse(entry.skills) as string[]).map((skill) => (
-                        <span key={skill} className="bg-secondary text-white px-2 py-1 rounded-md text-xs">
-                          {skill}
-                        </span>
-                      ))}
+                      {/* Connector: show only if not last card */}
+                      {index !== careerEntries.length - 1 && (
+                        <div className="flex justify-center">
+                          <div className="w-1 h-8 bg-main rounded-full my-2" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
