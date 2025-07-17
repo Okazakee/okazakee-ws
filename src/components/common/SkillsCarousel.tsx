@@ -1,10 +1,7 @@
 'use client';
 import { useRef, useEffect, useState, useMemo } from 'react';
 
-export const SkillsCarousel = ({
-  skills,
-  isEven,
-}: { skills: string[]; isEven?: boolean }) => {
+export const SkillsCarousel = ({ skills }: { skills: string[] }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [totalWidth, setTotalWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -12,8 +9,7 @@ export const SkillsCarousel = ({
   useEffect(() => {
     const calculateWidths = () => {
       if (containerRef.current) {
-        const skillElements =
-          containerRef.current.querySelectorAll('.skill-tag');
+        const skillElements = containerRef.current.querySelectorAll('.skill-tag');
         let width = 0;
 
         for (const el of skillElements) {
@@ -39,9 +35,7 @@ export const SkillsCarousel = ({
       <div
         ref={containerRef}
         className={`flex whitespace-nowrap transition-all duration-[400ms] ease-in-out ${
-          shouldAnimate
-            ? 'animate-carousel'
-            : `flex-wrap justify-center ${isEven ? 'md:justify-end' : 'md:justify-start'}`
+          shouldAnimate ? 'animate-carousel' : 'flex-wrap justify-center md:justify-start'
         }`}
         style={
           shouldAnimate
@@ -63,4 +57,4 @@ export const SkillsCarousel = ({
       </div>
     </div>
   );
-};
+}; 
