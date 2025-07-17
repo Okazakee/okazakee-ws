@@ -78,6 +78,7 @@ export type CareerEntry = {
   id: number;
   title: string;
   company: string;
+  website_url: string;
   logo: string;
   blurhashURL: string;
   location_en: string;

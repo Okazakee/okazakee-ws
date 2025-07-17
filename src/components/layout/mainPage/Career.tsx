@@ -8,6 +8,7 @@ import { ExternalLink, MapPin, Calendar } from 'lucide-react';
 import moment, { type MomentInput } from 'moment';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import Link from 'next/link';
 
 interface CareerEntry {
   id: string;
@@ -19,6 +20,7 @@ interface CareerEntry {
   skills: string;
   logo: string;
   blurhashurl: string;
+  website_url: string;
   [key: `location_${string}`]: string;
   [key: `description_${string}`]: string;
   [key: `company_description_${string}`]: string;
@@ -121,7 +123,7 @@ export default async function Career() {
                       <span>{calculateDuration(entry.startDate, entry.endDate)}</span>
                     </div>
 
-                    <div className={`mb-4 prose dark:prose-invert max-w-none ${isEven ? 'text-right' : 'text-left'}`}>
+                    <div className={"mb-4 prose dark:prose-invert max-w-none text-left"}>
                       <ReactMarkdown rehypePlugins={[rehypeRaw]}>
                         {entry[`description_${locale}`]}
                       </ReactMarkdown>
@@ -139,20 +141,32 @@ export default async function Career() {
                   <div className="absolute left-1/2 top-8 transform -translate-x-1/2 w-6 h-6 bg-main rounded-full z-10 border-2 border-white dark:border-gray-900" />
 
                   <div className={`w-1/2 ${isEven ? 'pl-16' : 'pr-16'}`}>
-                    <div className={`bg-gray-100 dark:bg-gray-800 p-6 rounded-xl shadow-lg ${isEven ? 'mr-auto' : 'ml-auto'} max-w-xs`}>
-                      <Image
-                        src={entry.logo}
-                        alt={entry.company}
-                        width={100}
-                        height={100}
-                        placeholder="blur"
-                        blurDataURL={entry.blurhashurl}
-                        className="mx-auto mb-4 rounded-md"
-                      />
-                      <p className="text-sm text-gray-600 dark:text-gray-300 italic">
-                        {entry[`company_description_${locale}`]}
-                      </p>
-                    </div>
+                    <Link
+                      href={entry.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`group bg-[#c5c5c5] dark:bg-[#0e0e0e] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 ${isEven ? 'mr-auto' : 'ml-auto'} max-w-sm hover:scale-105 transition-all cursor-pointer block`}
+                    >
+                      <div className="text-center mb-6">
+                        <div className="relative inline-block">
+                          <Image
+                            src={entry.logo}
+                            alt={entry.company}
+                            width={400}
+                            height={0}
+                            placeholder="blur"
+                            blurDataURL={entry.blurhashurl}
+                            className="rounded-xl shadow-md h-auto md:max-h-[160px] w-auto"
+                          />
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <h5 className="font-semibold text-gray-900 dark:text-white mb-3 text-lg">{entry.company}</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                          {entry[`company_description_${locale}`]}
+                        </p>
+                      </div>
+                    </Link>
                   </div>
                 </div>
 
