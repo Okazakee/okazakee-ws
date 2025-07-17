@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type React from 'react';
-import { useEffect } from 'react';
+import type React from "react";
+import { useEffect } from "react";
 import useThemeStore from '../store/themeStore';
 
 const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -16,7 +16,7 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     // Apply theme class to html element
-    document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
 
   return <>{children}</>;

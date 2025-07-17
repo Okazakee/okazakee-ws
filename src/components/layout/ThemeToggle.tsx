@@ -44,7 +44,7 @@ export default function ThemeToggle({
   // Helper function to cycle through modes: auto -> light -> dark -> auto
   const cycleThemeMode = () => {
     // Also update system state on click to ensure it's current, after hydration
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const systemDark = window.matchMedia(
         '(prefers-color-scheme: dark)'
       ).matches;
