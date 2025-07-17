@@ -192,11 +192,11 @@ export default async function Career() {
                               <Image
                                 src={entry.logo}
                                 alt={entry.company}
-                                width={120}
+                                width={250}
                                 height={0}
                                 placeholder="blur"
                                 blurDataURL={entry.blurhashurl}
-                                className="rounded-xl shadow-md h-auto max-h-[80px] w-auto"
+                                className="rounded-xl shadow-md h-auto max-h-[120px] w-auto"
                               />
                             </div>
                             <h3 className="text-xl font-bold text-main mb-2">{entry.title}</h3>
