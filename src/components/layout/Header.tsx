@@ -5,7 +5,6 @@ import Link from 'next/link';
 import NavMenu from './NavMenu';
 
 export default async function Header({ locale }: { locale: string }) {
-
   return (
     <header className="max-w-screen-2xl mx-auto pt-2">
       <div className="flex justify-between items-center pt-5 mx-5">
