@@ -76,7 +76,7 @@ export default async function Career() {
         />
 
         <div className="relative">
-          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-main hidden md:block" />
+          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-main hidden md:block" style={{ top: '0.5rem' }} />
 
           {careerEntries.map((entry, index) => {
             const isEven = index % 2 === 0;
@@ -88,17 +88,15 @@ export default async function Career() {
                 <div
                   className={`hidden md:flex items-center ${isEven ? 'flex-row' : 'flex-row-reverse'}`}
                 >
-                  {!isLast && (
-                    <div
-                      className={`absolute top-1/2 left-1/2 w-10 h-20 ${isEven ? '-translate-x-full' : 'translate-x-0'} -translate-y-1/2`}
-                      style={{
-                        borderTop: '2px solid #8B53FB',
-                        borderRight: isEven ? 'none' : '2px solid #8B53FB',
-                        borderLeft: isEven ? '2px solid #8B53FB' : 'none',
-                        borderRadius: isEven ? '8px 0 0 0' : '0 8px 0 0',
-                      }}
-                    />
-                  )}
+                  <div
+                    className={`absolute top-1/2 left-1/2 w-10 h-20 ${isEven ? '-translate-x-full' : 'translate-x-0'} -translate-y-1/2`}
+                    style={{
+                      borderTop: '2px solid #8B53FB',
+                      borderRight: isEven ? 'none' : '2px solid #8B53FB',
+                      borderLeft: isEven ? '2px solid #8B53FB' : 'none',
+                      borderRadius: isEven ? '8px 0 0 0' : '0 8px 0 0',
+                    }}
+                  />
 
                   <div
                     className={`w-1/2 ${isEven ? 'pr-16 text-right' : 'pl-16 text-left'}`}
@@ -153,7 +151,7 @@ export default async function Career() {
                     </div>
                   </div>
 
-                  <div className="absolute left-1/2 top-8 transform -translate-x-1/2 w-6 h-6 bg-main rounded-full z-10 border-2 border-white dark:border-gray-900" />
+                  <div className="absolute left-1/2 top-1 transform -translate-x-1/2 w-6 h-6 bg-main rounded-full z-10 border-2 border-white dark:border-gray-900" />
 
                   <div className={`w-1/2 ${isEven ? 'pl-16' : 'pr-16'}`}>
                     <Link
