@@ -57,9 +57,29 @@ export default async function Career() {
     }
   };
 
+  // Add this new helper function
+  const groupEntriesByCompany = (entries: CareerEntry[]) => {
+    const grouped = entries.reduce((acc, entry) => {
+      if (!acc[entry.company]) {
+        acc[entry.company] = [];
+      }
+      acc[entry.company].push(entry);
+      return acc;
+    }, {} as Record<string, CareerEntry[]>);
+    
+    return Object.entries(grouped).map(([company, positions]) => ({
+      company,
+      positions: positions.sort((a, b) => 
+        moment(b.startDate).diff(moment(a.startDate))
+      )
+    }));
+  };
+
   if (!careerEntries) {
     return <ErrorDiv>Error loading Career data</ErrorDiv>;
   }
+
+  const groupedEntries = groupEntriesByCompany(careerEntries);
 
   return (
     <section
@@ -78,13 +98,15 @@ export default async function Career() {
         <div className="relative">
           <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-main hidden md:block" style={{ top: '0.5rem' }} />
 
-          {careerEntries.map((entry, index) => {
+          {groupedEntries.map((companyGroup, index) => {
             const isEven = index % 2 === 0;
-            const isLast = index === careerEntries.length - 1;
+            const isLast = index === groupedEntries.length - 1;
             const locale = t('locale');
+            const latestPosition = companyGroup.positions[0]; // Most recent position
+            const olderPositions = companyGroup.positions.slice(1);
 
             return (
-              <div key={entry.id} className="mb-0 md:mb-8 relative">
+              <div key={companyGroup.company} className="mb-0 md:mb-8 relative">
                 <div
                   className={`hidden md:flex items-center ${isEven ? 'flex-row' : 'flex-row-reverse'}`}
                 >
@@ -101,33 +123,22 @@ export default async function Career() {
                   <div
                     className={`w-1/2 ${isEven ? 'pr-16 text-right' : 'pl-16 text-left'}`}
                   >
-                    <h3 className="text-2xl font-bold text-main">
-                      {entry.title}
+                    {/* Latest position - full UI */}
+                    <h3 className="text-2xl font-bold text-main mb-2">
+                      {latestPosition.title}
                     </h3>
-                    <h4 className="text-xl mb-2">{entry.company}</h4>
 
                     <div
-                      className={`flex items-center mb-2 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <MapPin size={16} className="inline" />
-                      <span>{entry[`location_${locale}`]}</span>
-                      <span className="px-1 text-main">•</span>
-                      <span className="bg-secondary text-white px-2 py-0.5 rounded-md text-xs">
-                        {t(`remote.${entry.remote}`)}
-                      </span>
-                    </div>
-
-                    <div
-                      className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                      className={`flex mb-4 items-center text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
                     >
                       <Calendar size={16} className="inline" />
                       <span>
-                        {formatDate(entry.startDate)} —{' '}
-                        {formatDate(entry.endDate)}
+                        {formatDate(latestPosition.startDate)} —{' '}
+                        {formatDate(latestPosition.endDate)}
                       </span>
                       <span className="px-1 text-main">•</span>
                       <span>
-                        {calculateDuration(entry.startDate, entry.endDate)}
+                        {calculateDuration(latestPosition.startDate, latestPosition.endDate)}
                       </span>
                     </div>
 
@@ -137,7 +148,7 @@ export default async function Career() {
                       }
                     >
                       <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                        {entry[`description_${locale}`]}
+                        {latestPosition[`description_${locale}`]}
                       </ReactMarkdown>
                     </div>
 
@@ -145,17 +156,49 @@ export default async function Career() {
                       className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
                     >
                       <SkillsCarousel
-                        skills={JSON.parse(entry.skills) as string[]}
+                        skills={JSON.parse(latestPosition.skills) as string[]}
                         isEven={isEven}
                       />
                     </div>
+
+                    {/* Older positions - compact UI */}
+                    {olderPositions.length > 0 && (
+                      <div className={`mt-6 space-y-4 ${isEven ? 'text-right' : 'text-left'}`}>
+                        {olderPositions.map((position) => (
+                          <div key={position.id} className="pl-4">
+                            <h5 className="text-2xl font-bold text-main mb-2">
+                              {position.title}
+                            </h5>
+                            <div className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
+                              <Calendar size={16} className="inline" />
+                              <span>
+                                {formatDate(position.startDate)} — {formatDate(position.endDate)}
+                              </span>
+                              <span className="px-1 text-main">•</span>
+                              <span>{calculateDuration(position.startDate, position.endDate)}</span>
+                            </div>
+                            <div className="prose dark:prose-invert max-w-none text-left mb-4">
+                              <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                                {position[`description_${locale}`]}
+                              </ReactMarkdown>
+                            </div>
+                            <div className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
+                              <SkillsCarousel
+                                skills={JSON.parse(position.skills) as string[]}
+                                isEven={isEven}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="absolute left-1/2 top-1 transform -translate-x-1/2 w-6 h-6 bg-main rounded-full z-10 border-2 border-white dark:border-gray-900" />
 
                   <div className={`w-1/2 ${isEven ? 'pl-16' : 'pr-16'}`}>
                     <Link
-                      href={entry.website_url}
+                      href={latestPosition.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={'group bg-[#c5c5c5] dark:bg-[#0e0e0e] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mx-auto max-w-md hover:scale-105 transition-all cursor-pointer block'}
@@ -163,23 +206,32 @@ export default async function Career() {
                       <div className="text-center mb-6">
                         <div className="relative inline-block">
                           <Image
-                            src={entry.logo}
-                            alt={entry.company}
+                            src={latestPosition.logo}
+                            alt={latestPosition.company}
                             width={400}
                             height={0}
                             placeholder="blur"
-                            blurDataURL={entry.blurhashurl}
+                            blurDataURL={latestPosition.blurhashurl}
                             className="rounded-xl shadow-md h-auto md:max-h-[160px] w-auto"
                           />
                         </div>
                       </div>
                       <div className="text-center">
                         <h5 className="font-semibold text-gray-900 dark:text-white mb-3 text-lg">
-                          {entry.company}
+                          {latestPosition.company}
                         </h5>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                          {entry[`company_description_${locale}`]}
+                        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
+                          {latestPosition[`company_description_${locale}`]}
                         </p>
+                        <div className="w-28 h-px bg-gray-300 dark:bg-gray-600 mx-auto mb-3" />
+                        <div className="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 gap-1">
+                          <MapPin size={16} className="inline mb-1 mr-1" />
+                          <span>{latestPosition[`location_${locale}`]}</span>
+                          <span className="px-1 text-main">•</span>
+                          <span className="bg-secondary text-white px-1.5 py-0.5 rounded-md text-xs">
+                            {t(`remote.${latestPosition.remote}`)}
+                          </span>
+                        </div>
                       </div>
                     </Link>
                   </div>
@@ -200,7 +252,7 @@ export default async function Career() {
                       <div className="bg-[#c5c5c5] dark:bg-[#0e0e0e] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mt-2 w-full max-w-[21rem] xs:min-w-[24rem] md:max-w-xl mx-auto z-10">
                         {/* Company logo and info */}
                         <Link
-                          href={entry.website_url}
+                          href={latestPosition.website_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block"
@@ -208,69 +260,117 @@ export default async function Career() {
                           <div className="text-center mb-2">
                             <div className="relative inline-block mb-4">
                               <Image
-                                src={entry.logo}
-                                alt={entry.company}
+                                src={latestPosition.logo}
+                                alt={latestPosition.company}
                                 width={250}
                                 height={0}
                                 placeholder="blur"
-                                blurDataURL={entry.blurhashurl}
+                                blurDataURL={latestPosition.blurhashurl}
                                 className="rounded-xl shadow-md h-auto max-h-[120px] w-auto"
                               />
                             </div>
-                            <h3 className="text-xl font-bold text-main mb-2">
-                              {entry.title}
-                            </h3>
                             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {entry.company}
+                              {latestPosition.company}
                             </h4>
                           </div>
                         </Link>
                         <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed text-center mb-4">
-                          {entry[`company_description_${locale}`]}
+                          {latestPosition[`company_description_${locale}`]}
                         </p>
+
+                        {/* Location and remote info */}
+                        <div className="flex items-center justify-center mb-4 text-xs text-gray-500 dark:text-gray-400 gap-1">
+                          <MapPin size={14} className="inline mb-1 mr-1" />
+                          <span>{latestPosition[`location_${locale}`]}</span>
+                          <span className="px-1 text-main">•</span>
+                          <span className="bg-secondary text-white px-1.5 py-0.5 rounded-md text-xs">
+                            {t(`remote.${latestPosition.remote}`)}
+                          </span>
+                        </div>
 
                         {/* Divider */}
                         <div className="w-16 h-px bg-gray-300 dark:bg-gray-600 mx-auto mb-4" />
 
+                        {/* Latest job title */}
+                        <h3 className="text-xl font-bold text-main mb-2 text-center">
+                          {latestPosition.title}
+                        </h3>
+
                         {/* Description */}
                         <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
                           <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                            {entry[`description_${locale}`]}
+                            {latestPosition[`description_${locale}`]}
                           </ReactMarkdown>
-                        </div>
-
-                        {/* Location and remote info */}
-                        <div className="flex items-center justify-center mb-2 text-xs text-gray-500 dark:text-gray-400 gap-1">
-                          <MapPin size={14} className="inline mb-1" />
-                          <span>{entry[`location_${locale}`]}</span>
-                          <span className="px-1 text-main">•</span>
-                          <span className="bg-secondary text-white px-1.5 py-0.5 rounded-md text-xs">
-                            {t(`remote.${entry.remote}`)}
-                          </span>
                         </div>
 
                         {/* Date and duration */}
                         <div className="flex items-center justify-center mb-5 text-xs text-gray-500 dark:text-gray-400 gap-1">
                           <Calendar size={14} className="inline mb-1" />
                           <span>
-                            {formatDate(entry.startDate)} —{' '}
-                            {formatDate(entry.endDate)}
+                            {formatDate(latestPosition.startDate)} —{' '}
+                            {formatDate(latestPosition.endDate)}
                           </span>
                           <span className="px-1 text-main">•</span>
                           <span>
-                            {calculateDuration(entry.startDate, entry.endDate)}
+                            {calculateDuration(latestPosition.startDate, latestPosition.endDate)}
                           </span>
                         </div>
 
                         {/* Skills */}
                         <div className="flex flex-wrap gap-2 justify-center">
                           <SkillsCarousel
-                            skills={JSON.parse(entry.skills) as string[]}
+                            skills={JSON.parse(latestPosition.skills) as string[]}
                           />
                         </div>
+
+                        {/* Older positions for mobile */}
+                        {olderPositions.length > 0 && (
+                          <div className="mt-6">
+                            <div className="space-y-3">
+                              {olderPositions.map((position, posIndex) => (
+                                <div key={position.id}>
+                                  {/* Connecting line from previous position */}
+                                  <div className="flex justify-center mb-3">
+                                    <div className="relative">
+                                      <div className="w-1 h-6 bg-main rounded-full" />
+                                      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-main rounded-full border-2 border-white dark:border-gray-900" />
+                                    </div>
+                                  </div>
+                                  <div className="pl-3">
+                                    <h3 className="text-xl font-bold text-main mb-2 text-center">
+                                      {position.title}
+                                    </h3>
+                                    
+                                    <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
+                                      <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                                        {position[`description_${locale}`]}
+                                      </ReactMarkdown>
+                                    </div>
+
+                                    {/* Date and duration */}
+                                    <div className="flex items-center justify-center mb-5 text-xs text-gray-500 dark:text-gray-400 gap-1">
+                                      <Calendar size={14} className="inline mb-1" />
+                                      <span>
+                                        {formatDate(position.startDate)} — {formatDate(position.endDate)}
+                                      </span>
+                                      <span className="px-1 text-main">•</span>
+                                      <span>{calculateDuration(position.startDate, position.endDate)}</span>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 justify-center">
+                                      <SkillsCarousel
+                                        skills={JSON.parse(position.skills) as string[]}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       {/* Connector: show only if not last card */}
-                      {index !== careerEntries.length - 1 && (
+                      {index !== groupedEntries.length - 1 && (
                         <div className="flex justify-center">
                           <div className="w-1 h-8 bg-main rounded-full my-2" />
                         </div>
