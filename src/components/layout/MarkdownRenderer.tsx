@@ -59,9 +59,10 @@ const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
           const altText = data[0];
           const blurhash = data[1];
 
-          return (
-            <NextImage src={src || ''} alt={altText} blurhash={blurhash} />
-          );
+          // Ensure src is a string before passing to NextImage
+          const imageSrc = typeof src === 'string' ? src : '';
+
+          return <NextImage src={imageSrc} alt={altText} blurhash={blurhash} />;
         },
       }}
     >
