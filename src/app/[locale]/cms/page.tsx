@@ -3,6 +3,7 @@
 import { getUser } from '@/app/actions/cms/getUser';
 import { heroActions } from '@/app/actions/cms/sections/heroActions';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import BlogSection from '@/components/common/cms/BlogSection';
 import CareerSection from '@/components/common/cms/CareerSection';
 import ContactsSection from '@/components/common/cms/ContactsSection';
 import HeroSection from '@/components/common/cms/HeroSection';
@@ -100,14 +101,7 @@ export default function CMS() {
             {activeSection === 'skills' && <SkillsSection />}
             {activeSection === 'career' && <CareerSection />}
             {activeSection === 'portfolio' && <PortfolioSection />}
-            {activeSection === 'posts' && (
-              <div className="text-center py-12">
-                <h2 className="text-3xl font-bold text-main mb-4">
-                  Posts Section
-                </h2>
-                <p className="text-lighttext2">Coming soon...</p>
-              </div>
-            )}
+            {activeSection === 'blog' && <BlogSection />}
             {activeSection === 'contacts' && <ContactsSection />}
             {activeSection === 'i18n' && <I18nSection />}
             {activeSection === 'settings' && (

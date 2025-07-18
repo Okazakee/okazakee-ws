@@ -65,13 +65,6 @@ export default function I18nSection() {
     }
   };
 
-  const handleTranslationChange = (key: string, value: string) => {
-    setEditedTranslations((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
     setError(null);
@@ -102,50 +95,6 @@ export default function I18nSection() {
     }
   };
 
-  const flattenTranslations = (
-    obj: Record<string, unknown>,
-    prefix = ''
-  ): Record<string, string> => {
-    const flattened: Record<string, string> = {};
-
-    for (const key in obj) {
-      const newKey = prefix ? `${prefix}.${key}` : key;
-
-      if (typeof obj[key] === 'object' && obj[key] !== null) {
-        Object.assign(
-          flattened,
-          flattenTranslations(obj[key] as Record<string, unknown>, newKey)
-        );
-      } else {
-        flattened[newKey] = String(obj[key]);
-      }
-    }
-
-    return flattened;
-  };
-
-  const unflattenTranslations = (
-    flatObj: Record<string, string>
-  ): Record<string, unknown> => {
-    const result: Record<string, unknown> = {};
-
-    for (const key in flatObj) {
-      const keys = key.split('.');
-      let current = result;
-
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) {
-          current[keys[i]] = {};
-        }
-        current = current[keys[i]] as Record<string, unknown>;
-      }
-
-      current[keys[keys.length - 1]] = flatObj[key];
-    }
-
-    return result;
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -153,8 +102,6 @@ export default function I18nSection() {
       </div>
     );
   }
-
-  const flattenedTranslations = flattenTranslations(editedTranslations);
 
   return (
     <div className="space-y-8">
@@ -192,25 +139,24 @@ export default function I18nSection() {
       {/* Translations Editor */}
       <div className="bg-darkergray rounded-xl p-6">
         <h2 className="text-2xl font-bold text-main mb-4">Translations</h2>
-
-        <div className="space-y-4 max-h-96 overflow-y-auto">
-          {Object.entries(flattenedTranslations).map(([key, value]) => (
-            <div key={key} className="flex flex-col gap-2">
-              <label
-                htmlFor={`translation-${key}`}
-                className="text-sm font-medium text-lighttext"
-              >
-                {key}
-              </label>
-              <textarea
-                id={`translation-${key}`}
-                value={value}
-                onChange={(e) => handleTranslationChange(key, e.target.value)}
-                className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[60px]"
-                rows={Math.max(2, value.split('\n').length)}
-              />
-            </div>
-          ))}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-lighttext2">
+            <Globe className="w-4 h-4" />
+            <span>Translation strings for {selectedLocale.toUpperCase()}</span>
+          </div>
+          <textarea
+            value={JSON.stringify(editedTranslations, null, 2)}
+            onChange={(e) => {
+              try {
+                const parsed = JSON.parse(e.target.value);
+                setEditedTranslations(parsed);
+              } catch (error) {
+                // Allow invalid JSON during typing
+              }
+            }}
+            className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[400px] font-mono text-sm"
+            placeholder="Enter translations as JSON object..."
+          />
         </div>
       </div>
 
@@ -225,7 +171,7 @@ export default function I18nSection() {
           <textarea
             value={editedPrivacyPolicy}
             onChange={(e) => setEditedPrivacyPolicy(e.target.value)}
-            className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[200px]"
+            className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[400px]"
             placeholder="Enter privacy policy content in markdown format..."
           />
         </div>
