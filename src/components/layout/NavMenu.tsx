@@ -30,6 +30,20 @@ const createMenuItems = (locale: string) => [
   // Resume button removed from main navigation
 ];
 
+// Create a hardcoded mapping for Italian translations
+const getItalianButtonText = (index: number) => {
+  const italianButtons = [
+    'Home',
+    'Skills',
+    'Carriera',
+    'Portfolio',
+    'Blog',
+    'Contatti',
+    'Curriculum',
+  ];
+  return italianButtons[index];
+};
+
 export default function ResponsiveNav({
   className,
   locale,
@@ -92,6 +106,15 @@ export default function ResponsiveNav({
     return item.href;
   };
 
+  // Function to get button text based on locale
+  const getButtonText = (index: number) => {
+    if (locale === 'it') {
+      return getItalianButtonText(index);
+    }
+    // For English, use the translation system
+    return t(`buttons.${index}`);
+  };
+
   // Close settings dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -135,7 +158,7 @@ export default function ResponsiveNav({
                   onClick={(e) => handleClick(e, button.href, button.isAnchor)}
                 >
                   <button.icon className="mr-2 -mt-1" />
-                  {t(`buttons.${i}`)}
+                  {getButtonText(i)}
                 </Link>
               );
             })}
@@ -212,7 +235,7 @@ export default function ResponsiveNav({
                         }}
                       >
                         <item.icon size={35} className="mr-2" />
-                        <span>{t(`buttons.${i}`)}</span>
+                        <span>{getButtonText(i)}</span>
                       </Link>
                     </li>
                   );
