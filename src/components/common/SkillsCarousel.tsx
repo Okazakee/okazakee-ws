@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useEffect, useState, useMemo } from 'react';
 
-export const SkillsCarousel = ({ skills }: { skills: string[] }) => {
+export const SkillsCarousel = ({ skills, isEven }: { skills: string[], isEven?: boolean }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [totalWidth, setTotalWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -38,7 +38,7 @@ export const SkillsCarousel = ({ skills }: { skills: string[] }) => {
         className={`flex whitespace-nowrap transition-all duration-[400ms] ease-in-out ${
           shouldAnimate
             ? 'animate-carousel'
-            : 'flex-wrap justify-center md:justify-start'
+            : `flex-wrap justify-center ${isEven ? 'md:justify-end' : 'md:justify-start'}`
         }`}
         style={
           shouldAnimate
