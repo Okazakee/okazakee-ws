@@ -32,7 +32,18 @@ export default function CMS() {
         if (!result.success) {
           throw new Error(result.error || 'Failed to fetch hero section data');
         }
-        setHeroSection(result.data);
+
+        // Transform the data structure to match setHeroSection expectations
+        const data = result.data as {
+          hero: { propic: string; blurhashURL: string } | null;
+          resume: { resume_en: string; resume_it: string } | null;
+        };
+        setHeroSection({
+          mainImage: data.hero?.propic || null,
+          blurhashURL: data.hero?.blurhashURL || null,
+          resume_en: data.resume?.resume_en || null,
+          resume_it: data.resume?.resume_it || null,
+        });
       } catch (err) {
         setError('Failed to fetch hero section data');
       } finally {

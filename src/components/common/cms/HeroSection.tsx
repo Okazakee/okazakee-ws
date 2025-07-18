@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 import { ErrorDiv } from '../ErrorDiv';
 import { useLayoutStore } from '@/store/layoutStore';
@@ -16,6 +16,10 @@ type HeroUpdateData = {
 
 export default function HeroSection() {
   const { heroSection } = useLayoutStore();
+
+  // Add refs for file inputs
+  const resumeItInputRef = useRef<HTMLInputElement>(null);
+  const resumeEnInputRef = useRef<HTMLInputElement>(null);
 
   // Local state for edits
   const [editedData, setEditedData] = useState({
@@ -100,6 +104,17 @@ export default function HeroSection() {
     } catch (error) {
       console.error('Error handling file change:', error);
       setError('Failed to process file');
+    }
+  };
+
+  // Add the missing handleResumeChange function
+  const handleResumeChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'resume_en' | 'resume_it'
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileChange(field, file);
     }
   };
 
@@ -208,12 +223,19 @@ export default function HeroSection() {
 
         // Update local state to reflect changes
         if (result.data) {
+          const data = result.data as {
+            propic?: string;
+            blurhashURL?: string;
+            resume_en?: string;
+            resume_it?: string;
+          };
+
           useLayoutStore.getState().setHeroSection({
             ...heroSection,
-            mainImage: result.data.propic || heroSection?.mainImage,
-            blurhashURL: result.data.blurhashURL || heroSection?.blurhashURL,
-            resume_en: result.data.resume_en || heroSection?.resume_en,
-            resume_it: result.data.resume_it || heroSection?.resume_it,
+            mainImage: data.propic || heroSection?.mainImage,
+            blurhashURL: data.blurhashURL || heroSection?.blurhashURL,
+            resume_en: data.resume_en || heroSection?.resume_en,
+            resume_it: data.resume_it || heroSection?.resume_it,
           });
         }
       } else {

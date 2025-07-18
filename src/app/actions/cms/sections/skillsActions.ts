@@ -16,10 +16,13 @@ type SkillOperation =
     };
 
 type CreateSkillData = {
-  name: string;
-  description: string;
-  category_id: number;
-  position: number;
+  title: string;
+  icon: string;
+  invert: boolean;
+  name?: string;
+  description?: string;
+  category_id?: number;
+  position?: number;
   icon_url?: string;
   blurhashURL?: string;
 };
