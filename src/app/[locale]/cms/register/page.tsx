@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
 import { login } from '@/app/actions/cms/login';
 import { CircleUserRound } from 'lucide-react';
+import { type FormEvent, useState } from 'react';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');

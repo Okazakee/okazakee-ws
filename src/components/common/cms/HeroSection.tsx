@@ -1,11 +1,11 @@
-import type React from 'react';
-import { useState, useRef } from 'react';
-import Image from 'next/image';
-import { ErrorDiv } from '../ErrorDiv';
-import { useLayoutStore } from '@/store/layoutStore';
 import { heroActions } from '@/app/actions/cms/sections/heroActions';
+import { useLayoutStore } from '@/store/layoutStore';
 import { encode } from 'blurhash';
-import { Upload, Copy, Download } from 'lucide-react';
+import { Copy, Download, Upload } from 'lucide-react';
+import Image from 'next/image';
+import type React from 'react';
+import { useRef, useState } from 'react';
+import { ErrorDiv } from '../ErrorDiv';
 
 type HeroUpdateData = {
   mainImage?: string;

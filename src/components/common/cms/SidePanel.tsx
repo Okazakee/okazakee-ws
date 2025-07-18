@@ -1,18 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
 import { useLayoutStore } from '@/store/layoutStore';
 import {
-  Home,
-  Zap,
   Briefcase,
-  NotebookPen,
   Contact,
-  User2,
-  Layers3,
   Globe,
+  Home,
+  Layers3,
+  NotebookPen,
+  User2,
+  Zap,
 } from 'lucide-react';
+import Image from 'next/image';
+import React, { useState } from 'react';
 
 const SidePanel = () => {
   const [activeButton, setActiveButton] = useState('hero');

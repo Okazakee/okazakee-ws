@@ -1,16 +1,17 @@
 'use client';
 
 import { getUser } from '@/app/actions/cms/getUser';
-import HeroSection from '@/components/common/cms/HeroSection';
-import SidePanel from '@/components/common/cms/SidePanel';
+import { heroActions } from '@/app/actions/cms/sections/heroActions';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import CareerSection from '@/components/common/cms/CareerSection';
+import ContactsSection from '@/components/common/cms/ContactsSection';
+import HeroSection from '@/components/common/cms/HeroSection';
+import I18nSection from '@/components/common/cms/I18nSection';
+import PortfolioSection from '@/components/common/cms/PortfolioSection';
+import SidePanel from '@/components/common/cms/SidePanel';
+import SkillsSection from '@/components/common/cms/SkillsSection';
 import { useLayoutStore } from '@/store/layoutStore';
 import React, { useEffect } from 'react';
-import SkillsSection from '@/components/common/cms/SkillsSection';
-import { heroActions } from '@/app/actions/cms/sections/heroActions';
-import ContactsSection from '@/components/common/cms/ContactsSection';
-import I18nSection from '@/components/common/cms/I18nSection';
-import CareerSection from '@/components/common/cms/CareerSection';
 
 export default function CMS() {
   const {
@@ -98,6 +99,7 @@ export default function CMS() {
             {activeSection === 'hero' && <HeroSection />}
             {activeSection === 'skills' && <SkillsSection />}
             {activeSection === 'career' && <CareerSection />}
+            {activeSection === 'portfolio' && <PortfolioSection />}
             {activeSection === 'posts' && (
               <div className="text-center py-12">
                 <h2 className="text-3xl font-bold text-main mb-4">

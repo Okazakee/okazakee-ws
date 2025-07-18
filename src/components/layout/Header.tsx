@@ -1,7 +1,7 @@
-import React from 'react';
-import Image from 'next/image';
 import logo from '@public/logo.svg';
+import Image from 'next/image';
 import Link from 'next/link';
+import React from 'react';
 import NavMenu from './NavMenu';
 
 export default async function Header({ locale }: { locale: string }) {

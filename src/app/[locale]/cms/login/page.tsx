@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { login } from '@/app/actions/cms/login';
 import { CircleUserRound } from 'lucide-react';
+import { useState } from 'react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');

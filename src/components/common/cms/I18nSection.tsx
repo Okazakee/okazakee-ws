@@ -1,10 +1,10 @@
 'use client';
 
-import type React from 'react';
-import { useState, useEffect } from 'react';
-import { ErrorDiv } from '../ErrorDiv';
-import { Save, Globe, FileText } from 'lucide-react';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
+import { FileText, Globe, Save } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { ErrorDiv } from '../ErrorDiv';
 
 type I18nData = {
   language: string;

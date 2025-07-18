@@ -1,21 +1,21 @@
 'use client';
 
-import type React from 'react';
-import { useState, useEffect, Suspense } from 'react';
-import type { LucideProps } from 'lucide-react';
-import { ErrorDiv } from '../ErrorDiv';
-import {
-  Plus,
-  Trash2,
-  Edit3,
-  Save,
-  X,
-  GripVertical,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
 import { contactsActions } from '@/app/actions/cms/sections/contactsActions';
 import type { Contact } from '@/types/fetchedData.types';
+import type { LucideProps } from 'lucide-react';
+import {
+  Edit3,
+  Eye,
+  EyeOff,
+  GripVertical,
+  Plus,
+  Save,
+  Trash2,
+  X,
+} from 'lucide-react';
+import type React from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { ErrorDiv } from '../ErrorDiv';
 
 type ContactWithEditing = Contact & {
   isEditing: boolean;

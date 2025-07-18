@@ -1,11 +1,11 @@
-import React from 'react';
-import { getPosts } from '@/utils/getData';
-import type { PortfolioPost, BlogPost } from '@/types/fetchedData.types';
-import { CircleX } from 'lucide-react';
 import PostList from '@/components/common/PostList';
-import { getTranslations } from 'next-intl/server';
+import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { formatLabels } from '@/utils/formatLabels';
+import { getPosts } from '@/utils/getData';
+import { CircleX } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
+import React from 'react';
 
 export async function generateMetadata({
   params,

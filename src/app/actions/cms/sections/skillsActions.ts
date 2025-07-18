@@ -1,7 +1,7 @@
 'use server';
 import { createClient } from '@/utils/supabase/server';
-import { encode } from 'blurhash';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { encode } from 'blurhash';
 
 type SkillOperation =
   | { type: 'GET' }

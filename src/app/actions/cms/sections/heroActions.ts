@@ -1,8 +1,8 @@
 'use server';
-import { createClient } from '@/utils/supabase/server';
 import { getHeroSection, getResumeLink } from '@/utils/getData';
-import { encode } from 'blurhash';
+import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { encode } from 'blurhash';
 
 type HeroOperation =
   | { type: 'GET' }

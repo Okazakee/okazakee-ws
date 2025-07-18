@@ -1,11 +1,11 @@
 'use client';
 
-import type React from 'react';
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { ErrorDiv } from '../ErrorDiv';
-import { Upload, Plus, Trash2, Edit3, Save, X } from 'lucide-react';
 import { skillsActions } from '@/app/actions/cms/sections/skillsActions';
+import { Edit3, Plus, Save, Trash2, Upload, X } from 'lucide-react';
+import Image from 'next/image';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { ErrorDiv } from '../ErrorDiv';
 
 type Skill = {
   isEditing: boolean;

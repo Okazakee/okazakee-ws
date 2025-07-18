@@ -1,80 +1,76 @@
 'use server';
-import type { CareerEntry } from '@/types/fetchedData.types';
-import { getCareerEntries } from '@/utils/getData';
+import type { PortfolioPost } from '@/types/fetchedData.types';
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { encode } from 'blurhash';
 
-type CareerOperation =
+type PortfolioOperation =
   | { type: 'GET' }
-  | { type: 'CREATE'; data: CreateCareerData }
-  | { type: 'UPDATE'; id: number; data: UpdateCareerData }
+  | { type: 'CREATE'; data: CreatePortfolioData }
+  | { type: 'UPDATE'; id: number; data: UpdatePortfolioData }
   | { type: 'DELETE'; id: number }
   | {
-      type: 'UPLOAD_LOGO';
-      careerId: number;
+      type: 'UPLOAD_IMAGE';
+      portfolioId: number;
       file: File;
-      currentLogoUrl?: string;
+      currentImageUrl?: string;
     };
 
-type CreateCareerData = {
-  title: string;
-  company: string;
-  website_url: string;
-  logo: string;
-  blurhashURL: string;
-  location_en: string;
-  location_it: string;
-  remote: 'full' | 'hybrid' | 'onSite';
-  startDate: string;
-  endDate: string | null;
+type CreatePortfolioData = {
+  title_en: string;
+  title_it: string;
+  image: string;
+  source_link: string;
+  demo_link: string;
   description_en: string;
   description_it: string;
-  skills: string;
-  company_description_en: string;
-  company_description_it: string;
+  body_en: string;
+  body_it: string;
+  blurhashURL: string;
+  post_tags: string;
+  store_link: string;
 };
 
-type UpdateCareerData = Partial<CreateCareerData>;
+type UpdatePortfolioData = Partial<CreatePortfolioData>;
 
-type CareerResult = {
+type PortfolioResult = {
   success: boolean;
   data?: unknown;
   error?: string;
 };
 
-export async function careerActions(
-  operation: CareerOperation
-): Promise<CareerResult> {
+export async function portfolioActions(
+  operation: PortfolioOperation
+): Promise<PortfolioResult> {
   const supabase = await createClient();
 
   try {
     switch (operation.type) {
       case 'GET':
-        return await getCareerData(supabase);
+        return await getPortfolioData(supabase);
 
       case 'CREATE':
-        return await createCareer(supabase, operation.data);
+        return await createPortfolio(supabase, operation.data);
 
       case 'UPDATE':
-        return await updateCareer(supabase, operation.id, operation.data);
+        return await updatePortfolio(supabase, operation.id, operation.data);
 
       case 'DELETE':
-        return await deleteCareer(supabase, operation.id);
+        return await deletePortfolio(supabase, operation.id);
 
-      case 'UPLOAD_LOGO':
-        return await uploadCareerLogo(
+      case 'UPLOAD_IMAGE':
+        return await uploadPortfolioImage(
           supabase,
-          operation.careerId,
+          operation.portfolioId,
           operation.file,
-          operation.currentLogoUrl
+          operation.currentImageUrl
         );
 
       default:
         return { success: false, error: 'Invalid operation' };
     }
   } catch (error) {
-    console.error('Career action error:', error);
+    console.error('Portfolio action error:', error);
     return {
       success: false,
       error:
@@ -83,50 +79,59 @@ export async function careerActions(
   }
 }
 
-async function getCareerData(supabase: SupabaseClient): Promise<CareerResult> {
+async function getPortfolioData(
+  supabase: SupabaseClient
+): Promise<PortfolioResult> {
   try {
-    const careerEntries = await getCareerEntries();
-    return { success: true, data: careerEntries };
+    // For CMS, fetch all portfolio posts without limit
+    const { data: portfolioPosts, error } = await supabase
+      .from('portfolio_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return { success: true, data: portfolioPosts };
   } catch (error) {
-    console.error('Error fetching career data:', error);
+    console.error('Error fetching portfolio data:', error);
     return {
       success: false,
-      error: 'Failed to fetch career data',
+      error: 'Failed to fetch portfolio data',
     };
   }
 }
 
-async function createCareer(
+async function createPortfolio(
   supabase: SupabaseClient,
-  data: CreateCareerData
-): Promise<CareerResult> {
+  data: CreatePortfolioData
+): Promise<PortfolioResult> {
   try {
-    const { data: newCareer, error } = await supabase
-      .from('career_entries')
+    const { data: newPortfolio, error } = await supabase
+      .from('portfolio_posts')
       .insert(data)
       .select()
       .single();
 
     if (error) throw error;
 
-    return { success: true, data: newCareer };
+    return { success: true, data: newPortfolio };
   } catch (error) {
-    console.error('Error creating career entry:', error);
+    console.error('Error creating portfolio post:', error);
     return {
       success: false,
-      error: 'Failed to create career entry',
+      error: 'Failed to create portfolio post',
     };
   }
 }
 
-async function updateCareer(
+async function updatePortfolio(
   supabase: SupabaseClient,
   id: number,
-  data: UpdateCareerData
-): Promise<CareerResult> {
+  data: UpdatePortfolioData
+): Promise<PortfolioResult> {
   try {
-    const { data: updatedCareer, error } = await supabase
-      .from('career_entries')
+    const { data: updatedPortfolio, error } = await supabase
+      .from('portfolio_posts')
       .update(data)
       .eq('id', id)
       .select()
@@ -134,23 +139,23 @@ async function updateCareer(
 
     if (error) throw error;
 
-    return { success: true, data: updatedCareer };
+    return { success: true, data: updatedPortfolio };
   } catch (error) {
-    console.error('Error updating career entry:', error);
+    console.error('Error updating portfolio post:', error);
     return {
       success: false,
-      error: 'Failed to update career entry',
+      error: 'Failed to update portfolio post',
     };
   }
 }
 
-async function deleteCareer(
+async function deletePortfolio(
   supabase: SupabaseClient,
   id: number
-): Promise<CareerResult> {
+): Promise<PortfolioResult> {
   try {
     const { error } = await supabase
-      .from('career_entries')
+      .from('portfolio_posts')
       .delete()
       .eq('id', id);
 
@@ -158,31 +163,31 @@ async function deleteCareer(
 
     return { success: true };
   } catch (error) {
-    console.error('Error deleting career entry:', error);
+    console.error('Error deleting portfolio post:', error);
     return {
       success: false,
-      error: 'Failed to delete career entry',
+      error: 'Failed to delete portfolio post',
     };
   }
 }
 
-async function uploadCareerLogo(
+async function uploadPortfolioImage(
   supabase: SupabaseClient,
-  careerId: number,
+  portfolioId: number,
   file: File,
-  currentLogoUrl?: string
-): Promise<CareerResult> {
+  currentImageUrl?: string
+): Promise<PortfolioResult> {
   try {
-    // Backup old logo if it exists
-    if (currentLogoUrl) {
-      await backupOldFile(supabase, currentLogoUrl, 'website');
+    // Backup old image if it exists
+    if (currentImageUrl) {
+      await backupOldFile(supabase, currentImageUrl, 'website');
     }
 
     // Generate blurhash
     const blurhash = await generateBlurhashFromFile(file);
 
     // Upload to Supabase Storage
-    const fileName = `career/logos/${careerId}_${Date.now()}.${file.name
+    const fileName = `portfolio/images/${portfolioId}_${Date.now()}.${file.name
       .split('.')
       .pop()}`;
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -199,26 +204,26 @@ async function uploadCareerLogo(
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update career entry with new logo URL and blurhash
+    // Update portfolio post with new image URL and blurhash
     const { error: updateError } = await supabase
-      .from('career_entries')
+      .from('portfolio_posts')
       .update({
-        logo: urlData.publicUrl,
+        image: urlData.publicUrl,
         blurhashURL: blurhash,
       })
-      .eq('id', careerId);
+      .eq('id', portfolioId);
 
     if (updateError) throw updateError;
 
     return {
       success: true,
-      data: { logo: urlData.publicUrl, blurhashURL: blurhash },
+      data: { image: urlData.publicUrl, blurhashURL: blurhash },
     };
   } catch (error) {
-    console.error('Error uploading career logo:', error);
+    console.error('Error uploading portfolio image:', error);
     return {
       success: false,
-      error: 'Failed to upload career logo',
+      error: 'Failed to upload portfolio image',
     };
   }
 }

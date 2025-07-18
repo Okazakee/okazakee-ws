@@ -1,9 +1,9 @@
-import React from 'react';
-import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
 import { getSkillsCategories } from '@/utils/getData';
 import { ErrorDiv } from '@components/common/ErrorDiv';
+import { getTranslations } from 'next-intl/server';
+import Image from 'next/image';
+import React from 'react';
 
 export default async function Skills() {
   const skills_categories = await getSkillsCategories();

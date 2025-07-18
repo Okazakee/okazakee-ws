@@ -70,6 +70,7 @@ export default function CareerSection() {
 
   // Drag and drop states
   const [dragStates, setDragStates] = useState<Record<string, boolean>>({});
+  const [newEntryLogo, setNewEntryLogo] = useState<File | null>(null);
 
   useEffect(() => {
     fetchCareerData();
@@ -141,6 +142,16 @@ export default function CareerSection() {
         throw new Error(result.error || 'Failed to create career entry');
       }
 
+      // Upload logo if provided
+      if (newEntryLogo && result.data) {
+        const createdEntry = result.data as CareerEntry;
+        await careerActions({
+          type: 'UPLOAD_LOGO',
+          careerId: createdEntry.id,
+          file: newEntryLogo,
+        });
+      }
+
       // Reset form
       setNewCareerEntry({
         title: '',
@@ -159,6 +170,7 @@ export default function CareerSection() {
         company_description_en: '',
         company_description_it: '',
       });
+      setNewEntryLogo(null);
 
       // Refresh data
       await fetchCareerData();
@@ -287,6 +299,37 @@ export default function CareerSection() {
       if (file.type.startsWith('image/')) {
         handleLogoUpload(entryId, file);
       }
+    }
+  };
+
+  // New entry logo handlers
+  const handleNewEntryDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragStates((prev) => ({ ...prev, 'new-entry-logo': true }));
+  };
+
+  const handleNewEntryDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragStates((prev) => ({ ...prev, 'new-entry-logo': false }));
+  };
+
+  const handleNewEntryDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragStates((prev) => ({ ...prev, 'new-entry-logo': false }));
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        setNewEntryLogo(file);
+      }
+    }
+  };
+
+  const handleNewEntryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file?.type.startsWith('image/')) {
+      setNewEntryLogo(file);
     }
   };
 
@@ -556,6 +599,60 @@ export default function CareerSection() {
               className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
               placeholder="Breve descrizione dell'azienda..."
             />
+          </div>
+        </div>
+
+        {/* Logo Upload for New Entry */}
+        <div className="mt-4">
+          <label
+            htmlFor="new-entry-logo-upload"
+            className="block text-sm font-medium text-lighttext mb-2"
+          >
+            Company Logo
+          </label>
+          <div
+            className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
+            onDragOver={handleNewEntryDragOver}
+            onDragLeave={handleNewEntryDragLeave}
+            onDrop={handleNewEntryDrop}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleNewEntryFileChange}
+              className="hidden"
+              id="new-entry-logo-upload"
+            />
+            <label htmlFor="new-entry-logo-upload" className="cursor-pointer">
+              {newEntryLogo ? (
+                <div className="flex items-center justify-center">
+                  <div className="text-center">
+                    <FileText className="w-8 h-8 mx-auto mb-2 text-main" />
+                    <p className="text-lighttext font-medium">
+                      {newEntryLogo.name}
+                    </p>
+                    <p className="text-sm text-lighttext2">
+                      Click to change logo
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
+                  <p className="text-lighttext2 font-medium">
+                    Drop logo here or click to browse
+                  </p>
+                </>
+              )}
+            </label>
+            {dragStates['new-entry-logo'] && (
+              <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
+                <div className="text-center text-white">
+                  <Upload className="w-12 h-12 mx-auto mb-2" />
+                  <p className="font-medium">Drop logo here</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

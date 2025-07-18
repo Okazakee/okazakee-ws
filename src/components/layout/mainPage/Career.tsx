@@ -1,15 +1,15 @@
-import React from 'react';
-import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
 import { getCareerEntries } from '@/utils/getData';
 import { ErrorDiv } from '@components/common/ErrorDiv';
 import { SkillsCarousel } from '@components/common/SkillsCarousel';
-import Image from 'next/image';
-import { ExternalLink, MapPin, Calendar } from 'lucide-react';
+import { Calendar, ExternalLink, MapPin } from 'lucide-react';
 import moment, { type MomentInput } from 'moment';
+import { getTranslations } from 'next-intl/server';
+import Image from 'next/image';
+import Link from 'next/link';
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import Link from 'next/link';
 
 interface CareerEntry {
   id: string;

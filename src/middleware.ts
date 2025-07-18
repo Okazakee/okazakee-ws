@@ -1,6 +1,6 @@
+import { updateSession } from '@/utils/supabase/middleware';
 import createMiddleware from 'next-intl/middleware';
 import { type NextRequest, NextResponse } from 'next/server';
-import { updateSession } from '@/utils/supabase/middleware';
 
 // Constants and precompiled patterns for performance
 const locales = ['en', 'it'];

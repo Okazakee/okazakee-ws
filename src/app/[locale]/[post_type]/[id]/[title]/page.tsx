@@ -2,7 +2,7 @@ import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
-import { getPosts, getPost } from '@utils/getData';
+import { getPost, getPosts } from '@utils/getData';
 import { CirclePlay, Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
 import { getTranslations } from 'next-intl/server';

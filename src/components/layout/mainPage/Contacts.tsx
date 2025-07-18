@@ -1,12 +1,12 @@
-import React from 'react';
-import type { LucideProps } from 'lucide-react';
-import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import ResumeButton from '@/components/common/ResumeButton';
+import type { ResumeData } from '@/types/fetchedData.types';
 import { formatLabels } from '@/utils/formatLabels';
 import { getContacts, getResumeLink } from '@/utils/getData';
 import { ErrorDiv } from '@components/common/ErrorDiv';
-import ResumeButton from '@/components/common/ResumeButton';
-import type { ResumeData } from '@/types/fetchedData.types';
+import type { LucideProps } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
+import React from 'react';
 
 export default async function Contacts({ locale }: { locale: string }) {
   let contacts = await getContacts();

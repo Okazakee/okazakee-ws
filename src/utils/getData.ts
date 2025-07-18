@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import type {
   BlogPost,
   CareerEntry,
@@ -8,6 +7,7 @@ import type {
   ResumeData,
   SkillsCategory,
 } from '@/types/fetchedData.types';
+import { createClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;

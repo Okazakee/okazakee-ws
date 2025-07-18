@@ -1,6 +1,6 @@
 'use server';
-import { createClient } from '@/utils/supabase/server';
 import { getContacts } from '@/utils/getData';
+import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 type ContactOperation =

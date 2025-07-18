@@ -1,9 +1,9 @@
-import React from 'react';
+import Career from '@/components/layout/mainPage/Career';
 import Contacts from '@layout/mainPage/Contacts';
-import Skills from '@layout/mainPage/Skills';
 import Hero from '@layout/mainPage/Hero';
 import PostsSection from '@layout/mainPage/PostsSections';
-import Career from '@/components/layout/mainPage/Career';
+import Skills from '@layout/mainPage/Skills';
+import React from 'react';
 
 export async function generateMetadata({
   params,

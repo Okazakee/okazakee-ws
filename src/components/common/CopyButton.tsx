@@ -1,8 +1,8 @@
 'use client';
 
+import { Check, Copy } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useState } from 'react';
-import { Check, Copy } from 'lucide-react';
 
 export default function CopyLinkButton({
   copyValue,

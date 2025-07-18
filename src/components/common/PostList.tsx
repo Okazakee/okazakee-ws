@@ -1,11 +1,11 @@
 'use client';
 
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import { useTranslations } from 'next-intl';
 import React, { useState } from 'react';
+import { ErrorDiv } from './ErrorDiv';
 import Postcard from './PostCard';
 import Searchbar from './Searchbar';
-import { ErrorDiv } from './ErrorDiv';
-import { useTranslations } from 'next-intl';
 
 export default function PostList({
   initialPosts,
