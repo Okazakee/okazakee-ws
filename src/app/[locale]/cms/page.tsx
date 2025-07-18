@@ -64,8 +64,8 @@ export default function CMS() {
   }
 
   return (
-    <div className="min-h-screen bg-bglight dark:bg-bgdark">
-      <div className="flex h-screen max-w-screen-2xl mx-auto">
+    <div className=" bg-bglight dark:bg-bgdark">
+      <div className="flex max-w-screen-2xl mx-auto">
         <SidePanel />
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="max-w-4xl mx-auto">
