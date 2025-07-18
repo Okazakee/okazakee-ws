@@ -148,6 +148,7 @@ export default async function Career() {
                     >
                       <SkillsCarousel
                         skills={JSON.parse(entry.skills) as string[]}
+                        isEven={isEven}
                       />
                     </div>
                   </div>
@@ -159,7 +160,7 @@ export default async function Career() {
                       href={entry.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`group bg-[#c5c5c5] dark:bg-[#0e0e0e] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 ${isEven ? 'mr-auto' : 'ml-auto'} max-w-sm hover:scale-105 transition-all cursor-pointer block`}
+                      className={'group bg-[#c5c5c5] dark:bg-[#0e0e0e] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mx-auto max-w-md hover:scale-105 transition-all cursor-pointer block'}
                     >
                       <div className="text-center mb-6">
                         <div className="relative inline-block">

@@ -7,12 +7,13 @@ import {
   Menu,
   X,
   Home,
-  Drill,
   Briefcase,
   BookOpenText,
   Contact,
   FileUser,
   Settings,
+  FolderGit2,
+  Wrench,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
@@ -21,8 +22,9 @@ import { logout } from '@/app/actions/cms/logout';
 
 const createMenuItems = (locale: string) => [
   { href: `/${locale}`, icon: Home, isAnchor: false },
-  { href: 'skills', icon: Drill, isAnchor: true },
-  { href: `/${locale}/portfolio`, icon: Briefcase, isAnchor: false },
+  { href: 'skills', icon: Wrench, isAnchor: true },
+  { href: 'career', icon: Briefcase, isAnchor: true },
+  { href: `/${locale}/portfolio`, icon: FolderGit2, isAnchor: false },
   { href: `/${locale}/blog`, icon: BookOpenText, isAnchor: false },
   { href: 'contacts', icon: Contact, isAnchor: true },
   // Resume button removed from main navigation
@@ -46,7 +48,6 @@ export default function ResponsiveNav({
   const isCms = pathname.includes('/cms');
   const isLogin = pathname.includes('/cms/login');
   const isRegister = pathname.includes('/cms/register');
-  const isItalian = locale === 'it';
 
   useEffect(() => {
     // Handle scrolling when we're on the home page and have a pending scroll target
