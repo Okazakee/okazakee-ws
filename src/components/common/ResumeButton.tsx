@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { FileUser } from 'lucide-react';
+import Link from 'next/link';
 
 interface ResumeButtonProps {
   resumeLink: string;

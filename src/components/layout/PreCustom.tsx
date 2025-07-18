@@ -1,8 +1,8 @@
 'use client';
 import { Check, Copy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type React from 'react';
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 
 export type PreChild = React.ReactElement & {
   props: {

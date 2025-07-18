@@ -1,6 +1,6 @@
 'use client';
-import { useRef, useEffect, useState, useMemo } from 'react';
 import { Tag } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export const Tags = ({ tags }: { tags: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);

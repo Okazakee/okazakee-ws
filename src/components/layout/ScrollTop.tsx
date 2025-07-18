@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { scrollToSection } from '@/utils/scrollToSection';
 import { ArrowUpToLine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { scrollToSection } from '@/utils/scrollToSection';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function ScrollTop() {
   const [showLink, setShowLink] = useState(false);

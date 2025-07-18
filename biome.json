@@ -20,7 +20,8 @@
         "noArrayIndexKey": "off"
       },
       "style": {
-        "noUselessElse": "off"
+        "noUselessElse": "off",
+        "noNonNullAssertion": "off"
       }
     }
   },

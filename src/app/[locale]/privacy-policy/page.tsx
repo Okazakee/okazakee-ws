@@ -1,9 +1,9 @@
+import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import { getPrivacyPolicy } from '@/utils/getData';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import type { Metadata } from 'next';
-import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 
 export async function generateMetadata({
   params,

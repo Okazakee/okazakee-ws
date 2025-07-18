@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
-import { ImageModal } from '../common/ImageModal';
 import { useState } from 'react';
+import { ImageModal } from '../common/ImageModal';
 
 interface NextImageProps {
   src: string;

@@ -1,8 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
 import { useLayoutStore } from '@/store/layoutStore';
+import {
+  Briefcase,
+  Contact,
+  Globe,
+  Home,
+  Layers3,
+  NotebookPen,
+  User2,
+  Zap,
+} from 'lucide-react';
+import Image from 'next/image';
+import React, { useState } from 'react';
 
 const SidePanel = () => {
   const [activeButton, setActiveButton] = useState('hero');
@@ -15,49 +25,36 @@ const SidePanel = () => {
     setActiveSection(section);
   };
 
-  return (
-    <div className="w-64 bg-darkestgray text-lighttext flex flex-col mt-10 rounded-xl">
-      <div className="flex-1 p-4 mt-10">
-        {[
-          'hero',
-          'skills categories',
-          'skills',
-          'portfolio',
-          'blog',
-          'contacts',
-          'i18n strings',
-          'settings',
-        ].map((section) => (
-          <button
-            type="button"
-            key={section}
-            className={`w-full p-2 mb-2 rounded ${
-              activeButton === section ? 'bg-darkgray' : 'bg-darkergray'
-            }`}
-            onClick={() => handleButtonClick(section)}
-          >
-            {section.charAt(0).toUpperCase() + section.slice(1)}
-          </button>
-        ))}
-      </div>
+  const menuItems = [
+    { id: 'hero', label: 'Hero Section', icon: Home },
+    { id: 'skills', label: 'Skills', icon: Zap },
+    { id: 'career', label: 'Career', icon: User2 },
+    { id: 'portfolio', label: 'Portfolio', icon: Briefcase },
+    { id: 'blog', label: 'Blog', icon: NotebookPen },
+    { id: 'contacts', label: 'Contacts', icon: Contact },
+    { id: 'i18n', label: 'I18n Strings', icon: Globe },
+  ];
 
-      <div className="p-4 bg-darkergray rounded-xl">
-        {user && (
-          <div className="flex items-center justify-center gap-3">
-            <Image
-              loading="eager"
-              decoding="sync"
-              src={user.propic}
-              width={40}
-              height={40}
-              className="rounded-full mr-2"
-              alt="User Profile"
-            />
-            <div>
-              <p className="text-sm font-semibold">{user.email}</p>
-            </div>
-          </div>
-        )}
+  return (
+    <div className="w-72 text-lighttext flex flex-col h-fit">
+      <div className="p-4">
+        <nav className="space-y-2">
+          {menuItems.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-left ${
+                activeButton === item.id
+                  ? 'bg-main text-white shadow-lg'
+                  : 'bg-darkergray hover:bg-darkgray text-lighttext hover:text-white'
+              }`}
+              onClick={() => handleButtonClick(item.id)}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="font-medium">{item.label}</span>
+            </button>
+          ))}
+        </nav>
       </div>
     </div>
   );

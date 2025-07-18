@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export const SkillsCarousel = ({
   skills,

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export const useZoom = () => {
   const [scale, setScale] = useState(1);

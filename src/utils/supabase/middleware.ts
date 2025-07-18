@@ -1,5 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /* PLEASE REFER TO https://supabase.com/docs/guides/auth/server-side/nextjs?queryGroups=router&router=app */
 

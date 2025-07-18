@@ -1,19 +1,19 @@
 'use client';
-import { Search } from 'lucide-react';
-import {
-  useEffect,
-  useState,
-  useMemo,
-  type Dispatch,
-  type SetStateAction,
-  useRef,
-} from 'react';
-import { debounce } from 'lodash';
 import { searchPosts } from '@/app/actions/search';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
-import validator from 'validator';
 import { TokenBucket } from '@/utils/tokenBucket';
+import { debounce } from 'lodash';
+import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import {
+  type Dispatch,
+  type SetStateAction,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import validator from 'validator';
 
 export default function Searchbar({
   post_type,

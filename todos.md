@@ -1,6 +1,3 @@
-- Better style error and notfound pages for posts.
-- Major query functions refactoring.
-- Migrate folder structure from src to app, move all folders inside app.
-- GDPR cuckie banner for Umami implementation.
 - Better reeadme.
-- Small cms to edit most important data such as about description, propic, skills, posts, contacts.
+- CMS misses supabase rules and server functions need to add user.id in requests to allow field editing.
+- Major query functions refactoring.

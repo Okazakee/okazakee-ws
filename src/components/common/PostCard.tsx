@@ -1,7 +1,7 @@
-import React from 'react';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import Image from 'next/image';
 import Link from 'next/link';
+import React from 'react';
 import { Tags } from './Tags';
 
 export default function Postcard({

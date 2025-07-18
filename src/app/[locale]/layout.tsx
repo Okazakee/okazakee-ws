@@ -1,13 +1,13 @@
 import localFont from 'next/font/local';
 import '../globals.css';
-import { Providers } from '../providers';
-import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { NextIntlClientProvider } from 'next-intl';
-import { getTranslationsSupabase } from '@/utils/getData';
-import Script from 'next/script';
+import Header from '@/components/layout/Header';
 import ScrollTop from '@/components/layout/ScrollTop';
+import { getTranslationsSupabase } from '@/utils/getData';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { NextIntlClientProvider } from 'next-intl';
+import Script from 'next/script';
+import { Providers } from '../providers';
 
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',

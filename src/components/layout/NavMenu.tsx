@@ -1,31 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { logout } from '@/app/actions/cms/logout';
+import { useLayoutStore } from '@/store/layoutStore';
 import {
-  Menu,
-  X,
-  Home,
-  Briefcase,
   BookOpenText,
+  Briefcase,
   Contact,
   FileUser,
-  Settings,
   FolderGit2,
+  Home,
+  Menu,
+  NotebookPen,
+  Settings,
+  User2,
   Wrench,
+  X,
+  Zap,
 } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
-import LanguageToggle from './LanguageToggle';
 import { useTranslations } from 'next-intl';
-import { logout } from '@/app/actions/cms/logout';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import LanguageToggle from './LanguageToggle';
+import ThemeToggle from './ThemeToggle';
 
 const createMenuItems = (locale: string) => [
   { href: `/${locale}`, icon: Home, isAnchor: false },
-  { href: 'skills', icon: Wrench, isAnchor: true },
-  { href: 'career', icon: Briefcase, isAnchor: true },
-  { href: `/${locale}/portfolio`, icon: FolderGit2, isAnchor: false },
-  { href: `/${locale}/blog`, icon: BookOpenText, isAnchor: false },
+  { href: 'skills', icon: Zap, isAnchor: true },
+  { href: 'career', icon: User2, isAnchor: true },
+  { href: `/${locale}/portfolio`, icon: Briefcase, isAnchor: false },
+  { href: `/${locale}/blog`, icon: NotebookPen, isAnchor: false },
   { href: 'contacts', icon: Contact, isAnchor: true },
   // Resume button removed from main navigation
 ];
@@ -62,6 +67,7 @@ export default function ResponsiveNav({
   const isCms = pathname.includes('/cms');
   const isLogin = pathname.includes('/cms/login');
   const isRegister = pathname.includes('/cms/register');
+  const { user } = useLayoutStore();
 
   useEffect(() => {
     // Handle scrolling when we're on the home page and have a pending scroll target
@@ -252,45 +258,64 @@ export default function ResponsiveNav({
         </>
       ) : (
         <>
-          <h1 className="text-3xl absolute left-1/2 -translate-x-1/2">{`CMS - ${isLogin ? 'login page' : isRegister ? 'register page' : 'edit mode'}`}</h1>
-
-          <nav className="text-xl flex">
-            <Link
-              href={'/'}
-              className="mx-4 transition-all hover:text-main flex items-center"
-            >
-              <Home className="mr-2 -mt-1" />
-              Home
-            </Link>
-            {!isLogin && !isRegister && (
-              <button
-                type="button"
-                onClick={() => logout()}
-                className="mx-4 transition-all hover:text-main flex items-center"
-              >
-                <FileUser className="mr-2 -mt-1" />
-                Logout
-              </button>
-            )}
-            {isLogin && (
+          <div className="flex items-center justify-end w-full">
+            <div className="flex items-center gap-4">
               <Link
-                href={`/${locale}/cms/register`}
+                href={'/'}
                 className="mx-4 transition-all hover:text-main flex items-center"
               >
-                <FileUser className="mr-2 -mt-1" />
-                Registrati
+                <Home className="mr-2 -mt-1" />
+                Home
               </Link>
-            )}
-            {isRegister && (
-              <Link
-                href={`/${locale}/cms/login`}
-                className="mx-4 transition-all hover:text-main flex items-center"
-              >
-                <FileUser className="mr-2 -mt-1" />
-                Accedi
-              </Link>
-            )}
-          </nav>
+              {!isLogin && !isRegister && (
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  className="mx-4 transition-all hover:text-main flex items-center"
+                >
+                  <FileUser className="mr-2 -mt-1" />
+                  Logout
+                </button>
+              )}
+              {isLogin && (
+                <Link
+                  href={`/${locale}/cms/register`}
+                  className="mx-4 transition-all hover:text-main flex items-center"
+                >
+                  <FileUser className="mr-2 -mt-1" />
+                  Registrati
+                </Link>
+              )}
+              {isRegister && (
+                <Link
+                  href={`/${locale}/cms/login`}
+                  className="mx-4 transition-all hover:text-main flex items-center"
+                >
+                  <FileUser className="mr-2 -mt-1" />
+                  Accedi
+                </Link>
+              )}
+              {!isLogin && !isRegister && user && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-darkestgray border border-darkgray">
+                  <Image
+                    loading="eager"
+                    decoding="sync"
+                    src={user.propic}
+                    width={32}
+                    height={32}
+                    className="rounded-full border-2 border-main"
+                    alt="User Profile"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-lighttext truncate">
+                      {user.email}
+                    </p>
+                    <p className="text-xs text-lighttext2">Administrator</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </>
       )}
     </>
