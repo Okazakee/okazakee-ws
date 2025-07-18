@@ -59,19 +59,22 @@ export default async function Career() {
 
   // Add this new helper function
   const groupEntriesByCompany = (entries: CareerEntry[]) => {
-    const grouped = entries.reduce((acc, entry) => {
-      if (!acc[entry.company]) {
-        acc[entry.company] = [];
-      }
-      acc[entry.company].push(entry);
-      return acc;
-    }, {} as Record<string, CareerEntry[]>);
-    
+    const grouped = entries.reduce(
+      (acc, entry) => {
+        if (!acc[entry.company]) {
+          acc[entry.company] = [];
+        }
+        acc[entry.company].push(entry);
+        return acc;
+      },
+      {} as Record<string, CareerEntry[]>
+    );
+
     return Object.entries(grouped).map(([company, positions]) => ({
       company,
-      positions: positions.sort((a, b) => 
+      positions: positions.sort((a, b) =>
         moment(b.startDate).diff(moment(a.startDate))
-      )
+      ),
     }));
   };
 
@@ -96,7 +99,10 @@ export default async function Career() {
         />
 
         <div className="relative">
-          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-main hidden md:block" style={{ top: '0.5rem' }} />
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-main hidden md:block"
+            style={{ top: '0.5rem' }}
+          />
 
           {groupedEntries.map((companyGroup, index) => {
             const isEven = index % 2 === 0;
@@ -138,7 +144,10 @@ export default async function Career() {
                       </span>
                       <span className="px-1 text-main">•</span>
                       <span>
-                        {calculateDuration(latestPosition.startDate, latestPosition.endDate)}
+                        {calculateDuration(
+                          latestPosition.startDate,
+                          latestPosition.endDate
+                        )}
                       </span>
                     </div>
 
@@ -163,26 +172,38 @@ export default async function Career() {
 
                     {/* Older positions - compact UI */}
                     {olderPositions.length > 0 && (
-                      <div className={`mt-6 space-y-4 ${isEven ? 'text-right' : 'text-left'}`}>
+                      <div
+                        className={`mt-6 space-y-4 ${isEven ? 'text-right' : 'text-left'}`}
+                      >
                         {olderPositions.map((position) => (
                           <div key={position.id} className="pl-4">
                             <h5 className="text-2xl font-bold text-main mb-2">
                               {position.title}
                             </h5>
-                            <div className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
+                            <div
+                              className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                            >
                               <Calendar size={16} className="inline" />
                               <span>
-                                {formatDate(position.startDate)} — {formatDate(position.endDate)}
+                                {formatDate(position.startDate)} —{' '}
+                                {formatDate(position.endDate)}
                               </span>
                               <span className="px-1 text-main">•</span>
-                              <span>{calculateDuration(position.startDate, position.endDate)}</span>
+                              <span>
+                                {calculateDuration(
+                                  position.startDate,
+                                  position.endDate
+                                )}
+                              </span>
                             </div>
                             <div className="prose dark:prose-invert max-w-none text-left mb-4">
                               <ReactMarkdown rehypePlugins={[rehypeRaw]}>
                                 {position[`description_${locale}`]}
                               </ReactMarkdown>
                             </div>
-                            <div className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}>
+                            <div
+                              className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                            >
                               <SkillsCarousel
                                 skills={JSON.parse(position.skills) as string[]}
                                 isEven={isEven}
@@ -201,7 +222,9 @@ export default async function Career() {
                       href={latestPosition.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={'group bg-[#c5c5c5] dark:bg-[#0e0e0e] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mx-auto max-w-md hover:scale-105 transition-all cursor-pointer block'}
+                      className={
+                        'group bg-[#c5c5c5] dark:bg-[#0e0e0e] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mx-auto max-w-md hover:scale-105 transition-all cursor-pointer block'
+                      }
                     >
                       <div className="text-center mb-6">
                         <div className="relative inline-block">
@@ -312,14 +335,19 @@ export default async function Career() {
                           </span>
                           <span className="px-1 text-main">•</span>
                           <span>
-                            {calculateDuration(latestPosition.startDate, latestPosition.endDate)}
+                            {calculateDuration(
+                              latestPosition.startDate,
+                              latestPosition.endDate
+                            )}
                           </span>
                         </div>
 
                         {/* Skills */}
                         <div className="flex flex-wrap gap-2 justify-center">
                           <SkillsCarousel
-                            skills={JSON.parse(latestPosition.skills) as string[]}
+                            skills={
+                              JSON.parse(latestPosition.skills) as string[]
+                            }
                           />
                         </div>
 
@@ -340,26 +368,41 @@ export default async function Career() {
                                     <h3 className="text-xl font-bold text-main mb-2 text-center">
                                       {position.title}
                                     </h3>
-                                    
+
                                     <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
-                                      <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                                      <ReactMarkdown
+                                        rehypePlugins={[rehypeRaw]}
+                                      >
                                         {position[`description_${locale}`]}
                                       </ReactMarkdown>
                                     </div>
 
                                     {/* Date and duration */}
                                     <div className="flex items-center justify-center mb-5 text-xs text-gray-500 dark:text-gray-400 gap-1">
-                                      <Calendar size={14} className="inline mb-1" />
+                                      <Calendar
+                                        size={14}
+                                        className="inline mb-1"
+                                      />
                                       <span>
-                                        {formatDate(position.startDate)} — {formatDate(position.endDate)}
+                                        {formatDate(position.startDate)} —{' '}
+                                        {formatDate(position.endDate)}
                                       </span>
                                       <span className="px-1 text-main">•</span>
-                                      <span>{calculateDuration(position.startDate, position.endDate)}</span>
+                                      <span>
+                                        {calculateDuration(
+                                          position.startDate,
+                                          position.endDate
+                                        )}
+                                      </span>
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 justify-center">
                                       <SkillsCarousel
-                                        skills={JSON.parse(position.skills) as string[]}
+                                        skills={
+                                          JSON.parse(
+                                            position.skills
+                                          ) as string[]
+                                        }
                                       />
                                     </div>
                                   </div>

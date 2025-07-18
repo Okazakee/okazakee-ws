@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { ErrorDiv } from '../ErrorDiv';
 import { useLayoutStore } from '@/store/layoutStore';
-import { updateHero } from '@/app/actions/cms/sections/updateHero';
+import { heroActions } from '@/app/actions/cms/sections/heroActions';
 import { encode } from 'blurhash';
-import { Upload, Copy } from 'lucide-react';
+import { Upload, Copy, Download } from 'lucide-react';
 
 type HeroUpdateData = {
   mainImage?: string;
@@ -22,13 +23,17 @@ export default function HeroSection() {
     blurhashURL: heroSection?.blurhashURL || '',
     resume_en: heroSection?.resume_en || '',
     resume_it: heroSection?.resume_it || '',
+    // Add file storage
+    mainImage_file: null as File | null,
+    resume_en_file: null as File | null,
+    resume_it_file: null as File | null,
   });
 
   // Track what fields have been modified
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Drag and drop states
   const [dragStates, setDragStates] = useState({
     image: false,
@@ -77,52 +82,93 @@ export default function HeroSection() {
     }
   };
 
-  const handleFileChange = (field: string, file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      handleInputChange(field, reader.result as string);
-      // Generate blurhash when file changes
-      if (reader.result && field === 'mainImage') {
-        generateBlurhash(reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+  const handleFileChange = async (field: string, file: File) => {
+    try {
+      // Store file in state for preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleInputChange(field, reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Store the actual File object for upload
+      setEditedData((prev) => ({
+        ...prev,
+        [`${field}_file`]: file,
+      }));
+      setModifiedFields((prev) => new Set(prev).add(field));
+    } catch (error) {
+      console.error('Error handling file change:', error);
+      setError('Failed to process file');
+    }
   };
 
-  const handleDragOver = (e: React.DragEvent, field: 'image' | 'resumeIt' | 'resumeEn') => {
+  const handleDragOver = (
+    e: React.DragEvent,
+    field: 'image' | 'resumeIt' | 'resumeEn'
+  ) => {
     e.preventDefault();
-    setDragStates(prev => ({ ...prev, [field]: true }));
+    setDragStates((prev) => ({ ...prev, [field]: true }));
   };
 
-  const handleDragLeave = (e: React.DragEvent, field: 'image' | 'resumeIt' | 'resumeEn') => {
+  const handleDragLeave = (
+    e: React.DragEvent,
+    field: 'image' | 'resumeIt' | 'resumeEn'
+  ) => {
     e.preventDefault();
-    setDragStates(prev => ({ ...prev, [field]: false }));
+    setDragStates((prev) => ({ ...prev, [field]: false }));
   };
 
-  const handleDrop = (e: React.DragEvent, field: 'image' | 'resumeIt' | 'resumeEn') => {
+  const handleDrop = (
+    e: React.DragEvent,
+    field: 'image' | 'resumeIt' | 'resumeEn'
+  ) => {
     e.preventDefault();
-    setDragStates(prev => ({ ...prev, [field]: false }));
-    
+    setDragStates((prev) => ({ ...prev, [field]: false }));
+
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
       const fieldMap = {
         image: 'mainImage',
         resumeIt: 'resume_it',
-        resumeEn: 'resume_en'
+        resumeEn: 'resume_en',
       };
-      
+
       handleFileChange(fieldMap[field], file);
     }
   };
 
   const copyToClipboard = (url: string, label: string) => {
-    navigator.clipboard.writeText(url).then(() => {
-      alert(`${label} URL copied to clipboard!`);
-    }).catch((err) => {
-      console.error('Failed to copy URL:', err);
-      setError('Failed to copy URL');
-    });
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        alert(`${label} URL copied to clipboard!`);
+      })
+      .catch((err) => {
+        console.error('Failed to copy URL:', err);
+        setError('Failed to copy URL');
+      });
+  };
+
+  const downloadImage = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Failed to download image:', error);
+      setError('Failed to download image');
+    }
   };
 
   const handleApplyChanges = async () => {
@@ -130,34 +176,73 @@ export default function HeroSection() {
     setError(null);
 
     try {
-      const updateData: HeroUpdateData = {};
-      // Only include fields that have actually changed from original values
-      if (editedData.mainImage !== heroSection.mainImage) {
-        updateData.mainImage = editedData.mainImage;
+      // Collect files that need to be uploaded
+      const filesToUpload: Record<string, File> = {};
+      const currentData: Record<string, string> = {};
+
+      // Check which fields have file changes
+      if (editedData.mainImage_file) {
+        filesToUpload.mainImage = editedData.mainImage_file;
+        currentData.mainImage = heroSection?.mainImage || '';
       }
-      if (editedData.blurhashURL !== heroSection.blurhashURL) {
-        updateData.blurhashURL = editedData.blurhashURL;
+      if (editedData.resume_en_file) {
+        filesToUpload.resume_en = editedData.resume_en_file;
+        currentData.resume_en = heroSection?.resume_en || '';
       }
-      if (editedData.resume_en !== heroSection.resume_en) {
-        updateData.resume_en = editedData.resume_en;
-      }
-      if (editedData.resume_it !== heroSection.resume_it) {
-        updateData.resume_it = editedData.resume_it;
+      if (editedData.resume_it_file) {
+        filesToUpload.resume_it = editedData.resume_it_file;
+        currentData.resume_it = heroSection?.resume_it || '';
       }
 
-      console.log('Updating with data:', updateData);
-      const result = await updateHero(updateData);
+      // If we have files to upload, use the file upload action
+      if (Object.keys(filesToUpload).length > 0) {
+        const result = await heroActions({
+          type: 'UPDATE_WITH_FILES',
+          files: filesToUpload,
+          currentData,
+        });
 
-      console.log('Update result:', result);
-      if (!result.success) {
-        throw new Error(error || 'Failed to update hero section');
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to update hero section');
+        }
+
+        // Update local state to reflect changes
+        if (result.data) {
+          useLayoutStore.getState().setHeroSection({
+            ...heroSection,
+            mainImage: result.data.propic || heroSection?.mainImage,
+            blurhashURL: result.data.blurhashURL || heroSection?.blurhashURL,
+            resume_en: result.data.resume_en || heroSection?.resume_en,
+            resume_it: result.data.resume_it || heroSection?.resume_it,
+          });
+        }
+      } else {
+        // Handle non-file updates (like manual URL changes)
+        const updateData: HeroUpdateData = {};
+        if (editedData.mainImage !== heroSection?.mainImage) {
+          updateData.mainImage = editedData.mainImage;
+        }
+        if (editedData.blurhashURL !== heroSection?.blurhashURL) {
+          updateData.blurhashURL = editedData.blurhashURL;
+        }
+        if (editedData.resume_en !== heroSection?.resume_en) {
+          updateData.resume_en = editedData.resume_en;
+        }
+        if (editedData.resume_it !== heroSection?.resume_it) {
+          updateData.resume_it = editedData.resume_it;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          const result = await heroActions({
+            type: 'UPDATE',
+            data: updateData,
+          });
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to update hero section');
+          }
+        }
       }
 
-      // Update local state to reflect changes
-      useLayoutStore.getState().setHeroSection({
-        ...heroSection,
-        ...updateData,
-      });
       setModifiedFields(new Set());
       alert('Hero section updated successfully!');
     } catch (error) {
@@ -173,7 +258,9 @@ export default function HeroSection() {
   return (
     <div className="space-y-8">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-main mb-4">Hero Section Editor</h1>
+        <h1 className="text-4xl font-bold text-main mb-4">
+          Hero Section Editor
+        </h1>
         <p className="text-lighttext2 text-lg">
           Update your hero section content and image
         </p>
@@ -183,10 +270,10 @@ export default function HeroSection() {
         {/* Hero Image Section */}
         <div className="bg-darkergray rounded-xl p-6">
           <h2 className="text-2xl font-bold text-main mb-4">Hero Image</h2>
-          
+
           <div className="space-y-4">
             <div className="flex justify-center">
-              <div 
+              <div
                 className="relative cursor-pointer"
                 onDragOver={(e) => handleDragOver(e, 'image')}
                 onDragLeave={(e) => handleDragLeave(e, 'image')}
@@ -238,14 +325,28 @@ export default function HeroSection() {
                 Choose Image
               </label>
               {editedData.mainImage && (
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(editedData.mainImage, 'Hero Image')}
-                  className="flex items-center gap-2 px-4 py-2 bg-darkestgray hover:bg-darkgray text-lighttext rounded-lg transition-all duration-200"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copy URL
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyToClipboard(editedData.mainImage, 'Hero Image')
+                    }
+                    className="flex items-center gap-2 px-4 py-2 bg-darkestgray hover:bg-darkgray text-lighttext rounded-lg transition-all duration-200"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      downloadImage(editedData.mainImage, 'hero-image.jpg')
+                    }
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -254,14 +355,17 @@ export default function HeroSection() {
         {/* Resume Links Section */}
         <div className="bg-darkergray rounded-xl p-6">
           <h2 className="text-2xl font-bold text-main mb-4">Resume Links</h2>
-          
+
           <div className="grid md:grid-cols-2 gap-6">
             {/* Italian Resume */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-lighttext">
+              <label
+                htmlFor="resume-it-upload"
+                className="block text-sm font-medium text-lighttext"
+              >
                 Upload Resume (Italian)
               </label>
-              <div 
+              <div
                 className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
                 onDragOver={(e) => handleDragOver(e, 'resumeIt')}
                 onDragLeave={(e) => handleDragLeave(e, 'resumeIt')}
@@ -269,19 +373,17 @@ export default function HeroSection() {
               >
                 <input
                   id="resume-it-upload"
+                  ref={resumeItInputRef}
                   type="file"
                   accept=".pdf,.doc,.docx"
+                  onChange={(e) => handleResumeChange(e, 'resume_it')}
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleFileChange('resume_it', file);
-                    }
-                  }}
                 />
                 <label htmlFor="resume-it-upload" className="cursor-pointer">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
-                  <p className="text-lighttext2 font-medium">Drop PDF here or click to browse</p>
+                  <p className="text-lighttext2 font-medium">
+                    Drop PDF here or click to browse
+                  </p>
                 </label>
                 {/* Drag overlay */}
                 {dragStates.resumeIt && (
@@ -306,10 +408,13 @@ export default function HeroSection() {
 
             {/* English Resume */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-lighttext">
+              <label
+                htmlFor="resume-en-upload"
+                className="block text-sm font-medium text-lighttext"
+              >
                 Upload Resume (English)
               </label>
-              <div 
+              <div
                 className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
                 onDragOver={(e) => handleDragOver(e, 'resumeEn')}
                 onDragLeave={(e) => handleDragLeave(e, 'resumeEn')}
@@ -317,19 +422,17 @@ export default function HeroSection() {
               >
                 <input
                   id="resume-en-upload"
+                  ref={resumeEnInputRef}
                   type="file"
                   accept=".pdf,.doc,.docx"
+                  onChange={(e) => handleResumeChange(e, 'resume_en')}
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleFileChange('resume_en', file);
-                    }
-                  }}
                 />
                 <label htmlFor="resume-en-upload" className="cursor-pointer">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
-                  <p className="text-lighttext2 font-medium">Drop PDF here or click to browse</p>
+                  <p className="text-lighttext2 font-medium">
+                    Drop PDF here or click to browse
+                  </p>
                 </label>
                 {/* Drag overlay */}
                 {dragStates.resumeEn && (
