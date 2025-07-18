@@ -10,6 +10,7 @@ import SkillsSection from '@/components/common/cms/SkillsSection';
 import { heroActions } from '@/app/actions/cms/sections/heroActions';
 import ContactsSection from '@/components/common/cms/ContactsSection';
 import I18nSection from '@/components/common/cms/I18nSection';
+import CareerSection from '@/components/common/cms/CareerSection';
 
 export default function CMS() {
   const {
@@ -96,6 +97,7 @@ export default function CMS() {
           <div className="max-w-4xl mx-auto">
             {activeSection === 'hero' && <HeroSection />}
             {activeSection === 'skills' && <SkillsSection />}
+            {activeSection === 'career' && <CareerSection />}
             {activeSection === 'posts' && (
               <div className="text-center py-12">
                 <h2 className="text-3xl font-bold text-main mb-4">
