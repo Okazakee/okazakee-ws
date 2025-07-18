@@ -1,16 +1,16 @@
-"use server";
-import type { BlogPost } from "@/types/fetchedData.types";
-import { createClient } from "@/utils/supabase/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { encode } from "blurhash";
+'use server';
+import type { BlogPost } from '@/types/fetchedData.types';
+import { createClient } from '@/utils/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { encode } from 'blurhash';
 
 type BlogOperation =
-  | { type: "GET" }
-  | { type: "CREATE"; data: CreateBlogData }
-  | { type: "UPDATE"; id: number; data: UpdateBlogData }
-  | { type: "DELETE"; id: number }
+  | { type: 'GET' }
+  | { type: 'CREATE'; data: CreateBlogData }
+  | { type: 'UPDATE'; id: number; data: UpdateBlogData }
+  | { type: 'DELETE'; id: number }
   | {
-      type: "UPLOAD_IMAGE";
+      type: 'UPLOAD_IMAGE';
       blogId: number;
       file: File;
       currentImageUrl?: string;
@@ -43,19 +43,19 @@ export async function blogActions(
 
   try {
     switch (operation.type) {
-      case "GET":
+      case 'GET':
         return await getBlogData(supabase);
 
-      case "CREATE":
+      case 'CREATE':
         return await createBlog(supabase, operation.data);
 
-      case "UPDATE":
+      case 'UPDATE':
         return await updateBlog(supabase, operation.id, operation.data);
 
-      case "DELETE":
+      case 'DELETE':
         return await deleteBlog(supabase, operation.id);
 
-      case "UPLOAD_IMAGE":
+      case 'UPLOAD_IMAGE':
         return await uploadBlogImage(
           supabase,
           operation.blogId,
@@ -64,14 +64,14 @@ export async function blogActions(
         );
 
       default:
-        return { success: false, error: "Invalid operation" };
+        return { success: false, error: 'Invalid operation' };
     }
   } catch (error) {
-    console.error("Blog action error:", error);
+    console.error('Blog action error:', error);
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "An unknown error occurred",
+        error instanceof Error ? error.message : 'An unknown error occurred',
     };
   }
 }
@@ -80,18 +80,18 @@ async function getBlogData(supabase: SupabaseClient): Promise<BlogResult> {
   try {
     // For CMS, fetch all blog posts without limit
     const { data: blogPosts, error } = await supabase
-      .from("blog_posts")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .from('blog_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
     return { success: true, data: blogPosts };
   } catch (error) {
-    console.error("Error fetching blog data:", error);
+    console.error('Error fetching blog data:', error);
     return {
       success: false,
-      error: "Failed to fetch blog data",
+      error: 'Failed to fetch blog data',
     };
   }
 }
@@ -102,7 +102,7 @@ async function createBlog(
 ): Promise<BlogResult> {
   try {
     const { data: newBlog, error } = await supabase
-      .from("blog_posts")
+      .from('blog_posts')
       .insert(data)
       .select()
       .single();
@@ -111,10 +111,10 @@ async function createBlog(
 
     return { success: true, data: newBlog };
   } catch (error) {
-    console.error("Error creating blog post:", error);
+    console.error('Error creating blog post:', error);
     return {
       success: false,
-      error: "Failed to create blog post",
+      error: 'Failed to create blog post',
     };
   }
 }
@@ -126,9 +126,9 @@ async function updateBlog(
 ): Promise<BlogResult> {
   try {
     const { data: updatedBlog, error } = await supabase
-      .from("blog_posts")
+      .from('blog_posts')
       .update(data)
-      .eq("id", id)
+      .eq('id', id)
       .select()
       .single();
 
@@ -136,10 +136,10 @@ async function updateBlog(
 
     return { success: true, data: updatedBlog };
   } catch (error) {
-    console.error("Error updating blog post:", error);
+    console.error('Error updating blog post:', error);
     return {
       success: false,
-      error: "Failed to update blog post",
+      error: 'Failed to update blog post',
     };
   }
 }
@@ -149,16 +149,16 @@ async function deleteBlog(
   id: number
 ): Promise<BlogResult> {
   try {
-    const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+    const { error } = await supabase.from('blog_posts').delete().eq('id', id);
 
     if (error) throw error;
 
     return { success: true };
   } catch (error) {
-    console.error("Error deleting blog post:", error);
+    console.error('Error deleting blog post:', error);
     return {
       success: false,
-      error: "Failed to delete blog post",
+      error: 'Failed to delete blog post',
     };
   }
 }
@@ -172,7 +172,7 @@ async function uploadBlogImage(
   try {
     // Backup old image if it exists
     if (currentImageUrl) {
-      await backupOldFile(supabase, currentImageUrl, "website");
+      await backupOldFile(supabase, currentImageUrl, 'website');
     }
 
     // Generate blurhash
@@ -180,12 +180,12 @@ async function uploadBlogImage(
 
     // Upload to Supabase Storage
     const fileName = `blog/images/${blogId}_${Date.now()}.${file.name
-      .split(".")
+      .split('.')
       .pop()}`;
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("website")
+      .from('website')
       .upload(fileName, file, {
-        cacheControl: "3600",
+        cacheControl: '3600',
         upsert: false,
       });
 
@@ -193,17 +193,17 @@ async function uploadBlogImage(
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from("website")
+      .from('website')
       .getPublicUrl(fileName);
 
     // Update blog post with new image URL and blurhash
     const { error: updateError } = await supabase
-      .from("blog_posts")
+      .from('blog_posts')
       .update({
         image: urlData.publicUrl,
         blurhashURL: blurhash,
       })
-      .eq("id", blogId);
+      .eq('id', blogId);
 
     if (updateError) throw updateError;
 
@@ -212,10 +212,10 @@ async function uploadBlogImage(
       data: { image: urlData.publicUrl, blurhashURL: blurhash },
     };
   } catch (error) {
-    console.error("Error uploading blog image:", error);
+    console.error('Error uploading blog image:', error);
     return {
       success: false,
-      error: "Failed to upload blog image",
+      error: 'Failed to upload blog image',
     };
   }
 }
@@ -227,7 +227,7 @@ async function backupOldFile(
   bucket: string
 ): Promise<void> {
   try {
-    const fileName = fileUrl.split("/").pop();
+    const fileName = fileUrl.split('/').pop();
     if (fileName) {
       const backupName = `backup/${Date.now()}_${fileName}`;
       const { data: oldFile } = await supabase.storage
@@ -239,14 +239,14 @@ async function backupOldFile(
       }
     }
   } catch (error) {
-    console.warn("Failed to backup old file:", error);
+    console.warn('Failed to backup old file:', error);
   }
 }
 
 async function generateBlurhashFromFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
     const img = new Image();
 
     img.onload = () => {
@@ -265,11 +265,11 @@ async function generateBlurhashFromFile(file: File): Promise<string> {
         );
         resolve(hash);
       } else {
-        reject(new Error("Failed to get image data"));
+        reject(new Error('Failed to get image data'));
       }
     };
 
-    img.onerror = () => reject(new Error("Failed to load image"));
+    img.onerror = () => reject(new Error('Failed to load image'));
     img.src = URL.createObjectURL(file);
   });
 }

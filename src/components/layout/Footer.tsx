@@ -43,6 +43,11 @@ export default async function Footer() {
           </Link>
         </div>
       </div>
+
+      <div className="text-center text-[0.5rem] md:text-xs mx-10 md:mx-0 text-gray-500 dark:text-gray-400 mb-2">
+        This website uses anonymous analytics to improve user experience. No
+        personal data is collected.
+      </div>
     </footer>
   );
 }

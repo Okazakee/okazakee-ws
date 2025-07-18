@@ -1,9 +1,15 @@
 'use client';
 
-import { AlertTriangle, Home, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Home, ArrowLeft, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
-export default function ErrorPage() {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-md mx-auto">
@@ -18,21 +24,21 @@ export default function ErrorPage() {
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold mb-4 text-darktext dark:text-lighttext">
-          Oops!
+          Something went wrong
         </h1>
 
         <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8">
-          Something went wrong while loading this post.
+          An unexpected error occurred. Please try again.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={reset}
             className="flex items-center justify-center gap-2 px-6 py-3 bg-main hover:bg-main/90 text-white rounded-lg transition-colors duration-200 font-medium"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Go Back
+            <RefreshCw className="w-4 h-4" />
+            Try Again
           </button>
 
           <Link
