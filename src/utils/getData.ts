@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type {
   BlogPost,
+  CareerEntry,
   Contact,
   HeroSection,
   PortfolioPost,
@@ -271,4 +272,22 @@ export const getResumeLink = unstable_cache(
   },
   ['resume-link'],
   { revalidate: revalTime, tags: ['resume', 'hero_section'] }
+);
+
+export const getCareerEntries = unstable_cache(
+  async (): Promise<CareerEntry[] | null> => {
+    const { data, error } = await supabase
+      .from('career_entries')
+      .select('*')
+      .order('id', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching career entries:', error);
+      throw error;
+    }
+
+    return data || null;
+  },
+  ['career-entries'],
+  { revalidate: revalTime, tags: ['career'] }
 );
