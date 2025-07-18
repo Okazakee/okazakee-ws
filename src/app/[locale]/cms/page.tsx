@@ -46,23 +46,57 @@ export default function CMS() {
   }, [setUser]);
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>; // Show an error message if fetching fails
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-500 bg-red-50 dark:bg-red-900/20 p-6 rounded-lg border border-red-200 dark:border-red-800">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <section className="flex h-[90vh] max-w-screen-2xl mx-auto">
-      <SidePanel />
-      <main className="flex-1 mt-20 md:mt-10 h-full">
-        {activeSection === 'hero' && <HeroSection />}
-        {activeSection === 'skills' && <div>skills sec</div>}
-        {activeSection === 'posts' && <div>3</div>}
-        {activeSection === 'contacts' && <div>4</div>}
-        {activeSection === 'settings' && <div>4</div>}
-      </main>
-    </section>
+    <div className="min-h-screen bg-bglight dark:bg-bgdark">
+      <div className="flex h-screen max-w-screen-2xl mx-auto">
+        <SidePanel />
+        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+          <div className="max-w-4xl mx-auto">
+            {activeSection === 'hero' && <HeroSection />}
+            {activeSection === 'skills' && (
+              <div className="text-center py-12">
+                <h2 className="text-3xl font-bold text-main mb-4">Skills Section</h2>
+                <p className="text-lighttext2">Coming soon...</p>
+              </div>
+            )}
+            {activeSection === 'posts' && (
+              <div className="text-center py-12">
+                <h2 className="text-3xl font-bold text-main mb-4">Posts Section</h2>
+                <p className="text-lighttext2">Coming soon...</p>
+              </div>
+            )}
+            {activeSection === 'contacts' && (
+              <div className="text-center py-12">
+                <h2 className="text-3xl font-bold text-main mb-4">Contacts Section</h2>
+                <p className="text-lighttext2">Coming soon...</p>
+              </div>
+            )}
+            {activeSection === 'settings' && (
+              <div className="text-center py-12">
+                <h2 className="text-3xl font-bold text-main mb-4">Settings</h2>
+                <p className="text-lighttext2">Coming soon...</p>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }
