@@ -90,11 +90,11 @@ export default async function Career() {
       className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-screen my-20 md:my-0 mb-20 md:mb-32"
     >
       <div className="w-full max-w-6xl">
-        <h1 className="xl:text-6xl text-3xl xs:text-4xl mb-10 xl:mb-5">
+        <h1 className="xl:text-6xl text-xl xs:text-2xl mb-10 xl:mb-5">
           {t('title')}
         </h1>
         <h2
-          className="xl:mb-20 text-lg xs:text-[1.4rem] md:text-2xl mb-10"
+          className="xl:mb-20 text-base xs:text-lg md:text-2xl mb-10"
           dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
         />
 
@@ -114,10 +114,14 @@ export default async function Career() {
             return (
               <div key={companyGroup.company} className="mb-0 md:mb-8 relative">
                 <div
-                  className={`hidden md:flex items-center ${isEven ? 'flex-row' : 'flex-row-reverse'}`}
+                  className={`hidden md:flex items-center ${
+                    isEven ? 'flex-row' : 'flex-row-reverse'
+                  }`}
                 >
                   <div
-                    className={`absolute top-1/2 left-1/2 w-10 h-20 ${isEven ? '-translate-x-full' : 'translate-x-0'} -translate-y-1/2`}
+                    className={`absolute top-1/2 left-1/2 w-10 h-20 ${
+                      isEven ? '-translate-x-full' : 'translate-x-0'
+                    } -translate-y-1/2`}
                     style={{
                       borderTop: '2px solid #8B53FB',
                       borderRight: isEven ? 'none' : '2px solid #8B53FB',
@@ -127,7 +131,9 @@ export default async function Career() {
                   />
 
                   <div
-                    className={`w-1/2 ${isEven ? 'pr-16 text-right' : 'pl-16 text-left'}`}
+                    className={`w-1/2 ${
+                      isEven ? 'pr-16 text-right' : 'pl-16 text-left'
+                    }`}
                   >
                     {/* Latest position - full UI */}
                     <h3 className="text-2xl font-bold text-main mb-2">
@@ -135,7 +141,9 @@ export default async function Career() {
                     </h3>
 
                     <div
-                      className={`flex mb-4 items-center text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                      className={`flex mb-4 items-center text-sm text-gray-500 dark:text-gray-400 gap-2 ${
+                        isEven ? 'justify-end' : 'justify-start'
+                      }`}
                     >
                       <Calendar size={16} className="inline" />
                       <span>
@@ -162,7 +170,9 @@ export default async function Career() {
                     </div>
 
                     <div
-                      className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                      className={`flex flex-wrap gap-2 ${
+                        isEven ? 'justify-end' : 'justify-start'
+                      }`}
                     >
                       <SkillsCarousel
                         skills={JSON.parse(latestPosition.skills) as string[]}
@@ -173,7 +183,9 @@ export default async function Career() {
                     {/* Older positions - compact UI */}
                     {olderPositions.length > 0 && (
                       <div
-                        className={`mt-6 space-y-4 ${isEven ? 'text-right' : 'text-left'}`}
+                        className={`mt-6 space-y-4 ${
+                          isEven ? 'text-right' : 'text-left'
+                        }`}
                       >
                         {olderPositions.map((position) => (
                           <div key={position.id} className="pl-4">
@@ -181,7 +193,9 @@ export default async function Career() {
                               {position.title}
                             </h5>
                             <div
-                              className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                              className={`flex items-center mb-4 text-sm text-gray-500 dark:text-gray-400 gap-2 ${
+                                isEven ? 'justify-end' : 'justify-start'
+                              }`}
                             >
                               <Calendar size={16} className="inline" />
                               <span>
@@ -202,7 +216,9 @@ export default async function Career() {
                               </ReactMarkdown>
                             </div>
                             <div
-                              className={`flex flex-wrap gap-2 ${isEven ? 'justify-end' : 'justify-start'}`}
+                              className={`flex flex-wrap gap-2 ${
+                                isEven ? 'justify-end' : 'justify-start'
+                              }`}
                             >
                               <SkillsCarousel
                                 skills={JSON.parse(position.skills) as string[]}

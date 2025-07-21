@@ -18,8 +18,16 @@ export async function generateMetadata({
 
   const tagDesc =
     locale === 'en'
-      ? `My ${post_type} showcasing ${post_type === 'portfolio' ? 'projects i worked on' : 'my thoughts and experiences'}`
-      : `Il mio ${post_type} mostra ${post_type === 'portfolio' ? 'progetti a cui ho lavorato' : 'le mie riflessioni ed esperienze'}`;
+      ? `My ${post_type} showcasing ${
+          post_type === 'portfolio'
+            ? 'projects i worked on'
+            : 'my thoughts and experiences'
+        }`
+      : `Il mio ${post_type} mostra ${
+          post_type === 'portfolio'
+            ? 'progetti a cui ho lavorato'
+            : 'le mie riflessioni ed esperienze'
+        }`;
 
   return {
     title: `${title} - Okazakee WS`,
@@ -71,11 +79,11 @@ export default async function PostsPage({
   return (
     <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
       <div className="xl:mx-16 text-center mb-20 max-w-[120rem] w-full">
-        <h1 className="text-3xl xs:text-4xl xl:text-5xl mb-5">
+        <h1 className="xl:text-5xl text-2xl xs:text-3xl mb-5">
           {post_type === 'blog' ? t('title2') : t('title1')}
         </h1>
         <h3
-          className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-[1.3rem] md:text-2xl"
+          className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-lg md:text-2xl"
           dangerouslySetInnerHTML={{
             __html:
               post_type === 'blog'

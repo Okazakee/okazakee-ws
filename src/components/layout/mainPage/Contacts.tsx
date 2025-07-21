@@ -47,9 +47,9 @@ export default async function Contacts({ locale }: { locale: string }) {
       className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh my-20 md:my-0 mdh:mt-40"
     >
       <div>
-        <h1 className="xl:text-6xl text-4xl xs:text-5xl mb-5">{t('title')}</h1>
+        <h1 className="xl:text-6xl text-xl xs:text-2xl mb-5">{t('title')}</h1>
         <h2
-          className="md:mb-20 mb-10 text-lg xs:text-[1.4rem] md:text-2xl"
+          className="md:mb-20 mb-10 text-base xs:text-lg md:text-2xl"
           dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
         />
         <div className="flex md:flex-row flex-col md:gap-8 mx-12 md:mx-0 justify-between drop-shadow-xl md:drop-shadow-2xl dark:drop-shadow-none">

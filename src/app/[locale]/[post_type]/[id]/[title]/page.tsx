@@ -73,10 +73,10 @@ export default async function Page({
     <article className="max-w-5xl mx-auto px-4 mb-20 md:mb-32 md:mt-16 mt-10">
       <header className="flex relative mb-6 md:mb-0">
         <div>
-          <h1 className="md:text-4xl text-2xl xs:text-3xl sm:text-3xl font-bold mb-4">
+          <h1 className="md:text-4xl text-2xl xs:text-3xl font-bold mb-4">
             {initTitle}
           </h1>
-          <p className="xs:text-xl sm:text-xl">{post[postDescription]}</p>
+          <p className="text-base xs:text-lg">{post[postDescription]}</p>
         </div>
       </header>
 
@@ -184,7 +184,16 @@ export default async function Page({
 
       {/* mobile btns */}
       <div
-        className={`text-lighttext ${post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'}  ${post_type === 'portfolio' && post && 'source_link' in post && 'demo_link' in post ? 'justify-center' : 'justify-start'}`}
+        className={`text-lighttext ${
+          post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'
+        }  ${
+          post_type === 'portfolio' &&
+          post &&
+          'source_link' in post &&
+          'demo_link' in post
+            ? 'justify-center'
+            : 'justify-start'
+        }`}
       >
         {post_type === 'portfolio' &&
           post &&
@@ -194,7 +203,12 @@ export default async function Page({
             <Link
               target="_blank"
               href={post.source_link || ''}
-              className={`flex ${(post.source_link && post.demo_link) || (post.source_link && post.store_link) ? 'w-full mr-5' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+              className={`flex ${
+                (post.source_link && post.demo_link) ||
+                (post.source_link && post.store_link)
+                  ? 'w-full mr-5'
+                  : 'w-full'
+              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
               data-umami-event="View Source Code button"
               data-umami-event-post={title}
             >
@@ -211,7 +225,9 @@ export default async function Page({
             <Link
               target="_blank"
               href={post.demo_link}
-              className={`flex ${post.source_link && post.demo_link ? 'w-full' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+              className={`flex ${
+                post.source_link && post.demo_link ? 'w-full' : 'w-full'
+              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
               data-umami-event="View Demo button"
               data-umami-event-post={title}
             >
@@ -227,7 +243,9 @@ export default async function Page({
             <Link
               target="_blank"
               href={post.store_link}
-              className={`flex ${post.store_link && post.store_link ? 'w-full' : 'w-full'} text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+              className={`flex ${
+                post.store_link && post.store_link ? 'w-full' : 'w-full'
+              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
               data-umami-event="Play Store button"
               data-umami-event-post={title}
             >
@@ -240,7 +258,7 @@ export default async function Page({
       {/* Project Description */}
       <div
         id="post"
-        className="space-y-4 max-w-none xs:text-lg sm:text-xl prose dark:prose-invert text-left"
+        className="space-y-4 max-w-none text-base xs:text-lg prose dark:prose-invert text-left"
       >
         <MarkdownRenderer markdown={String(post[localeKey])} />
       </div>

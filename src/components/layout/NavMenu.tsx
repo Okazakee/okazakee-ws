@@ -171,7 +171,9 @@ export default function ResponsiveNav({
             <div className="relative ml-4 settings-dropdown">
               <button
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                className={`transition-all hover:text-main flex items-center justify-center p-2 rounded-full ${isSettingsOpen ? 'bg-gray-100 dark:bg-gray-800 text-main' : ''}`}
+                className={`transition-all hover:text-main flex items-center justify-center p-2 rounded-full ${
+                  isSettingsOpen ? 'bg-gray-100 dark:bg-gray-800 text-main' : ''
+                }`}
                 aria-label="Settings"
                 type="button"
               >
@@ -210,10 +212,10 @@ export default function ResponsiveNav({
               <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="scale-[85%] xs:scale-100"
+                className="scale-[75%] xs:scale-90"
                 aria-label="Toggle menu"
               >
-                {isOpen ? <X size={40} /> : <Menu size={40} />}
+                {isOpen ? <X size={32} /> : <Menu size={32} />}
               </button>
             </div>
 
@@ -225,7 +227,9 @@ export default function ResponsiveNav({
               }`}
             >
               <ul
-                className={`space-y-[4rem] p-4 scale-[85%] xs:scale-100 -mt-16 transition-all duration-[400ms] ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+                className={`space-y-[4rem] p-4 scale-[85%] xs:scale-100 -mt-16 transition-all duration-[400ms] ease-in-out ${
+                  isOpen ? 'opacity-100' : 'opacity-0'
+                }`}
               >
                 {menuItems.map((item, i) => {
                   const href = getHref(item);
@@ -234,13 +238,13 @@ export default function ResponsiveNav({
                     <li key={i}>
                       <Link
                         href={href}
-                        className="flex text-3xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out"
+                        className="flex text-xl xs:text-2xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out"
                         onClick={(e) => {
                           handleClick(e, item.href, item.isAnchor);
                           setIsOpen(false);
                         }}
                       >
-                        <item.icon size={35} className="mr-2" />
+                        <item.icon size={28} className="mr-2" />
                         <span>{getButtonText(i)}</span>
                       </Link>
                     </li>
@@ -248,7 +252,9 @@ export default function ResponsiveNav({
                 })}
               </ul>
               <div
-                className={`flex space-x-2 xs:space-x-5 sm:space-x-5 bottom-10 absolute left-1/2 transform-gpu -translate-x-1/2 scale-[85%] xs:scale-100 transition-all duration-[400ms] ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+                className={`flex space-x-2 xs:space-x-5 sm:space-x-5 bottom-10 absolute left-1/2 transform-gpu -translate-x-1/2 scale-[85%] xs:scale-100 transition-all duration-[400ms] ease-in-out ${
+                  isOpen ? 'opacity-100' : 'opacity-0'
+                }`}
               >
                 <LanguageToggle compact={false} />
                 <ThemeToggle compact={false} />
