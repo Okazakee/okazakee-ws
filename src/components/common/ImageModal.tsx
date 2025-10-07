@@ -44,7 +44,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-xs -top-4">
-      <div className="relative w-full h-full max-w-(--breakpoint-2xl)">
+      <div className="relative w-full h-full" style={{ maxWidth: 'var(--breakpoint-2xl)' }}>
         <button
           type="button"
           onClick={onClose}
