@@ -98,6 +98,14 @@
     @apply cursor-text text-main;
   }
 
+  input {
+    @apply bg-white dark:bg-white text-black dark:text-black;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
   #post {
     @apply leading-tight text-darktext dark:text-lighttext;
   }
