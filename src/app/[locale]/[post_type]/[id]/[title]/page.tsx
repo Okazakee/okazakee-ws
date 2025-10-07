@@ -1,5 +1,6 @@
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
+import ViewDisplay from '@/components/common/ViewDisplay';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPost, getPosts } from '@utils/getData';
@@ -174,13 +175,19 @@ export default async function Page({
           </div>
         )}
 
+          <ViewDisplay 
+            postId={id} 
+            postType={post_type as 'blog' | 'portfolio'} 
+            initialViews={post.views || "⏳"} 
+          />
+
         <ShareButton
           className="ml-auto"
           buttonTitle={locale === 'en' ? 'Copy post url' : 'Copia url del post'}
           url={postURL}
           title={post.title_en}
         />
-      </div>
+        </div>
 
       {/* mobile btns */}
       <div
