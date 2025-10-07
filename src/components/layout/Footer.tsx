@@ -34,7 +34,14 @@ export default async function Footer() {
           {t('middle')} - 02863310815
         </CopyLinkButton>
 
-        <div className="text-xs xs:text-base sm:text-base md:my-0 w-fit lg:mr-5">
+        <div className="text-xs xs:text-base sm:text-base md:my-0 w-fit lg:mr-5 flex items-center gap-3">
+          <Link
+            href="/cms"
+            className="hover:text-main text-xs xs:text-sm md:text-base text-right transition-colors duration-0"
+          >
+            CMS
+          </Link>
+          <span className="text-gray-500 dark:text-gray-400">|</span>
           <Link
             href="/privacy-policy"
             className="hover:text-main text-xs xs:text-sm md:text-base text-right transition-colors duration-0"
