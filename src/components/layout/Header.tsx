@@ -6,7 +6,7 @@ import NavMenu from './NavMenu';
 
 export default async function Header({ locale }: { locale: string }) {
   return (
-    <header className="max-w-(--breakpoint-2xl) mx-auto pt-2">
+    <header className="max-w-[var(--breakpoint-2xl)] mx-auto pt-2">
       <div className="flex justify-between items-center pt-5 mx-5">
         <Link href={'/'} className="xl:mr-auto xl:mx-0 xl:static">
           <Image
