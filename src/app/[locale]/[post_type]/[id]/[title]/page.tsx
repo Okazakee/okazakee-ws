@@ -87,7 +87,7 @@ export default async function Page({
       </div>
 
       {/* Main Image */}
-      <div className="w-full h-[14rem] md:h-[24rem] relative mx-auto mt-6 md:mt-0">
+      <div className="w-full h-56 md:h-96 relative mx-auto mt-6 md:mt-0">
         <Image
           placeholder="blur"
           blurDataURL={post.blurhashURL}

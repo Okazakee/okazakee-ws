@@ -41,7 +41,7 @@ export default function ThemeToggle({
 
   const buttonClass = compact
     ? 'flex items-center justify-center rounded-2xl border-2 border-main transition-all duration-300 ease-in-out w-fit px-3 h-10'
-    : 'flex justify-center items-center border-2 border-white dark:border-white rounded-2xl transition-all duration-300 ease-in-out h-[3rem] w-[10rem] lg:h-10 lg:w-[12rem] lg:border-main';
+    : 'flex justify-center items-center border-2 border-white dark:border-white rounded-2xl transition-all duration-300 ease-in-out h-12 w-40 lg:h-10 lg:w-48 lg:border-main';
 
   // Helper function to cycle through modes: auto -> light -> dark -> auto
   const cycleThemeMode = () => {

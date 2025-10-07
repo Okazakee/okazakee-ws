@@ -31,7 +31,7 @@ export default async function RootLayout({
       <Providers>
         <body
           id="about"
-          className={`${whiteRabbit.variable} transition-colors duration-[400ms] ease-in-out font-whiterabt antialiased rounded-xl scroll-smooth relative min-h-screen`}
+          className={`${whiteRabbit.variable} transition-colors duration-400 ease-in-out font-whiterabt antialiased rounded-xl scroll-smooth relative min-h-screen`}
         >
           <NextIntlClientProvider messages={messages} locale={locale}>
             <Header locale={locale} />

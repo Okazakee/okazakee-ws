@@ -32,7 +32,7 @@ export default function LanguageToggle({
   // Use compact styling when in desktop header
   const buttonClass = compact
     ? 'flex items-center justify-center border-2 border-main rounded-2xl transition-all duration-300 ease-in-out w-fit px-3 h-10'
-    : 'space-x-2 relative flex justify-center items-center border-2 border-white dark:border-white rounded-2xl transition-all duration-300 ease-in-out h-[3rem] w-[10rem] lg:h-10 lg:w-32 lg:border-main';
+    : 'space-x-2 relative flex justify-center items-center border-2 border-white dark:border-white rounded-2xl transition-all duration-300 ease-in-out h-12 w-40 lg:h-10 lg:w-32 lg:border-main';
 
   return (
     <button

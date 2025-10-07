@@ -43,8 +43,8 @@ export const ImageModal: React.FC<ImageModalProps> = ({
   }, [blockScroll, onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm -top-4">
-      <div className="relative w-full h-full max-w-screen-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-xs -top-4">
+      <div className="relative w-full h-full max-w-(--breakpoint-2xl)">
         <button
           type="button"
           onClick={onClose}

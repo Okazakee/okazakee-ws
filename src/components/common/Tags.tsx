@@ -41,7 +41,7 @@ export const Tags = ({ tags }: { tags: string }) => {
     <div className="relative overflow-hidden w-full">
       <div
         ref={containerRef}
-        className={`flex whitespace-nowrap transition-all duration-[400ms] ease-in-out ${
+        className={`flex whitespace-nowrap transition-all duration-400 ease-in-out ${
           shouldAnimate ? 'animate-carousel' : 'flex-wrap'
         }`}
         style={

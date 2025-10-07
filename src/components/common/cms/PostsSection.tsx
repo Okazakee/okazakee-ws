@@ -36,7 +36,7 @@ export default async function PostsSection() {
         <label className="mt-10 flex text-lighttext gap-5">
           BlurhashURL
           <input
-            className="text-darktext w-[50rem] rounded-md"
+            className="text-darktext w-200 rounded-md"
             type="text"
             placeholder="blurhashURL"
             value={blurhashURL}
@@ -48,7 +48,7 @@ export default async function PostsSection() {
         <label className="flex text-lighttext gap-5">
           Resume IT
           <input
-            className="text-darktext w-[50rem] rounded-md"
+            className="text-darktext w-200 rounded-md"
             type="text"
             placeholder="Resume IT"
             value={resume_it}
@@ -57,7 +57,7 @@ export default async function PostsSection() {
         <label className="flex text-lighttext gap-5">
           Resume EN
           <input
-            className="text-darktext w-[50rem] rounded-md"
+            className="text-darktext w-200 rounded-md"
             type="text"
             placeholder="Resume EN"
             value={resume_en}

@@ -633,7 +633,7 @@ export default function CareerSection() {
                 />
                 <label
                   htmlFor={`logo-${entry.id}`}
-                  className="mt-2 inline-block px-3 py-1 bg-secondary text-white rounded text-sm cursor-pointer hover:bg-tertiary transition-colors border border-secondary hover:border-tertiary"
+                  className="mt-2 inline-block px-3 py-1 bg-secondary text-white rounded-sm text-sm cursor-pointer hover:bg-tertiary transition-colors border border-secondary hover:border-tertiary"
                 >
                   <Upload className="h-3 w-3 inline mr-1" />
                   Change Logo
@@ -687,7 +687,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'title', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -700,7 +700,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'company', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -713,7 +713,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'website_url', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -726,7 +726,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'location_en', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -739,7 +739,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'location_it', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -751,7 +751,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'remote', e.target.value as 'full' | 'hybrid' | 'onSite')
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     >
                       <option value="full">Full Remote</option>
                       <option value="hybrid">Hybrid</option>
@@ -768,7 +768,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'startDate', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -781,7 +781,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'endDate', e.target.value || null)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -794,7 +794,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'skills', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -806,7 +806,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'description_en', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
                     />
                   </div>
@@ -819,7 +819,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'description_it', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
                     />
                   </div>
@@ -832,7 +832,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'company_description_en', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
                     />
                   </div>
@@ -845,14 +845,14 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'company_description_it', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
                     />
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleUpdateCareer(entry.id)}
-                      className="flex items-center gap-1 px-3 py-1 bg-main text-white text-sm rounded hover:bg-secondary transition-colors border border-main hover:border-secondary"
+                      className="flex items-center gap-1 px-3 py-1 bg-main text-white text-sm rounded-sm hover:bg-secondary transition-colors border border-main hover:border-secondary"
                     >
                       <Save className="h-3 w-3" />
                       Save
@@ -861,7 +861,7 @@ export default function CareerSection() {
                       onClick={() =>
                         handleInputChange(entry.id, 'isEditing', false)
                       }
-                      className="px-3 py-1 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext text-sm rounded hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
+                      className="px-3 py-1 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext text-sm rounded-sm hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
                     >
                       <X className="h-3 w-3" />
                     </button>

@@ -154,7 +154,7 @@ export default function I18nSection() {
                 // Allow invalid JSON during typing
               }
             }}
-            className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[400px] font-mono text-sm"
+            className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y min-h-[400px] font-mono text-sm"
             placeholder="Enter translations as JSON object..."
           />
         </div>
@@ -171,7 +171,7 @@ export default function I18nSection() {
           <textarea
             value={editedPrivacyPolicy}
             onChange={(e) => setEditedPrivacyPolicy(e.target.value)}
-            className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[400px]"
+            className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y min-h-[400px]"
             placeholder="Enter privacy policy content in markdown format..."
           />
         </div>

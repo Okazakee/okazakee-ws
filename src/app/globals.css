@@ -1,13 +1,80 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@config '../../tailwind.config.ts';
+
+/* Custom screen breakpoints for Tailwind CSS 4.x */
+@layer utilities {
+  /* xs: (min-width: 400px) and (max-width: 1100px) */
+  @media (min-width: 400px) and (max-width: 1100px) {
+    .xs\:mt-2 { margin-top: 0.5rem; }
+    .xs\:mb-1 { margin-bottom: 0.25rem; }
+    .xs\:h-16 { height: 4rem; }
+    .xs\:h-\[250px\] { height: 250px; }
+    .xs\:w-\[15px\] { width: 15px; }
+    .xs\:w-\[70px\] { width: 70px; }
+    .xs\:w-\[160px\] { width: 160px; }
+    .xs\:w-\[250px\] { width: 250px; }
+    .xs\:min-w-\[24rem\] { min-width: 24rem; }
+    .xs\:scale-90 { transform: scale(0.9); }
+    .xs\:scale-100 { transform: scale(1); }
+    .xs\:gap-2 { gap: 0.5rem; }
+    .xs\:space-x-5 > :not([hidden]) ~ :not([hidden]) { --tw-space-x-reverse: 0; margin-right: calc(1.25rem * var(--tw-space-x-reverse)); margin-left: calc(1.25rem * calc(1 - var(--tw-space-x-reverse))); }
+    .xs\:text-2xl { font-size: 1.5rem; line-height: 2rem; }
+    .xs\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    .xs\:text-base { font-size: 1rem; line-height: 1.5rem; }
+    .xs\:text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .xs\:text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .xs\:text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .xs\:text-\[1\.2rem\] { font-size: 1.2rem; }
+    .xs\:leading-snug { line-height: 1.375; }
+    .xs\:tracking-wider { letter-spacing: 0.05em; }
+    .xs\:placeholder\:text-base::placeholder { font-size: 1rem; line-height: 1.5rem; }
+    .xs\:stext-sm { font-size: 0.875rem; line-height: 1.25rem; }
+  }
+
+  /* mdh: (min-width: 768px) and (max-height: 1080px) */
+  @media (min-width: 768px) and (max-height: 1080px) {
+    .mdh\:mt-20 { margin-top: 5rem; }
+    .mdh\:mt-40 { margin-top: 10rem; }
+  }
+
+  /* 2xlh: (min-width: 1536px) and (min-height: 1220px) */
+  @media (min-width: 1536px) and (min-height: 1220px) {
+    .container { max-width: 1536px; }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility clip-pebble {
+  clip-path: url(#pebble-clip);
+  -webkit-clip-path: url(#pebble-clip);
+  position: relative;
+  overflow: visible !important;
+}
 
 @layer base {
   html {
     scroll-behavior: smooth;
   }
   body {
-    @apply dark:text-lighttext text-darktext bg-bglight dark:bg-bgdark transition-all duration-[400ms];
+    @apply dark:text-lighttext text-darktext bg-bglight dark:bg-bgdark transition-all duration-400;
     position: relative;
     overflow: hidden;
   }
@@ -37,15 +104,6 @@
 
   #post li::marker {
     @apply text-darktext dark:text-lighttext;
-  }
-}
-
-@layer components {
-  .clip-pebble {
-    clip-path: url(#pebble-clip);
-    -webkit-clip-path: url(#pebble-clip);
-    position: relative;
-    overflow: visible !important;
   }
 }
 

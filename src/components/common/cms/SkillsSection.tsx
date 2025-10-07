@@ -486,7 +486,7 @@ export default function SkillsSection() {
                       />
                       <label
                         htmlFor={`skill-icon-${skill.id}`}
-                        className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded transition-all duration-200 cursor-pointer"
+                        className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200 cursor-pointer"
                       >
                         <Upload className="w-3 h-3" />
                         Change Icon
@@ -508,7 +508,7 @@ export default function SkillsSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkgray text-lighttext rounded border border-darkgray focus:border-main focus:outline-none"
+                        className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden"
                         placeholder="Skill title"
                       />
                       <div className="flex items-center gap-2">
@@ -524,7 +524,7 @@ export default function SkillsSection() {
                               e.target.checked
                             )
                           }
-                          className="rounded"
+                          className="rounded-sm"
                         />
                         <label
                           htmlFor={`invert-${skill.id}`}
@@ -539,7 +539,7 @@ export default function SkillsSection() {
                           onClick={() =>
                             saveSkillChanges(category.id, skill.id)
                           }
-                          className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-all duration-200"
+                          className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-sm transition-all duration-200"
                           disabled={isUpdating}
                         >
                           <Save className="w-3 h-3" />
@@ -548,7 +548,7 @@ export default function SkillsSection() {
                         <button
                           type="button"
                           onClick={() => toggleEditSkill(category.id, skill.id)}
-                          className="flex items-center gap-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-all duration-200"
+                          className="flex items-center gap-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-sm transition-all duration-200"
                           disabled={isUpdating}
                         >
                           <X className="w-3 h-3" />
@@ -594,7 +594,7 @@ export default function SkillsSection() {
                           )
                         )
                       }
-                      className="w-full px-3 py-2 bg-darkgray text-lighttext rounded border border-darkgray focus:border-main focus:outline-none"
+                      className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden"
                       placeholder="Skill title"
                     />
                     <div className="flex items-center gap-2">
@@ -617,7 +617,7 @@ export default function SkillsSection() {
                             )
                           )
                         }
-                        className="rounded"
+                        className="rounded-sm"
                       />
                       <label
                         htmlFor={`new-invert-${category.id}`}
@@ -630,7 +630,7 @@ export default function SkillsSection() {
                       <button
                         type="button"
                         onClick={() => saveNewSkill(category.id)}
-                        className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-all duration-200"
+                        className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-sm transition-all duration-200"
                         disabled={isUpdating}
                       >
                         <Save className="w-3 h-3" />
@@ -647,7 +647,7 @@ export default function SkillsSection() {
                             )
                           )
                         }
-                        className="flex items-center gap-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-all duration-200"
+                        className="flex items-center gap-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-sm transition-all duration-200"
                         disabled={isUpdating}
                       >
                         <X className="w-3 h-3" />

@@ -532,7 +532,7 @@ export default function BlogSection() {
                 />
                 <label
                   htmlFor={`image-${post.id}`}
-                  className="mt-2 inline-block px-3 py-1 bg-secondary text-white rounded text-sm cursor-pointer hover:bg-tertiary transition-colors border border-secondary hover:border-tertiary"
+                  className="mt-2 inline-block px-3 py-1 bg-secondary text-white rounded-sm text-sm cursor-pointer hover:bg-tertiary transition-colors border border-secondary hover:border-tertiary"
                 >
                   <Upload className="h-3 w-3 inline mr-1" />
                   Change Image
@@ -588,7 +588,7 @@ export default function BlogSection() {
                       onChange={(e) =>
                         handleInputChange(post.id, 'title_en', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -601,7 +601,7 @@ export default function BlogSection() {
                       onChange={(e) =>
                         handleInputChange(post.id, 'title_it', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -613,7 +613,7 @@ export default function BlogSection() {
                       onChange={(e) =>
                         handleInputChange(post.id, 'description_en', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
                     />
                   </div>
@@ -626,7 +626,7 @@ export default function BlogSection() {
                       onChange={(e) =>
                         handleInputChange(post.id, 'description_it', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
                     />
                   </div>
@@ -639,7 +639,7 @@ export default function BlogSection() {
                       onChange={(e) =>
                         handleInputChange(post.id, 'body_en', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={3}
                     />
                   </div>
@@ -652,7 +652,7 @@ export default function BlogSection() {
                       onChange={(e) =>
                         handleInputChange(post.id, 'body_it', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={3}
                     />
                   </div>
@@ -666,13 +666,13 @@ export default function BlogSection() {
                       onChange={(e) =>
                         handleInputChange(post.id, 'post_tags', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleUpdateBlog(post.id)}
-                      className="flex items-center gap-1 px-3 py-1 bg-main text-white text-sm rounded hover:bg-secondary transition-colors border border-main hover:border-secondary"
+                      className="flex items-center gap-1 px-3 py-1 bg-main text-white text-sm rounded-sm hover:bg-secondary transition-colors border border-main hover:border-secondary"
                     >
                       <Save className="h-3 w-3" />
                       Save
@@ -681,7 +681,7 @@ export default function BlogSection() {
                       onClick={() =>
                         handleInputChange(post.id, 'isEditing', false)
                       }
-                      className="px-3 py-1 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext text-sm rounded hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
+                      className="px-3 py-1 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext text-sm rounded-sm hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
                     >
                       <X className="h-3 w-3" />
                     </button>

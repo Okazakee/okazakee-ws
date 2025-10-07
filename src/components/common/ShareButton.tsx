@@ -30,19 +30,19 @@ export default function ShareButton({
     <button
       type="button"
       onClick={handleCopy}
-      className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-[400ms] ease-in-out w-5`}
+      className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-400 ease-in-out w-5`}
       title={buttonTitle}
       data-umami-event="Share button"
       data-umami-event-post={title}
     >
       <div className="flex absolute right-0">
         <Check
-          className={`w-5 h-5 mr-2 text-green-500 transition-all duration-[400ms] ease-in-out ${
+          className={`w-5 h-5 mr-2 text-green-500 transition-all duration-400 ease-in-out ${
             copied ? 'opacity-100' : 'opacity-0'
           }`}
         />
         <span
-          className={`text-sm transition-all duration-[400ms] ease-in-out ${
+          className={`text-sm transition-all duration-400 ease-in-out ${
             copied ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -51,7 +51,7 @@ export default function ShareButton({
       </div>
 
       <Share2
-        className={`absolute left-1/2 transform-gpu transition-all duration-[400ms] ease-in-out -translate-x-1/2 w-5 h-5 ${copied ? 'opacity-0' : 'opacity-100'}`}
+        className={`absolute left-1/2 transform-gpu transition-all duration-400 ease-in-out -translate-x-1/2 w-5 h-5 ${copied ? 'opacity-0' : 'opacity-100'}`}
       />
     </button>
   );
