@@ -288,7 +288,7 @@ export default async function Career() {
                       {/* Dot */}
                       <div className="absolute left-1/2 -top-4 w-4 h-4 bg-main rounded-full border-2 border-white dark:border-gray-900 z-10 -translate-x-1/2" />
                       {/* Card */}
-                      <div className="bg-[#c5c5c5] dark:bg-[#0e0e0e] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mt-2 w-full max-w-[21rem] xs:min-w-[24rem] md:max-w-xl mx-auto z-10">
+                      <div className="bg-[#c5c5c5] dark:bg-[#0e0e0e] p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mt-2 w-full max-w-84 xs:min-w-[24rem] md:max-w-xl mx-auto z-10">
                         {/* Company logo and info */}
                         <Link
                           href={latestPosition.website_url}

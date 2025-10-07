@@ -220,14 +220,14 @@ export default function ResponsiveNav({
             </div>
 
             <nav
-              className={`fixed mt-2 backdrop-blur-[70px] shadow-lg z-10 -top-1.5 left-1/2 transform-gpu -translate-x-1/2 w-[100vw] h-[100vh] max-w-full max-h-full right-auto flex justify-center items-center transition-all duration-[400ms] ease-in-out ${
+              className={`fixed mt-2 backdrop-blur-[70px] shadow-lg z-10 -top-1.5 left-1/2 transform-gpu -translate-x-1/2 w-screen h-screen max-w-full max-h-full right-auto flex justify-center items-center transition-all duration-400 ease-in-out ${
                 isOpen
                   ? 'opacity-100 translate-y-0'
                   : 'opacity-0 -translate-y-20 pointer-events-none'
               }`}
             >
               <ul
-                className={`space-y-[4rem] p-4 scale-[85%] xs:scale-100 -mt-16 transition-all duration-[400ms] ease-in-out ${
+                className={`space-y-16 p-4 scale-[85%] xs:scale-100 -mt-16 transition-all duration-400 ease-in-out ${
                   isOpen ? 'opacity-100' : 'opacity-0'
                 }`}
               >
@@ -238,7 +238,7 @@ export default function ResponsiveNav({
                     <li key={i}>
                       <Link
                         href={href}
-                        className="flex text-xl xs:text-2xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-[400ms] ease-in-out"
+                        className="flex text-xl xs:text-2xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-400 ease-in-out"
                         onClick={(e) => {
                           handleClick(e, item.href, item.isAnchor);
                           setIsOpen(false);
@@ -252,7 +252,7 @@ export default function ResponsiveNav({
                 })}
               </ul>
               <div
-                className={`flex space-x-2 xs:space-x-5 sm:space-x-5 bottom-10 absolute left-1/2 transform-gpu -translate-x-1/2 scale-[85%] xs:scale-100 transition-all duration-[400ms] ease-in-out ${
+                className={`flex space-x-2 xs:space-x-5 sm:space-x-5 bottom-10 absolute left-1/2 transform-gpu -translate-x-1/2 scale-[85%] xs:scale-100 transition-all duration-400 ease-in-out ${
                   isOpen ? 'opacity-100' : 'opacity-0'
                 }`}
               >

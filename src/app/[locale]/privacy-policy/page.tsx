@@ -31,7 +31,7 @@ export default async function PrivacyPolicyPage({
   }
 
   return (
-    <main className="flex flex-col items-center justify-center max-w-screen-2xl mx-auto px-5 py-16">
+    <main className="flex flex-col items-center justify-center max-w-(--breakpoint-2xl) mx-auto px-5 py-16">
       <div className="w-full max-w-4xl">
         <h1 className="text-4xl font-bold mb-8 text-center">{t('title')}</h1>
         <div className="prose dark:prose-invert max-w-none">

@@ -78,7 +78,7 @@ export default async function PostsPage({
 
   return (
     <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
-      <div className="xl:mx-16 text-center mb-20 max-w-[120rem] w-full">
+      <div className="xl:mx-16 text-center mb-20 max-w-480 w-full">
         <h1 className="xl:text-5xl text-2xl xs:text-3xl mb-5">
           {post_type === 'blog' ? t('title2') : t('title1')}
         </h1>

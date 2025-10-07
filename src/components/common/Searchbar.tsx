@@ -77,7 +77,7 @@ export default function Searchbar({
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
           placeholder={t('searchbar')}
-          className="md:text-xl w-full p-2 pl-10 rounded-xl border-2 bg-lighttext border-main focus:outline-none placeholder:text-darktext placeholder:opacity-70 text-darktext focus:placeholder:opacity-0 placeholder:text-sm xs:placeholder:text-base sm:placeholder:text-xl"
+          className="md:text-xl w-full p-2 pl-10 rounded-xl border-2 bg-lighttext border-main focus:outline-hidden placeholder:text-darktext placeholder:opacity-70 text-darktext focus:placeholder:opacity-0 placeholder:text-sm xs:placeholder:text-base sm:placeholder:text-xl"
         />
         <Search
           className="absolute left-3 top-1/2 transform-gpu -translate-y-1/2 stroke-main"

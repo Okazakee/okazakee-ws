@@ -29,14 +29,14 @@ export default function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md px-4 py-2 border focus:outline-none mb-5 text-darktext"
+            className="w-full rounded-md px-4 py-2 border focus:outline-hidden mb-5 text-darktext"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md px-4 py-2 border focus:outline-none mb-5 text-darktext"
+            className="w-full rounded-md px-4 py-2 border focus:outline-hidden mb-5 text-darktext"
           />
           {error && <p className="text-red-500 mb-5">{error}</p>}
           <button

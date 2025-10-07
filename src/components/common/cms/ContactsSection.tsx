@@ -65,7 +65,7 @@ function IconComponent({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center w-6 h-6 bg-red-500/20 rounded text-red-500 text-xs">
+      <div className="flex items-center justify-center w-6 h-6 bg-red-500/20 rounded-sm text-red-500 text-xs">
         ?
       </div>
     );
@@ -73,7 +73,7 @@ function IconComponent({
 
   if (!Icon) {
     return (
-      <div className="flex items-center justify-center w-6 h-6 bg-gray-500/20 rounded text-gray-500 text-xs">
+      <div className="flex items-center justify-center w-6 h-6 bg-gray-500/20 rounded-sm text-gray-500 text-xs">
         ...
       </div>
     );
@@ -310,7 +310,7 @@ export default function ContactsSection() {
               onChange={(e) =>
                 setNewContact((prev) => ({ ...prev, label: e.target.value }))
               }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
+              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
               placeholder="e.g., LinkedIn"
             />
           </div>
@@ -330,7 +330,7 @@ export default function ContactsSection() {
                 onChange={(e) =>
                   setNewContact((prev) => ({ ...prev, icon: e.target.value }))
                 }
-                className="flex-1 px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
+                className="flex-1 px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                 placeholder="e.g., linkedin"
               />
               {newContact.icon && (
@@ -359,7 +359,7 @@ export default function ContactsSection() {
               onChange={(e) =>
                 setNewContact((prev) => ({ ...prev, link: e.target.value }))
               }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
+              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
               placeholder="https://linkedin.com/in/..."
             />
           </div>
@@ -468,7 +468,7 @@ function ContactDisplay({
 
         <div className="flex items-center gap-3">
           <div
-            className="w-4 h-4 rounded"
+            className="w-4 h-4 rounded-sm"
             style={{ backgroundColor: contact.bg_color }}
           />
           <div className="flex items-center gap-2">
@@ -540,7 +540,7 @@ function EditContactForm({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, label: e.target.value }))
             }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
+            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
           />
         </div>
 
@@ -559,7 +559,7 @@ function EditContactForm({
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, icon: e.target.value }))
               }
-              className="flex-1 px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
+              className="flex-1 px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
             />
             {formData.icon && (
               <div className="flex items-center justify-center w-10 h-10 bg-darkergray border border-lighttext2 rounded-lg">
@@ -587,7 +587,7 @@ function EditContactForm({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, link: e.target.value }))
             }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
+            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
           />
         </div>
 

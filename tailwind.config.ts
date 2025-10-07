@@ -15,11 +15,6 @@ const config: Config = {
       dropShadow: {
         '3xl': '0px 5px 45px rgba(0, 0, 0, 0.8)',
       },
-      screens: {
-        mdh: { raw: '(min-width: 768px) and (max-height: 1080px)' },
-        '2xlh': { raw: '(min-width: 1536px) and (min-height: 1220px)' },
-        xs: { raw: '(min-width: 400px) and (max-width: 1100px)' },
-      },
       backgroundImage: {
         'gradient-wrapper-dark':
           'radial-gradient(circle at bottom left, #000000, #010101 20%, #030303 40%, #080808 60%, #121212 80%, #1a1a1a 100%, #252525)',
