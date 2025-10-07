@@ -8,8 +8,8 @@ interface UseAutoSaveOptions {
 }
 
 export function useAutoSave({ data, onSave, interval = 30000, enabled = true }: UseAutoSaveOptions) {
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  const lastSavedRef = useRef<any>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const lastSavedRef = useRef<any>(undefined);
   const isSavingRef = useRef(false);
 
   const save = useCallback(async () => {
