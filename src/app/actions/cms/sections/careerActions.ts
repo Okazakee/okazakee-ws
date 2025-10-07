@@ -36,6 +36,12 @@ type CreateCareerData = {
 
 type UpdateCareerData = Partial<CreateCareerData>;
 
+type CareerResult = {
+  success: boolean;
+  data?: any;
+  error?: string;
+};
+
 // Validation functions
 function validateCareerData(data: CreateCareerData | UpdateCareerData): { isValid: boolean; error?: string } {
   // Required fields validation
