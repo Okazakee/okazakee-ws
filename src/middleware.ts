@@ -96,4 +96,5 @@ export const config = {
     // Match everything except static files, API routes, and Next.js internals
     '/((?!api|_next/static|_next/image|_next/font|favicon.ico|assets|fonts|images|.*\\.).*)',
   ],
+  runtime: 'nodejs', // Use Node.js runtime instead of Edge Runtime
 };
