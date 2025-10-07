@@ -31,7 +31,7 @@ export default function PreCustom({ children }: PreCustomProps) {
 
   return (
     <>
-      <div className="flex items-center h-10 dark:bg-[#969696] bg-[#696969] relative justify-between -mb-4! rounded-t-md text-lighttext dark:text-darktext">
+      <div className="flex items-center h-10 dark:bg-[#969696] bg-[#696969] relative justify-between !-mb-4 rounded-t-md text-lighttext dark:text-darktext">
         <h6 className="ml-3 text-lg">Code</h6>
         <div className="relative mr-2 flex items-center">
           <h6
