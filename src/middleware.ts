@@ -16,6 +16,15 @@ const handleI18n = createMiddleware({
   localeDetection: true,
 });
 
+// Consolidated locale extraction function
+function extractLocaleFromPath(pathname: string): string | null {
+  const match = pathname.match(localePattern);
+  if (match && match[1] && localeSet.has(match[1])) {
+    return match[1];
+  }
+  return null;
+}
+
 function getPreferredLocale(request: NextRequest): string {
   try {
     // First check cookie
@@ -33,7 +42,8 @@ function getPreferredLocale(request: NextRequest): string {
       }
     }
   } catch (error) {
-    console.error('Error determining locale:', error);
+    // Log error without exposing sensitive information
+    console.error('Locale detection failed');
   }
 
   return defaultLocale;
@@ -52,14 +62,12 @@ export default async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Check if path already has locale
-    const hasLocale = localePattern.test(pathname);
+    // Extract locale from path using consolidated function
+    const currentLocale = extractLocaleFromPath(pathname);
+    const hasLocale = currentLocale !== null;
 
     // Handle CMS routes authentication for all locales
-    if (hasLocale && cmsPattern.test(pathname)) {
-      // Extract the current locale more efficiently
-      const currentLocale = pathname.substring(1, 3);
-
+    if (hasLocale && cmsPattern.test(pathname) && currentLocale) {
       // Handle auth with locale-aware redirects
       const response = await updateSession(request, currentLocale);
       if (response) return response;
@@ -72,11 +80,12 @@ export default async function middleware(request: NextRequest) {
 
     // Redirect to localized path
     const locale = getPreferredLocale(request);
-    const url = new URL(request.url);
+    const url = request.nextUrl.clone();
     url.pathname = `/${locale}${pathname}`;
     return NextResponse.redirect(url);
   } catch (error) {
-    console.error('Middleware error:', error);
+    // Log error without exposing sensitive information
+    console.error('Middleware processing failed');
     // Fail gracefully - proceed without redirection
     return NextResponse.next();
   }
