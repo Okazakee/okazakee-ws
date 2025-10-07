@@ -5,11 +5,7 @@ import type { CareerEntry } from '@/types/fetchedData.types';
 import {
   Briefcase,
   Calendar,
-  Code,
   Edit3,
-  FileText,
-  Globe,
-  MapPin,
   Plus,
   Save,
   Trash2,
@@ -19,7 +15,6 @@ import {
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { ErrorDiv } from '../ErrorDiv';
 
 type CareerEntryWithEditing = CareerEntry & {
   isEditing: boolean;
@@ -120,36 +115,39 @@ export default function CareerSection() {
     setNewCareerEntry((prev) => ({ ...prev, [field]: value }));
   };
 
-  const toggleEditing = (entryId: number) => {
-    setCareerEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === entryId ? { ...entry, isEditing: !entry.isEditing } : entry
-      )
-    );
-  };
-
   const handleCreateCareer = async () => {
+    if (!newEntryLogo) {
+      setError('Please select a logo for the career entry');
+      return;
+    }
+
     setIsCreating(true);
     setError(null);
 
     try {
       const result = await careerActions({
         type: 'CREATE',
-        data: newCareerEntry,
+        data: {
+          ...newCareerEntry,
+          logo: '', // Will be set after logo upload
+        },
       });
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to create career entry');
       }
 
-      // Upload logo if provided
-      if (newEntryLogo && result.data) {
-        const createdEntry = result.data as CareerEntry;
-        await careerActions({
-          type: 'UPLOAD_LOGO',
-          careerId: createdEntry.id,
-          file: newEntryLogo,
-        });
+      const newEntry = result.data as CareerEntry;
+
+      // Upload logo
+      const logoResult = await careerActions({
+        type: 'UPLOAD_LOGO',
+        careerId: newEntry.id,
+        file: newEntryLogo,
+      });
+
+      if (!logoResult.success) {
+        throw new Error(logoResult.error || 'Failed to upload logo');
       }
 
       // Reset form
@@ -171,6 +169,7 @@ export default function CareerSection() {
         company_description_it: '',
       });
       setNewEntryLogo(null);
+      setIsCreating(false);
 
       // Refresh data
       await fetchCareerData();
@@ -179,18 +178,17 @@ export default function CareerSection() {
       setError(
         error instanceof Error ? error.message : 'Failed to create career entry'
       );
-    } finally {
       setIsCreating(false);
     }
   };
 
   const handleUpdateCareer = async (entryId: number) => {
+    const entry = careerEntries.find((e) => e.id === entryId);
+    if (!entry) return;
+
     setError(null);
 
     try {
-      const entry = careerEntries.find((e) => e.id === entryId);
-      if (!entry) return;
-
       const result = await careerActions({
         type: 'UPDATE',
         id: entryId,
@@ -198,8 +196,6 @@ export default function CareerSection() {
           title: entry.title,
           company: entry.company,
           website_url: entry.website_url,
-          logo: entry.logo,
-          blurhashURL: entry.blurhashURL,
           location_en: entry.location_en,
           location_it: entry.location_it,
           remote: entry.remote,
@@ -217,8 +213,10 @@ export default function CareerSection() {
         throw new Error(result.error || 'Failed to update career entry');
       }
 
-      toggleEditing(entryId);
-      await fetchCareerData();
+      // Update local state
+      setCareerEntries((prev) =>
+        prev.map((e) => (e.id === entryId ? { ...e, isEditing: false } : e))
+      );
     } catch (error) {
       console.error('Error updating career entry:', error);
       setError(
@@ -233,16 +231,14 @@ export default function CareerSection() {
     setError(null);
 
     try {
-      const result = await careerActions({
-        type: 'DELETE',
-        id: entryId,
-      });
+      const result = await careerActions({ type: 'DELETE', id: entryId });
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to delete career entry');
       }
 
-      await fetchCareerData();
+      // Remove from local state
+      setCareerEntries((prev) => prev.filter((e) => e.id !== entryId));
     } catch (error) {
       console.error('Error deleting career entry:', error);
       setError(
@@ -269,6 +265,7 @@ export default function CareerSection() {
         throw new Error(result.error || 'Failed to upload logo');
       }
 
+      // Refresh data to get updated logo
       await fetchCareerData();
     } catch (error) {
       console.error('Error uploading logo:', error);
@@ -278,888 +275,612 @@ export default function CareerSection() {
     }
   };
 
-  // Drag and drop handlers
-  const handleDragOver = (e: React.DragEvent, entryId: number) => {
+  const handleDragOver = (e: React.DragEvent, entryId: string) => {
     e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [`logo-${entryId}`]: true }));
+    setDragStates((prev) => ({ ...prev, [entryId]: true }));
   };
 
-  const handleDragLeave = (e: React.DragEvent, entryId: number) => {
+  const handleDragLeave = (e: React.DragEvent, entryId: string) => {
     e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [`logo-${entryId}`]: false }));
+    setDragStates((prev) => ({ ...prev, [entryId]: false }));
   };
 
-  const handleDrop = (e: React.DragEvent, entryId: number) => {
+  const handleDrop = (e: React.DragEvent, entryId: string) => {
     e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [`logo-${entryId}`]: false }));
+    setDragStates((prev) => ({ ...prev, [entryId]: false }));
 
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        handleLogoUpload(entryId, file);
+    const imageFile = files.find((file) => file.type.startsWith('image/'));
+
+    if (imageFile) {
+      if (entryId === 'new') {
+        setNewEntryLogo(imageFile);
+      } else {
+        handleLogoUpload(parseInt(entryId), imageFile);
       }
     }
   };
 
-  // New entry logo handlers
-  const handleNewEntryDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, 'new-entry-logo': true }));
-  };
-
-  const handleNewEntryDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, 'new-entry-logo': false }));
-  };
-
-  const handleNewEntryDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, 'new-entry-logo': false }));
-
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        setNewEntryLogo(file);
-      }
-    }
-  };
-
-  const handleNewEntryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    entryId: string
+  ) => {
     const file = e.target.files?.[0];
-    if (file?.type.startsWith('image/')) {
-      setNewEntryLogo(file);
+    if (file) {
+      if (entryId === 'new') {
+        setNewEntryLogo(file);
+      } else {
+        handleLogoUpload(parseInt(entryId), file);
+      }
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-main" />
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-main"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-main mb-4">
-          Career Section Editor
-        </h1>
-        <p className="text-lighttext2 text-lg">
-          Manage your professional experience and career entries
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
+          Career Entries
+        </h2>
+        <button
+          onClick={() => setIsCreating(!isCreating)}
+          className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary transition-colors border-2 border-main hover:border-secondary"
+        >
+          <Plus className="h-4 w-4" />
+          Add Career Entry
+        </button>
       </div>
 
-      {/* Create New Career Entry */}
-      <div className="bg-darkergray rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-main mb-4">
-          Add New Career Entry
-        </h2>
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label
-              htmlFor="new-title"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Job Title *
-            </label>
-            <input
-              id="new-title"
-              type="text"
-              value={newCareerEntry.title}
-              onChange={(e) => handleNewEntryChange('title', e.target.value)}
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-              placeholder="e.g., Senior Developer"
-            />
+      {isCreating && (
+        <div className="p-6 bg-bglight dark:bg-darkgray rounded-lg border-2 border-main dark:border-main">
+          <h3 className="text-lg font-semibold mb-4 text-darktext dark:text-lighttext">
+            Create New Career Entry
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Job Title
+              </label>
+              <input
+                type="text"
+                value={newCareerEntry.title}
+                onChange={(e) => handleNewEntryChange('title', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter job title"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Company
+              </label>
+              <input
+                type="text"
+                value={newCareerEntry.company}
+                onChange={(e) => handleNewEntryChange('company', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter company name"
+              />
+            </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="new-company"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Company *
-            </label>
-            <input
-              id="new-company"
-              type="text"
-              value={newCareerEntry.company}
-              onChange={(e) => handleNewEntryChange('company', e.target.value)}
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-              placeholder="e.g., Tech Corp"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-website"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-main dark:text-main mb-1">
               Website URL
             </label>
             <input
-              id="new-website"
               type="url"
               value={newCareerEntry.website_url}
-              onChange={(e) =>
-                handleNewEntryChange('website_url', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
+              onChange={(e) => handleNewEntryChange('website_url', e.target.value)}
+              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
               placeholder="https://company.com"
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="new-location-en"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Location (EN) *
-            </label>
-            <input
-              id="new-location-en"
-              type="text"
-              value={newCareerEntry.location_en}
-              onChange={(e) =>
-                handleNewEntryChange('location_en', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-              placeholder="e.g., New York, NY"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                English Location
+              </label>
+              <input
+                type="text"
+                value={newCareerEntry.location_en}
+                onChange={(e) => handleNewEntryChange('location_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter location"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Italian Location
+              </label>
+              <input
+                type="text"
+                value={newCareerEntry.location_it}
+                onChange={(e) => handleNewEntryChange('location_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter location"
+              />
+            </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="new-location-it"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Location (IT) *
-            </label>
-            <input
-              id="new-location-it"
-              type="text"
-              value={newCareerEntry.location_it}
-              onChange={(e) =>
-                handleNewEntryChange('location_it', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-              placeholder="e.g., Milano, Italia"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-remote"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Remote Type *
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-main dark:text-main mb-1">
+              Remote Type
             </label>
             <select
-              id="new-remote"
               value={newCareerEntry.remote}
-              onChange={(e) =>
-                handleNewEntryChange(
-                  'remote',
-                  e.target.value as 'full' | 'hybrid' | 'onSite'
-                )
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
+              onChange={(e) => handleNewEntryChange('remote', e.target.value as 'full' | 'hybrid' | 'onSite')}
+              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
             >
-              <option value="onSite">On Site</option>
-              <option value="hybrid">Hybrid</option>
               <option value="full">Full Remote</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="onSite">On Site</option>
             </select>
           </div>
 
-          <div>
-            <label
-              htmlFor="new-start-date"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Start Date *
-            </label>
-            <input
-              id="new-start-date"
-              type="date"
-              value={newCareerEntry.startDate}
-              onChange={(e) =>
-                handleNewEntryChange('startDate', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={newCareerEntry.startDate}
+                onChange={(e) => handleNewEntryChange('startDate', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={newCareerEntry.endDate || ''}
+                onChange={(e) => handleNewEntryChange('endDate', e.target.value || null)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+              />
+            </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="new-end-date"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              End Date
-            </label>
-            <input
-              id="new-end-date"
-              type="date"
-              value={newCareerEntry.endDate || ''}
-              onChange={(e) =>
-                handleNewEntryChange('endDate', e.target.value || null)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                English Description
+              </label>
+              <textarea
+                value={newCareerEntry.description_en}
+                onChange={(e) => handleNewEntryChange('description_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={3}
+                placeholder="Enter job description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Italian Description
+              </label>
+              <textarea
+                value={newCareerEntry.description_it}
+                onChange={(e) => handleNewEntryChange('description_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={3}
+                placeholder="Enter job description"
+              />
+            </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="new-skills"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                English Company Description
+              </label>
+              <textarea
+                value={newCareerEntry.company_description_en}
+                onChange={(e) => handleNewEntryChange('company_description_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={3}
+                placeholder="Enter company description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Italian Company Description
+              </label>
+              <textarea
+                value={newCareerEntry.company_description_it}
+                onChange={(e) => handleNewEntryChange('company_description_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={3}
+                placeholder="Enter company description"
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-main dark:text-main mb-1">
               Skills
             </label>
             <input
-              id="new-skills"
               type="text"
               value={newCareerEntry.skills}
               onChange={(e) => handleNewEntryChange('skills', e.target.value)}
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-              placeholder="React, TypeScript, Node.js"
+              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+              placeholder="Enter skills (comma separated)"
             />
           </div>
-        </div>
 
-        <div className="mt-4 space-y-4">
-          <div>
-            <label
-              htmlFor="new-description-en"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Description (EN) *
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-main dark:text-main mb-2">
+              Company Logo
             </label>
-            <textarea
-              id="new-description-en"
-              value={newCareerEntry.description_en}
-              onChange={(e) =>
-                handleNewEntryChange('description_en', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[100px]"
-              placeholder="Describe your role and achievements..."
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-description-it"
-              className="block text-sm font-medium text-lighttext mb-2"
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                dragStates['new']
+                  ? 'border-main bg-main/10 dark:bg-main/20'
+                  : 'border-main dark:border-main'
+              }`}
+              onDragOver={(e) => handleDragOver(e, 'new')}
+              onDragLeave={(e) => handleDragLeave(e, 'new')}
+              onDrop={(e) => handleDrop(e, 'new')}
             >
-              Description (IT) *
-            </label>
-            <textarea
-              id="new-description-it"
-              value={newCareerEntry.description_it}
-              onChange={(e) =>
-                handleNewEntryChange('description_it', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[100px]"
-              placeholder="Descrivi il tuo ruolo e i risultati..."
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-company-desc-en"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Company Description (EN)
-            </label>
-            <textarea
-              id="new-company-desc-en"
-              value={newCareerEntry.company_description_en}
-              onChange={(e) =>
-                handleNewEntryChange('company_description_en', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
-              placeholder="Brief description of the company..."
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-company-desc-it"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Company Description (IT)
-            </label>
-            <textarea
-              id="new-company-desc-it"
-              value={newCareerEntry.company_description_it}
-              onChange={(e) =>
-                handleNewEntryChange('company_description_it', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
-              placeholder="Breve descrizione dell'azienda..."
-            />
-          </div>
-        </div>
-
-        {/* Logo Upload for New Entry */}
-        <div className="mt-4">
-          <label
-            htmlFor="new-entry-logo-upload"
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Company Logo
-          </label>
-          <div
-            className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
-            onDragOver={handleNewEntryDragOver}
-            onDragLeave={handleNewEntryDragLeave}
-            onDrop={handleNewEntryDrop}
-          >
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleNewEntryFileChange}
-              className="hidden"
-              id="new-entry-logo-upload"
-            />
-            <label htmlFor="new-entry-logo-upload" className="cursor-pointer">
               {newEntryLogo ? (
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <FileText className="w-8 h-8 mx-auto mb-2 text-main" />
-                    <p className="text-lighttext font-medium">
-                      {newEntryLogo.name}
-                    </p>
-                    <p className="text-sm text-lighttext2">
-                      Click to change logo
-                    </p>
-                  </div>
+                <div className="space-y-2">
+                  <Image
+                    src={URL.createObjectURL(newEntryLogo)}
+                    alt="Preview"
+                    width={200}
+                    height={200}
+                    className="mx-auto rounded-lg"
+                  />
+                  <p className="text-sm text-darktext dark:text-lighttext2">
+                    {newEntryLogo.name}
+                  </p>
                 </div>
               ) : (
-                <>
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
-                  <p className="text-lighttext2 font-medium">
-                    Drop logo here or click to browse
+                <div className="space-y-2">
+                  <Briefcase className="h-8 w-8 mx-auto text-main dark:text-main" />
+                  <p className="text-sm text-darktext dark:text-lighttext2">
+                    Drag and drop a logo here, or click to select
                   </p>
-                </>
-              )}
-            </label>
-            {dragStates['new-entry-logo'] && (
-              <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
-                <div className="text-center text-white">
-                  <Upload className="w-12 h-12 mx-auto mb-2" />
-                  <p className="font-medium">Drop logo here</p>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <button
-            type="button"
-            onClick={handleCreateCareer}
-            disabled={
-              isCreating || !newCareerEntry.title || !newCareerEntry.company
-            }
-            className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            <Plus className="w-4 h-4" />
-            {isCreating ? 'Creating...' : 'Create Career Entry'}
-          </button>
-        </div>
-      </div>
-
-      {/* Manage Career Entries */}
-      <div className="bg-darkergray rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-main mb-4">
-          Manage Career Entries
-        </h2>
-
-        {careerEntries.length === 0 ? (
-          <div className="text-center py-8 text-lighttext2">
-            No career entries found. Add your first career entry above.
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {careerEntries.map((entry) => (
-              <div
-                key={entry.id}
-                className="bg-darkestgray rounded-lg p-6 border border-lighttext2"
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileInputChange(e, 'new')}
+                className="hidden"
+                id="new-entry-logo"
+              />
+              <label
+                htmlFor="new-entry-logo"
+                className="mt-2 inline-block px-4 py-2 bg-secondary text-white rounded-lg cursor-pointer hover:bg-tertiary transition-colors border-2 border-secondary hover:border-tertiary"
               >
-                {entry.isEditing ? (
-                  <EditCareerForm
-                    entry={entry}
-                    onSave={() => handleUpdateCareer(entry.id)}
-                    onCancel={() => toggleEditing(entry.id)}
-                    onInputChange={handleInputChange}
-                    onLogoUpload={handleLogoUpload}
-                    dragStates={dragStates}
-                    handleDragOver={handleDragOver}
-                    handleDragLeave={handleDragLeave}
-                    handleDrop={handleDrop}
-                  />
-                ) : (
-                  <CareerDisplay
-                    entry={entry}
-                    onEdit={() => toggleEditing(entry.id)}
-                    onDelete={() => handleDeleteCareer(entry.id)}
-                  />
-                )}
-              </div>
-            ))}
+                Select Logo
+              </label>
+            </div>
           </div>
-        )}
-      </div>
 
-      {error && (
-        <div className="mt-6 text-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
-          {error}
+          <div className="flex gap-2">
+            <button
+              onClick={handleCreateCareer}
+              disabled={isCreating}
+              className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary disabled:opacity-50 transition-colors border-2 border-main hover:border-secondary"
+            >
+              <Save className="h-4 w-4" />
+              {isCreating ? 'Creating...' : 'Create Career Entry'}
+            </button>
+            <button
+              onClick={() => setIsCreating(false)}
+              className="px-4 py-2 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext rounded-lg hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border-2 border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
-    </div>
-  );
-}
 
-function CareerDisplay({
-  entry,
-  onEdit,
-  onDelete,
-}: {
-  entry: CareerEntryWithEditing;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="flex items-start justify-between">
-      <div className="flex items-start gap-4 flex-1">
-        {entry.logo && (
-          <div className="flex-shrink-0">
-            <Image
-              src={entry.logo}
-              width={60}
-              height={60}
-              className="rounded-lg"
-              alt={`${entry.company} logo`}
-              placeholder={entry.blurhashURL ? 'blur' : 'empty'}
-              blurDataURL={entry.blurhashURL || undefined}
-            />
-          </div>
-        )}
-
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Briefcase className="w-4 h-4 text-lighttext2" />
-            <h3 className="text-lg font-bold text-lighttext">{entry.title}</h3>
-          </div>
-
-          <div className="flex items-center gap-2 mb-1">
-            <Globe className="w-4 h-4 text-lighttext2" />
-            <span className="text-lighttext font-medium">{entry.company}</span>
-            {entry.website_url && (
-              <a
-                href={entry.website_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-main hover:underline text-sm"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {careerEntries.map((entry) => (
+          <div
+            key={entry.id}
+            className="bg-bglight dark:bg-darkgray rounded-lg border-2 border-main dark:border-main overflow-hidden"
+          >
+            <div className="relative">
+              <div
+                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                  dragStates[entry.id.toString()]
+                    ? 'border-main bg-main/10 dark:bg-main/20'
+                    : 'border-main dark:border-main'
+                }`}
+                onDragOver={(e) => handleDragOver(e, entry.id.toString())}
+                onDragLeave={(e) => handleDragLeave(e, entry.id.toString())}
+                onDrop={(e) => handleDrop(e, entry.id.toString())}
               >
-                (Website)
-              </a>
-            )}
-          </div>
-
-          <div className="flex items-center gap-4 text-sm text-lighttext2 mb-2">
-            <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              <span>{entry.location_en}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              <span>
-                {new Date(entry.startDate).toLocaleDateString()} -{' '}
-                {entry.endDate
-                  ? new Date(entry.endDate).toLocaleDateString()
-                  : 'Present'}
-              </span>
-            </div>
-            <span className="capitalize">{entry.remote}</span>
-          </div>
-
-          {entry.skills && (
-            <div className="flex items-center gap-1 text-sm text-lighttext2 mb-2">
-              <Code className="w-3 h-3" />
-              <span>{entry.skills}</span>
-            </div>
-          )}
-
-          <div className="text-sm text-lighttext2 line-clamp-2">
-            {entry.description_en}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onEdit}
-          className="p-2 text-lighttext2 hover:text-main transition-colors"
-        >
-          <Edit3 className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="p-2 text-lighttext2 hover:text-red-500 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function EditCareerForm({
-  entry,
-  onSave,
-  onCancel,
-  onInputChange,
-  onLogoUpload,
-  dragStates,
-  handleDragOver,
-  handleDragLeave,
-  handleDrop,
-}: {
-  entry: CareerEntryWithEditing;
-  onSave: () => void;
-  onCancel: () => void;
-  onInputChange: (
-    entryId: number,
-    field: string,
-    value: string | boolean | null
-  ) => void;
-  onLogoUpload: (entryId: number, file: File) => void;
-  dragStates: Record<string, boolean>;
-  handleDragOver: (e: React.DragEvent, entryId: number) => void;
-  handleDragLeave: (e: React.DragEvent, entryId: number) => void;
-  handleDrop: (e: React.DragEvent, entryId: number) => void;
-}) {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file?.type.startsWith('image/')) {
-      onLogoUpload(entry.id, file);
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div>
-          <label
-            htmlFor={`edit-title-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Job Title *
-          </label>
-          <input
-            id={`edit-title-${entry.id}`}
-            type="text"
-            value={entry.title}
-            onChange={(e) => onInputChange(entry.id, 'title', e.target.value)}
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-company-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Company *
-          </label>
-          <input
-            id={`edit-company-${entry.id}`}
-            type="text"
-            value={entry.company}
-            onChange={(e) => onInputChange(entry.id, 'company', e.target.value)}
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-website-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Website URL
-          </label>
-          <input
-            id={`edit-website-${entry.id}`}
-            type="url"
-            value={entry.website_url}
-            onChange={(e) =>
-              onInputChange(entry.id, 'website_url', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-location-en-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Location (EN) *
-          </label>
-          <input
-            id={`edit-location-en-${entry.id}`}
-            type="text"
-            value={entry.location_en}
-            onChange={(e) =>
-              onInputChange(entry.id, 'location_en', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-location-it-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Location (IT) *
-          </label>
-          <input
-            id={`edit-location-it-${entry.id}`}
-            type="text"
-            value={entry.location_it}
-            onChange={(e) =>
-              onInputChange(entry.id, 'location_it', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-remote-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Remote Type *
-          </label>
-          <select
-            id={`edit-remote-${entry.id}`}
-            value={entry.remote}
-            onChange={(e) =>
-              onInputChange(
-                entry.id,
-                'remote',
-                e.target.value as 'full' | 'hybrid' | 'onSite'
-              )
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          >
-            <option value="onSite">On Site</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="full">Full Remote</option>
-          </select>
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-start-date-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Start Date *
-          </label>
-          <input
-            id={`edit-start-date-${entry.id}`}
-            type="date"
-            value={entry.startDate}
-            onChange={(e) =>
-              onInputChange(entry.id, 'startDate', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-end-date-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            End Date
-          </label>
-          <input
-            id={`edit-end-date-${entry.id}`}
-            type="date"
-            value={entry.endDate || ''}
-            onChange={(e) =>
-              onInputChange(entry.id, 'endDate', e.target.value || null)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-skills-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Skills
-          </label>
-          <input
-            id={`edit-skills-${entry.id}`}
-            type="text"
-            value={entry.skills}
-            onChange={(e) => onInputChange(entry.id, 'skills', e.target.value)}
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Logo Upload */}
-      <div>
-        <label
-          htmlFor={`logo-upload-${entry.id}`}
-          className="block text-sm font-medium text-lighttext mb-2"
-        >
-          Company Logo
-        </label>
-        <div
-          className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
-          onDragOver={(e) => handleDragOver(e, entry.id)}
-          onDragLeave={(e) => handleDragLeave(e, entry.id)}
-          onDrop={(e) => handleDrop(e, entry.id)}
-        >
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-            id={`logo-upload-${entry.id}`}
-          />
-          <label htmlFor={`logo-upload-${entry.id}`} className="cursor-pointer">
-            {entry.logo ? (
-              <div className="flex items-center justify-center">
-                <Image
-                  src={entry.logo}
-                  width={80}
-                  height={80}
-                  className="rounded-lg"
-                  alt={`${entry.company} logo`}
-                  placeholder={entry.blurhashURL ? 'blur' : 'empty'}
-                  blurDataURL={entry.blurhashURL || undefined}
+                {entry.logo ? (
+                  <Image
+                    src={entry.logo}
+                    alt={entry.company}
+                    width={200}
+                    height={200}
+                    className="w-full h-32 object-contain rounded-lg"
+                  />
+                ) : (
+                  <div className="h-32 flex items-center justify-center bg-bglight dark:bg-darkergray rounded-lg">
+                    <Briefcase className="h-8 w-8 text-main dark:text-main" />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileInputChange(e, entry.id.toString())}
+                  className="hidden"
+                  id={`logo-${entry.id}`}
                 />
-              </div>
-            ) : (
-              <>
-                <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
-                <p className="text-lighttext2 font-medium">
-                  Drop logo here or click to browse
-                </p>
-              </>
-            )}
-          </label>
-          {dragStates[`logo-${entry.id}`] && (
-            <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
-              <div className="text-center text-white">
-                <Upload className="w-12 h-12 mx-auto mb-2" />
-                <p className="font-medium">Drop logo here</p>
+                <label
+                  htmlFor={`logo-${entry.id}`}
+                  className="mt-2 inline-block px-3 py-1 bg-secondary text-white rounded text-sm cursor-pointer hover:bg-tertiary transition-colors border border-secondary hover:border-tertiary"
+                >
+                  <Upload className="h-3 w-3 inline mr-1" />
+                  Change Logo
+                </label>
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-darktext dark:text-lighttext">
+                  {entry.title}
+                </h3>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() =>
+                      handleInputChange(entry.id, 'isEditing', !entry.isEditing)
+                    }
+                    className="p-1 text-main hover:text-secondary transition-colors"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCareer(entry.id)}
+                    className="p-1 text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-sm text-darktext dark:text-lighttext2 mb-1">
+                {entry.company}
+              </p>
+
+              <div className="flex items-center gap-2 text-xs text-darktext dark:text-lighttext2">
+                <Calendar className="h-3 w-3" />
+                <span>
+                  {new Date(entry.startDate).toLocaleDateString()} - {entry.endDate ? new Date(entry.endDate).toLocaleDateString() : 'Present'}
+                </span>
+              </div>
+
+              {entry.isEditing && (
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Job Title
+                    </label>
+                    <input
+                      type="text"
+                      value={entry.title}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'title', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Company
+                    </label>
+                    <input
+                      type="text"
+                      value={entry.company}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'company', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Website URL
+                    </label>
+                    <input
+                      type="url"
+                      value={entry.website_url}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'website_url', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      English Location
+                    </label>
+                    <input
+                      type="text"
+                      value={entry.location_en}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'location_en', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Italian Location
+                    </label>
+                    <input
+                      type="text"
+                      value={entry.location_it}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'location_it', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Remote Type
+                    </label>
+                    <select
+                      value={entry.remote}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'remote', e.target.value as 'full' | 'hybrid' | 'onSite')
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    >
+                      <option value="full">Full Remote</option>
+                      <option value="hybrid">Hybrid</option>
+                      <option value="onSite">On Site</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={entry.startDate}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'startDate', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={entry.endDate || ''}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'endDate', e.target.value || null)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Skills
+                    </label>
+                    <input
+                      type="text"
+                      value={entry.skills}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'skills', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      English Description
+                    </label>
+                    <textarea
+                      value={entry.description_en}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'description_en', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Italian Description
+                    </label>
+                    <textarea
+                      value={entry.description_it}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'description_it', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      English Company Description
+                    </label>
+                    <textarea
+                      value={entry.company_description_en}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'company_description_en', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Italian Company Description
+                    </label>
+                    <textarea
+                      value={entry.company_description_it}
+                      onChange={(e) =>
+                        handleInputChange(entry.id, 'company_description_it', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      rows={2}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleUpdateCareer(entry.id)}
+                      className="flex items-center gap-1 px-3 py-1 bg-main text-white text-sm rounded hover:bg-secondary transition-colors border border-main hover:border-secondary"
+                    >
+                      <Save className="h-3 w-3" />
+                      Save
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleInputChange(entry.id, 'isEditing', false)
+                      }
+                      className="px-3 py-1 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext text-sm rounded hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label
-            htmlFor={`edit-description-en-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Description (EN) *
-          </label>
-          <textarea
-            id={`edit-description-en-${entry.id}`}
-            value={entry.description_en}
-            onChange={(e) =>
-              onInputChange(entry.id, 'description_en', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[100px]"
-          />
+      {careerEntries.length === 0 && !isCreating && (
+        <div className="text-center py-8">
+          <Briefcase className="h-12 w-12 mx-auto text-main dark:text-main mb-4" />
+          <p className="text-darktext dark:text-lighttext2">
+            No career entries found. Create your first career entry!
+          </p>
         </div>
-
-        <div>
-          <label
-            htmlFor={`edit-description-it-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Description (IT) *
-          </label>
-          <textarea
-            id={`edit-description-it-${entry.id}`}
-            value={entry.description_it}
-            onChange={(e) =>
-              onInputChange(entry.id, 'description_it', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[100px]"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-company-desc-en-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Company Description (EN)
-          </label>
-          <textarea
-            id={`edit-company-desc-en-${entry.id}`}
-            value={entry.company_description_en}
-            onChange={(e) =>
-              onInputChange(entry.id, 'company_description_en', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-company-desc-it-${entry.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Company Description (IT)
-          </label>
-          <textarea
-            id={`edit-company-desc-it-${entry.id}`}
-            value={entry.company_description_it}
-            onChange={(e) =>
-              onInputChange(entry.id, 'company_description_it', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onSave}
-          className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
-        >
-          <Save className="w-4 h-4" />
-          Save Changes
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200"
-        >
-          <X className="w-4 h-4" />
-          Cancel
-        </button>
-      </div>
+      )}
     </div>
   );
 }

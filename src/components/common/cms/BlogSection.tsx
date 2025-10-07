@@ -79,7 +79,9 @@ export default function BlogSection() {
     } catch (error) {
       console.error('Error fetching blog data:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to fetch blog data'
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch blog data'
       );
     } finally {
       setIsLoading(false);
@@ -98,40 +100,43 @@ export default function BlogSection() {
     );
   };
 
-  const handleNewPostChange = (field: string, value: string | null) => {
+  const handleNewPostInputChange = (field: string, value: string) => {
     setNewBlogPost((prev) => ({ ...prev, [field]: value }));
   };
 
-  const toggleEditing = (postId: number) => {
-    setBlogPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId ? { ...post, isEditing: !post.isEditing } : post
-      )
-    );
-  };
-
   const handleCreateBlog = async () => {
+    if (!newPostImage) {
+      setError('Please select an image for the blog post');
+      return;
+    }
+
     setIsCreating(true);
     setError(null);
 
     try {
       const result = await blogActions({
         type: 'CREATE',
-        data: newBlogPost,
+        data: {
+          ...newBlogPost,
+          image: '', // Will be set after image upload
+        },
       });
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to create blog post');
       }
 
-      // Upload image if provided
-      if (newPostImage && result.data) {
-        const createdPost = result.data as BlogPost;
-        await blogActions({
-          type: 'UPLOAD_IMAGE',
-          blogId: createdPost.id,
-          file: newPostImage,
-        });
+      const newPost = result.data as BlogPost;
+
+      // Upload image
+      const imageResult = await blogActions({
+        type: 'UPLOAD_IMAGE',
+        blogId: newPost.id,
+        file: newPostImage,
+      });
+
+      if (!imageResult.success) {
+        throw new Error(imageResult.error || 'Failed to upload image');
       }
 
       // Reset form
@@ -147,6 +152,7 @@ export default function BlogSection() {
         post_tags: '',
       });
       setNewPostImage(null);
+      setIsCreating(false);
 
       // Refresh data
       await fetchBlogData();
@@ -155,30 +161,27 @@ export default function BlogSection() {
       setError(
         error instanceof Error ? error.message : 'Failed to create blog post'
       );
-    } finally {
       setIsCreating(false);
     }
   };
 
   const handleUpdateBlog = async (postId: number) => {
+    const post = blogPosts.find((p) => p.id === postId);
+    if (!post) return;
+
     setError(null);
 
     try {
-      const post = blogPosts.find((p) => p.id === postId);
-      if (!post) return;
-
       const result = await blogActions({
         type: 'UPDATE',
         id: postId,
         data: {
           title_en: post.title_en,
           title_it: post.title_it,
-          image: post.image,
           description_en: post.description_en,
           description_it: post.description_it,
           body_en: post.body_en,
           body_it: post.body_it,
-          blurhashURL: post.blurhashURL,
           post_tags: post.post_tags,
         },
       });
@@ -187,8 +190,10 @@ export default function BlogSection() {
         throw new Error(result.error || 'Failed to update blog post');
       }
 
-      toggleEditing(postId);
-      await fetchBlogData();
+      // Update local state
+      setBlogPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, isEditing: false } : p))
+      );
     } catch (error) {
       console.error('Error updating blog post:', error);
       setError(
@@ -203,16 +208,14 @@ export default function BlogSection() {
     setError(null);
 
     try {
-      const result = await blogActions({
-        type: 'DELETE',
-        id: postId,
-      });
+      const result = await blogActions({ type: 'DELETE', id: postId });
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to delete blog post');
       }
 
-      await fetchBlogData();
+      // Remove from local state
+      setBlogPosts((prev) => prev.filter((p) => p.id !== postId));
     } catch (error) {
       console.error('Error deleting blog post:', error);
       setError(
@@ -239,6 +242,7 @@ export default function BlogSection() {
         throw new Error(result.error || 'Failed to upload image');
       }
 
+      // Refresh data to get updated image
       await fetchBlogData();
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -248,627 +252,455 @@ export default function BlogSection() {
     }
   };
 
-  // Drag and drop handlers
-  const handleDragOver = (e: React.DragEvent, postId: number) => {
+  const handleDragOver = (e: React.DragEvent, postId: string) => {
     e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [`image-${postId}`]: true }));
+    setDragStates((prev) => ({ ...prev, [postId]: true }));
   };
 
-  const handleDragLeave = (e: React.DragEvent, postId: number) => {
+  const handleDragLeave = (e: React.DragEvent, postId: string) => {
     e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [`image-${postId}`]: false }));
+    setDragStates((prev) => ({ ...prev, [postId]: false }));
   };
 
-  const handleDrop = (e: React.DragEvent, postId: number) => {
+  const handleDrop = (e: React.DragEvent, postId: string) => {
     e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [`image-${postId}`]: false }));
+    setDragStates((prev) => ({ ...prev, [postId]: false }));
 
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        handleImageUpload(postId, file);
+    const imageFile = files.find((file) => file.type.startsWith('image/'));
+
+    if (imageFile) {
+      if (postId === 'new') {
+        setNewPostImage(imageFile);
+      } else {
+        handleImageUpload(parseInt(postId), imageFile);
       }
     }
   };
 
-  // New post image handlers
-  const handleNewPostDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, 'new-post-image': true }));
-  };
-
-  const handleNewPostDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, 'new-post-image': false }));
-  };
-
-  const handleNewPostDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, 'new-post-image': false }));
-
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        setNewPostImage(file);
-      }
-    }
-  };
-
-  const handleNewPostFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    postId: string
+  ) => {
     const file = e.target.files?.[0];
-    if (file?.type.startsWith('image/')) {
-      setNewPostImage(file);
+    if (file) {
+      if (postId === 'new') {
+        setNewPostImage(file);
+      } else {
+        handleImageUpload(parseInt(postId), file);
+      }
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-main" />
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-main mb-4">
-          Blog Section Editor
-        </h1>
-        <p className="text-lighttext2 text-lg">
-          Manage your blog posts and share your thoughts
-        </p>
-      </div>
-
-      {/* Create New Blog Post */}
-      <div className="bg-darkergray rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-main mb-4">Add New Blog Post</h2>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="new-title-en"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Title (EN) *
-            </label>
-            <input
-              id="new-title-en"
-              type="text"
-              value={newBlogPost.title_en}
-              onChange={(e) => handleNewPostChange('title_en', e.target.value)}
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-              placeholder="e.g., My First Blog Post"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-title-it"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Title (IT) *
-            </label>
-            <input
-              id="new-title-it"
-              type="text"
-              value={newBlogPost.title_it}
-              onChange={(e) => handleNewPostChange('title_it', e.target.value)}
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-              placeholder="e.g., Il Mio Primo Post"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-post-tags"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Tags
-            </label>
-            <input
-              id="new-post-tags"
-              type="text"
-              value={newBlogPost.post_tags}
-              onChange={(e) => handleNewPostChange('post_tags', e.target.value)}
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-              placeholder="React, TypeScript, Web Development"
-            />
-          </div>
-        </div>
-
-        <div className="mt-4 space-y-4">
-          <div>
-            <label
-              htmlFor="new-description-en"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Description (EN) *
-            </label>
-            <textarea
-              id="new-description-en"
-              value={newBlogPost.description_en}
-              onChange={(e) =>
-                handleNewPostChange('description_en', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
-              placeholder="Brief description of the blog post..."
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-description-it"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Description (IT) *
-            </label>
-            <textarea
-              id="new-description-it"
-              value={newBlogPost.description_it}
-              onChange={(e) =>
-                handleNewPostChange('description_it', e.target.value)
-              }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
-              placeholder="Breve descrizione del post..."
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-body-en"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Full Content (EN) *
-            </label>
-            <textarea
-              id="new-body-en"
-              value={newBlogPost.body_en}
-              onChange={(e) => handleNewPostChange('body_en', e.target.value)}
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[150px]"
-              placeholder="Write your blog post content with markdown support..."
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="new-body-it"
-              className="block text-sm font-medium text-lighttext mb-2"
-            >
-              Full Content (IT) *
-            </label>
-            <textarea
-              id="new-body-it"
-              value={newBlogPost.body_it}
-              onChange={(e) => handleNewPostChange('body_it', e.target.value)}
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[150px]"
-              placeholder="Scrivi il contenuto del post con supporto markdown..."
-            />
-          </div>
-        </div>
-
-        {/* Image Upload for New Post */}
-        <div className="mt-4">
-          <label
-            htmlFor="new-post-image-upload"
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Blog Post Image
-          </label>
-          <div
-            className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
-            onDragOver={handleNewPostDragOver}
-            onDragLeave={handleNewPostDragLeave}
-            onDrop={handleNewPostDrop}
-          >
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleNewPostFileChange}
-              className="hidden"
-              id="new-post-image-upload"
-            />
-            <label htmlFor="new-post-image-upload" className="cursor-pointer">
-              {newPostImage ? (
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <ImageIcon className="w-8 h-8 mx-auto mb-2 text-main" />
-                    <p className="text-lighttext font-medium">
-                      {newPostImage.name}
-                    </p>
-                    <p className="text-sm text-lighttext2">
-                      Click to change image
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
-                  <p className="text-lighttext2 font-medium">
-                    Drop image here or click to browse
-                  </p>
-                </>
-              )}
-            </label>
-            {dragStates['new-post-image'] && (
-              <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
-                <div className="text-center text-white">
-                  <Upload className="w-12 h-12 mx-auto mb-2" />
-                  <p className="font-medium">Drop image here</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <button
-            type="button"
-            onClick={handleCreateBlog}
-            disabled={
-              isCreating ||
-              !newBlogPost.title_en ||
-              !newBlogPost.title_it ||
-              !newBlogPost.description_en ||
-              !newBlogPost.description_it ||
-              !newBlogPost.body_en ||
-              !newBlogPost.body_it
-            }
-            className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            <Plus className="w-4 h-4" />
-            {isCreating ? 'Creating...' : 'Create Blog Post'}
-          </button>
-        </div>
-      </div>
-
-      {/* Manage Blog Posts */}
-      <div className="bg-darkergray rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-main mb-4">Manage Blog Posts</h2>
-
-        {blogPosts.length === 0 ? (
-          <div className="text-center py-8 text-lighttext2">
-            No blog posts found. Add your first blog post above.
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {blogPosts.map((post) => (
-              <div
-                key={post.id}
-                className="bg-darkestgray rounded-lg p-6 border border-lighttext2"
-              >
-                {post.isEditing ? (
-                  <EditBlogForm
-                    post={post}
-                    onSave={() => handleUpdateBlog(post.id)}
-                    onCancel={() => toggleEditing(post.id)}
-                    onInputChange={handleInputChange}
-                    onImageUpload={handleImageUpload}
-                    dragStates={dragStates}
-                    handleDragOver={handleDragOver}
-                    handleDragLeave={handleDragLeave}
-                    handleDrop={handleDrop}
-                  />
-                ) : (
-                  <BlogDisplay
-                    post={post}
-                    onEdit={() => toggleEditing(post.id)}
-                    onDelete={() => handleDeleteBlog(post.id)}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
+          Blog Posts
+        </h2>
+        <button
+          onClick={() => setIsCreating(!isCreating)}
+          className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary transition-colors border-2 border-main hover:border-secondary"
+        >
+          <Plus className="h-4 w-4" />
+          Add Blog Post
+        </button>
       </div>
 
       {error && (
-        <div className="mt-6 text-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
-          {error}
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
-    </div>
-  );
-}
 
-function BlogDisplay({
-  post,
-  onEdit,
-  onDelete,
-}: {
-  post: BlogPostWithEditing;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="flex items-start justify-between">
-      <div className="flex items-start gap-4 flex-1">
-        {post.image && (
-          <div className="flex-shrink-0">
-            <Image
-              src={post.image}
-              width={80}
-              height={80}
-              className="rounded-lg object-cover"
-              alt={`${post.title_en} preview`}
-              placeholder={post.blurhashURL ? 'blur' : 'empty'}
-              blurDataURL={post.blurhashURL || undefined}
+      {isCreating && (
+        <div className="p-6 bg-bglight dark:bg-darkgray rounded-lg border-2 border-main dark:border-main">
+          <h3 className="text-lg font-semibold mb-4 text-darktext dark:text-lighttext">
+            Create New Blog Post
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                English Title
+              </label>
+              <input
+                type="text"
+                value={newBlogPost.title_en}
+                onChange={(e) => handleNewPostInputChange('title_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter English title"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Italian Title
+              </label>
+              <input
+                type="text"
+                value={newBlogPost.title_it}
+                onChange={(e) => handleNewPostInputChange('title_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter Italian title"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                English Description
+              </label>
+              <textarea
+                value={newBlogPost.description_en}
+                onChange={(e) => handleNewPostInputChange('description_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={3}
+                placeholder="Enter English description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Italian Description
+              </label>
+              <textarea
+                value={newBlogPost.description_it}
+                onChange={(e) => handleNewPostInputChange('description_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={3}
+                placeholder="Enter Italian description"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                English Content
+              </label>
+              <textarea
+                value={newBlogPost.body_en}
+                onChange={(e) => handleNewPostInputChange('body_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={5}
+                placeholder="Enter English content"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main dark:text-main mb-1">
+                Italian Content
+              </label>
+              <textarea
+                value={newBlogPost.body_it}
+                onChange={(e) => handleNewPostInputChange('body_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={5}
+                placeholder="Enter Italian content"
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-main dark:text-main mb-1">
+              Tags
+            </label>
+            <input
+              type="text"
+              value={newBlogPost.post_tags}
+              onChange={(e) => handleNewPostInputChange('post_tags', e.target.value)}
+              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+              placeholder="Enter tags (comma separated)"
             />
           </div>
-        )}
 
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <FileText className="w-4 h-4 text-lighttext2" />
-            <h3 className="text-lg font-bold text-lighttext">
-              {post.title_en}
-            </h3>
-          </div>
-
-          <div className="flex items-center gap-4 text-sm text-lighttext2 mb-2">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              <span>{new Date(post.created_at).toLocaleDateString()}</span>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-main dark:text-main mb-2">
+              Image
+            </label>
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                dragStates['new']
+                  ? 'border-main bg-main/10 dark:bg-main/20'
+                  : 'border-main dark:border-main'
+              }`}
+              onDragOver={(e) => handleDragOver(e, 'new')}
+              onDragLeave={(e) => handleDragLeave(e, 'new')}
+              onDrop={(e) => handleDrop(e, 'new')}
+            >
+              {newPostImage ? (
+                <div className="space-y-2">
+                  <Image
+                    src={URL.createObjectURL(newPostImage)}
+                    alt="Preview"
+                    width={200}
+                    height={200}
+                    className="mx-auto rounded-lg"
+                  />
+                  <p className="text-sm text-darktext dark:text-lighttext2">
+                    {newPostImage.name}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <ImageIcon className="h-8 w-8 mx-auto text-gray-400" />
+                  <p className="text-sm text-darktext dark:text-lighttext2">
+                    Drag and drop an image here, or click to select
+                  </p>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileInputChange(e, 'new')}
+                className="hidden"
+                id="new-post-image"
+              />
+              <label
+                htmlFor="new-post-image"
+                className="mt-2 inline-block px-4 py-2 bg-secondary text-white rounded-lg cursor-pointer hover:bg-tertiary transition-colors border-2 border-secondary hover:border-tertiary"
+              >
+                Select Image
+              </label>
             </div>
-            {post.post_tags && (
-              <div className="flex items-center gap-1">
-                <span className="text-main">{post.post_tags}</span>
-              </div>
-            )}
           </div>
 
-          <div className="text-sm text-lighttext2 line-clamp-2 mb-3">
-            {post.description_en}
+          <div className="flex gap-2">
+            <button
+              onClick={handleCreateBlog}
+              disabled={isCreating}
+              className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary disabled:opacity-50 transition-colors border-2 border-main hover:border-secondary"
+            >
+              <Save className="h-4 w-4" />
+              {isCreating ? 'Creating...' : 'Create Blog Post'}
+            </button>
+            <button
+              onClick={() => setIsCreating(false)}
+              className="px-4 py-2 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext rounded-lg hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border-2 border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
+            >
+              Cancel
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onEdit}
-          className="p-2 text-lighttext2 hover:text-main transition-colors"
-        >
-          <Edit3 className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="p-2 text-lighttext2 hover:text-red-500 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function EditBlogForm({
-  post,
-  onSave,
-  onCancel,
-  onInputChange,
-  onImageUpload,
-  dragStates,
-  handleDragOver,
-  handleDragLeave,
-  handleDrop,
-}: {
-  post: BlogPostWithEditing;
-  onSave: () => void;
-  onCancel: () => void;
-  onInputChange: (
-    postId: number,
-    field: string,
-    value: string | boolean | null
-  ) => void;
-  onImageUpload: (postId: number, file: File) => void;
-  dragStates: Record<string, boolean>;
-  handleDragOver: (e: React.DragEvent, postId: number) => void;
-  handleDragLeave: (e: React.DragEvent, postId: number) => void;
-  handleDrop: (e: React.DragEvent, postId: number) => void;
-}) {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file?.type.startsWith('image/')) {
-      onImageUpload(post.id, file);
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor={`edit-title-en-${post.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {blogPosts.map((post) => (
+          <div
+            key={post.id}
+            className="bg-bglight dark:bg-darkgray rounded-lg border-2 border-main dark:border-main overflow-hidden"
           >
-            Title (EN) *
-          </label>
-          <input
-            id={`edit-title-en-${post.id}`}
-            type="text"
-            value={post.title_en}
-            onChange={(e) => onInputChange(post.id, 'title_en', e.target.value)}
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-title-it-${post.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Title (IT) *
-          </label>
-          <input
-            id={`edit-title-it-${post.id}`}
-            type="text"
-            value={post.title_it}
-            onChange={(e) => onInputChange(post.id, 'title_it', e.target.value)}
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-post-tags-${post.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Tags
-          </label>
-          <input
-            id={`edit-post-tags-${post.id}`}
-            type="text"
-            value={post.post_tags}
-            onChange={(e) =>
-              onInputChange(post.id, 'post_tags', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Image Upload */}
-      <div>
-        <label
-          htmlFor={`image-upload-${post.id}`}
-          className="block text-sm font-medium text-lighttext mb-2"
-        >
-          Blog Post Image
-        </label>
-        <div
-          className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
-          onDragOver={(e) => handleDragOver(e, post.id)}
-          onDragLeave={(e) => handleDragLeave(e, post.id)}
-          onDrop={(e) => handleDrop(e, post.id)}
-        >
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-            id={`image-upload-${post.id}`}
-          />
-          <label htmlFor={`image-upload-${post.id}`} className="cursor-pointer">
-            {post.image ? (
-              <div className="flex items-center justify-center">
-                <Image
-                  src={post.image}
-                  width={120}
-                  height={120}
-                  className="rounded-lg object-cover"
-                  alt={`${post.title_en} preview`}
-                  placeholder={post.blurhashURL ? 'blur' : 'empty'}
-                  blurDataURL={post.blurhashURL || undefined}
+            <div className="relative">
+                <div
+                  className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                    dragStates[post.id.toString()]
+                      ? 'border-main bg-main/10 dark:bg-main/20'
+                      : 'border-main dark:border-main'
+                  }`}
+                  onDragOver={(e) => handleDragOver(e, post.id.toString())}
+                  onDragLeave={(e) => handleDragLeave(e, post.id.toString())}
+                  onDrop={(e) => handleDrop(e, post.id.toString())}
+                >
+                {post.image ? (
+                  <Image
+                    src={post.image}
+                    alt={post.title_en}
+                    width={300}
+                    height={200}
+                    className="w-full h-48 object-cover rounded-lg"
+                    placeholder="blur"
+                    blurDataURL={post.blurhashURL}
+                  />
+                ) : (
+                  <div className="h-48 flex items-center justify-center bg-bglight dark:bg-darkergray rounded-lg">
+                    <ImageIcon className="h-8 w-8 text-main dark:text-main" />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileInputChange(e, post.id.toString())}
+                  className="hidden"
+                  id={`image-${post.id}`}
                 />
-              </div>
-            ) : (
-              <>
-                <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
-                <p className="text-lighttext2 font-medium">
-                  Drop image here or click to browse
-                </p>
-              </>
-            )}
-          </label>
-          {dragStates[`image-${post.id}`] && (
-            <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
-              <div className="text-center text-white">
-                <Upload className="w-12 h-12 mx-auto mb-2" />
-                <p className="font-medium">Drop image here</p>
+                <label
+                  htmlFor={`image-${post.id}`}
+                  className="mt-2 inline-block px-3 py-1 bg-secondary text-white rounded text-sm cursor-pointer hover:bg-tertiary transition-colors border border-secondary hover:border-tertiary"
+                >
+                  <Upload className="h-3 w-3 inline mr-1" />
+                  Change Image
+                </label>
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-darktext dark:text-lighttext">
+                  {post.title_en}
+                </h3>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() =>
+                      handleInputChange(post.id, 'isEditing', !post.isEditing)
+                    }
+                    className="p-1 text-main hover:text-secondary transition-colors"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteBlog(post.id)}
+                    className="p-1 text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-sm text-darktext dark:text-lighttext2 mb-2">
+                {post.description_en}
+              </p>
+
+              <div className="flex items-center gap-2 text-xs text-darktext dark:text-lighttext2">
+                <Calendar className="h-3 w-3" />
+                <span>
+                  {new Date(post.created_at).toLocaleDateString()}
+                </span>
+                <FileText className="h-3 w-3" />
+                <span>{post.views} views</span>
+              </div>
+
+              {post.isEditing && (
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      English Title
+                    </label>
+                    <input
+                      type="text"
+                      value={post.title_en}
+                      onChange={(e) =>
+                        handleInputChange(post.id, 'title_en', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Italian Title
+                    </label>
+                    <input
+                      type="text"
+                      value={post.title_it}
+                      onChange={(e) =>
+                        handleInputChange(post.id, 'title_it', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      English Description
+                    </label>
+                    <textarea
+                      value={post.description_en}
+                      onChange={(e) =>
+                        handleInputChange(post.id, 'description_en', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Italian Description
+                    </label>
+                    <textarea
+                      value={post.description_it}
+                      onChange={(e) =>
+                        handleInputChange(post.id, 'description_it', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      rows={2}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      English Content
+                    </label>
+                    <textarea
+                      value={post.body_en}
+                      onChange={(e) =>
+                        handleInputChange(post.id, 'body_en', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Italian Content
+                    </label>
+                    <textarea
+                      value={post.body_it}
+                      onChange={(e) =>
+                        handleInputChange(post.id, 'body_it', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
+                      Tags
+                    </label>
+                    <input
+                      type="text"
+                      value={post.post_tags}
+                      onChange={(e) =>
+                        handleInputChange(post.id, 'post_tags', e.target.value)
+                      }
+                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleUpdateBlog(post.id)}
+                      className="flex items-center gap-1 px-3 py-1 bg-main text-white text-sm rounded hover:bg-secondary transition-colors border border-main hover:border-secondary"
+                    >
+                      <Save className="h-3 w-3" />
+                      Save
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleInputChange(post.id, 'isEditing', false)
+                      }
+                      className="px-3 py-1 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext text-sm rounded hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label
-            htmlFor={`edit-description-en-${post.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Description (EN) *
-          </label>
-          <textarea
-            id={`edit-description-en-${post.id}`}
-            value={post.description_en}
-            onChange={(e) =>
-              onInputChange(post.id, 'description_en', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
-          />
+      {blogPosts.length === 0 && !isCreating && (
+        <div className="text-center py-8">
+          <FileText className="h-12 w-12 mx-auto text-main dark:text-main mb-4" />
+          <p className="text-darktext dark:text-lighttext2">
+            No blog posts found. Create your first blog post!
+          </p>
         </div>
-
-        <div>
-          <label
-            htmlFor={`edit-description-it-${post.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Description (IT) *
-          </label>
-          <textarea
-            id={`edit-description-it-${post.id}`}
-            value={post.description_it}
-            onChange={(e) =>
-              onInputChange(post.id, 'description_it', e.target.value)
-            }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[80px]"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-body-en-${post.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Full Content (EN) *
-          </label>
-          <textarea
-            id={`edit-body-en-${post.id}`}
-            value={post.body_en}
-            onChange={(e) => onInputChange(post.id, 'body_en', e.target.value)}
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[150px]"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor={`edit-body-it-${post.id}`}
-            className="block text-sm font-medium text-lighttext mb-2"
-          >
-            Full Content (IT) *
-          </label>
-          <textarea
-            id={`edit-body-it-${post.id}`}
-            value={post.body_it}
-            onChange={(e) => onInputChange(post.id, 'body_it', e.target.value)}
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-none resize-y min-h-[150px]"
-          />
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onSave}
-          className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
-        >
-          <Save className="w-4 h-4" />
-          Save Changes
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200"
-        >
-          <X className="w-4 h-4" />
-          Cancel
-        </button>
-      </div>
+      )}
     </div>
   );
 }
