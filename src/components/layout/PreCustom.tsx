@@ -49,7 +49,7 @@ export default function PreCustom({ children }: PreCustomProps) {
           />
         </div>
       </div>
-      <pre className="bg-bgdark dark:bg-lighttext2 text-lighttext dark:text-darktext relative w-full rounded-t-none">
+      <pre className="bg-bgdark dark:bg-lighttext2 text-lighttext dark:text-darktext relative w-full rounded-t-none mt-4">
         {children}
       </pre>
     </>
