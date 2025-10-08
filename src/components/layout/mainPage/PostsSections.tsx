@@ -28,15 +28,15 @@ export default async function PostsSection({ locale }: { locale: string }) {
             <section
               key={section}
               id={section}
-              className={`text-center sm:mx-20 md:mx-auto mx-5 md:w-full mt-20 md:mt-0 mdh:mt-40 ${
+              className={`text-center sm:mx-20 md:mx-auto mx-5 md:w-full mt-20 md:mt-20 lg:mt-32 xl:mt-40 ${
                 postsCheck.length > 2 && 'md:min-h-lvh'
               }`}
             >
-              <h1 className="xl:text-6xl text-xl xs:text-2xl mb-5">
+              <h1 className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-5">
                 {t(isBlog ? 'title2' : 'title1')}
               </h1>
               <h2
-                className="mb-10 md:mb-20 text-base xs:text-lg md:text-2xl"
+                className="mb-10 md:mb-20 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl"
                 dangerouslySetInnerHTML={{
                   __html: formatLabels(t(isBlog ? 'subtitle2' : 'subtitle1')),
                 }}

@@ -13,19 +13,19 @@ export default async function Skills() {
   return skills_categories ? (
     <section
       id="skills"
-      className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh mt-20 md:mt-0 mb-20 md:mb-32 mdh:mt-40"
+      className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh mt-20 md:mt-20 lg:mt-32 xl:mt-40 mb-20 md:mb-32"
     >
       <div className="w-full h-full ">
-        <h1 className="xl:text-6xl text-xl xs:text-2xl mb-10 xl:mb-5 ">
+        <h1 className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-10 xl:mb-5 ">
           {t('title')}
         </h1>
         <h2
-          className="xl:mb-20 text-base xs:text-lg md:text-2xl mb-10"
+          className="xl:mb-20 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl mb-10"
           dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
         />
         {skills_categories.map((skillCategory, index) => (
           <div key={skillCategory.id} className="">
-            <h2 className="text-lg xs:text-xl md:text-[2.33rem] xs:tracking-wider my-5">
+            <h2 className="text-lg xs:text-xl tablet:text-3xl md:text-[2.33rem] xs:tracking-wider my-5">
               {t(`skills.${skillCategory.name}`)}
             </h2>
             <div className="flex xl:flex-nowrap flex-wrap justify-center items-center">
@@ -46,7 +46,7 @@ export default async function Skills() {
                     }`}
                     alt={skill.title}
                   />
-                  <h3 className="mt-5 text-base xs:text-lg xl:text-2xl">
+                  <h3 className="mt-5 text-base xs:text-lg tablet:text-xl xl:text-2xl">
                     {skill.title}
                   </h3>
                 </div>

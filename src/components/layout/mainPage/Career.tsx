@@ -90,11 +90,11 @@ export default async function Career() {
       className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-screen my-20 md:my-0 mb-20 md:mb-32"
     >
       <div className="w-full max-w-6xl">
-        <h1 className="xl:text-6xl text-xl xs:text-2xl mb-10 xl:mb-5">
+        <h1 className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-10 xl:mb-5">
           {t('title')}
         </h1>
         <h2
-          className="xl:mb-20 text-base xs:text-lg md:text-2xl mb-10"
+          className="xl:mb-20 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl mb-10"
           dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
         />
 
