@@ -28,6 +28,9 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
+      <head>
+        <meta name="darkreader-lock" />
+      </head>
       <Providers>
         <body
           id="about"
