@@ -27,7 +27,7 @@ export default async function Hero() {
   if (!heroSection) return <ErrorDiv>Error loading Hero data</ErrorDiv>;
 
   return (
-    <section className="md:mx-10 mx-5 md:h-svh flex items-center md:mt-20 lg:mt-32 xl:mt-40">
+    <section className="md:mx-10 mx-5 md:h-svh flex items-center md:mt-20">
       <PebbleClipPath />
       <div>
         <div className="flex flex-col xl:flex-row items-center xl:justify-around">
