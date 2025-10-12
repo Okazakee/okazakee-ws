@@ -42,8 +42,8 @@ export default async function PostsSection({ locale }: { locale: string }) {
                 }}
               />
               <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
-                {postsCheck.map((post) => (
-                  <PostCard key={post.id} post={post} locale={locale} />
+                {postsCheck.map((post, index) => (
+                  <PostCard key={post.id} post={post} locale={locale} index={index} />
                 ))}
               </div>
               <Link href={`/${locale}/${isBlog ? 'blog' : 'portfolio'}`}>

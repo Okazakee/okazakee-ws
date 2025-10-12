@@ -1,9 +1,12 @@
-import Career from '@/components/layout/mainPage/Career';
-import Contacts from '@layout/mainPage/Contacts';
 import Hero from '@layout/mainPage/Hero';
-import PostsSection from '@layout/mainPage/PostsSections';
-import Skills from '@layout/mainPage/Skills';
+import dynamic from 'next/dynamic';
 import React from 'react';
+
+// Dynamic imports for below-fold sections
+const Skills = dynamic(() => import('@layout/mainPage/Skills'));
+const Career = dynamic(() => import('@/components/layout/mainPage/Career'));
+const PostsSection = dynamic(() => import('@layout/mainPage/PostsSections'));
+const Contacts = dynamic(() => import('@layout/mainPage/Contacts'));
 
 export async function generateMetadata({
   params,

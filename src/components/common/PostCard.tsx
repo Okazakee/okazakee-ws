@@ -7,7 +7,8 @@ import { Tags } from './Tags';
 export default function Postcard({
   post,
   locale,
-}: { post: PortfolioPost | BlogPost; locale: string }) {
+  index = 0,
+}: { post: PortfolioPost | BlogPost; locale: string; index?: number }) {
   const isPortfolioPost = (
     post: PortfolioPost | BlogPost
   ): post is PortfolioPost => {
@@ -40,6 +41,7 @@ export default function Postcard({
           blurDataURL={post.blurhashURL}
           src={post.image}
           fill
+          loading={index < 3 ? 'eager' : 'lazy'}
           sizes="100vw"
           style={{
             objectFit: 'cover',

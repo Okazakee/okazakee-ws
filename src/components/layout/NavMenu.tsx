@@ -304,8 +304,6 @@ export default function ResponsiveNav({
               {!isLogin && !isRegister && user && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-darkestgray border border-darkgray">
                   <Image
-                    loading="eager"
-                    decoding="sync"
                     src={user.propic}
                     width={32}
                     height={32}

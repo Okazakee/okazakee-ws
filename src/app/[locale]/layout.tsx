@@ -47,8 +47,13 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={isDark ? 'dark' : ''} suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content={isDark ? '#0a0a0a' : '#d4d4d4'} />
         <meta name="darkreader-lock" />
         <meta name="color-scheme" content={isDark ? 'dark' : 'light'} />
+        <link rel="preconnect" href="https://mtvwynyikouqzmhqespl.supabase.co" />
+        <link rel="dns-prefetch" href="https://mtvwynyikouqzmhqespl.supabase.co" />
+        <link rel="preconnect" href="https://umami.okazakee.dev" />
       </head>
       <Providers>
         <body
@@ -68,7 +73,7 @@ export default async function RootLayout({
         <Script
           src="https://umami.okazakee.dev/script.js"
           data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
       )}
     </html>
