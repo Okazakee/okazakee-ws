@@ -227,7 +227,7 @@ export default function ResponsiveNav({
               }`}
             >
               <ul
-                className={`space-y-20 p-4 scale-110 -mt-16 transition-all duration-400 ease-in-out ${
+                className={`space-y-12 sm:space-y-16 md:space-y-20 p-4 xs:scale-100 scale-110 sm:scale-105 md:scale-110 lg:scale-115 -mt-8 sm:-mt-12 md:-mt-16 transition-all duration-400 ease-in-out ${
                   isOpen ? 'opacity-100' : 'opacity-0'
                 }`}
               >
@@ -238,13 +238,13 @@ export default function ResponsiveNav({
                     <li key={i}>
                       <Link
                         href={href}
-                        className="flex text-3xl items-center space-x-2 text-darktext dark:text-lighttext transition-all duration-400 ease-in-out"
+                        className="flex text-2xl sm:text-3xl md:text-4xl items-center space-x-2 sm:space-x-3 text-darktext dark:text-lighttext transition-all duration-400 ease-in-out"
                         onClick={(e) => {
                           handleClick(e, item.href, item.isAnchor);
                           setIsOpen(false);
                         }}
                       >
-                        <item.icon size={32} className="mr-2 w-8 h-8" />
+                        <item.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 mr-2" />
                         <span>{getButtonText(i)}</span>
                       </Link>
                     </li>
@@ -252,7 +252,7 @@ export default function ResponsiveNav({
                 })}
               </ul>
               <div
-                className={`flex space-x-5 bottom-10 absolute left-1/2 transform-gpu -translate-x-1/2 scale-110 transition-all duration-400 ease-in-out ${
+                className={`flex space-x-3 sm:space-x-4 md:space-x-5 bottom-6 sm:bottom-8 md:bottom-10 absolute left-1/2 transform-gpu -translate-x-1/2 scale-75 sm:scale-100 md:scale-110 lg:scale-125 transition-all duration-400 ease-in-out ${
                   isOpen ? 'opacity-100' : 'opacity-0'
                 }`}
               >
