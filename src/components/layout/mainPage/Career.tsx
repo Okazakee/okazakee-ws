@@ -8,8 +8,7 @@ import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
+import Markdown from 'markdown-to-jsx';
 
 interface CareerEntry {
   id: string;
@@ -164,9 +163,9 @@ export default async function Career() {
                         'mb-4 prose dark:prose-invert max-w-none text-left'
                       }
                     >
-                      <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                      <Markdown options={{ forceBlock: true }}>
                         {latestPosition[`description_${locale}`]}
-                      </ReactMarkdown>
+                      </Markdown>
                     </div>
 
                     <div
@@ -211,9 +210,9 @@ export default async function Career() {
                               </span>
                             </div>
                             <div className="prose dark:prose-invert max-w-none text-left mb-4">
-                              <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                              <Markdown options={{ forceBlock: true }}>
                                 {position[`description_${locale}`]}
-                              </ReactMarkdown>
+                              </Markdown>
                             </div>
                             <div
                               className={`flex flex-wrap gap-2 ${
@@ -337,9 +336,9 @@ export default async function Career() {
 
                         {/* Description */}
                         <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
-                          <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                          <Markdown options={{ forceBlock: true }}>
                             {latestPosition[`description_${locale}`]}
-                          </ReactMarkdown>
+                          </Markdown>
                         </div>
 
                         {/* Date and duration */}
@@ -386,11 +385,9 @@ export default async function Career() {
                                     </h3>
 
                                     <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
-                                      <ReactMarkdown
-                                        rehypePlugins={[rehypeRaw]}
-                                      >
+                                      <Markdown options={{ forceBlock: true }}>
                                         {position[`description_${locale}`]}
-                                      </ReactMarkdown>
+                                      </Markdown>
                                     </div>
 
                                     {/* Date and duration */}
