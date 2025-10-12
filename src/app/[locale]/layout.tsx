@@ -8,6 +8,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { NextIntlClientProvider } from 'next-intl';
 import Script from 'next/script';
 import { Providers } from '../providers';
+import { cookies } from 'next/headers';
 
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',
@@ -25,11 +26,29 @@ export default async function RootLayout({
   const { locale } = await params;
 
   const messages = await getTranslationsSupabase(locale);
+  
+  // Read theme preference from cookies during SSR
+  const cookieStore = await cookies();
+  const themeMode = cookieStore.get('themeMode')?.value || 'auto';
+  const resolvedTheme = cookieStore.get('resolvedTheme')?.value;
+  
+  // Determine if dark mode should be applied
+  // Use resolvedTheme if available (for auto mode), otherwise use themeMode
+  let isDark = false;
+  
+  if (resolvedTheme) {
+    // Use the resolved theme (handles auto mode correctly)
+    isDark = resolvedTheme === 'dark';
+  } else {
+    // Fallback to themeMode for explicit light/dark
+    isDark = themeMode === 'dark';
+  }
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={isDark ? 'dark' : ''} suppressHydrationWarning>
       <head>
         <meta name="darkreader-lock" />
+        <meta name="color-scheme" content={isDark ? 'dark' : 'light'} />
       </head>
       <Providers>
         <body
