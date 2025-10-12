@@ -208,14 +208,14 @@ export default function ResponsiveNav({
 
           {/* Mobile Navigation */}
           <div className={`${className} lg:hidden`}>
-            <div className="absolute top-4 right-4 z-30">
+            <div className="flex items-center relative z-50">
               <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="scale-125"
+                className="sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                 aria-label="Toggle menu"
               >
-                {isOpen ? <X size={32} /> : <Menu size={32} />}
+                {isOpen ? <X className="w-6 h-6 sm:w-7 sm:h-7" /> : <Menu className="w-6 h-6 sm:w-7 sm:h-7" />}
               </button>
             </div>
 
