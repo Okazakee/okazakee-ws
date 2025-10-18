@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 import { Tags } from './Tags';
+import ViewDisplay from './ViewDisplay';
 
 export default function Postcard({
   post,
@@ -52,9 +53,17 @@ export default function Postcard({
         />
       </div>
       <div className="flex flex-col">
-        <h1 className="font-bold text-xl xs:text-2xl sm:text-2xl mb-2">
-          {initTitle}
-        </h1>
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="font-bold text-[1.4rem] md:text-2xl flex-shrink min-w-0">
+            {initTitle}
+          </h1>
+          <ViewDisplay 
+            postId={post.id.toString()} 
+            postType={checkPostType} 
+            initialViews={post.views}
+            isCard={true}
+          />
+        </div>
         <div className="h-12 mb-2 flex items-center">
           <h2 className="sm:line-clamp-2 line-clamp-3 sm:text-[1.03rem] text-sm leading-4 sm:leading-normal tracking-wide sm:tracking-tight">
             {description}

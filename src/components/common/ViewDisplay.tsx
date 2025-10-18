@@ -9,9 +9,10 @@ interface ViewDisplayProps {
   postId: string;
   postType: 'blog' | 'portfolio';
   initialViews: number | string;
+  isCard?: boolean;
 }
 
-export default function ViewDisplay({ postId, postType, initialViews }: ViewDisplayProps) {
+export default function ViewDisplay({ postId, postType, initialViews, isCard = false }: ViewDisplayProps) {
   const [views, setViews] = useState(initialViews);
   const [hasIncremented, setHasIncremented] = useState(false);
 
@@ -89,8 +90,8 @@ export default function ViewDisplay({ postId, postType, initialViews }: ViewDisp
   }, [postId, postType, hasIncremented]);
 
   return (
-    <div className="flex items-center text-darktext dark:text-lighttext mr-3">
-      <Eye size={20} className="mr-2" />
+    <div className="flex items-center text-darktext dark:text-lighttext">
+      <Eye size={20} className={isCard ? "mr-1" : "mr-2"} />
       <span className="mt-0.5">{views}</span>
     </div>
   );
