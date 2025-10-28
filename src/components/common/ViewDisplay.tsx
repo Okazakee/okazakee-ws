@@ -17,50 +17,55 @@ export default function ViewDisplay({ postId, postType, initialViews, isCard = f
   const [hasIncremented, setHasIncremented] = useState(false);
 
   useEffect(() => {
+    if (isCard) {
+      setViews(initialViews);
+      return;
+    }
+
     console.log('🚀 ViewDisplay useEffect triggered', { postId, postType, hasIncremented });
-    
+
     // Create a unique key for this post visit with 24-hour expiration
     const visitKey = `viewed_${postType}_${postId}`;
-    
+
     // Check if we've already incremented for this post in the last 24 hours
     const lastViewed = localStorage.getItem(visitKey);
     const now = Date.now();
     const twentyFourHours = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-    
+
     let hasViewedRecently = false;
     if (lastViewed) {
       const lastViewedTime = parseInt(lastViewed);
-      hasViewedRecently = (now - lastViewedTime) < twentyFourHours;
+      hasViewedRecently = now - lastViewedTime < twentyFourHours;
     }
-    
-    console.log('🔍 24h check:', { 
-      visitKey, 
-      lastViewed, 
-      hasViewedRecently, 
-      hoursSinceLastView: lastViewed ? Math.round((now - parseInt(lastViewed)) / (60 * 60 * 1000)) : 'never',
-      hasIncremented 
+
+    console.log('🔍 24h check:', {
+      visitKey,
+      lastViewed,
+      hasViewedRecently,
+      hoursSinceLastView: lastViewed ? Math.round((now - parseInt(lastViewed, 10)) / (60 * 60 * 1000)) : 'never',
+      hasIncremented,
     });
-    
+
     if (!hasViewedRecently && !hasIncremented) {
       console.log('✅ Proceeding with increment (24h window)');
       setHasIncremented(true);
-      
+
       // Mark as viewed with current timestamp
       localStorage.setItem(visitKey, now.toString());
-      
+
       // First increment in the database
       incrementViews(postId, postType)
         .then((result) => {
           console.log('🔍 Increment result:', result);
           if (result.success) {
             console.log('✅ Database updated successfully');
-            
+
             // Then fetch the real current view count from database
             return getCurrentViews(postId, postType);
-          } else {
-            console.error('❌ Database update failed:', result.error);
-            throw new Error(result.error);
           }
+
+          console.error('❌ Database update failed:', result.error);
+          throw new Error(result.error);
         })
         .then((viewsResult) => {
           if (viewsResult?.success) {
@@ -77,17 +82,16 @@ export default function ViewDisplay({ postId, postType, initialViews, isCard = f
     } else if (hasViewedRecently) {
       console.log('📋 Already viewed in last 24h, fetching current count');
       // If already viewed in this session, just fetch current count
-      getCurrentViews(postId, postType)
-        .then((viewsResult) => {
-          if (viewsResult?.success) {
-            setViews(viewsResult.views);
-            console.log('📊 Fetched current view count:', viewsResult.views);
-          }
-        });
+      getCurrentViews(postId, postType).then((viewsResult) => {
+        if (viewsResult?.success) {
+          setViews(viewsResult.views);
+          console.log('📊 Fetched current view count:', viewsResult.views);
+        }
+      });
     } else {
       console.log('❌ Not incrementing - conditions not met');
     }
-  }, [postId, postType, hasIncremented]);
+  }, [isCard, initialViews, postId, postType, hasIncremented]);
 
   return (
     <div className="flex items-center text-darktext dark:text-lighttext">
