@@ -322,7 +322,7 @@ async function uploadCareerLogo(
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
-        contentType: 'image/webp',
+        contentType: 'image/jpeg',
         upsert: true,
       });
 

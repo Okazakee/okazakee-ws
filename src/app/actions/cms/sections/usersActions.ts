@@ -427,7 +427,7 @@ export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdat
   const { error: uploadError } = await adminClient.storage
     .from('website')
     .upload(filePath, processed.buffer, {
-      contentType: 'image/webp',
+      contentType: 'image/jpeg',
       upsert: true,
     });
 
@@ -561,7 +561,7 @@ export async function updateMyProfile(formData: FormData): Promise<ProfileUpdate
     const { error: uploadError } = await adminClient.storage
       .from('website')
       .upload(filePath, processed.buffer, {
-        contentType: 'image/webp',
+        contentType: 'image/jpeg',
         upsert: true,
       });
 

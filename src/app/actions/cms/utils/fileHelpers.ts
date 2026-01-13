@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { encode } from 'blurhash';
-import sharp from 'sharp';
+import { Jimp } from 'jimp';
+import { webp } from '@jimp/wasm-webp';
 import { createClient } from '@/utils/supabase/server';
 
 /**
@@ -70,8 +71,9 @@ type ProcessImageResult = {
 };
 
 /**
- * Processes an image: resize to max dimensions, convert to WebP
+ * Processes an image: resize to max dimensions, convert to JPEG
  * Returns the processed buffer and metadata
+ * Uses Jimp (pure JS, works on Vercel serverless)
  */
 export async function processImage(
   file: File,
@@ -85,56 +87,49 @@ export async function processImage(
     const arrayBuffer = await file.arrayBuffer();
     const inputBuffer = Buffer.from(arrayBuffer);
 
-    // Get original image metadata
-    const metadata = await sharp(inputBuffer).metadata();
-    const originalHeight = metadata.height || 0;
-    const originalWidth = metadata.width || 0;
+    // Read image with Jimp
+    const image = await Jimp.read(inputBuffer);
+    const originalWidth = image.width;
+    const originalHeight = image.height;
 
-    // Calculate resize options
-    let resizeOptions: sharp.ResizeOptions | undefined;
-    
+    // Calculate new dimensions
+    let newWidth = originalWidth;
+    let newHeight = originalHeight;
+
     if (maxWidth && maxHeight) {
-      // Resize to fit within both dimensions (for avatars)
+      // Resize to fit within both dimensions (for avatars - cover mode)
       if (originalWidth > maxWidth || originalHeight > maxHeight) {
-        resizeOptions = {
-          width: maxWidth,
-          height: maxHeight,
-          fit: 'cover',
-          withoutEnlargement: true,
-        };
+        const widthRatio = maxWidth / originalWidth;
+        const heightRatio = maxHeight / originalHeight;
+        // Use larger ratio for cover effect, then crop
+        const ratio = Math.max(widthRatio, heightRatio);
+        newWidth = Math.round(originalWidth * ratio);
+        newHeight = Math.round(originalHeight * ratio);
+        image.resize({ w: newWidth, h: newHeight });
+        // Crop to exact dimensions
+        image.crop({ x: (newWidth - maxWidth) / 2, y: (newHeight - maxHeight) / 2, w: maxWidth, h: maxHeight });
+        newWidth = maxWidth;
+        newHeight = maxHeight;
       }
     } else if (originalHeight > maxHeight) {
-      // Only resize if height exceeds max (for post images)
-      resizeOptions = {
-        height: maxHeight,
-        withoutEnlargement: true,
-      };
+      // Only resize if height exceeds max (maintain aspect ratio)
+      const ratio = maxHeight / originalHeight;
+      newWidth = Math.round(originalWidth * ratio);
+      newHeight = maxHeight;
+      image.resize({ w: newWidth, h: newHeight });
     }
 
-    // Process image: resize if needed, convert to WebP
-    const processedImage = sharp(inputBuffer);
-    
-    if (resizeOptions) {
-      processedImage.resize(resizeOptions);
-    }
+    // Convert to WebP buffer with quality setting using WASM encoder
+    const processedBuffer = await image.encode(webp, { quality });
 
-    const processedBuffer = await processedImage
-      .webp({ quality })
-      .toBuffer();
-
-    // Get final dimensions
-    const finalMetadata = await sharp(processedBuffer).metadata();
-    const finalWidth = finalMetadata.width || originalWidth;
-    const finalHeight = finalMetadata.height || originalHeight;
-
-    // Generate blurhash from a small version of the image
-    const blurhash = await generateBlurhash(processedBuffer);
+    // Generate blurhash
+    const blurhash = await generateBlurhash(image);
 
     return {
       success: true,
       buffer: processedBuffer,
-      width: finalWidth,
-      height: finalHeight,
+      width: newWidth,
+      height: newHeight,
       blurhash,
     };
   } catch (error) {
@@ -147,29 +142,34 @@ export async function processImage(
 }
 
 /**
- * Generates a real blurhash from image buffer
+ * Generates a real blurhash from Jimp image
  */
-async function generateBlurhash(imageBuffer: Buffer): Promise<string> {
+async function generateBlurhash(image: Awaited<ReturnType<typeof Jimp.read>>): Promise<string> {
   try {
-    // Create a small version for blurhash (32px wide)
-    const { data, info } = await sharp(imageBuffer)
-      .resize(32, 32, { fit: 'inside' })
-      .ensureAlpha()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
+    // Clone and resize for blurhash (32x32)
+    const smallImage = image.clone().resize({ w: 32, h: 32 });
+    const width = smallImage.width;
+    const height = smallImage.height;
 
-    const blurhash = encode(
-      new Uint8ClampedArray(data),
-      info.width,
-      info.height,
-      4,
-      4
-    );
+    // Get raw RGBA pixel data
+    const pixels = new Uint8ClampedArray(width * height * 4);
+    let idx = 0;
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const color = smallImage.getPixelColor(x, y);
+        // Jimp stores colors as 32-bit integers (RGBA)
+        pixels[idx++] = (color >> 24) & 0xff; // R
+        pixels[idx++] = (color >> 16) & 0xff; // G
+        pixels[idx++] = (color >> 8) & 0xff;  // B
+        pixels[idx++] = color & 0xff;          // A
+      }
+    }
 
+    const blurhash = encode(pixels, width, height, 4, 4);
     return blurhash;
   } catch (error) {
     console.error('Failed to generate blurhash:', error);
-    // Return a fallback placeholder
     return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
   }
 }
