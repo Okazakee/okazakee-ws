@@ -47,6 +47,7 @@ export default function UsersSection() {
   const [editingNameFor, setEditingNameFor] = useState<string | null>(null);
   const [editedName, setEditedName] = useState('');
   const [savingNameFor, setSavingNameFor] = useState<string | null>(null);
+  const [updatingRoleFor, setUpdatingRoleFor] = useState<number | null>(null);
   const fileInputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
 
   const isAdmin = user?.role === 'admin';
@@ -104,6 +105,7 @@ export default function UsersSection() {
 
   const handleUpdateRole = async (id: number, newRole: 'admin' | 'editor') => {
     setError(null);
+    setUpdatingRoleFor(id);
 
     try {
       const result = await usersActions({ type: 'UPDATE_ROLE', id, role: newRole });
@@ -114,6 +116,8 @@ export default function UsersSection() {
     } catch (err) {
       console.error('Error updating role:', err);
       setError(err instanceof Error ? err.message : 'Failed to update role');
+    } finally {
+      setUpdatingRoleFor(null);
     }
   };
 
@@ -527,7 +531,8 @@ export default function UsersSection() {
                       <select
                         value={allowedUser.role}
                         onChange={(e) => handleUpdateRole(allowedUser.id, e.target.value as 'admin' | 'editor')}
-                        className="px-2 py-1 bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden"
+                        disabled={updatingRoleFor === allowedUser.id}
+                        className="px-2 py-1 bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="editor">Editor</option>
                         <option value="admin">Admin</option>

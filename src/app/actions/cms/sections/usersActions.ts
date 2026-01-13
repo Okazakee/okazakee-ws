@@ -44,15 +44,32 @@ const GITHUB_USERNAME_REGEX = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
  */
 async function isAdmin(supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) return false;
+  if (!user) return false;
 
-  const { data } = await supabase
-    .from('cms_allowed_users')
-    .select('role')
-    .eq('email', user.email)
-    .single();
+  let allowedUser: { role: string } | null = null;
 
-  return data?.role === 'admin';
+  // Try by email first
+  if (user.email) {
+    const { data: emailMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('email', user.email.toLowerCase())
+      .single();
+    if (emailMatch) allowedUser = emailMatch;
+  }
+
+  // Try by GitHub username if no email match
+  const githubUsername = user.user_metadata?.user_name;
+  if (!allowedUser && githubUsername) {
+    const { data: githubMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('github_username', githubUsername)
+      .single();
+    if (githubMatch) allowedUser = githubMatch;
+  }
+
+  return allowedUser?.role === 'admin';
 }
 
 /**

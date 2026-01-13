@@ -38,12 +38,28 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
     throw new Error('Unauthorized: Authentication required');
   }
 
-  // Check if user is admin
-  const { data: allowedUser } = await supabase
-    .from('cms_allowed_users')
-    .select('role')
-    .eq('email', user.email)
-    .single();
+  // Check if user is admin - try by email first, then GitHub username
+  let allowedUser: { role: string } | null = null;
+
+  if (user.email) {
+    const { data: emailMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('email', user.email.toLowerCase())
+      .single();
+    if (emailMatch) allowedUser = emailMatch;
+  }
+
+  // Try by GitHub username if no email match
+  const githubUsername = user.user_metadata?.user_name;
+  if (!allowedUser && githubUsername) {
+    const { data: githubMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('github_username', githubUsername)
+      .single();
+    if (githubMatch) allowedUser = githubMatch;
+  }
 
   if (allowedUser?.role !== 'admin') {
     throw new Error('Unauthorized: Admin access required');
