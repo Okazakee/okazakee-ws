@@ -1,8 +1,8 @@
-import type { User } from '@/types/fetchedData.types';
+import type { CMSUser } from '@/app/actions/cms/getUser';
 import { create } from 'zustand';
 
 interface LayoutState {
-  user: User | null;
+  user: CMSUser | null;
   sidePanelSections: string[];
   activeSection: string | null;
   heroSection: {
@@ -13,7 +13,7 @@ interface LayoutState {
   } | null;
   loading: boolean;
   error: string | null;
-  setUser: (user: User) => void;
+  setUser: (user: CMSUser | null) => void;
   setSidePanelSections: (sections: string[]) => void;
   setActiveSection: (section: string) => void;
   setHeroSection: (heroSection: {

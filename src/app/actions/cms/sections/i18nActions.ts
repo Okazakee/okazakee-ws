@@ -1,4 +1,5 @@
 'use server';
+import { requireAdmin } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -17,9 +18,50 @@ type I18nResult = {
   error?: string;
 };
 
+// Validation functions
+function validateI18nData(
+  locale: string,
+  data: UpdateI18nData
+): { isValid: boolean; error?: string } {
+  // Locale validation
+  const validLocales = ['en', 'it'];
+  if (!validLocales.includes(locale)) {
+    return { isValid: false, error: `Invalid locale. Must be one of: ${validLocales.join(', ')}` };
+  }
+
+  // Translations validation
+  if (!data.translations || typeof data.translations !== 'object') {
+    return { isValid: false, error: 'Translations must be a valid object' };
+  }
+
+  // Check that translations object is not empty
+  if (Object.keys(data.translations).length === 0) {
+    return { isValid: false, error: 'Translations object cannot be empty' };
+  }
+
+  // Privacy policy validation (if provided)
+  if (data.privacy_policy !== undefined && data.privacy_policy !== null) {
+    if (typeof data.privacy_policy !== 'string') {
+      return { isValid: false, error: 'Privacy policy must be a string' };
+    }
+    if (data.privacy_policy.length > 50000) {
+      return { isValid: false, error: 'Privacy policy content is too long (max 50,000 characters)' };
+    }
+  }
+
+  return { isValid: true };
+}
+
 export async function i18nActions(
   operation: I18nOperation
 ): Promise<I18nResult> {
+  // Admin check - only admins can manage i18n
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: 'Unauthorized: Admin access required' };
+  }
+
   const supabase = await createClient();
 
   try {
@@ -68,6 +110,12 @@ async function updateI18nData(
   updateData: UpdateI18nData
 ): Promise<I18nResult> {
   try {
+    // Validate input data
+    const validation = validateI18nData(locale, updateData);
+    if (!validation.isValid) {
+      return { success: false, error: validation.error };
+    }
+
     const { data, error } = await supabase
       .from('i18n_translations')
       .upsert({

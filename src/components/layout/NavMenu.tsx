@@ -1,24 +1,17 @@
 'use client';
 
-import { logout } from '@/app/actions/cms/logout';
-import { useLayoutStore } from '@/store/layoutStore';
 import {
-  BookOpenText,
   Briefcase,
   Contact,
-  FileUser,
-  FolderGit2,
   Home,
   Menu,
   NotebookPen,
   Settings,
   User2,
-  Wrench,
   X,
   Zap,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -67,7 +60,6 @@ export default function ResponsiveNav({
   const isCms = pathname.includes('/cms');
   const isLogin = pathname.includes('/cms/login');
   const isRegister = pathname.includes('/cms/register');
-  const { user } = useLayoutStore();
 
   useEffect(() => {
     // Handle scrolling when we're on the home page and have a pending scroll target
@@ -263,64 +255,18 @@ export default function ResponsiveNav({
           </div>
         </>
       ) : (
-        <>
+        /* CMS Navigation - minimal for login page only */
+        (isLogin || isRegister) && (
           <div className="flex items-center justify-end w-full">
-            <div className="flex items-center gap-4">
-              <Link
-                href={'/'}
-                className="mx-4 transition-all hover:text-main flex items-center"
-              >
-                <Home className="mr-2 -mt-1" />
-                Home
-              </Link>
-              {!isLogin && !isRegister && (
-                <button
-                  type="button"
-                  onClick={() => logout()}
-                  className="mx-4 transition-all hover:text-main flex items-center"
-                >
-                  <FileUser className="mr-2 -mt-1" />
-                  Logout
-                </button>
-              )}
-              {isLogin && (
-                <Link
-                  href={`/${locale}/cms/register`}
-                  className="mx-4 transition-all hover:text-main flex items-center"
-                >
-                  <FileUser className="mr-2 -mt-1" />
-                  Registrati
-                </Link>
-              )}
-              {isRegister && (
-                <Link
-                  href={`/${locale}/cms/login`}
-                  className="mx-4 transition-all hover:text-main flex items-center"
-                >
-                  <FileUser className="mr-2 -mt-1" />
-                  Accedi
-                </Link>
-              )}
-              {!isLogin && !isRegister && user && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-darkestgray border border-darkgray">
-                  <Image
-                    src={user.propic}
-                    width={32}
-                    height={32}
-                    className="rounded-full border-2 border-main"
-                    alt="User Profile"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-lighttext truncate">
-                      {user.email}
-                    </p>
-                    <p className="text-xs text-lighttext2">Administrator</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <Link
+              href={'/'}
+              className="mx-4 transition-all hover:text-main flex items-center"
+            >
+              <Home className="mr-2 -mt-1" />
+              Home
+            </Link>
           </div>
-        </>
+        )
       )}
     </>
   );

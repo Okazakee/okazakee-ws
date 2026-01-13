@@ -1,7 +1,14 @@
 'use server';
+
+import {
+  backupOldFile,
+  processImage,
+  requireAdmin,
+  sanitizeFilename,
+  validateImageFile,
+} from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { encode } from 'blurhash';
 
 type SkillOperation =
   | { type: 'GET' }
@@ -13,7 +20,10 @@ type SkillOperation =
       skillId: number;
       file: File;
       currentIconUrl?: string;
-    };
+    }
+  | { type: 'CREATE_CATEGORY'; data: CreateCategoryData }
+  | { type: 'UPDATE_CATEGORY'; id: number; data: UpdateCategoryData }
+  | { type: 'DELETE_CATEGORY'; id: number };
 
 type CreateSkillData = {
   title: string;
@@ -36,15 +46,70 @@ type UpdateSkillData = {
   blurhashURL?: string;
 };
 
+type CreateCategoryData = {
+  name: string;
+};
+
+type UpdateCategoryData = {
+  name?: string;
+};
+
 type SkillsResult = {
   success: boolean;
   data?: unknown;
   error?: string;
 };
 
+// Validation functions
+function validateSkillData(
+  data: CreateSkillData | UpdateSkillData
+): { isValid: boolean; error?: string } {
+  // Title validation (for CreateSkillData)
+  if ('title' in data && data.title !== undefined) {
+    if (!data.title || data.title.trim().length === 0) {
+      return { isValid: false, error: 'Skill title is required' };
+    }
+    if (data.title.length > 100) {
+      return { isValid: false, error: 'Skill title must be less than 100 characters' };
+    }
+  }
+
+  // Name validation
+  if (data.name !== undefined && data.name.trim().length === 0) {
+    return { isValid: false, error: 'Skill name cannot be empty' };
+  }
+  if (data.name && data.name.length > 100) {
+    return { isValid: false, error: 'Skill name must be less than 100 characters' };
+  }
+
+  // Description validation
+  if (data.description && data.description.length > 500) {
+    return { isValid: false, error: 'Description must be less than 500 characters' };
+  }
+
+  // Position validation
+  if (data.position !== undefined && (data.position < 0 || !Number.isInteger(data.position))) {
+    return { isValid: false, error: 'Position must be a non-negative integer' };
+  }
+
+  // Category ID validation
+  if (data.category_id !== undefined && (data.category_id < 1 || !Number.isInteger(data.category_id))) {
+    return { isValid: false, error: 'Invalid category ID' };
+  }
+
+  return { isValid: true };
+}
+
 export async function skillsActions(
   operation: SkillOperation
 ): Promise<SkillsResult> {
+  // Admin check - only admins can manage skills
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: 'Unauthorized: Admin access required' };
+  }
+
   const supabase = await createClient();
 
   try {
@@ -68,6 +133,15 @@ export async function skillsActions(
           operation.file,
           operation.currentIconUrl
         );
+
+      case 'CREATE_CATEGORY':
+        return await createCategory(supabase, operation.data);
+
+      case 'UPDATE_CATEGORY':
+        return await updateCategory(supabase, operation.id, operation.data);
+
+      case 'DELETE_CATEGORY':
+        return await deleteCategory(supabase, operation.id);
 
       default:
         return { success: false, error: 'Invalid operation' };
@@ -109,6 +183,12 @@ async function createSkill(
   skillData: CreateSkillData
 ): Promise<SkillsResult> {
   try {
+    // Validate input data
+    const validation = validateSkillData(skillData);
+    if (!validation.isValid) {
+      return { success: false, error: validation.error };
+    }
+
     const { data, error } = await supabase
       .from('skills')
       .insert(skillData)
@@ -133,6 +213,23 @@ async function updateSkill(
   updateData: UpdateSkillData
 ): Promise<SkillsResult> {
   try {
+    // Validate input data
+    const validation = validateSkillData(updateData);
+    if (!validation.isValid) {
+      return { success: false, error: validation.error };
+    }
+
+    // Check if skill exists
+    const { data: existingSkill, error: fetchError } = await supabase
+      .from('skills')
+      .select('id')
+      .eq('id', skillId)
+      .single();
+
+    if (fetchError || !existingSkill) {
+      return { success: false, error: 'Skill not found' };
+    }
+
     const { data, error } = await supabase
       .from('skills')
       .update(updateData)
@@ -177,74 +274,73 @@ async function uploadSkillIcon(
   currentIconUrl?: string
 ): Promise<SkillsResult> {
   try {
-    // Backup old icon if it exists
-    if (currentIconUrl) {
-      await backupOldIcon(supabase, currentIconUrl, 'website');
+    // Validate file
+    const fileValidation = validateImageFile(file);
+    if (!fileValidation.isValid) {
+      return { success: false, error: fileValidation.error };
     }
 
-    // Generate blurhash
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
+    // Check if skill exists and get title for filename
+    const { data: existingSkill, error: fetchError } = await supabase
+      .from('skills')
+      .select('id, title')
+      .eq('id', skillId)
+      .single();
 
-    return new Promise((resolve, reject) => {
-      img.onload = async () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-        const imageData = ctx?.getImageData(0, 0, img.width, img.height);
-        const blurhash = encode(
-          imageData?.data || new Uint8ClampedArray(),
-          img.width,
-          img.height,
-          4,
-          4
-        );
+    if (fetchError || !existingSkill) {
+      return { success: false, error: 'Skill not found' };
+    }
 
-        // Upload to Supabase Storage
-        const fileName = `skills/${skillId}_${Date.now()}.${file.name
-          .split('.')
-          .pop()}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('website')
-          .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+    // Backup old icon if it exists
+    if (currentIconUrl) {
+      await backupOldFile(supabase, currentIconUrl, 'website');
+    }
 
-        if (uploadError) throw uploadError;
+    // Process image: resize, convert to WebP, generate blurhash
+    const processed = await processImage(file);
+    if (!processed.success || !processed.buffer) {
+      return { success: false, error: processed.error || 'Failed to process image' };
+    }
+    const { buffer, blurhash } = processed;
 
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('website')
-          .getPublicUrl(fileName);
+    // Generate filename: {skillId}-{title}.webp
+    const sanitizedTitle = sanitizeFilename(existingSkill.title || 'skill');
+    const fileName = `skills/${skillId}-${sanitizedTitle}.webp`;
 
-        // Update skill with new icon URL and blurhash
-        const { error: updateError } = await supabase
-          .from('skills')
-          .update({
-            icon_url: urlData.publicUrl,
-            blurhashURL: blurhash,
-          })
-          .eq('id', skillId);
+    // Delete old file if exists
+    await supabase.storage.from('website').remove([fileName]);
 
-        if (updateError) throw updateError;
+    // Upload processed image to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('website')
+      .upload(fileName, buffer, {
+        cacheControl: '3600',
+        contentType: 'image/webp',
+        upsert: true,
+      });
 
-        resolve({
-          success: true,
-          data: { icon_url: urlData.publicUrl, blurhashURL: blurhash },
-        });
-      };
+    if (uploadError) throw uploadError;
 
-      img.onerror = () => {
-        reject(new Error('Failed to load image'));
-      };
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('website')
+      .getPublicUrl(fileName);
 
-      const blob = new Blob([uint8Array], { type: file.type });
-      img.src = URL.createObjectURL(blob);
-    });
+    // Update skill with new icon URL and blurhash
+    const { error: updateError } = await supabase
+      .from('skills')
+      .update({
+        icon_url: urlData.publicUrl,
+        blurhashURL: blurhash,
+      })
+      .eq('id', skillId);
+
+    if (updateError) throw updateError;
+
+    return {
+      success: true,
+      data: { icon_url: urlData.publicUrl, blurhashURL: blurhash },
+    };
   } catch (error) {
     console.error('Error uploading skill icon:', error);
     return {
@@ -254,26 +350,114 @@ async function uploadSkillIcon(
   }
 }
 
-async function backupOldIcon(
+async function createCategory(
   supabase: SupabaseClient,
-  currentUrl: string,
-  bucket: string
-): Promise<void> {
+  categoryData: CreateCategoryData
+): Promise<SkillsResult> {
   try {
-    // Extract file path from URL
-    const urlParts = currentUrl.split('/');
-    const fileName = urlParts[urlParts.length - 1];
-    const filePath = `skills/${fileName}`;
-
-    // Copy to backup folder
-    const { error } = await supabase.storage
-      .from(bucket)
-      .copy(filePath, `backup/skills/${Date.now()}_${fileName}`);
-
-    if (error) {
-      console.warn('Failed to backup old icon:', error);
+    if (!categoryData.name || categoryData.name.trim().length === 0) {
+      return { success: false, error: 'Category name is required' };
     }
+
+    if (categoryData.name.length > 100) {
+      return { success: false, error: 'Category name must be less than 100 characters' };
+    }
+
+    const { data, error } = await supabase
+      .from('skills_categories')
+      .insert({ name: categoryData.name.trim() })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return { success: true, data };
   } catch (error) {
-    console.warn('Error backing up old icon:', error);
+    console.error('Error creating category:', error);
+    return {
+      success: false,
+      error: 'Failed to create category',
+    };
+  }
+}
+
+async function updateCategory(
+  supabase: SupabaseClient,
+  categoryId: number,
+  updateData: UpdateCategoryData
+): Promise<SkillsResult> {
+  try {
+    if (updateData.name !== undefined) {
+      if (!updateData.name || updateData.name.trim().length === 0) {
+        return { success: false, error: 'Category name cannot be empty' };
+      }
+      if (updateData.name.length > 100) {
+        return { success: false, error: 'Category name must be less than 100 characters' };
+      }
+    }
+
+    const { data: existingCategory, error: fetchError } = await supabase
+      .from('skills_categories')
+      .select('id')
+      .eq('id', categoryId)
+      .single();
+
+    if (fetchError || !existingCategory) {
+      return { success: false, error: 'Category not found' };
+    }
+
+    const { data, error } = await supabase
+      .from('skills_categories')
+      .update({ name: updateData.name?.trim() })
+      .eq('id', categoryId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error updating category:', error);
+    return {
+      success: false,
+      error: 'Failed to update category',
+    };
+  }
+}
+
+async function deleteCategory(
+  supabase: SupabaseClient,
+  categoryId: number
+): Promise<SkillsResult> {
+  try {
+    // Check if category has skills
+    const { data: skills, error: skillsError } = await supabase
+      .from('skills')
+      .select('id')
+      .eq('category_id', categoryId);
+
+    if (skillsError) throw skillsError;
+
+    if (skills && skills.length > 0) {
+      return {
+        success: false,
+        error: `Cannot delete category with ${skills.length} skill(s). Remove all skills first.`,
+      };
+    }
+
+    const { error } = await supabase
+      .from('skills_categories')
+      .delete()
+      .eq('id', categoryId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return {
+      success: false,
+      error: 'Failed to delete category',
+    };
   }
 }

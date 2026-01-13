@@ -1,10 +1,24 @@
+import { redirect } from 'next/navigation';
+
+// Registration is disabled for security (single-user CMS)
+// To re-enable, uncomment the RegisterPageContent component below
+
+export default function RegisterPage() {
+  // Redirect to login - registration disabled
+  redirect('/cms/login');
+}
+
+/*
+// ============ DISABLED REGISTRATION CODE ============
+// Uncomment this section to re-enable registration
+
 'use client';
 
-import { login } from '@/app/actions/cms/login';
+import { signup } from '@/app/actions/cms/signup';
 import { CircleUserRound } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -40,7 +54,7 @@ export default function RegisterPage() {
     setPasswordStrength(strength);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
@@ -58,7 +72,10 @@ export default function RegisterPage() {
     }
 
     if (Object.keys(newErrors).length === 0) {
-      login(email, password);
+      const result = await signup(email, password);
+      if (result?.error) {
+        setErrors({ general: result.error });
+      }
     } else {
       setErrors(newErrors);
     }
@@ -124,6 +141,10 @@ export default function RegisterPage() {
             )}
           </div>
 
+          {errors.general && (
+            <p className="text-red-500 text-sm">{errors.general}</p>
+          )}
+
           <button
             type="submit"
             className="w-full text-xl bg-secondary text-lighttext transition-all py-3 rounded-lg hover:bg-main focus:outline-hidden"
@@ -135,3 +156,4 @@ export default function RegisterPage() {
     </section>
   );
 }
+*/

@@ -216,11 +216,21 @@ export const getPosts = unstable_cache(
   { revalidate: revalTime, tags: ['posts'] }
 );
 
+export type PostAuthor = {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+};
+
+export type PostWithAuthor = (PortfolioPost | BlogPost) & {
+  author?: PostAuthor | null;
+};
+
 export const getPost = unstable_cache(
   async (
     id: string,
     type: string
-  ): Promise<PortfolioPost | BlogPost | null> => {
+  ): Promise<PostWithAuthor | null> => {
     const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 
     let query = supabase.from(tableName).select('*').eq('id', id);
@@ -241,7 +251,22 @@ export const getPost = unstable_cache(
       console.error(`Error fetching ${type} post:`, error);
       throw error;
     }
-    return data;
+
+    // Fetch author profile if author_id exists
+    let author: PostAuthor | null = null;
+    if (data?.author_id) {
+      const { data: authorData } = await supabase
+        .from('user_profiles')
+        .select('id, display_name, avatar_url')
+        .eq('id', data.author_id)
+        .single();
+      
+      if (authorData) {
+        author = authorData;
+      }
+    }
+
+    return { ...data, author };
   },
   ['post'], // Simple key since the cache will be shared across all getPost calls
   { revalidate: revalTime, tags: ['post'] }

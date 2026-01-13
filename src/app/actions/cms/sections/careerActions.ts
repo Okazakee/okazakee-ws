@@ -1,4 +1,14 @@
 'use server';
+
+import {
+  backupOldFile,
+  isValidDate,
+  isValidUrl,
+  processImage,
+  requireAdmin,
+  sanitizeFilename,
+  validateImageFile,
+} from '@/app/actions/cms/utils/fileHelpers';
 import type { CareerEntry } from '@/types/fetchedData.types';
 import { getCareerEntries } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
@@ -38,7 +48,7 @@ type UpdateCareerData = Partial<CreateCareerData>;
 
 type CareerResult = {
   success: boolean;
-  data?: any;
+  data?: CareerEntry | CareerEntry[] | { logo: string; blurhashURL: string } | null;
   error?: string;
 };
 
@@ -100,42 +110,16 @@ function validateCareerData(data: CreateCareerData | UpdateCareerData): { isVali
   return { isValid: true };
 }
 
-function validateFileUpload(file: File): { isValid: boolean; error?: string } {
-  // File type validation
-  if (!file.type.startsWith('image/')) {
-    return { isValid: false, error: 'Please select a valid image file (JPG, PNG, WebP, etc.)' };
-  }
-
-  // File size validation (5MB limit)
-  if (file.size > 5 * 1024 * 1024) {
-    return { isValid: false, error: 'Image file is too large. Please select an image smaller than 5MB' };
-  }
-
-  // File name validation
-  if (file.name.length > 255) {
-    return { isValid: false, error: 'File name is too long' };
-  }
-
-  return { isValid: true };
-}
-
-function isValidUrl(string: string): boolean {
-  try {
-    new URL(string);
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
-
-function isValidDate(dateString: string): boolean {
-  const date = new Date(dateString);
-  return date instanceof Date && !isNaN(date.getTime());
-}
-
 export async function careerActions(
   operation: CareerOperation
 ): Promise<CareerResult> {
+  // Admin check - only admins can manage career
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: 'Unauthorized: Admin access required' };
+  }
+
   const supabase = await createClient();
 
   try {
@@ -298,15 +282,15 @@ async function uploadCareerLogo(
 ): Promise<CareerResult> {
   try {
     // Validate file
-    const fileValidation = validateFileUpload(file);
+    const fileValidation = validateImageFile(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
     }
 
-    // Check if career entry exists
+    // Check if career entry exists and get company name for filename
     const { data: existingCareer, error: fetchError } = await supabase
       .from('career_entries')
-      .select('id')
+      .select('id, company')
       .eq('id', careerId)
       .single();
 
@@ -319,18 +303,27 @@ async function uploadCareerLogo(
       await backupOldFile(supabase, currentLogoUrl, 'website');
     }
 
-    // Generate blurhash
-    const blurhash = await generateBlurhashFromFile(file);
+    // Process image: resize, convert to WebP, generate blurhash
+    const processed = await processImage(file);
+    if (!processed.success || !processed.buffer) {
+      return { success: false, error: processed.error || 'Failed to process image' };
+    }
+    const { buffer, blurhash } = processed;
 
-    // Upload to Supabase Storage
-    const fileName = `career/logos/${careerId}_${Date.now()}.${file.name
-      .split('.')
-      .pop()}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Generate filename: {careerId}-{company}.webp
+    const sanitizedCompany = sanitizeFilename(existingCareer.company || 'company');
+    const fileName = `career/logos/${careerId}-${sanitizedCompany}.webp`;
+
+    // Delete old file with same name if exists
+    await supabase.storage.from('website').remove([fileName]);
+
+    // Upload processed image to Supabase Storage
+    const { error: uploadError } = await supabase.storage
       .from('website')
-      .upload(fileName, file, {
+      .upload(fileName, buffer, {
         cacheControl: '3600',
-        upsert: false,
+        contentType: 'image/webp',
+        upsert: true,
       });
 
     if (uploadError) throw uploadError;
@@ -353,7 +346,7 @@ async function uploadCareerLogo(
 
     return {
       success: true,
-      data: { logo: urlData.publicUrl, blurhashURL: blurhash },
+      data: { logo: urlData.publicUrl, blurhashURL: blurhash || '' },
     };
   } catch (error) {
     console.error('Error uploading career logo:', error);
@@ -361,48 +354,5 @@ async function uploadCareerLogo(
       success: false,
       error: 'Failed to upload career logo',
     };
-  }
-}
-
-// Helper functions (copied from other action files)
-async function backupOldFile(
-  supabase: SupabaseClient,
-  fileUrl: string,
-  bucket: string
-): Promise<void> {
-  try {
-    const fileName = fileUrl.split('/').pop();
-    if (fileName) {
-      const backupName = `backup/${Date.now()}_${fileName}`;
-      const { data: oldFile } = await supabase.storage
-        .from(bucket)
-        .download(fileName);
-
-      if (oldFile) {
-        await supabase.storage.from(bucket).upload(backupName, oldFile);
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to backup old file:', error);
-  }
-}
-
-async function generateBlurhashFromFile(file: File): Promise<string> {
-  // For server-side, we'll generate a simple placeholder blurhash
-  // In a production environment, you'd want to use a server-side image processing library
-  // like sharp or jimp to generate proper blurhashes
-  
-  try {
-    // Create a simple placeholder blurhash based on file properties
-    const fileSize = file.size;
-    const fileName = file.name;
-    
-    // Generate a deterministic but simple blurhash based on file properties
-    const hash = `L6PZfSi_.AyE_3t7t7R**0o#DgR4`;
-    
-    return hash;
-  } catch (error) {
-    console.warn('Failed to generate blurhash, using placeholder:', error);
-    return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4'; // Default placeholder
   }
 }

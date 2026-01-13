@@ -1,32 +1,26 @@
 'use client';
 
-import { portfolioActions } from '@/app/actions/cms/sections/portfolioActions';
+import { type Author, portfolioActions } from '@/app/actions/cms/sections/portfolioActions';
+import { useLayoutStore } from '@/store/layoutStore';
 import type { PortfolioPost } from '@/types/fetchedData.types';
 import {
-  Briefcase,
   Calendar,
-  Code,
   Edit3,
-  ExternalLink,
   FileText,
-  Globe,
   Image as ImageIcon,
-  Link,
   Plus,
   Save,
   Trash2,
-  Upload,
+  User,
   X,
 } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 
-type PortfolioPostWithEditing = PortfolioPost & {
-  isEditing: boolean;
-};
+type FormMode = 'list' | 'create' | 'edit';
 
-type NewPortfolioPost = {
+type PortfolioFormData = {
   title_en: string;
   title_it: string;
   image: string;
@@ -39,37 +33,54 @@ type NewPortfolioPost = {
   blurhashURL: string;
   post_tags: string;
   store_link: string;
+  created_at: string;
+  author_id: string;
+};
+
+const emptyFormData: PortfolioFormData = {
+  title_en: '',
+  title_it: '',
+  image: '',
+  source_link: '',
+  demo_link: '',
+  description_en: '',
+  description_it: '',
+  body_en: '',
+  body_it: '',
+  blurhashURL: '',
+  post_tags: '',
+  store_link: '',
+  created_at: new Date().toISOString().split('T')[0],
+  author_id: '',
 };
 
 export default function PortfolioSection() {
-  const [portfolioPosts, setPortfolioPosts] = useState<
-    PortfolioPostWithEditing[]
-  >([]);
+  const [portfolioPosts, setPortfolioPosts] = useState<PortfolioPost[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newPortfolioPost, setNewPortfolioPost] = useState<NewPortfolioPost>({
-    title_en: '',
-    title_it: '',
-    image: '',
-    source_link: '',
-    demo_link: '',
-    description_en: '',
-    description_it: '',
-    body_en: '',
-    body_it: '',
-    blurhashURL: '',
-    post_tags: '',
-    store_link: '',
-  });
 
-  // Drag and drop states
-  const [dragStates, setDragStates] = useState<Record<string, boolean>>({});
-  const [newPostImage, setNewPostImage] = useState<File | null>(null);
+  // Form state
+  const [mode, setMode] = useState<FormMode>('list');
+  const [editingPostId, setEditingPostId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<PortfolioFormData>(emptyFormData);
+  const [formImage, setFormImage] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+
+  const { user } = useLayoutStore();
 
   useEffect(() => {
     fetchPortfolioData();
+    fetchAuthors();
   }, []);
+
+  // Set default author to current user when creating
+  useEffect(() => {
+    if (mode === 'create' && user && !formData.author_id) {
+      setFormData(prev => ({ ...prev, author_id: user.id }));
+    }
+  }, [mode, user, formData.author_id]);
 
   const fetchPortfolioData = async () => {
     setIsLoading(true);
@@ -80,58 +91,83 @@ export default function PortfolioSection() {
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch portfolio data');
       }
-
-      const postsWithEditing = (result.data as PortfolioPost[]).map(
-        (post: PortfolioPost) => ({
-          ...post,
-          isEditing: false,
-        })
-      );
-
-      setPortfolioPosts(postsWithEditing);
+      setPortfolioPosts(result.data as PortfolioPost[]);
     } catch (error) {
       console.error('Error fetching portfolio data:', error);
       setError(
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch portfolio data'
+        error instanceof Error ? error.message : 'Failed to fetch portfolio data'
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (
-    postId: number,
-    field: string,
-    value: string | boolean | null
-  ) => {
-    setPortfolioPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId ? { ...post, [field]: value } : post
-      )
-    );
+  const fetchAuthors = async () => {
+    try {
+      const result = await portfolioActions({ type: 'GET_AUTHORS' });
+      if (result.success) {
+        setAuthors(result.data as Author[]);
+      }
+    } catch (error) {
+      console.error('Error fetching authors:', error);
+    }
   };
 
-  const handleNewPostChange = (field: string, value: string) => {
-    setNewPortfolioPost((prev) => ({ ...prev, [field]: value }));
+  const handleFormChange = (field: keyof PortfolioFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const openCreateForm = () => {
+    setFormData(emptyFormData);
+    setFormImage(null);
+    setEditingPostId(null);
+    setMode('create');
+  };
+
+  const openEditForm = (post: PortfolioPost & { author_id?: string }) => {
+    setFormData({
+      title_en: post.title_en ?? '',
+      title_it: post.title_it ?? '',
+      image: post.image ?? '',
+      source_link: post.source_link ?? '',
+      demo_link: post.demo_link ?? '',
+      description_en: post.description_en ?? '',
+      description_it: post.description_it ?? '',
+      body_en: post.body_en ?? '',
+      body_it: post.body_it ?? '',
+      blurhashURL: post.blurhashURL ?? '',
+      post_tags: post.post_tags ?? '',
+      store_link: post.store_link ?? '',
+      created_at: post.created_at?.split('T')[0] ?? new Date().toISOString().split('T')[0],
+      author_id: post.author_id ?? user?.id ?? '',
+    });
+    setFormImage(null);
+    setEditingPostId(post.id);
+    setMode('edit');
+  };
+
+  const closeForm = () => {
+    setFormData(emptyFormData);
+    setFormImage(null);
+    setEditingPostId(null);
+    setMode('list');
   };
 
   const handleCreatePortfolio = async () => {
-    if (!newPostImage) {
+    if (!formImage) {
       setError('Please select an image for the portfolio post');
       return;
     }
 
-    setIsCreating(true);
+    setIsSaving(true);
     setError(null);
 
     try {
       const result = await portfolioActions({
         type: 'CREATE',
         data: {
-          ...newPortfolioPost,
-          image: '', // Will be set after image upload
+          ...formData,
+          image: '',
         },
       });
 
@@ -141,67 +177,49 @@ export default function PortfolioSection() {
 
       const newPost = result.data as PortfolioPost;
 
-      // Upload image
       const imageResult = await portfolioActions({
         type: 'UPLOAD_IMAGE',
         portfolioId: newPost.id,
-        file: newPostImage,
+        file: formImage,
       });
 
       if (!imageResult.success) {
         throw new Error(imageResult.error || 'Failed to upload image');
       }
 
-      // Reset form
-      setNewPortfolioPost({
-        title_en: '',
-        title_it: '',
-        image: '',
-        source_link: '',
-        demo_link: '',
-        description_en: '',
-        description_it: '',
-        body_en: '',
-        body_it: '',
-        blurhashURL: '',
-        post_tags: '',
-        store_link: '',
-      });
-      setNewPostImage(null);
-      setIsCreating(false);
-
-      // Refresh data
+      closeForm();
       await fetchPortfolioData();
     } catch (error) {
       console.error('Error creating portfolio post:', error);
       setError(
         error instanceof Error ? error.message : 'Failed to create portfolio post'
       );
-      setIsCreating(false);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleUpdatePortfolio = async (postId: number) => {
-    const post = portfolioPosts.find((p) => p.id === postId);
-    if (!post) return;
+  const handleUpdatePortfolio = async () => {
+    if (!editingPostId) return;
 
+    setIsSaving(true);
     setError(null);
 
     try {
       const result = await portfolioActions({
         type: 'UPDATE',
-        id: postId,
+        id: editingPostId,
         data: {
-          title_en: post.title_en,
-          title_it: post.title_it,
-          source_link: post.source_link,
-          demo_link: post.demo_link,
-          store_link: post.store_link,
-          description_en: post.description_en,
-          description_it: post.description_it,
-          body_en: post.body_en,
-          body_it: post.body_it,
-          post_tags: post.post_tags,
+          title_en: formData.title_en,
+          title_it: formData.title_it,
+          source_link: formData.source_link,
+          demo_link: formData.demo_link,
+          store_link: formData.store_link,
+          description_en: formData.description_en,
+          description_it: formData.description_it,
+          body_en: formData.body_en,
+          body_it: formData.body_it,
+          post_tags: formData.post_tags,
         },
       });
 
@@ -209,15 +227,29 @@ export default function PortfolioSection() {
         throw new Error(result.error || 'Failed to update portfolio post');
       }
 
-      // Update local state
-      setPortfolioPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, isEditing: false } : p))
-      );
+      // Upload new image if selected
+      if (formImage) {
+        const imageResult = await portfolioActions({
+          type: 'UPLOAD_IMAGE',
+          portfolioId: editingPostId,
+          file: formImage,
+          currentImageUrl: formData.image,
+        });
+
+        if (!imageResult.success) {
+          throw new Error(imageResult.error || 'Failed to upload image');
+        }
+      }
+
+      closeForm();
+      await fetchPortfolioData();
     } catch (error) {
       console.error('Error updating portfolio post:', error);
       setError(
         error instanceof Error ? error.message : 'Failed to update portfolio post'
       );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -233,7 +265,6 @@ export default function PortfolioSection() {
         throw new Error(result.error || 'Failed to delete portfolio post');
       }
 
-      // Remove from local state
       setPortfolioPosts((prev) => prev.filter((p) => p.id !== postId));
     } catch (error) {
       console.error('Error deleting portfolio post:', error);
@@ -243,82 +274,314 @@ export default function PortfolioSection() {
     }
   };
 
-  const handleImageUpload = async (postId: number, file: File) => {
-    setError(null);
-
-    try {
-      const post = portfolioPosts.find((p) => p.id === postId);
-      if (!post) return;
-
-      const result = await portfolioActions({
-        type: 'UPLOAD_IMAGE',
-        portfolioId: postId,
-        file,
-        currentImageUrl: post.image,
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to upload image');
-      }
-
-      // Refresh data to get updated image
-      await fetchPortfolioData();
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to upload image'
-      );
-    }
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(true);
   };
 
-  const handleDragOver = (e: React.DragEvent, postId: string) => {
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [postId]: true }));
+    setDragActive(false);
   };
 
-  const handleDragLeave = (e: React.DragEvent, postId: string) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [postId]: false }));
-  };
-
-  const handleDrop = (e: React.DragEvent, postId: string) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [postId]: false }));
+    setDragActive(false);
 
     const files = Array.from(e.dataTransfer.files);
     const imageFile = files.find((file) => file.type.startsWith('image/'));
 
     if (imageFile) {
-      if (postId === 'new') {
-        setNewPostImage(imageFile);
-      } else {
-        handleImageUpload(parseInt(postId), imageFile);
-      }
+      setFormImage(imageFile);
     }
   };
 
-  const handleFileInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    postId: string
-  ) => {
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (postId === 'new') {
-        setNewPostImage(file);
-      } else {
-        handleImageUpload(parseInt(postId), file);
-      }
+      setFormImage(file);
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-main"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-main" />
       </div>
     );
   }
 
+  // Form view (create or edit)
+  if (mode === 'create' || mode === 'edit') {
+    const isEditing = mode === 'edit';
+    const currentImage = formImage
+      ? URL.createObjectURL(formImage)
+      : isEditing ? formData.image : null;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
+            {isEditing ? 'Edit Portfolio Post' : 'Create New Portfolio Post'}
+          </h2>
+          <button
+            type="button"
+            onClick={closeForm}
+            className="flex items-center gap-2 px-4 py-2 bg-darkgray dark:bg-darkergray text-lighttext rounded-lg hover:bg-darkergray dark:hover:bg-darkestgray transition-colors"
+          >
+            <X className="h-4 w-4" />
+            Cancel
+          </button>
+        </div>
+
+        {error && (
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        )}
+
+        <div className="p-6 bg-bglight dark:bg-darkgray rounded-lg border-2 border-main">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                English Title
+              </label>
+              <input
+                type="text"
+                value={formData.title_en}
+                onChange={(e) => handleFormChange('title_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter English title"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                Italian Title
+              </label>
+              <input
+                type="text"
+                value={formData.title_it}
+                onChange={(e) => handleFormChange('title_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter Italian title"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                Source Code Link
+              </label>
+              <input
+                type="url"
+                value={formData.source_link}
+                onChange={(e) => handleFormChange('source_link', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="https://github.com/..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                Demo Link
+              </label>
+              <input
+                type="url"
+                value={formData.demo_link}
+                onChange={(e) => handleFormChange('demo_link', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="https://demo.example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                Store Link
+              </label>
+              <input
+                type="url"
+                value={formData.store_link}
+                onChange={(e) => handleFormChange('store_link', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="https://play.google.com/..."
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                English Description
+              </label>
+              <textarea
+                value={formData.description_en}
+                onChange={(e) => handleFormChange('description_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={3}
+                placeholder="Enter English description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                Italian Description
+              </label>
+              <textarea
+                value={formData.description_it}
+                onChange={(e) => handleFormChange('description_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={3}
+                placeholder="Enter Italian description"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                English Content
+              </label>
+              <textarea
+                value={formData.body_en}
+                onChange={(e) => handleFormChange('body_en', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={5}
+                placeholder="Enter English content"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                Italian Content
+              </label>
+              <textarea
+                value={formData.body_it}
+                onChange={(e) => handleFormChange('body_it', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                rows={5}
+                placeholder="Enter Italian content"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                Tags
+              </label>
+              <input
+                type="text"
+                value={formData.post_tags}
+                onChange={(e) => handleFormChange('post_tags', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                placeholder="Enter tags (comma separated)"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                <Calendar className="h-4 w-4 inline mr-1" />
+                Publication Date
+              </label>
+              <input
+                type="date"
+                value={formData.created_at}
+                onChange={(e) => handleFormChange('created_at', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-main mb-1">
+                <User className="h-4 w-4 inline mr-1" />
+                Author
+              </label>
+              <select
+                value={formData.author_id}
+                onChange={(e) => handleFormChange('author_id', e.target.value)}
+                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                required
+              >
+                <option value="">Select an author</option>
+                {authors.map((author) => (
+                  <option key={author.id} value={author.id}>
+                    {author.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-main mb-2">
+              Image {isEditing && !formImage && '(leave empty to keep current)'}
+            </label>
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                dragActive
+                  ? 'border-main bg-main/10 dark:bg-main/20'
+                  : 'border-main'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {currentImage ? (
+                <div className="space-y-2">
+                  <Image
+                    src={currentImage}
+                    alt="Preview"
+                    width={200}
+                    height={200}
+                    className="mx-auto rounded-lg object-cover"
+                  />
+                  <p className="text-sm text-darktext dark:text-lighttext2">
+                    {formImage ? formImage.name : 'Current image'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <ImageIcon className="h-8 w-8 mx-auto text-gray-400" />
+                  <p className="text-sm text-darktext dark:text-lighttext2">
+                    Drag and drop an image here, or click to select
+                  </p>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileInputChange}
+                className="hidden"
+                id="form-image"
+              />
+              <label
+                htmlFor="form-image"
+                className="mt-2 inline-block px-4 py-2 bg-secondary text-white rounded-lg cursor-pointer hover:bg-tertiary transition-colors border-2 border-secondary hover:border-tertiary"
+              >
+                {currentImage ? 'Change Image' : 'Select Image'}
+              </label>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={isEditing ? handleUpdatePortfolio : handleCreatePortfolio}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary disabled:opacity-50 transition-colors border-2 border-main hover:border-secondary"
+            >
+              <Save className="h-4 w-4" />
+              {isSaving ? 'Saving...' : isEditing ? 'Update Portfolio Post' : 'Create Portfolio Post'}
+            </button>
+            <button
+              type="button"
+              onClick={closeForm}
+              className="px-4 py-2 bg-darkgray dark:bg-darkergray text-lighttext rounded-lg hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border-2 border-darkgray dark:border-darkergray"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // List view
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -326,7 +589,8 @@ export default function PortfolioSection() {
           Portfolio Posts
         </h2>
         <button
-          onClick={() => setIsCreating(!isCreating)}
+          type="button"
+          onClick={openCreateForm}
           className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary transition-colors border-2 border-main hover:border-secondary"
         >
           <Plus className="h-4 w-4" />
@@ -340,280 +604,45 @@ export default function PortfolioSection() {
         </div>
       )}
 
-      {isCreating && (
-        <div className="p-6 bg-bglight dark:bg-darkgray rounded-lg border-2 border-main dark:border-main">
-          <h3 className="text-lg font-semibold mb-4 text-darktext dark:text-lighttext">
-            Create New Portfolio Post
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                English Title
-              </label>
-              <input
-                type="text"
-                value={newPortfolioPost.title_en}
-                onChange={(e) => handleNewPostChange('title_en', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                placeholder="Enter English title"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Italian Title
-              </label>
-              <input
-                type="text"
-                value={newPortfolioPost.title_it}
-                onChange={(e) => handleNewPostChange('title_it', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                placeholder="Enter Italian title"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Source Code Link
-              </label>
-              <input
-                type="url"
-                value={newPortfolioPost.source_link}
-                onChange={(e) => handleNewPostChange('source_link', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                placeholder="https://github.com/..."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Demo Link
-              </label>
-              <input
-                type="url"
-                value={newPortfolioPost.demo_link}
-                onChange={(e) => handleNewPostChange('demo_link', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                placeholder="https://demo.example.com"
-              />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-main dark:text-main mb-1">
-              Store Link
-            </label>
-            <input
-              type="url"
-              value={newPortfolioPost.store_link}
-              onChange={(e) => handleNewPostChange('store_link', e.target.value)}
-              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-              placeholder="https://play.google.com/store/..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                English Description
-              </label>
-              <textarea
-                value={newPortfolioPost.description_en}
-                onChange={(e) => handleNewPostChange('description_en', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                rows={3}
-                placeholder="Enter English description"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Italian Description
-              </label>
-              <textarea
-                value={newPortfolioPost.description_it}
-                onChange={(e) => handleNewPostChange('description_it', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                rows={3}
-                placeholder="Enter Italian description"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                English Content
-              </label>
-              <textarea
-                value={newPortfolioPost.body_en}
-                onChange={(e) => handleNewPostChange('body_en', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                rows={5}
-                placeholder="Enter English content"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Italian Content
-              </label>
-              <textarea
-                value={newPortfolioPost.body_it}
-                onChange={(e) => handleNewPostChange('body_it', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                rows={5}
-                placeholder="Enter Italian content"
-              />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-main dark:text-main mb-1">
-              Tags
-            </label>
-            <input
-              type="text"
-              value={newPortfolioPost.post_tags}
-              onChange={(e) => handleNewPostChange('post_tags', e.target.value)}
-              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-              placeholder="Enter tags (comma separated)"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-main dark:text-main mb-2">
-              Image
-            </label>
-            <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                dragStates['new']
-                  ? 'border-main bg-main/10 dark:bg-main/20'
-                  : 'border-main dark:border-main'
-              }`}
-              onDragOver={(e) => handleDragOver(e, 'new')}
-              onDragLeave={(e) => handleDragLeave(e, 'new')}
-              onDrop={(e) => handleDrop(e, 'new')}
-            >
-              {newPostImage ? (
-                <div className="space-y-2">
-                  <Image
-                    src={URL.createObjectURL(newPostImage)}
-                    alt="Preview"
-                    width={200}
-                    height={200}
-                    className="mx-auto rounded-lg"
-                  />
-                  <p className="text-sm text-darktext dark:text-lighttext2">
-                    {newPostImage.name}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <ImageIcon className="h-8 w-8 mx-auto text-main dark:text-main" />
-                  <p className="text-sm text-darktext dark:text-lighttext2">
-                    Drag and drop an image here, or click to select
-                  </p>
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileInputChange(e, 'new')}
-                className="hidden"
-                id="new-post-image"
-              />
-              <label
-                htmlFor="new-post-image"
-                className="mt-2 inline-block px-4 py-2 bg-secondary text-white rounded-lg cursor-pointer hover:bg-tertiary transition-colors border-2 border-secondary hover:border-tertiary"
-              >
-                Select Image
-              </label>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleCreatePortfolio}
-              disabled={isCreating}
-              className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary disabled:opacity-50 transition-colors border-2 border-main hover:border-secondary"
-            >
-              <Save className="h-4 w-4" />
-              {isCreating ? 'Creating...' : 'Create Portfolio Post'}
-            </button>
-            <button
-              onClick={() => setIsCreating(false)}
-              className="px-4 py-2 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext rounded-lg hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border-2 border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {portfolioPosts.map((post) => (
           <div
             key={post.id}
-            className="bg-bglight dark:bg-darkgray rounded-lg border-2 border-main dark:border-main overflow-hidden"
+            className="bg-bglight dark:bg-darkgray rounded-lg border-2 border-main overflow-hidden"
           >
             <div className="relative">
-              <div
-                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                  dragStates[post.id.toString()]
-                    ? 'border-main bg-main/10 dark:bg-main/20'
-                    : 'border-main dark:border-main'
-                }`}
-                onDragOver={(e) => handleDragOver(e, post.id.toString())}
-                onDragLeave={(e) => handleDragLeave(e, post.id.toString())}
-                onDrop={(e) => handleDrop(e, post.id.toString())}
-              >
-                {post.image ? (
-                  <Image
-                    src={post.image}
-                    alt={post.title_en}
-                    width={300}
-                    height={200}
-                    className="w-full h-48 object-cover rounded-lg"
-                    placeholder="blur"
-                    blurDataURL={post.blurhashURL}
-                  />
-                ) : (
-                  <div className="h-48 flex items-center justify-center bg-bglight dark:bg-darkergray rounded-lg">
-                    <ImageIcon className="h-8 w-8 text-main dark:text-main" />
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileInputChange(e, post.id.toString())}
-                  className="hidden"
-                  id={`image-${post.id}`}
+              {post.image ? (
+                <Image
+                  src={post.image}
+                  alt={post.title_en}
+                  width={300}
+                  height={200}
+                  className="w-full h-48 object-cover"
+                  placeholder="blur"
+                  blurDataURL={post.blurhashURL}
                 />
-                <label
-                  htmlFor={`image-${post.id}`}
-                  className="mt-2 inline-block px-3 py-1 bg-secondary text-white rounded-sm text-sm cursor-pointer hover:bg-tertiary transition-colors border border-secondary hover:border-tertiary"
-                >
-                  <Upload className="h-3 w-3 inline mr-1" />
-                  Change Image
-                </label>
-              </div>
+              ) : (
+                <div className="h-48 flex items-center justify-center bg-bglight dark:bg-darkergray">
+                  <ImageIcon className="h-8 w-8 text-main" />
+                </div>
+              )}
             </div>
 
             <div className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-darktext dark:text-lighttext">
+                <h3 className="font-semibold text-darktext dark:text-lighttext truncate">
                   {post.title_en}
                 </h3>
                 <div className="flex gap-1">
                   <button
-                    onClick={() =>
-                      handleInputChange(post.id, 'isEditing', !post.isEditing)
-                    }
+                    type="button"
+                    onClick={() => openEditForm(post)}
                     className="p-1 text-main hover:text-secondary transition-colors"
                   >
                     <Edit3 className="h-4 w-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleDeletePortfolio(post.id)}
                     className="p-1 text-red-500 hover:text-red-600 transition-colors"
                   >
@@ -622,178 +651,24 @@ export default function PortfolioSection() {
                 </div>
               </div>
 
-              <p className="text-sm text-darktext dark:text-lighttext2 mb-2">
+              <p className="text-sm text-darktext dark:text-lighttext2 mb-2 line-clamp-2">
                 {post.description_en}
               </p>
 
               <div className="flex items-center gap-2 text-xs text-darktext dark:text-lighttext2">
                 <Calendar className="h-3 w-3" />
-                <span>
-                  {new Date(post.created_at).toLocaleDateString()}
-                </span>
+                <span>{new Date(post.created_at).toLocaleDateString()}</span>
                 <FileText className="h-3 w-3" />
                 <span>{post.views} views</span>
               </div>
-
-              {post.isEditing && (
-                <div className="mt-4 space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      English Title
-                    </label>
-                    <input
-                      type="text"
-                      value={post.title_en}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'title_en', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Italian Title
-                    </label>
-                    <input
-                      type="text"
-                      value={post.title_it}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'title_it', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Source Link
-                    </label>
-                    <input
-                      type="url"
-                      value={post.source_link}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'source_link', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Demo Link
-                    </label>
-                    <input
-                      type="url"
-                      value={post.demo_link}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'demo_link', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Store Link
-                    </label>
-                    <input
-                      type="url"
-                      value={post.store_link}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'store_link', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      English Description
-                    </label>
-                    <textarea
-                      value={post.description_en}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'description_en', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                      rows={2}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Italian Description
-                    </label>
-                    <textarea
-                      value={post.description_it}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'description_it', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                      rows={2}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      English Content
-                    </label>
-                    <textarea
-                      value={post.body_en}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'body_en', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Italian Content
-                    </label>
-                    <textarea
-                      value={post.body_it}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'body_it', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Tags
-                    </label>
-                    <input
-                      type="text"
-                      value={post.post_tags}
-                      onChange={(e) =>
-                        handleInputChange(post.id, 'post_tags', e.target.value)
-                      }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleUpdatePortfolio(post.id)}
-                      className="flex items-center gap-1 px-3 py-1 bg-main text-white text-sm rounded-sm hover:bg-secondary transition-colors border border-main hover:border-secondary"
-                    >
-                      <Save className="h-3 w-3" />
-                      Save
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleInputChange(post.id, 'isEditing', false)
-                      }
-                      className="px-3 py-1 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext text-sm rounded-sm hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         ))}
       </div>
 
-      {portfolioPosts.length === 0 && !isCreating && (
+      {portfolioPosts.length === 0 && (
         <div className="text-center py-8">
-          <FileText className="h-12 w-12 mx-auto text-main dark:text-main mb-4" />
+          <FileText className="h-12 w-12 mx-auto text-main mb-4" />
           <p className="text-darktext dark:text-lighttext2">
             No portfolio posts found. Create your first portfolio post!
           </p>

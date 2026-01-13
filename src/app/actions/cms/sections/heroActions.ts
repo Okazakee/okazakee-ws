@@ -1,8 +1,15 @@
 'use server';
+
+import {
+  backupOldFile,
+  processImage,
+  requireAdmin,
+  validateImageFile,
+  validatePdfFile,
+} from '@/app/actions/cms/utils/fileHelpers';
 import { getHeroSection, getResumeLink } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { encode } from 'blurhash';
 
 type HeroOperation =
   | { type: 'GET' }
@@ -51,12 +58,19 @@ type HeroResult = {
 export async function heroActions(
   operation: HeroOperation
 ): Promise<HeroResult> {
+  // Auth check - reject unauthenticated requests
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: 'Unauthorized: Authentication required' };
+  }
+
   const supabase = await createClient();
 
   try {
     switch (operation.type) {
       case 'GET':
-        return await getHeroData(supabase);
+        return await getHeroData();
 
       case 'UPDATE':
         return await updateHero(supabase, operation.data);
@@ -96,7 +110,7 @@ export async function heroActions(
   }
 }
 
-async function getHeroData(supabase: SupabaseClient): Promise<HeroResult> {
+async function getHeroData(): Promise<HeroResult> {
   try {
     const heroSection = await getHeroSection();
     const resumeData = await getResumeLink();
@@ -154,21 +168,37 @@ async function uploadHeroImage(
   currentImageUrl?: string
 ): Promise<HeroResult> {
   try {
+    // Validate file
+    const fileValidation = validateImageFile(file);
+    if (!fileValidation.isValid) {
+      return { success: false, error: fileValidation.error };
+    }
+
     // Backup old image if it exists
     if (currentImageUrl) {
       await backupOldFile(supabase, currentImageUrl, 'website');
     }
 
-    // Generate blurhash
-    const blurhash = await generateBlurhashFromFile(file);
+    // Process image: resize, convert to WebP, generate blurhash
+    const processed = await processImage(file);
+    if (!processed.success || !processed.buffer) {
+      return { success: false, error: processed.error || 'Failed to process image' };
+    }
+    const { buffer, blurhash } = processed;
 
     // Upload to Supabase Storage
-    const fileName = `hero/profile_${Date.now()}.${file.name.split('.').pop()}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const fileName = 'hero/profile.webp';
+
+    // Delete old file if exists
+    await supabase.storage.from('website').remove([fileName]);
+
+    // Upload processed image
+    const { error: uploadError } = await supabase.storage
       .from('website')
-      .upload(fileName, file, {
+      .upload(fileName, buffer, {
         cacheControl: '3600',
-        upsert: false,
+        contentType: 'image/webp',
+        upsert: true,
       });
 
     if (uploadError) throw uploadError;
@@ -209,6 +239,12 @@ async function uploadResume(
   currentResumeUrl?: string
 ): Promise<HeroResult> {
   try {
+    // Validate file
+    const fileValidation = validatePdfFile(file);
+    if (!fileValidation.isValid) {
+      return { success: false, error: fileValidation.error };
+    }
+
     // Backup old resume if it exists
     if (currentResumeUrl) {
       await backupOldFile(supabase, currentResumeUrl, 'website');
@@ -218,7 +254,7 @@ async function uploadResume(
     const fileName = `resumes/${field}_${Date.now()}.${file.name
       .split('.')
       .pop()}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('website')
       .upload(fileName, file, {
         cacheControl: '3600',
@@ -324,79 +360,3 @@ async function updateWithFiles(
   }
 }
 
-async function generateBlurhashFromFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-
-    img.onload = () => {
-      try {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-
-        const imageData = ctx?.getImageData(0, 0, img.width, img.height);
-
-        if (!imageData) {
-          reject(new Error('Could not get image data'));
-          return;
-        }
-
-        const blurhash = encode(
-          imageData.data,
-          imageData.width,
-          imageData.height,
-          4,
-          4
-        );
-
-        resolve(blurhash);
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
-  });
-}
-
-async function backupOldFile(
-  supabase: SupabaseClient,
-  currentUrl: string,
-  bucket: string
-): Promise<void> {
-  try {
-    // Extract filename from URL
-    const urlParts = currentUrl.split('/');
-    const fileName = urlParts[urlParts.length - 1];
-
-    if (!fileName) return;
-
-    // Create backup filename
-    const timestamp = Date.now();
-    const backupFileName = `${fileName.replace(
-      /\.[^/.]+$/,
-      ''
-    )}-bak-${timestamp}${fileName.match(/\.[^/.]+$/)?.[0] || ''}`;
-
-    // Copy file to backup location
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .copy(
-        `Website Assets/${
-          fileName.includes('profile') ? 'hero' : 'resumes'
-        }/${fileName}`,
-        `Website Assets/${
-          fileName.includes('profile') ? 'hero' : 'resumes'
-        }/backups/${backupFileName}`
-      );
-
-    if (error) {
-      console.warn('Failed to backup old file:', error);
-    }
-  } catch (error) {
-    console.warn('Error backing up old file:', error);
-  }
-}

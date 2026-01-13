@@ -31,7 +31,7 @@ type EditableSkill = Skill & {
 type EditableCategory = SkillsCategory & {
   skills: EditableSkill[];
   isEditing?: boolean;
-  newSkill?: Partial<EditableSkill>;
+  newSkill?: Partial<EditableSkill> & { icon_file?: File | null };
 };
 
 // API response types
@@ -50,8 +50,8 @@ type SkillApiResponse = {
 type UploadApiResponse = {
   success: boolean;
   data: {
-    url: string;
-    blurhash: string;
+    icon_url: string;
+    blurhashURL: string;
   };
   error?: string;
 };
@@ -220,8 +220,8 @@ export default function SkillsSection() {
           throw new Error(uploadResult.error || 'Failed to upload icon');
         }
 
-        updateData.icon = uploadResult.data.url;
-        updateData.blurhashURL = uploadResult.data.blurhash;
+        updateData.icon = uploadResult.data.icon_url;
+        updateData.blurhashURL = uploadResult.data.blurhashURL;
       }
 
       // Update the skill in database
@@ -290,8 +290,14 @@ export default function SkillsSection() {
     const category = categories.find((cat) => cat.id === categoryId);
     const newSkill = category?.newSkill;
 
-    if (!newSkill || !newSkill.title || !newSkill.icon) {
+    if (!newSkill || !newSkill.title) {
       setError('Please fill in all required fields');
+      return;
+    }
+
+    // Require either an icon URL or a file
+    if (!newSkill.icon && !newSkill.icon_file) {
+      setError('Please provide an icon (upload a file or enter a URL)');
       return;
     }
 
@@ -299,12 +305,12 @@ export default function SkillsSection() {
       setIsUpdating(true);
       setError(null);
 
-      // Create the new skill
+      // Create the new skill with placeholder icon if we're uploading a file
       const result = (await skillsActions({
         type: 'CREATE',
         data: {
           title: newSkill.title,
-          icon: newSkill.icon,
+          icon: newSkill.icon || 'pending-upload',
           invert: newSkill.invert || false,
           category_id: categoryId,
           blurhashURL: newSkill.blurhashURL || '',
@@ -315,13 +321,31 @@ export default function SkillsSection() {
         throw new Error(result.error || 'Failed to create skill');
       }
 
+      const createdSkill = result.data;
+
+      // If there's an icon file, upload it
+      if (newSkill.icon_file) {
+        const uploadResult = (await skillsActions({
+          type: 'UPLOAD_ICON',
+          skillId: createdSkill.id,
+          file: newSkill.icon_file,
+        })) as UploadApiResponse;
+
+        if (!uploadResult.success) {
+          throw new Error(uploadResult.error || 'Failed to upload icon');
+        }
+
+        createdSkill.icon = uploadResult.data.icon_url;
+        createdSkill.blurhashURL = uploadResult.data.blurhashURL;
+      }
+
       // Add the new skill to local state
       setCategories((prev) =>
         prev.map((cat) =>
           cat.id === categoryId
             ? {
                 ...cat,
-                skills: [...cat.skills, { ...result.data, isEditing: false }],
+                skills: [...cat.skills, { ...createdSkill, isEditing: false }],
                 newSkill: undefined,
               }
             : cat
@@ -335,6 +359,122 @@ export default function SkillsSection() {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  // Category management functions
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
+  const createCategory = async () => {
+    if (!newCategoryName.trim()) {
+      setError('Category name is required');
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      setError(null);
+
+      const result = await skillsActions({
+        type: 'CREATE_CATEGORY',
+        data: { name: newCategoryName.trim() },
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create category');
+      }
+
+      setNewCategoryName('');
+      setIsCreatingCategory(false);
+      await fetchSkillsData();
+    } catch (error) {
+      console.error('Error creating category:', error);
+      setError(
+        error instanceof Error ? error.message : 'Failed to create category'
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const updateCategory = async (categoryId: number, newName: string) => {
+    try {
+      setIsUpdating(true);
+      setError(null);
+
+      const result = await skillsActions({
+        type: 'UPDATE_CATEGORY',
+        id: categoryId,
+        data: { name: newName },
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update category');
+      }
+
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === categoryId ? { ...cat, name: newName, isEditing: false } : cat
+        )
+      );
+    } catch (error) {
+      console.error('Error updating category:', error);
+      setError(
+        error instanceof Error ? error.message : 'Failed to update category'
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const deleteCategory = async (categoryId: number) => {
+    if (!confirm('Are you sure you want to delete this category? All skills in this category must be removed first.')) {
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      setError(null);
+
+      const result = await skillsActions({
+        type: 'DELETE_CATEGORY',
+        id: categoryId,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete category');
+      }
+
+      setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      setError(
+        error instanceof Error ? error.message : 'Failed to delete category'
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleNewSkillFileChange = (categoryId: number, file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === categoryId
+            ? {
+                ...cat,
+                newSkill: {
+                  ...cat.newSkill!,
+                  icon: reader.result as string,
+                  icon_file: file,
+                },
+              }
+            : cat
+        )
+      );
+    };
+    reader.readAsDataURL(file);
   };
 
   const deleteSkillHandler = async (categoryId: number, skillId: number) => {
@@ -397,11 +537,116 @@ export default function SkillsSection() {
         </p>
       </div>
 
+      {/* Category Management */}
+      <div className="bg-darkergray rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-main">Manage Categories</h2>
+          {!isCreatingCategory && (
+            <button
+              type="button"
+              onClick={() => setIsCreatingCategory(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
+            >
+              <Plus className="w-4 h-4" />
+              Add Category
+            </button>
+          )}
+        </div>
+        
+        {isCreatingCategory && (
+          <div className="flex items-center gap-3 mb-4">
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              className="flex-1 px-3 py-2 bg-darkgray text-lighttext rounded-lg border border-darkgray focus:border-main focus:outline-hidden"
+              placeholder="Category name"
+            />
+            <button
+              type="button"
+              onClick={createCategory}
+              disabled={isUpdating}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200"
+            >
+              <Save className="w-4 h-4" />
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsCreatingCategory(false);
+                setNewCategoryName('');
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-8">
         {categories.map((category) => (
           <div key={category.id} className="bg-darkergray rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-main">{category.name}</h2>
+              {category.isEditing ? (
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    defaultValue={category.name}
+                    id={`category-name-${category.id}`}
+                    className="px-3 py-2 bg-darkgray text-lighttext rounded-lg border border-darkgray focus:border-main focus:outline-hidden text-xl font-bold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const input = document.getElementById(`category-name-${category.id}`) as HTMLInputElement;
+                      updateCategory(category.id, input.value);
+                    }}
+                    disabled={isUpdating}
+                    className="p-2 text-green-500 hover:text-green-400 transition-colors"
+                  >
+                    <Save className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCategories((prev) =>
+                        prev.map((cat) =>
+                          cat.id === category.id ? { ...cat, isEditing: false } : cat
+                        )
+                      )
+                    }
+                    className="p-2 text-lighttext2 hover:text-lighttext transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold text-main">{category.name}</h2>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCategories((prev) =>
+                        prev.map((cat) =>
+                          cat.id === category.id ? { ...cat, isEditing: true } : cat
+                        )
+                      )
+                    }
+                    className="p-2 text-lighttext2 hover:text-main transition-colors"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteCategory(category.id)}
+                    className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => addNewSkill(category.id)}
@@ -597,6 +842,46 @@ export default function SkillsSection() {
                       className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden"
                       placeholder="Skill title"
                     />
+                    
+                    {/* Icon Upload */}
+                    <div className="space-y-2">
+                      <label className="block text-sm text-lighttext2">Icon</label>
+                      <div className="flex items-center gap-3">
+                        {category.newSkill.icon ? (
+                          <Image
+                            src={category.newSkill.icon}
+                            width={48}
+                            height={48}
+                            className="rounded-lg"
+                            alt="New skill icon preview"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-darkgray rounded-lg flex items-center justify-center text-lighttext2 text-xs">
+                            No icon
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id={`new-skill-icon-${category.id}`}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleNewSkillFileChange(category.id, file);
+                            }}
+                          />
+                          <label
+                            htmlFor={`new-skill-icon-${category.id}`}
+                            className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200 cursor-pointer w-fit"
+                          >
+                            <Upload className="w-3 h-3" />
+                            Upload Icon
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"

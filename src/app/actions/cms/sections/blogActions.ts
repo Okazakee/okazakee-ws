@@ -1,10 +1,19 @@
 'use server';
+
+import {
+  backupOldFile,
+  processImage,
+  requireAuth,
+  sanitizeFilename,
+  validateImageFile,
+} from '@/app/actions/cms/utils/fileHelpers';
 import type { BlogPost } from '@/types/fetchedData.types';
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 type BlogOperation =
   | { type: 'GET' }
+  | { type: 'GET_AUTHORS' }
   | { type: 'CREATE'; data: CreateBlogData }
   | { type: 'UPDATE'; id: number; data: UpdateBlogData }
   | { type: 'DELETE'; id: number }
@@ -14,6 +23,12 @@ type BlogOperation =
       file: File;
       currentImageUrl?: string;
     };
+
+export type Author = {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+};
 
 type CreateBlogData = {
   title_en: string;
@@ -25,6 +40,8 @@ type CreateBlogData = {
   body_it: string;
   blurhashURL: string;
   post_tags: string;
+  created_at?: string;
+  author_id: string;
 };
 
 type UpdateBlogData = Partial<CreateBlogData>;
@@ -82,34 +99,26 @@ function validateBlogData(data: CreateBlogData | UpdateBlogData): { isValid: boo
   return { isValid: true };
 }
 
-function validateFileUpload(file: File): { isValid: boolean; error?: string } {
-  // File type validation
-  if (!file.type.startsWith('image/')) {
-    return { isValid: false, error: 'Please select a valid image file (JPG, PNG, WebP, etc.)' };
-  }
-
-  // File size validation (5MB limit)
-  if (file.size > 5 * 1024 * 1024) {
-    return { isValid: false, error: 'Image file is too large. Please select an image smaller than 5MB' };
-  }
-
-  // File name validation
-  if (file.name.length > 255) {
-    return { isValid: false, error: 'File name is too long' };
-  }
-
-  return { isValid: true };
-}
 
 export async function blogActions(
   operation: BlogOperation
 ): Promise<BlogResult> {
+  // Auth check - reject unauthenticated requests
+  try {
+    await requireAuth();
+  } catch {
+    return { success: false, error: 'Unauthorized: Authentication required' };
+  }
+
   const supabase = await createClient();
 
   try {
     switch (operation.type) {
       case 'GET':
         return await getBlogData(supabase);
+
+      case 'GET_AUTHORS':
+        return await getAuthors(supabase);
 
       case 'CREATE':
         return await createBlog(supabase, operation.data);
@@ -163,6 +172,32 @@ async function getBlogData(supabase: SupabaseClient): Promise<BlogResult> {
     return {
       success: false,
       error: `Failed to fetch blog data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
+
+async function getAuthors(supabase: SupabaseClient): Promise<BlogResult> {
+  try {
+    // Fetch all users who have profiles (have logged in at least once)
+    const { data: profiles, error } = await supabase
+      .from('user_profiles')
+      .select('id, display_name, avatar_url')
+      .order('display_name', { ascending: true });
+
+    if (error) {
+      console.error('Database error:', error);
+      return {
+        success: false,
+        error: `Database error: ${error.message}`,
+      };
+    }
+
+    return { success: true, data: profiles || [] };
+  } catch (error) {
+    console.error('Error fetching authors:', error);
+    return {
+      success: false,
+      error: `Failed to fetch authors: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 }
@@ -276,15 +311,15 @@ async function uploadBlogImage(
 ): Promise<BlogResult> {
   try {
     // Validate file
-    const fileValidation = validateFileUpload(file);
+    const fileValidation = validateImageFile(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
     }
 
-    // Check if blog post exists
+    // Check if blog post exists and get title for filename
     const { data: existingBlog, error: fetchError } = await supabase
       .from('blog_posts')
-      .select('id')
+      .select('id, title_en')
       .eq('id', blogId)
       .single();
 
@@ -297,18 +332,27 @@ async function uploadBlogImage(
       await backupOldFile(supabase, currentImageUrl, 'website');
     }
 
-    // Generate blurhash
-    const blurhash = await generateBlurhashFromFile(file);
+    // Process image: resize, convert to WebP, generate blurhash
+    const processed = await processImage(file);
+    if (!processed.success || !processed.buffer) {
+      return { success: false, error: processed.error || 'Failed to process image' };
+    }
+    const { buffer, blurhash } = processed;
 
-    // Upload to Supabase Storage
-    const fileName = `blog/images/${blogId}_${Date.now()}.${file.name
-      .split('.')
-      .pop()}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Generate filename: {postId}-{title_en}.webp
+    const sanitizedTitle = sanitizeFilename(existingBlog.title_en || 'untitled');
+    const fileName = `blog/images/${blogId}-${sanitizedTitle}.webp`;
+
+    // Delete old file with same name if exists (upsert doesn't work well with different content)
+    await supabase.storage.from('website').remove([fileName]);
+
+    // Upload processed image to Supabase Storage
+    const { error: uploadError } = await supabase.storage
       .from('website')
-      .upload(fileName, file, {
+      .upload(fileName, buffer, {
         cacheControl: '3600',
-        upsert: false,
+        contentType: 'image/webp',
+        upsert: true,
       });
 
     if (uploadError) throw uploadError;
@@ -339,48 +383,5 @@ async function uploadBlogImage(
       success: false,
       error: 'Failed to upload blog image',
     };
-  }
-}
-
-// Helper functions (copied from other action files)
-async function backupOldFile(
-  supabase: SupabaseClient,
-  fileUrl: string,
-  bucket: string
-): Promise<void> {
-  try {
-    const fileName = fileUrl.split('/').pop();
-    if (fileName) {
-      const backupName = `backup/${Date.now()}_${fileName}`;
-      const { data: oldFile } = await supabase.storage
-        .from(bucket)
-        .download(fileName);
-
-      if (oldFile) {
-        await supabase.storage.from(bucket).upload(backupName, oldFile);
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to backup old file:', error);
-  }
-}
-
-async function generateBlurhashFromFile(file: File): Promise<string> {
-  // For server-side, we'll generate a simple placeholder blurhash
-  // In a production environment, you'd want to use a server-side image processing library
-  // like sharp or jimp to generate proper blurhashes
-  
-  try {
-    // Create a simple placeholder blurhash based on file properties
-    const fileSize = file.size;
-    const fileName = file.name;
-    
-    // Generate a deterministic but simple blurhash based on file properties
-    const hash = `L6PZfSi_.AyE_3t7t7R**0o#DgR4`;
-    
-    return hash;
-  } catch (error) {
-    console.warn('Failed to generate blurhash, using placeholder:', error);
-    return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4'; // Default placeholder
   }
 }

@@ -3,7 +3,7 @@ import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
-import { getPost, getPosts } from '@utils/getData';
+import { type PostWithAuthor, getPost, getPosts } from '@utils/getData';
 import { CirclePlay, Clock, ExternalLink, Github, Star } from 'lucide-react';
 import moment from 'moment';
 import { getTranslations } from 'next-intl/server';
@@ -25,7 +25,7 @@ export default async function Page({
 }) {
   const { id, title, post_type, locale } = await params;
 
-  const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
+  const post: PostWithAuthor | null = await getPost(id, post_type);
 
   const t = await getTranslations('posts-section');
 
@@ -77,7 +77,7 @@ export default async function Page({
           <h1 className="md:text-4xl text-2xl xs:text-3xl font-bold mb-4">
             {initTitle}
           </h1>
-          <p className="text-base xs:text-lg">{post[postDescription]}</p>
+          <p className="text-base xs:text-lg">{String(post[postDescription])}</p>
         </div>
       </header>
 
@@ -163,6 +163,27 @@ export default async function Page({
             )}
         </div>
 
+        {/* Author - desktop only */}
+        {post.author && (
+          <div className="hidden md:flex items-center gap-3 text-darktext dark:text-lighttext">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700">
+              {post.author.avatar_url ? (
+                <Image
+                  src={post.author.avatar_url}
+                  alt={post.author.display_name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+                  {post.author.display_name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <span className="mt-0.5 text-base">{post.author.display_name}</span>
+          </div>
+        )}
+
         <div className="flex items-center text-darktext dark:text-lighttext">
           <Clock size={20} className="mr-2" />
           <span className="mt-0.5">{formattedDate}</span>
@@ -175,11 +196,11 @@ export default async function Page({
           </div>
         )}
 
-          <ViewDisplay 
-            postId={id} 
-            postType={post_type as 'blog' | 'portfolio'} 
-            initialViews={post.views || "⏳"} 
-          />
+        <ViewDisplay 
+          postId={id} 
+          postType={post_type as 'blog' | 'portfolio'} 
+          initialViews={post.views || "⏳"} 
+        />
 
         <ShareButton
           className="ml-auto"
@@ -188,6 +209,27 @@ export default async function Page({
           title={post.title_en}
         />
         </div>
+
+      {/* Author - mobile only */}
+      {post.author && (
+        <div className="flex md:hidden items-center gap-3 text-darktext dark:text-lighttext mb-6">
+          <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700">
+            {post.author.avatar_url ? (
+              <Image
+                src={post.author.avatar_url}
+                alt={post.author.display_name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+                {post.author.display_name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <span className="mt-0.5 text-base">{post.author.display_name}</span>
+        </div>
+      )}
 
       {/* mobile btns */}
       <div

@@ -11,13 +11,15 @@ import I18nSection from '@/components/common/cms/I18nSection';
 import PortfolioSection from '@/components/common/cms/PortfolioSection';
 import SidePanel from '@/components/common/cms/SidePanel';
 import SkillsSection from '@/components/common/cms/SkillsSection';
+import UsersSection from '@/components/common/cms/UsersSection';
 import { useLayoutStore } from '@/store/layoutStore';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 export default function CMS() {
   const {
     setUser,
     activeSection,
+    setActiveSection,
     setHeroSection,
     setLoading,
     setError,
@@ -61,9 +63,13 @@ export default function CMS() {
     const fetchUser = async () => {
       const fetchedUser = await getUser();
       setUser(fetchedUser);
+      // Set default section based on user role: admin gets 'hero', editor gets 'blog'
+      if (fetchedUser) {
+        setActiveSection(fetchedUser.role === 'admin' ? 'hero' : 'blog');
+      }
     };
     fetchUser();
-  }, [setUser]);
+  }, [setUser, setActiveSection]);
 
   if (loading) {
     return (
@@ -85,7 +91,7 @@ export default function CMS() {
 
   return (
     <div className=" bg-bglight dark:bg-bgdark">
-      <div className="flex max-w-(--breakpoint-2xl) mx-auto">
+      <div className="flex max-w-(--breakpoint-2xl) mx-auto mt-6">
         <div className="flex flex-col">
           <SidePanel />
           <div className="w-72 p-4 text-center">
@@ -104,6 +110,7 @@ export default function CMS() {
             {activeSection === 'blog' && <BlogSection />}
             {activeSection === 'contacts' && <ContactsSection />}
             {activeSection === 'i18n' && <I18nSection />}
+            {activeSection === 'users' && <UsersSection />}
             {activeSection === 'settings' && (
               <div className="text-center py-12">
                 <h2 className="text-3xl font-bold text-main mb-4">Settings</h2>

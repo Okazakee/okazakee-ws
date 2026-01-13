@@ -1,4 +1,6 @@
 'use server';
+
+import { isValidUrl, requireAdmin } from '@/app/actions/cms/utils/fileHelpers';
 import { getContacts } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -32,9 +34,66 @@ type ContactsResult = {
   error?: string;
 };
 
+// Validation functions
+function validateContactData(
+  data: CreateContactData | UpdateContactData
+): { isValid: boolean; error?: string } {
+  // Label validation
+  if ('label' in data && data.label !== undefined) {
+    if (!data.label || data.label.trim().length === 0) {
+      return { isValid: false, error: 'Contact label is required' };
+    }
+    if (data.label.length > 50) {
+      return { isValid: false, error: 'Label must be less than 50 characters' };
+    }
+  }
+
+  // Icon validation
+  if ('icon' in data && data.icon !== undefined) {
+    if (!data.icon || data.icon.trim().length === 0) {
+      return { isValid: false, error: 'Icon name is required' };
+    }
+    if (data.icon.length > 50) {
+      return { isValid: false, error: 'Icon name must be less than 50 characters' };
+    }
+  }
+
+  // Link validation
+  if ('link' in data && data.link !== undefined) {
+    if (!data.link || data.link.trim().length === 0) {
+      return { isValid: false, error: 'Contact link is required' };
+    }
+    if (!isValidUrl(data.link) && !data.link.startsWith('mailto:') && !data.link.startsWith('tel:')) {
+      return { isValid: false, error: 'Link must be a valid URL, email (mailto:), or phone (tel:)' };
+    }
+  }
+
+  // Background color validation
+  if (data.bg_color !== undefined && data.bg_color) {
+    const hexColorPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexColorPattern.test(data.bg_color)) {
+      return { isValid: false, error: 'Background color must be a valid hex color (e.g., #FF5733)' };
+    }
+  }
+
+  // Position validation
+  if (data.position !== undefined && (data.position < 0 || !Number.isInteger(data.position))) {
+    return { isValid: false, error: 'Position must be a non-negative integer' };
+  }
+
+  return { isValid: true };
+}
+
 export async function contactsActions(
   operation: ContactOperation
 ): Promise<ContactsResult> {
+  // Admin check - only admins can manage contacts
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: 'Unauthorized: Admin access required' };
+  }
+
   const supabase = await createClient();
 
   try {
@@ -93,6 +152,12 @@ async function createContact(
   contactData: CreateContactData
 ): Promise<ContactsResult> {
   try {
+    // Validate input data
+    const validation = validateContactData(contactData);
+    if (!validation.isValid) {
+      return { success: false, error: validation.error };
+    }
+
     const { data, error } = await supabase
       .from('contacts')
       .insert(contactData)
@@ -117,6 +182,23 @@ async function updateContact(
   updateData: UpdateContactData
 ): Promise<ContactsResult> {
   try {
+    // Validate input data
+    const validation = validateContactData(updateData);
+    if (!validation.isValid) {
+      return { success: false, error: validation.error };
+    }
+
+    // Check if contact exists
+    const { data: existingContact, error: fetchError } = await supabase
+      .from('contacts')
+      .select('id')
+      .eq('id', contactId)
+      .single();
+
+    if (fetchError || !existingContact) {
+      return { success: false, error: 'Contact not found' };
+    }
+
     const { data, error } = await supabase
       .from('contacts')
       .update(updateData)
