@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
       }
     ],
   },
+  // Ensure sharp is bundled correctly for serverless
+  serverExternalPackages: ['sharp'],
 };
 
 export default withNextIntl(nextConfig);

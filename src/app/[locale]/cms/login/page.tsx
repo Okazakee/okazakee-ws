@@ -16,12 +16,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGitHubLoading, setIsGitHubLoading] = useState(false);
 
-  // Clear any existing session when login page loads (client-side to clear localStorage)
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.signOut();
-  }, []);
-
   // Check for error from OAuth callback
   useEffect(() => {
     const errorParam = searchParams.get('error');
