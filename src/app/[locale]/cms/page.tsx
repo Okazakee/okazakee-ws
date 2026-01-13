@@ -28,48 +28,48 @@ export default function CMS() {
   } = useLayoutStore();
 
   useEffect(() => {
-    const fetchHeroSection = async () => {
+    const initializeCMS = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const result = await heroActions({ type: 'GET' });
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to fetch hero section data');
-        }
+        // Fetch user first
+        const fetchedUser = await getUser();
+        setUser(fetchedUser);
 
-        // Transform the data structure to match setHeroSection expectations
-        const data = result.data as {
-          hero: { propic: string; blurhashURL: string } | null;
-          resume: { resume_en: string; resume_it: string } | null;
-        };
-        setHeroSection({
-          mainImage: data.hero?.propic || null,
-          blurhashURL: data.hero?.blurhashURL || null,
-          resume_en: data.resume?.resume_en || null,
-          resume_it: data.resume?.resume_it || null,
-        });
+        if (fetchedUser) {
+          // Set default section based on user role
+          const defaultSection = fetchedUser.role === 'admin' ? 'hero' : 'blog';
+          setActiveSection(defaultSection);
+
+          // Only fetch hero data for admins
+          if (fetchedUser.role === 'admin') {
+            const result = await heroActions({ type: 'GET' });
+            if (!result.success) {
+              throw new Error(result.error || 'Failed to fetch hero section data');
+            }
+
+            const data = result.data as {
+              hero: { propic: string; blurhashURL: string } | null;
+              resume: { resume_en: string; resume_it: string } | null;
+            };
+            setHeroSection({
+              mainImage: data.hero?.propic || null,
+              blurhashURL: data.hero?.blurhashURL || null,
+              resume_en: data.resume?.resume_en || null,
+              resume_it: data.resume?.resume_it || null,
+            });
+          }
+        }
       } catch (err) {
-        setError('Failed to fetch hero section data');
+        setError(err instanceof Error ? err.message : 'Failed to initialize CMS');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchHeroSection();
-  }, [setHeroSection, setLoading, setError]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const fetchedUser = await getUser();
-      setUser(fetchedUser);
-      // Set default section based on user role: admin gets 'hero', editor gets 'blog'
-      if (fetchedUser) {
-        setActiveSection(fetchedUser.role === 'admin' ? 'hero' : 'blog');
-      }
-    };
-    fetchUser();
-  }, [setUser, setActiveSection]);
+    initializeCMS();
+  }, [setUser, setActiveSection, setHeroSection, setLoading, setError]);
 
   if (loading) {
     return (
