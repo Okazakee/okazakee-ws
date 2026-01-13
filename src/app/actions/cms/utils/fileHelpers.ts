@@ -1,8 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { encode } from 'blurhash';
-import { Jimp } from 'jimp';
-import { webp } from '@jimp/wasm-webp';
+import { createJimp } from '@jimp/core';
+import { defaultPlugins } from 'jimp';
+import webp from '@jimp/wasm-webp';
 import { createClient } from '@/utils/supabase/server';
+
+// Create Jimp instance with WebP support
+const Jimp = createJimp({
+  formats: [webp],
+  plugins: defaultPlugins,
+});
 
 /**
  * Verifies the user is authenticated before allowing CMS operations
@@ -71,7 +78,7 @@ type ProcessImageResult = {
 };
 
 /**
- * Processes an image: resize to max dimensions, convert to JPEG
+ * Processes an image: resize to max dimensions, convert to WebP
  * Returns the processed buffer and metadata
  * Uses Jimp (pure JS, works on Vercel serverless)
  */
@@ -120,7 +127,7 @@ export async function processImage(
     }
 
     // Convert to WebP buffer with quality setting using WASM encoder
-    const processedBuffer = await image.encode(webp, { quality });
+    const processedBuffer = await image.getBufferAsync('image/webp', { quality });
 
     // Generate blurhash
     const blurhash = await generateBlurhash(image);

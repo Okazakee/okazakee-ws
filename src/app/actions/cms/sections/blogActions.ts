@@ -351,7 +351,7 @@ async function uploadBlogImage(
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
-        contentType: 'image/jpeg',
+        contentType: 'image/webp',
         upsert: true,
       });
 
