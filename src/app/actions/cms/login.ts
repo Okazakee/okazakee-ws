@@ -4,7 +4,6 @@ import { checkLoginRateLimit } from '@/libs/rateLimiters';
 import { createClient } from '@/utils/supabase/server';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,23 +16,33 @@ async function checkAllowlist(
   email?: string,
   githubUsername?: string
 ): Promise<{ allowed: boolean; role?: string }> {
-  let query = supabase.from('cms_allowed_users').select('role');
-
+  // Check by email first
   if (email) {
-    query = query.eq('email', email.toLowerCase());
-  } else if (githubUsername) {
-    query = query.eq('github_username', githubUsername);
-  } else {
-    return { allowed: false };
+    const { data: emailData } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (emailData) {
+      return { allowed: true, role: emailData.role };
+    }
   }
 
-  const { data, error } = await query.single();
+  // If not found by email, check by GitHub username
+  if (githubUsername) {
+    const { data: githubData } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('github_username', githubUsername)
+      .single();
 
-  if (error || !data) {
-    return { allowed: false };
+    if (githubData) {
+      return { allowed: true, role: githubData.role };
+    }
   }
 
-  return { allowed: true, role: data.role };
+  return { allowed: false };
 }
 
 /**
@@ -84,21 +93,29 @@ export async function login(email: string, password: string) {
   }
 
   revalidatePath('/cms');
-  redirect('/cms');
+  return { success: true, redirectTo: '/cms' };
 }
 
 /**
  * Get GitHub OAuth URL for login
  */
-export async function getGitHubOAuthUrl() {
+export async function getGitHubOAuthUrl(locale: string = 'en') {
   const supabase = await createClient();
+  
+  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${locale}/cms/auth/callback`;
+  console.log('=== GitHub OAuth ===');
+  console.log('NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
+  console.log('Redirect URL:', redirectTo);
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/cms/auth/callback`,
+      redirectTo,
     },
   });
+
+  console.log('OAuth URL:', data?.url);
+  console.log('OAuth Error:', error);
 
   if (error) {
     return { error: error.message };

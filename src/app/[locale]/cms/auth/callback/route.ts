@@ -3,9 +3,15 @@ import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
+  console.log('=== OAuth Callback Hit ===');
+  console.log('Full URL:', request.url);
+  
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/cms';
+
+  console.log('Code:', code ? 'present' : 'missing');
+  console.log('Origin:', origin);
 
   // Extract locale from the URL path
   const pathname = new URL(request.url).pathname;
@@ -15,10 +21,12 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+    console.log('Exchange error:', error);
 
     if (!error) {
       // Verify user is in allowlist
       const verification = await verifyGitHubUser();
+      console.log('Verification result:', verification);
       
       if (!verification.allowed) {
         // Redirect to login with error

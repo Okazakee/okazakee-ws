@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
         hostname: 'mtvwynyikouqzmhqespl.supabase.co',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        pathname: '/**',
+      }
     ],
   },
 };

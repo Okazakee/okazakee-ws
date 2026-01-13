@@ -2,11 +2,13 @@
 
 import { getGitHubOAuthUrl, login } from '@/app/actions/cms/login';
 import { CircleUserRound, Github, Loader2 } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1] || 'en';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -29,15 +31,18 @@ export default function LoginPage() {
     const result = await login(email, password);
     if (result?.error) {
       setError(result.error);
+      setIsLoading(false);
+    } else if (result?.success) {
+      // Redirect on client side
+      window.location.href = `/${locale}/cms`;
     }
-    setIsLoading(false);
   };
 
   const handleGitHubLogin = async () => {
     setIsGitHubLoading(true);
     setError(null);
 
-    const result = await getGitHubOAuthUrl();
+    const result = await getGitHubOAuthUrl(locale);
     if (result.error) {
       setError(result.error);
       setIsGitHubLoading(false);
