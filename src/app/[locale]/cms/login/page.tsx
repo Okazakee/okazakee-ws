@@ -1,6 +1,7 @@
 'use client';
 
 import { getGitHubOAuthUrl, login } from '@/app/actions/cms/login';
+import { createClient } from '@/utils/supabase/client';
 import { CircleUserRound, Github, Loader2 } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -14,6 +15,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGitHubLoading, setIsGitHubLoading] = useState(false);
+
+  // Clear any existing session when login page loads (client-side to clear localStorage)
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.signOut();
+  }, []);
 
   // Check for error from OAuth callback
   useEffect(() => {
@@ -41,6 +48,10 @@ export default function LoginPage() {
   const handleGitHubLogin = async () => {
     setIsGitHubLoading(true);
     setError(null);
+
+    // Sign out any existing session first (client-side to clear localStorage)
+    const supabase = createClient();
+    await supabase.auth.signOut();
 
     const result = await getGitHubOAuthUrl(locale);
     if (result.error) {

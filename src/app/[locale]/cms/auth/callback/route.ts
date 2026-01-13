@@ -14,11 +14,13 @@ export async function GET(request: Request) {
   if (code) {
     try {
       const supabase = await createClient();
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      
+      // Exchange the code for a session - this replaces any existing session
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-      if (!error) {
-        // Get user info
-        const { data: { user } } = await supabase.auth.getUser();
+      if (!error && data.session) {
+        // Use the user from the exchanged session directly, not getUser()
+        const user = data.session.user;
         
         if (!user) {
           const errorUrl = new URL(`/${locale}/cms/login`, origin);

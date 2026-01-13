@@ -2,7 +2,6 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 export async function logout() {
   const supabase = await createClient();
@@ -10,9 +9,9 @@ export async function logout() {
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    redirect('/error');
+    return { success: false, error: error.message };
   }
 
-  revalidatePath('/cms');
-  redirect('/cms');
+  revalidatePath('/cms', 'layout');
+  return { success: true };
 }

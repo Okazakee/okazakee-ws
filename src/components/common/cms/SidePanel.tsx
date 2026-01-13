@@ -34,7 +34,12 @@ const SidePanel = () => {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    await logout();
+    const result = await logout();
+    if (result.success) {
+      window.location.href = '/cms/login';
+    } else {
+      setIsLoggingOut(false);
+    }
   };
 
   const menuItems = [
