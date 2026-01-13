@@ -1,13 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { encode } from 'blurhash';
 import { createJimp } from '@jimp/core';
-import { defaultPlugins } from 'jimp';
+import { defaultFormats, defaultPlugins } from 'jimp';
 import webp from '@jimp/wasm-webp';
 import { createClient } from '@/utils/supabase/server';
 
 // Create Jimp instance with WebP support
 const Jimp = createJimp({
-  formats: [webp],
+  formats: [...defaultFormats, webp],
   plugins: defaultPlugins,
 });
 
@@ -127,7 +127,7 @@ export async function processImage(
     }
 
     // Convert to WebP buffer with quality setting using WASM encoder
-    const processedBuffer = await image.getBufferAsync('image/webp', { quality });
+    const processedBuffer = await image.getBuffer('image/webp', { quality });
 
     // Generate blurhash
     const blurhash = await generateBlurhash(image);

@@ -273,7 +273,7 @@
   dependencies:
     minipass "^7.0.4"
 
-"@jimp/core@1.6.0":
+"@jimp/core@1.6.0", "@jimp/core@^1.6.0":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@jimp/core/-/core-1.6.0.tgz#3ef241bf02f40431bb382aea665e5187a2c05eef"
   integrity sha512-EQQlKU3s9QfdJqiSrZWNTxBs3rKXgO2W+GxNXDtwchF3a4IqxDheFX1ti+Env9hdJXDiYLp2jTRjlxhPthsk8w==
