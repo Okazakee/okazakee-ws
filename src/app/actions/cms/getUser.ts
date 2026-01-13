@@ -29,11 +29,28 @@ export async function getUser(): Promise<CMSUser | null> {
     .single();
 
   // Fetch user role from cms_allowed_users
-  const { data: allowedUser } = await supabase
-    .from('cms_allowed_users')
-    .select('role')
-    .or(`email.eq.${user.email},github_username.eq.${user.user_metadata?.user_name || ''}`)
-    .single();
+  let allowedUser: { role: string } | null = null;
+  
+  // Try by email first
+  if (user.email) {
+    const { data: emailMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('email', user.email.toLowerCase())
+      .single();
+    if (emailMatch) allowedUser = emailMatch;
+  }
+  
+  // Try by GitHub username if no email match
+  const githubUsername = user.user_metadata?.user_name;
+  if (!allowedUser && githubUsername) {
+    const { data: githubMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('github_username', githubUsername)
+      .single();
+    if (githubMatch) allowedUser = githubMatch;
+  }
 
   // If no profile exists yet (edge case), create one from auth metadata
   if (!profile) {
@@ -48,15 +65,19 @@ export async function getUser(): Promise<CMSUser | null> {
     const avatarUrl = rawAvatarUrl && rawAvatarUrl.length > 0 ? rawAvatarUrl : null;
     const authProvider = user.app_metadata?.provider === 'github' ? 'github' : 'email';
 
-    // Try to create the profile
-    await supabase.from('user_profiles').insert({
-      id: user.id,
-      email: user.email,
-      display_name: displayName,
-      avatar_url: avatarUrl,
-      auth_provider: authProvider,
-      github_username: user.user_metadata?.user_name || null,
-    });
+    // Try to create the profile (may fail due to RLS, that's ok)
+    try {
+      await supabase.from('user_profiles').insert({
+        id: user.id,
+        email: user.email,
+        display_name: displayName,
+        avatar_url: avatarUrl,
+        auth_provider: authProvider,
+        github_username: user.user_metadata?.user_name || null,
+      });
+    } catch {
+      // Profile creation failed, likely RLS - continue anyway
+    }
 
     return {
       id: user.id,
