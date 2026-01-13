@@ -4,12 +4,12 @@ import { type NextRequest, NextResponse } from 'next/server';
 /* PLEASE REFER TO https://supabase.com/docs/guides/auth/server-side/nextjs?queryGroups=router&router=app */
 
 // Secure path matching for CMS routes
-// Note: /cms/register is disabled - only login is public
-const CMS_PUBLIC_PATHS = ['/cms/login'] as const;
+// Note: /cms/register is disabled - only login and auth callback are public
+const CMS_PUBLIC_PATHS = ['/cms/login', '/cms/auth/callback'] as const;
 
 function isPublicCMSPath(pathname: string, locale: string): boolean {
   const normalizedPath = pathname.replace(new RegExp(`^/${locale}`), '');
-  return CMS_PUBLIC_PATHS.some(path => normalizedPath === path);
+  return CMS_PUBLIC_PATHS.some(path => normalizedPath === path || normalizedPath.startsWith(path));
 }
 
 function isAuthCMSPath(pathname: string): boolean {
