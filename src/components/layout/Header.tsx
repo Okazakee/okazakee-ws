@@ -4,7 +4,7 @@ import Link from 'next/link';
 import React from 'react';
 import NavMenu from './NavMenu';
 
-export default async function Header({ locale }: { locale: string }) {
+export default function Header({ locale }: { locale: string }) {
   return (
     <header className="max-w-(--breakpoint-2xl) mx-auto pt-2">
       <div className="flex justify-between items-center pt-5 mx-5">
