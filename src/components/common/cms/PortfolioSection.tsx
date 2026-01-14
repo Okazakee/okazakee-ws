@@ -433,6 +433,7 @@ export default function PortfolioSection() {
             created_at: post.created_at,
             author_id: user?.id || '',
             image: '', // Will be set after image upload
+            blurhashURL: post.blurhashURL || '', // Include blurhashURL
           },
         });
 

@@ -156,7 +156,7 @@ export default function CMS() {
         )}
         <div className="flex-1 text-center">
           <h1 className="text-lg font-bold text-main">
-            {sectionLabels[activeSection] || 'CMS Dashboard'}
+            {activeSection ? sectionLabels[activeSection] || 'CMS Dashboard' : 'CMS Dashboard'}
           </h1>
         </div>
         <button

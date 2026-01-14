@@ -246,6 +246,7 @@ export default function BlogSection() {
     const tempId = -Date.now();
     const newPost: EditableBlogPost = {
       id: tempId,
+      title: formData.title_en, // Default to English title
       title_en: formData.title_en,
       title_it: formData.title_it,
       image: '',
@@ -256,6 +257,7 @@ export default function BlogSection() {
       blurhashURL: formData.blurhashURL,
       post_tags: formData.post_tags,
       created_at: formData.created_at,
+      views: 0, // Default views for new posts
       image_file: formImage,
     };
 
@@ -415,6 +417,7 @@ export default function BlogSection() {
             created_at: post.created_at,
             author_id: user?.id || '',
             image: '', // Will be set after image upload
+            blurhashURL: post.blurhashURL || '', // Include blurhashURL
           },
         });
 

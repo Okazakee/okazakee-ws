@@ -274,7 +274,7 @@ export default function LayoutSection() {
         </p>
       </div>
 
-      {error && <ErrorDiv error={error} />}
+      {error && <ErrorDiv>{error}</ErrorDiv>}
 
       {/* Action Buttons */}
       <div className="flex justify-center gap-3 mb-6">

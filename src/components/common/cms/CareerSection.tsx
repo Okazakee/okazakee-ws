@@ -325,6 +325,7 @@ export default function CareerSection() {
       skills: newCareerEntry.skills,
       company_description_en: newCareerEntry.company_description_en,
       company_description_it: newCareerEntry.company_description_it,
+      created_at: new Date().toISOString(), // Add created_at for new entries
       isEditing: false,
       logo_file: newEntryLogo,
     };
@@ -477,6 +478,7 @@ export default function CareerSection() {
             company_description_en: entry.company_description_en,
             company_description_it: entry.company_description_it,
             logo: '', // Will be set after logo upload
+            blurhashURL: entry.blurhashURL || '', // Include blurhashURL
           },
         });
 
