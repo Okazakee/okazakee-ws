@@ -1,7 +1,7 @@
 'use server';
 import { requireAdmin } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 type I18nOperation =
@@ -196,7 +196,6 @@ async function updateI18nData(
     if (error) throw error;
 
     // Invalidate cache
-    revalidateTag('translations');
     revalidatePath('/', 'layout');
 
     return { success: true, data };
@@ -257,7 +256,6 @@ async function updateSectionTranslations(
     if (error) throw error;
 
     // Invalidate cache
-    revalidateTag('translations');
     revalidatePath('/', 'layout');
 
     return { success: true, data };

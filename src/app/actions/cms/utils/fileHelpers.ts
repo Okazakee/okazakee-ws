@@ -7,7 +7,8 @@ import { createClient } from '@/utils/supabase/server';
 
 // Create Jimp instance with WebP support
 // Initialize lazily to handle WASM loading issues
-let JimpInstance: ReturnType<typeof createJimp> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let JimpInstance: any = null;
 
 function getJimp() {
   if (!JimpInstance) {
@@ -199,7 +200,8 @@ export async function processImage(
 /**
  * Generates a real blurhash from Jimp image
  */
-async function generateBlurhash(image: Awaited<ReturnType<typeof Jimp.read>>): Promise<string> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function generateBlurhash(image: any): Promise<string> {
   try {
     // Clone and resize for blurhash (32x32)
     const smallImage = image.clone().resize({ w: 32, h: 32 });

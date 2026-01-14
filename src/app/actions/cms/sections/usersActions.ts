@@ -391,16 +391,17 @@ async function addDummyUser(
     return { success: false, error: 'A dummy user already exists. Please try again.' };
   }
 
-  // Check if auth user with this email already exists (from a previous failed attempt)
+  // Check if profile with this email already exists (from a previous failed attempt)
+  // If profile exists, we can reuse the auth user ID
   let authUserId: string | null = null;
-  try {
-    const { data: existingAuthUser } = await adminClient.auth.admin.getUserByEmail(dummyEmail);
-    if (existingAuthUser?.user) {
-      authUserId = existingAuthUser.user.id;
-    }
-  } catch (checkError) {
-    // User doesn't exist or error checking - continue to create
-    console.log('No existing auth user found, proceeding with creation');
+  const { data: existingProfileByEmail } = await adminClient
+    .from('user_profiles')
+    .select('id')
+    .eq('email', dummyEmail)
+    .single();
+  
+  if (existingProfileByEmail) {
+    authUserId = existingProfileByEmail.id;
   }
 
   // Create auth user if it doesn't exist

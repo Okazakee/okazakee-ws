@@ -203,7 +203,7 @@ function getPreferredLocale(request: NextRequest): string {
   return DEFAULT_LOCALE;
 }
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check redirect loop prevention
@@ -211,10 +211,17 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Skip processing for static assets, API routes - optimized order
-  if (pathname.startsWith('/_next/') || 
-      pathname.startsWith('/api/') ||
-      STATIC_ASSET_PATTERN.test(pathname)) {
+  // Skip processing for static assets, API routes - matches old matcher behavior
+  // Exclude: api, _next/*, favicon.ico, assets/*, fonts/*, images/*, and files with extensions
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/') ||
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/assets/') ||
+    pathname.startsWith('/fonts/') ||
+    pathname.startsWith('/images/') ||
+    STATIC_ASSET_PATTERN.test(pathname)
+  ) {
     return NextResponse.next();
   }
 
@@ -279,10 +286,3 @@ export default async function middleware(request: NextRequest) {
 
   return await promise;
 }
-
-export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|_next/font|favicon.ico|assets|fonts|images|.*\\.).*)',
-  ],
-  runtime: 'nodejs',
-};
