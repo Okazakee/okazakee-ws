@@ -1,18 +1,21 @@
 'use client';
 
-import { formatLabels } from '@/utils/formatLabels';
 import PostCard from '@components/common/PostCard';
 import { CircleX } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import type { PortfolioPost } from '@/types/fetchedData.types';
+import { formatLabels } from '@/utils/formatLabels';
 
 interface PortfolioPreviewProps {
   posts: PortfolioPost[];
   deletedPostIds?: Set<number>;
 }
 
-export function PortfolioPreview({ posts, deletedPostIds = new Set() }: PortfolioPreviewProps) {
+export function PortfolioPreview({
+  posts,
+  deletedPostIds = new Set(),
+}: PortfolioPreviewProps) {
   const pathname = usePathname();
   const locale = pathname.split('/')[1] || 'en';
   const t = useTranslations('posts-section');
@@ -23,9 +26,7 @@ export function PortfolioPreview({ posts, deletedPostIds = new Set() }: Portfoli
   return (
     <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
       <div className="xl:mx-16 text-center mb-20 max-w-480 w-full">
-        <h1 className="xl:text-5xl text-2xl xs:text-3xl mb-5">
-          {t('title1')}
-        </h1>
+        <h1 className="xl:text-5xl text-2xl xs:text-3xl mb-5">{t('title1')}</h1>
         <h3
           className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-lg md:text-2xl"
           dangerouslySetInnerHTML={{
@@ -35,7 +36,12 @@ export function PortfolioPreview({ posts, deletedPostIds = new Set() }: Portfoli
         {visiblePosts.length > 0 ? (
           <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
             {visiblePosts.map((post, index) => (
-              <PostCard key={post.id} post={post} locale={locale} index={index} />
+              <PostCard
+                key={post.id}
+                post={post}
+                locale={locale}
+                index={index}
+              />
             ))}
           </div>
         ) : (

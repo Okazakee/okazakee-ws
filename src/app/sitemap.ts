@@ -1,6 +1,6 @@
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPosts } from '@utils/getData';
 import type { MetadataRoute } from 'next';
+import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.DOMAIN_URL;

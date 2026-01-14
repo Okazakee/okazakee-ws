@@ -1,9 +1,13 @@
 'use server';
 
-import { processImage, requireAuth, validateImageFile } from '@/app/actions/cms/utils/fileHelpers';
-import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import {
+  processImage,
+  requireAuth,
+  validateImageFile,
+} from '@/app/actions/cms/utils/fileHelpers';
+import { createClient } from '@/utils/supabase/server';
 
 type UserOperation =
   | { type: 'GET' }
@@ -44,8 +48,12 @@ const GITHUB_USERNAME_REGEX = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
 /**
  * Check if current user is an admin
  */
-async function isAdmin(supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never): Promise<boolean> {
-  const { data: { user } } = await supabase.auth.getUser();
+async function isAdmin(
+  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never
+): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return false;
 
   let allowedUser: { role: string } | null = null;
@@ -93,7 +101,9 @@ function getAdminClient() {
   });
 }
 
-export async function usersActions(operation: UserOperation): Promise<UsersResult> {
+export async function usersActions(
+  operation: UserOperation
+): Promise<UsersResult> {
   // Auth check
   try {
     await requireAuth();
@@ -120,10 +130,18 @@ export async function usersActions(operation: UserOperation): Promise<UsersResul
         return await addEmailUser(supabase, operation.email, operation.role);
 
       case 'ADD_GITHUB':
-        return await addGitHubUser(supabase, operation.github_username, operation.role);
+        return await addGitHubUser(
+          supabase,
+          operation.github_username,
+          operation.role
+        );
 
       case 'ADD_DUMMY':
-        return await addDummyUser(supabase, operation.display_name, operation.role);
+        return await addDummyUser(
+          supabase,
+          operation.display_name,
+          operation.role
+        );
 
       case 'UPDATE_ROLE':
         return await updateUserRole(supabase, operation.id, operation.role);
@@ -132,7 +150,11 @@ export async function usersActions(operation: UserOperation): Promise<UsersResul
         return await removeUser(supabase, operation.id);
 
       case 'UPDATE_PROFILE':
-        return await updateUserProfile(supabase, operation.profileId, operation.displayName);
+        return await updateUserProfile(
+          supabase,
+          operation.profileId,
+          operation.displayName
+        );
 
       default:
         return { success: false, error: 'Invalid operation' };
@@ -141,7 +163,8 @@ export async function usersActions(operation: UserOperation): Promise<UsersResul
     console.error('Users action error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'An unknown error occurred',
+      error:
+        error instanceof Error ? error.message : 'An unknown error occurred',
     };
   }
 }
@@ -157,7 +180,9 @@ async function getAllowedUsers(
   if (error) throw error;
 
   // Get current authenticated user to check their auth metadata for GitHub username
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
   const authGithubUsername = authUser?.user_metadata?.user_name || null;
 
   // Fetch all user profiles to match with allowed users (no cache to ensure fresh data)
@@ -171,8 +196,13 @@ async function getAllowedUsers(
 
   // If current user's profile is missing GitHub username but auth metadata has it, update the profile
   if (authUser && authGithubUsername && profiles) {
-    const currentUserProfileIndex = profiles.findIndex((p) => p.id === authUser.id);
-    if (currentUserProfileIndex !== -1 && !profiles[currentUserProfileIndex].github_username) {
+    const currentUserProfileIndex = profiles.findIndex(
+      (p) => p.id === authUser.id
+    );
+    if (
+      currentUserProfileIndex !== -1 &&
+      !profiles[currentUserProfileIndex].github_username
+    ) {
       try {
         await supabase
           .from('user_profiles')
@@ -181,7 +211,10 @@ async function getAllowedUsers(
         // Update the profiles array in memory for immediate use
         profiles[currentUserProfileIndex].github_username = authGithubUsername;
       } catch (updateError) {
-        console.error('Failed to sync GitHub username to profile:', updateError);
+        console.error(
+          'Failed to sync GitHub username to profile:',
+          updateError
+        );
       }
     }
   }
@@ -191,18 +224,24 @@ async function getAllowedUsers(
     (data as AllowedUser[]).map(async (allowedUser) => {
       // Find profile by email, GitHub username, or current user's ID
       const profile = profiles?.find(
-        (p) => 
-          (allowedUser.email && p.email?.toLowerCase() === allowedUser.email.toLowerCase()) ||
-          (allowedUser.github_username && p.github_username === allowedUser.github_username) ||
-          (authUser?.id && p.id === authUser.id && allowedUser.email && p.email?.toLowerCase() === allowedUser.email.toLowerCase())
+        (p) =>
+          (allowedUser.email &&
+            p.email?.toLowerCase() === allowedUser.email.toLowerCase()) ||
+          (allowedUser.github_username &&
+            p.github_username === allowedUser.github_username) ||
+          (authUser?.id &&
+            p.id === authUser.id &&
+            allowedUser.email &&
+            p.email?.toLowerCase() === allowedUser.email.toLowerCase())
       );
-      
+
       // For current user, also check auth metadata for GitHub username
-      let githubUsername = profile?.github_username || allowedUser.github_username;
+      let githubUsername =
+        profile?.github_username || allowedUser.github_username;
       if (authUser && profile?.id === authUser.id && authGithubUsername) {
         githubUsername = authGithubUsername;
       }
-      
+
       // If profile has GitHub username but cms_allowed_users doesn't, update it
       if (githubUsername && !allowedUser.github_username && allowedUser.email) {
         try {
@@ -212,18 +251,23 @@ async function getAllowedUsers(
             .eq('id', allowedUser.id);
         } catch (updateError) {
           // Silently fail - this is just a sync operation
-          console.error('Failed to sync GitHub username to cms_allowed_users:', updateError);
+          console.error(
+            'Failed to sync GitHub username to cms_allowed_users:',
+            updateError
+          );
         }
       }
-      
+
       return {
         ...allowedUser,
         github_username: githubUsername, // Update github_username with profile/auth value if available
-        profile: profile ? {
-          id: profile.id,
-          display_name: profile.display_name,
-          avatar_url: profile.avatar_url,
-        } : null,
+        profile: profile
+          ? {
+              id: profile.id,
+              display_name: profile.display_name,
+              avatar_url: profile.avatar_url,
+            }
+          : null,
       };
     })
   );
@@ -232,7 +276,9 @@ async function getAllowedUsers(
 }
 
 async function addEmailUser(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase: ReturnType<typeof createClient> extends Promise<infer T>
+    ? T
+    : never,
   email: string,
   role: 'admin' | 'editor' = 'editor'
 ): Promise<UsersResult> {
@@ -251,7 +297,10 @@ async function addEmailUser(
     .single();
 
   if (existing) {
-    return { success: false, error: 'This email is already in the allowed list' };
+    return {
+      success: false,
+      error: 'This email is already in the allowed list',
+    };
   }
 
   // Add to allowlist
@@ -266,27 +315,28 @@ async function addEmailUser(
   // Create user and send password reset email using admin client
   try {
     const adminClient = getAdminClient();
-    
+
     // Create the user with a random password (they'll reset it)
     const tempPassword = crypto.randomUUID();
-    const { data: createdUser, error: createError } = await adminClient.auth.admin.createUser({
-      email: normalizedEmail,
-      password: tempPassword,
-      email_confirm: true, // Auto-confirm the email
-    });
+    const { error: createError } =
+      await adminClient.auth.admin.createUser({
+        email: normalizedEmail,
+        password: tempPassword,
+        email_confirm: true, // Auto-confirm the email
+      });
 
     if (createError) {
       console.error('Failed to create user:', createError.message, createError);
-      return { 
-        success: true, 
+      return {
+        success: true,
         data: newUser as AllowedUser,
-        error: `User added to allowlist but account creation failed: ${createError.message}`
+        error: `User added to allowlist but account creation failed: ${createError.message}`,
       };
     }
 
     // Send password reset email so they can set their own password
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const { error: resetError } = await adminClient.auth.admin.generateLink({
+    await adminClient.auth.admin.generateLink({
       type: 'recovery',
       email: normalizedEmail,
       options: {
@@ -295,9 +345,12 @@ async function addEmailUser(
     });
 
     // Also trigger the actual email
-    const { error: emailError } = await adminClient.auth.resetPasswordForEmail(normalizedEmail, {
-      redirectTo: `${siteUrl}/cms`,
-    });
+    const { error: emailError } = await adminClient.auth.resetPasswordForEmail(
+      normalizedEmail,
+      {
+        redirectTo: `${siteUrl}/cms`,
+      }
+    );
 
     if (emailError) {
       console.error('Failed to send reset email:', emailError.message);
@@ -311,10 +364,10 @@ async function addEmailUser(
     }
   } catch (inviteErr) {
     console.error('Invite error:', inviteErr);
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: newUser as AllowedUser,
-      error: `User added to allowlist but invite failed.`
+      error: `User added to allowlist but invite failed.`,
     };
   }
 
@@ -322,13 +375,15 @@ async function addEmailUser(
 }
 
 async function addGitHubUser(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase: ReturnType<typeof createClient> extends Promise<infer T>
+    ? T
+    : never,
   github_username: string,
   role: 'admin' | 'editor' = 'editor'
 ): Promise<UsersResult> {
   // Validate GitHub username
   const cleanUsername = github_username.trim().replace(/^@/, '');
-  
+
   if (!cleanUsername || !GITHUB_USERNAME_REGEX.test(cleanUsername)) {
     return { success: false, error: 'Please enter a valid GitHub username' };
   }
@@ -341,7 +396,10 @@ async function addGitHubUser(
     .single();
 
   if (existing) {
-    return { success: false, error: 'This GitHub username is already in the allowed list' };
+    return {
+      success: false,
+      error: 'This GitHub username is already in the allowed list',
+    };
   }
 
   // Add to allowlist (no invite needed - they'll use GitHub OAuth)
@@ -357,7 +415,9 @@ async function addGitHubUser(
 }
 
 async function addDummyUser(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase: ReturnType<typeof createClient> extends Promise<infer T>
+    ? T
+    : never,
   displayName: string,
   role: 'admin' | 'editor' = 'editor'
 ): Promise<UsersResult> {
@@ -368,15 +428,18 @@ async function addDummyUser(
   }
 
   if (trimmedName.length > 100) {
-    return { success: false, error: 'Display name must be 100 characters or less' };
+    return {
+      success: false,
+      error: 'Display name must be 100 characters or less',
+    };
   }
 
   // Generate a UUID for the email format
   const emailUuid = crypto.randomUUID();
-  
+
   // Create dummy email for matching (format: dummy-{uuid}@dummy.local)
   const dummyEmail = `dummy-${emailUuid}@dummy.local`;
-  
+
   // Use admin client to create auth user and profile (bypasses RLS)
   const adminClient = getAdminClient();
 
@@ -386,9 +449,12 @@ async function addDummyUser(
     .select('id')
     .eq('email', dummyEmail)
     .single();
-  
+
   if (existingAllowed) {
-    return { success: false, error: 'A dummy user already exists. Please try again.' };
+    return {
+      success: false,
+      error: 'A dummy user already exists. Please try again.',
+    };
   }
 
   // Check if profile with this email already exists (from a previous failed attempt)
@@ -399,7 +465,7 @@ async function addDummyUser(
     .select('id')
     .eq('email', dummyEmail)
     .single();
-  
+
   if (existingProfileByEmail) {
     authUserId = existingProfileByEmail.id;
   }
@@ -408,18 +474,22 @@ async function addDummyUser(
   if (!authUserId) {
     // Use a random password that won't be used (dummy users can't log in)
     const tempPassword = crypto.randomUUID() + crypto.randomUUID(); // Long random password
-    const { data: createdAuthUser, error: authError } = await adminClient.auth.admin.createUser({
-      email: dummyEmail,
-      password: tempPassword,
-      email_confirm: true, // Auto-confirm
-      user_metadata: {
-        is_dummy: true, // Mark as dummy user
-      },
-    });
+    const { data: createdAuthUser, error: authError } =
+      await adminClient.auth.admin.createUser({
+        email: dummyEmail,
+        password: tempPassword,
+        email_confirm: true, // Auto-confirm
+        user_metadata: {
+          is_dummy: true, // Mark as dummy user
+        },
+      });
 
     if (authError || !createdAuthUser.user) {
       console.error('Error creating dummy auth user:', authError);
-      return { success: false, error: `Failed to create auth user: ${authError?.message || 'Unknown error'}` };
+      return {
+        success: false,
+        error: `Failed to create auth user: ${authError?.message || 'Unknown error'}`,
+      };
     }
 
     authUserId = createdAuthUser.user.id;
@@ -446,7 +516,10 @@ async function addDummyUser(
 
     if (updateError) {
       console.error('Error updating dummy user profile:', updateError);
-      return { success: false, error: `Failed to update profile: ${updateError.message}` };
+      return {
+        success: false,
+        error: `Failed to update profile: ${updateError.message}`,
+      };
     }
   } else {
     // Profile doesn't exist, create it
@@ -469,10 +542,13 @@ async function addDummyUser(
       } catch (deleteError) {
         console.error('Error cleaning up auth user:', deleteError);
       }
-      return { success: false, error: `Failed to create profile: ${profileError.message}` };
+      return {
+        success: false,
+        error: `Failed to create profile: ${profileError.message}`,
+      };
     }
   }
-  
+
   // Create entry in cms_allowed_users
   const { data: newUser, error: insertError } = await supabase
     .from('cms_allowed_users')
@@ -498,7 +574,9 @@ async function addDummyUser(
 }
 
 async function updateUserRole(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase: ReturnType<typeof createClient> extends Promise<infer T>
+    ? T
+    : never,
   id: number,
   role: 'admin' | 'editor'
 ): Promise<UsersResult> {
@@ -530,7 +608,9 @@ async function updateUserRole(
 }
 
 async function removeUser(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase: ReturnType<typeof createClient> extends Promise<infer T>
+    ? T
+    : never,
   id: number
 ): Promise<UsersResult> {
   // Prevent removing the last admin
@@ -560,7 +640,8 @@ async function removeUser(
   let profileId: string | null = null;
 
   // Check if this is a dummy user (email format: dummy-{uuid}@dummy.local)
-  const isDummyUser = user.email?.startsWith('dummy-') && user.email?.endsWith('@dummy.local');
+  const isDummyUser =
+    user.email?.startsWith('dummy-') && user.email?.endsWith('@dummy.local');
 
   // Try to find profile by email (works for both dummy and regular users)
   if (user.email) {
@@ -620,7 +701,9 @@ async function removeUser(
 }
 
 async function updateUserProfile(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase: ReturnType<typeof createClient> extends Promise<infer T>
+    ? T
+    : never,
   profileId: string,
   displayName?: string
 ): Promise<UsersResult> {
@@ -647,7 +730,9 @@ async function updateUserProfile(
 /**
  * Upload avatar for a specific user (admin only)
  */
-export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdateResult> {
+export async function uploadUserAvatar(
+  formData: FormData
+): Promise<ProfileUpdateResult> {
   try {
     await requireAuth();
   } catch {
@@ -696,7 +781,10 @@ export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdat
     });
 
     if (!processed.success || !processed.buffer) {
-      return { success: false, error: processed.error || 'Failed to process image' };
+      return {
+        success: false,
+        error: processed.error || 'Failed to process image',
+      };
     }
 
     buffer = processed.buffer;
@@ -721,7 +809,7 @@ export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdat
       // Extract file path from URL (remove query params and get path after bucket name)
       const url = new URL(currentProfile.avatar_url.split('?')[0]); // Remove query params
       const pathParts = url.pathname.split('/');
-      const bucketIndex = pathParts.findIndex(part => part === 'website');
+      const bucketIndex = pathParts.indexOf('website');
       if (bucketIndex !== -1) {
         const filePath = pathParts.slice(bucketIndex + 1).join('/');
         if (filePath) {
@@ -776,7 +864,10 @@ export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdat
 /**
  * Update a user's display name (admin only)
  */
-export async function updateUserDisplayName(profileId: string, displayName: string): Promise<ProfileUpdateResult> {
+export async function updateUserDisplayName(
+  profileId: string,
+  displayName: string
+): Promise<ProfileUpdateResult> {
   try {
     await requireAuth();
   } catch {
@@ -828,7 +919,9 @@ type ProfileUpdateResult = {
   error?: string;
 };
 
-export async function updateMyProfile(formData: FormData): Promise<ProfileUpdateResult> {
+export async function updateMyProfile(
+  formData: FormData
+): Promise<ProfileUpdateResult> {
   try {
     await requireAuth();
   } catch {
@@ -836,7 +929,9 @@ export async function updateMyProfile(formData: FormData): Promise<ProfileUpdate
   }
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return { success: false, error: 'User not found' };
@@ -877,7 +972,10 @@ export async function updateMyProfile(formData: FormData): Promise<ProfileUpdate
       });
 
       if (!processed.success || !processed.buffer) {
-        return { success: false, error: processed.error || 'Failed to process image' };
+        return {
+          success: false,
+          error: processed.error || 'Failed to process image',
+        };
       }
 
       buffer = processed.buffer;
@@ -902,7 +1000,7 @@ export async function updateMyProfile(formData: FormData): Promise<ProfileUpdate
         // Extract file path from URL (remove query params and get path after bucket name)
         const url = new URL(currentProfile.avatar_url.split('?')[0]); // Remove query params
         const pathParts = url.pathname.split('/');
-        const bucketIndex = pathParts.findIndex(part => part === 'website');
+        const bucketIndex = pathParts.indexOf('website');
         if (bucketIndex !== -1) {
           const filePath = pathParts.slice(bucketIndex + 1).join('/');
           if (filePath) {

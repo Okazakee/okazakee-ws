@@ -1,8 +1,8 @@
 'use client';
 
-import useThemeStore, { type ThemeMode } from '@/store/themeStore';
-import { Monitor, Moon, Smartphone, Sun } from 'lucide-react';
+import { Moon, Smartphone, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import useThemeStore, { type ThemeMode } from '@/store/themeStore';
 
 export default function ThemeToggle({
   compact = false,

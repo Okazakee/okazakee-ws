@@ -1,12 +1,12 @@
+import { ErrorDiv } from '@components/common/ErrorDiv';
+import type { LucideProps } from 'lucide-react';
+import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
+import React from 'react';
 import ResumeButton from '@/components/common/ResumeButton';
 import type { ResumeData } from '@/types/fetchedData.types';
 import { formatLabels } from '@/utils/formatLabels';
 import { getContacts, getResumeLink } from '@/utils/getData';
-import { ErrorDiv } from '@components/common/ErrorDiv';
-import type { LucideProps } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
-import React from 'react';
 
 export default async function Contacts({ locale }: { locale: string }) {
   let contacts = await getContacts();
@@ -47,7 +47,9 @@ export default async function Contacts({ locale }: { locale: string }) {
       className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh my-20 md:my-0 mdh:mt-40"
     >
       <div>
-        <h1 className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-5">{t('title')}</h1>
+        <h1 className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-5">
+          {t('title')}
+        </h1>
         <h2
           className="md:mb-20 mb-10 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl"
           dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
@@ -92,7 +94,9 @@ export default async function Contacts({ locale }: { locale: string }) {
           })}
 
           {/* Resume Link Button */}
-          {resumeLink && <ResumeButton resumeLink={resumeLink} locale={locale} />}
+          {resumeLink && (
+            <ResumeButton resumeLink={resumeLink} locale={locale} />
+          )}
         </div>
       </div>
     </section>

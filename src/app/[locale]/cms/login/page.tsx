@@ -1,17 +1,17 @@
 'use client';
 
-import { getGitHubOAuthUrl, login } from '@/app/actions/cms/login';
-import { createClient } from '@/utils/supabase/client';
 import { CircleUserRound, Github, Loader2 } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { getGitHubOAuthUrl, login } from '@/app/actions/cms/login';
+import { createClient } from '@/utils/supabase/client';
 
 // Component that reads search params - must be wrapped in Suspense
-function LoginFormContent({ 
-  locale, 
-  initialError 
-}: { 
-  locale: string; 
+function LoginFormContent({
+  locale,
+  initialError,
+}: {
+  locale: string;
   initialError?: string | null;
 }) {
   const [email, setEmail] = useState('');
@@ -33,7 +33,7 @@ function LoginFormContent({
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    
+
     const result = await login(email, password);
     if (result?.error) {
       setError(result.error);
@@ -64,7 +64,7 @@ function LoginFormContent({
   return (
     <>
       <CircleUserRound size={100} className="mx-auto mb-6 text-main" />
-      
+
       <h1 className="text-2xl font-bold text-center mb-6 text-darktext dark:text-lighttext">
         CMS Login
       </h1>
@@ -109,13 +109,13 @@ function LoginFormContent({
           className="w-full rounded-md px-4 py-2 border focus:outline-hidden mb-4 text-darktext dark:text-lighttext dark:bg-darkgray"
           disabled={isLoading}
         />
-        
+
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 mb-4">
             <p className="text-red-500 text-sm">{error}</p>
           </div>
         )}
-        
+
         <button
           type="submit"
           disabled={isLoading}
@@ -137,12 +137,14 @@ export default function LoginPage() {
   return (
     <section className="my-52 flex items-center justify-center">
       <div className="p-8 rounded-xl w-full max-w-md border border-main">
-        <Suspense fallback={
-          <div className="flex flex-col items-center justify-center min-h-[400px]">
-            <Loader2 className="w-8 h-8 animate-spin text-main mb-4" />
-            <p className="text-lighttext2">Loading...</p>
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="flex flex-col items-center justify-center min-h-[400px]">
+              <Loader2 className="w-8 h-8 animate-spin text-main mb-4" />
+              <p className="text-lighttext2">Loading...</p>
+            </div>
+          }
+        >
           <LoginFormContent locale={locale} />
         </Suspense>
       </div>

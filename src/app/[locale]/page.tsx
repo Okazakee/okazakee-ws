@@ -1,6 +1,5 @@
 import Hero from '@layout/mainPage/Hero';
 import dynamic from 'next/dynamic';
-import React from 'react';
 
 // Dynamic imports for below-fold sections
 const Skills = dynamic(() => import('@layout/mainPage/Skills'));

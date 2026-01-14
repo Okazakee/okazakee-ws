@@ -15,7 +15,10 @@ export type CMSUser = {
 export async function getUser(): Promise<CMSUser | null> {
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
   if (authError || !user) {
     return null;
@@ -30,7 +33,7 @@ export async function getUser(): Promise<CMSUser | null> {
 
   // Fetch user role from cms_allowed_users
   let allowedUser: { role: string } | null = null;
-  
+
   // Try by email first
   if (user.email) {
     const { data: emailMatch } = await supabase
@@ -40,7 +43,7 @@ export async function getUser(): Promise<CMSUser | null> {
       .single();
     if (emailMatch) allowedUser = emailMatch;
   }
-  
+
   // Try by GitHub username if no email match
   const githubUsername = user.user_metadata?.user_name;
   if (!allowedUser && githubUsername) {
@@ -54,16 +57,19 @@ export async function getUser(): Promise<CMSUser | null> {
 
   // If no profile exists yet (edge case), create one from auth metadata
   if (!profile) {
-    const displayName = user.user_metadata?.full_name 
-      || user.user_metadata?.name 
-      || user.user_metadata?.user_name 
-      || user.email?.split('@')[0] 
-      || 'User';
+    const displayName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.user_metadata?.user_name ||
+      user.email?.split('@')[0] ||
+      'User';
 
     // Ensure avatarUrl is null if empty string
     const rawAvatarUrl = user.user_metadata?.avatar_url;
-    const avatarUrl = rawAvatarUrl && rawAvatarUrl.length > 0 ? rawAvatarUrl : null;
-    const authProvider = user.app_metadata?.provider === 'github' ? 'github' : 'email';
+    const avatarUrl =
+      rawAvatarUrl && rawAvatarUrl.length > 0 ? rawAvatarUrl : null;
+    const authProvider =
+      user.app_metadata?.provider === 'github' ? 'github' : 'email';
 
     // Try to create the profile (may fail due to RLS, that's ok)
     try {
@@ -91,9 +97,10 @@ export async function getUser(): Promise<CMSUser | null> {
   }
 
   // Ensure avatarUrl is null if empty
-  const profileAvatarUrl = profile.avatar_url && profile.avatar_url.length > 0 
-    ? profile.avatar_url 
-    : null;
+  const profileAvatarUrl =
+    profile.avatar_url && profile.avatar_url.length > 0
+      ? profile.avatar_url
+      : null;
 
   return {
     id: user.id,

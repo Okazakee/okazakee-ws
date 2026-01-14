@@ -1,18 +1,20 @@
 'use client';
 
-import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
-import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
-import React from 'react';
+import { useTranslations } from 'next-intl';
+import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 
 interface PrivacyPolicyPreviewProps {
   markdown: string;
   locale: 'en' | 'it';
 }
 
-export function PrivacyPolicyPreview({ markdown, locale }: PrivacyPolicyPreviewProps) {
+export function PrivacyPolicyPreview({
+  markdown,
+  locale,
+}: PrivacyPolicyPreviewProps) {
   const pathname = usePathname();
-  const pathLocale = pathname.split('/')[1] || locale;
+  const _pathLocale = pathname.split('/')[1] || locale;
   const t = useTranslations('privacyPolicy');
 
   return (

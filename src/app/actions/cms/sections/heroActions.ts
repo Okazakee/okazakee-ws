@@ -1,5 +1,6 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
   processImage,
@@ -9,7 +10,6 @@ import {
 } from '@/app/actions/cms/utils/fileHelpers';
 import { getHeroSection, getResumeLink } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 type HeroOperation =
   | { type: 'GET' }
@@ -193,7 +193,10 @@ async function uploadHeroImage(
       // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
-        return { success: false, error: processed.error || 'Failed to process image' };
+        return {
+          success: false,
+          error: processed.error || 'Failed to process image',
+        };
       }
       buffer = processed.buffer;
       blurhash = processed.blurhash;
@@ -376,4 +379,3 @@ async function updateWithFiles(
     };
   }
 }
-

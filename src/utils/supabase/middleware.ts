@@ -9,7 +9,9 @@ const CMS_PUBLIC_PATHS = ['/cms/login', '/cms/auth/callback'] as const;
 
 function isPublicCMSPath(pathname: string, locale: string): boolean {
   const normalizedPath = pathname.replace(new RegExp(`^/${locale}`), '');
-  return CMS_PUBLIC_PATHS.some(path => normalizedPath === path || normalizedPath.startsWith(path));
+  return CMS_PUBLIC_PATHS.some(
+    (path) => normalizedPath === path || normalizedPath.startsWith(path)
+  );
 }
 
 function isAuthCMSPath(pathname: string): boolean {

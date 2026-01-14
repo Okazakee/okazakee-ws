@@ -1,12 +1,25 @@
 'use client';
 
-import { skillsActions } from '@/app/actions/cms/sections/skillsActions';
-import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
-import { processImageToWebP } from '@/utils/imageProcessor';
-import { Edit3, Plus, Save, Trash2, Upload, X, Eye, ArrowUp, ArrowDown, Globe, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronUp,
+  Edit3,
+  Eye,
+  Globe,
+  Plus,
+  Save,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
+import { skillsActions } from '@/app/actions/cms/sections/skillsActions';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import { ErrorDiv } from '../ErrorDiv';
 import { PreviewModal } from './PreviewModal';
 import { SkillsPreview } from './previews/SkillsPreview';
@@ -62,7 +75,9 @@ type UploadApiResponse = {
 
 export default function SkillsSection() {
   const [categories, setCategories] = useState<EditableCategory[]>([]);
-  const [originalCategories, setOriginalCategories] = useState<EditableCategory[]>([]);
+  const [originalCategories, setOriginalCategories] = useState<
+    EditableCategory[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -70,11 +85,19 @@ export default function SkillsSection() {
 
   // Track modifications
   const [modifiedSkills, setModifiedSkills] = useState<Set<string>>(new Set());
-  const [newSkills, setNewSkills] = useState<Array<{ categoryId: number; skill: EditableSkill }>>([]);
+  const [newSkills, setNewSkills] = useState<
+    Array<{ categoryId: number; skill: EditableSkill }>
+  >([]);
   const [deletedSkills, setDeletedSkills] = useState<Set<number>>(new Set());
-  const [modifiedCategories, setModifiedCategories] = useState<Set<number>>(new Set());
-  const [newCategories, setNewCategories] = useState<Array<{ name: string; tempId: number }>>([]);
-  const [deletedCategories, setDeletedCategories] = useState<Set<number>>(new Set());
+  const [modifiedCategories, setModifiedCategories] = useState<Set<number>>(
+    new Set()
+  );
+  const [newCategories, setNewCategories] = useState<
+    Array<{ name: string; tempId: number }>
+  >([]);
+  const [deletedCategories, setDeletedCategories] = useState<Set<number>>(
+    new Set()
+  );
   const [categoryOrderChanged, setCategoryOrderChanged] = useState(false);
 
   // Translation state
@@ -85,7 +108,8 @@ export default function SkillsSection() {
     en: { title: '', subtitle: '', skills: {} },
     it: { title: '', subtitle: '', skills: {} },
   });
-  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [originalTranslations, setOriginalTranslations] =
+    useState(translations);
   const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
   const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
@@ -107,22 +131,24 @@ export default function SkillsSection() {
           language: string;
           translations: Record<string, unknown>;
         }>;
-        
+
         const enData = i18nData.find((d) => d.language === 'en');
         const itData = i18nData.find((d) => d.language === 'it');
-        
-        const skillsEn = (enData?.translations?.['skills-section'] as {
-          title?: string;
-          subtitle?: string;
-          skills?: Record<string, string>;
-        }) || {};
-        
-        const skillsIt = (itData?.translations?.['skills-section'] as {
-          title?: string;
-          subtitle?: string;
-          skills?: Record<string, string>;
-        }) || {};
-        
+
+        const skillsEn =
+          (enData?.translations?.['skills-section'] as {
+            title?: string;
+            subtitle?: string;
+            skills?: Record<string, string>;
+          }) || {};
+
+        const skillsIt =
+          (itData?.translations?.['skills-section'] as {
+            title?: string;
+            subtitle?: string;
+            skills?: Record<string, string>;
+          }) || {};
+
         const newTranslations = {
           en: {
             title: skillsEn.title || '',
@@ -135,7 +161,7 @@ export default function SkillsSection() {
             skills: skillsIt.skills || {},
           },
         };
-        
+
         setTranslations(newTranslations);
         setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
       }
@@ -271,9 +297,13 @@ export default function SkillsSection() {
 
   const cancelSkillEdit = (categoryId: number, skillId: number) => {
     // Revert to original data
-    const originalCategory = originalCategories.find((cat) => cat.id === categoryId);
-    const originalSkill = originalCategory?.skills.find((s) => s.id === skillId);
-    
+    const originalCategory = originalCategories.find(
+      (cat) => cat.id === categoryId
+    );
+    const originalSkill = originalCategory?.skills.find(
+      (s) => s.id === skillId
+    );
+
     if (originalSkill) {
       setCategories((prev) =>
         prev.map((cat) =>
@@ -282,7 +312,11 @@ export default function SkillsSection() {
                 ...cat,
                 skills: cat.skills.map((skill) =>
                   skill.id === skillId
-                    ? { ...originalSkill, isEditing: false, icon_file: undefined }
+                    ? {
+                        ...originalSkill,
+                        isEditing: false,
+                        icon_file: undefined,
+                      }
                     : skill
                 ),
               }
@@ -306,9 +340,7 @@ export default function SkillsSection() {
           ? {
               ...cat,
               skills: cat.skills.map((skill) =>
-                skill.id === skillId
-                  ? { ...skill, isEditing: false }
-                  : skill
+                skill.id === skillId ? { ...skill, isEditing: false } : skill
               ),
             }
           : cat
@@ -399,7 +431,10 @@ export default function SkillsSection() {
     };
 
     setCategories((prev) => [...prev, newCategory]);
-    setNewCategories((prev) => [...prev, { name: newCategoryName.trim(), tempId }]);
+    setNewCategories((prev) => [
+      ...prev,
+      { name: newCategoryName.trim(), tempId },
+    ]);
     setIsCreatingCategory(false);
     setNewCategoryName('');
   };
@@ -407,20 +442,26 @@ export default function SkillsSection() {
   const updateCategory = (categoryId: number, newName: string) => {
     setCategories((prev) =>
       prev.map((cat) =>
-        cat.id === categoryId ? { ...cat, name: newName, isEditing: false } : cat
+        cat.id === categoryId
+          ? { ...cat, name: newName, isEditing: false }
+          : cat
       )
     );
     setModifiedCategories((prev) => new Set(prev).add(categoryId));
   };
 
   const deleteCategory = (categoryId: number) => {
-    if (!confirm('Are you sure you want to delete this category? All skills in this category must be removed first.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this category? All skills in this category must be removed first.'
+      )
+    ) {
       return;
     }
 
     // Check if it's a new category (temp ID)
     const isNewCategory = newCategories.some((nc) => nc.tempId === categoryId);
-    
+
     if (isNewCategory) {
       // Remove from new categories
       setNewCategories((prev) => prev.filter((nc) => nc.tempId !== categoryId));
@@ -458,7 +499,7 @@ export default function SkillsSection() {
 
     // Check if it's a new skill (temp ID)
     const isNewSkill = newSkills.some((ns) => ns.skill.id === skillId);
-    
+
     if (isNewSkill) {
       // Remove from new skills
       setNewSkills((prev) => prev.filter((ns) => ns.skill.id !== skillId));
@@ -512,22 +553,28 @@ export default function SkillsSection() {
         });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to delete category ${categoryId}`);
+          throw new Error(
+            result.error || `Failed to delete category ${categoryId}`
+          );
         }
       }
 
       // 3. Create new categories (with position)
       for (const newCat of newCategories) {
         const category = categories.find((cat) => cat.id === newCat.tempId);
-        const position = category ? categories.indexOf(category) : categories.length;
-        
+        const position = category
+          ? categories.indexOf(category)
+          : categories.length;
+
         const result = await skillsActions({
           type: 'CREATE_CATEGORY',
           data: { name: newCat.name },
         });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to create category ${newCat.name}`);
+          throw new Error(
+            result.error || `Failed to create category ${newCat.name}`
+          );
         }
 
         // Update position after creation
@@ -548,7 +595,9 @@ export default function SkillsSection() {
         for (let i = 0; i < categories.length; i++) {
           const category = categories[i];
           // Skip new categories (they'll be created with position)
-          const isNewCategory = newCategories.some((nc) => nc.tempId === category.id);
+          const isNewCategory = newCategories.some(
+            (nc) => nc.tempId === category.id
+          );
           if (!isNewCategory) {
             const result = await skillsActions({
               type: 'UPDATE_CATEGORY',
@@ -557,7 +606,10 @@ export default function SkillsSection() {
             });
 
             if (!result.success) {
-              throw new Error(result.error || `Failed to update category order for ${category.name}`);
+              throw new Error(
+                result.error ||
+                  `Failed to update category order for ${category.name}`
+              );
             }
           }
         }
@@ -574,7 +626,9 @@ export default function SkillsSection() {
           });
 
           if (!result.success) {
-            throw new Error(result.error || `Failed to update category ${categoryId}`);
+            throw new Error(
+              result.error || `Failed to update category ${categoryId}`
+            );
           }
         }
       }
@@ -598,7 +652,9 @@ export default function SkillsSection() {
         })) as SkillApiResponse;
 
         if (!createResult.success) {
-          throw new Error(createResult.error || `Failed to create skill ${skill.title}`);
+          throw new Error(
+            createResult.error || `Failed to create skill ${skill.title}`
+          );
         }
 
         const createdSkill = createResult.data;
@@ -606,7 +662,9 @@ export default function SkillsSection() {
         // Upload icon if there's a file
         if (skill.icon_file) {
           // Check if file is SVG (upload as-is) or process to WebP
-          const isSvg = skill.icon_file.type === 'image/svg+xml' || skill.icon_file.name.toLowerCase().endsWith('.svg');
+          const isSvg =
+            skill.icon_file.type === 'image/svg+xml' ||
+            skill.icon_file.name.toLowerCase().endsWith('.svg');
           let fileToUpload = skill.icon_file;
 
           if (!isSvg) {
@@ -631,7 +689,9 @@ export default function SkillsSection() {
           })) as UploadApiResponse;
 
           if (!uploadResult.success) {
-            throw new Error(uploadResult.error || `Failed to upload icon for ${skill.title}`);
+            throw new Error(
+              uploadResult.error || `Failed to upload icon for ${skill.title}`
+            );
           }
 
           // Update the skill with the new icon
@@ -649,11 +709,13 @@ export default function SkillsSection() {
       // 7. Update modified skills
       for (const modifiedKey of modifiedSkills) {
         const [categoryIdStr, skillIdStr] = modifiedKey.split('-');
-        const categoryId = parseInt(categoryIdStr);
-        const skillId = parseInt(skillIdStr);
+        const categoryId = parseInt(categoryIdStr, 10);
+        const skillId = parseInt(skillIdStr, 10);
 
         const category = categories.find((cat) => cat.id === categoryId);
-        const skill = category?.skills.find((s) => s.id === skillId) as EditableSkill | undefined;
+        const skill = category?.skills.find((s) => s.id === skillId) as
+          | EditableSkill
+          | undefined;
 
         if (!skill) continue;
 
@@ -665,7 +727,9 @@ export default function SkillsSection() {
         // Upload icon if there's a new file
         if (skill.icon_file) {
           // Check if file is SVG (upload as-is) or process to WebP
-          const isSvg = skill.icon_file.type === 'image/svg+xml' || skill.icon_file.name.toLowerCase().endsWith('.svg');
+          const isSvg =
+            skill.icon_file.type === 'image/svg+xml' ||
+            skill.icon_file.name.toLowerCase().endsWith('.svg');
           let fileToUpload = skill.icon_file;
 
           if (!isSvg) {
@@ -691,7 +755,9 @@ export default function SkillsSection() {
           })) as UploadApiResponse;
 
           if (!uploadResult.success) {
-            throw new Error(uploadResult.error || `Failed to upload icon for ${skill.title}`);
+            throw new Error(
+              uploadResult.error || `Failed to upload icon for ${skill.title}`
+            );
           }
 
           updateData.icon = uploadResult.data.icon_url;
@@ -706,7 +772,9 @@ export default function SkillsSection() {
         })) as SkillApiResponse;
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to update skill ${skill.title}`);
+          throw new Error(
+            result.error || `Failed to update skill ${skill.title}`
+          );
         }
       }
 
@@ -720,7 +788,9 @@ export default function SkillsSection() {
           sectionData: translations.en,
         });
         if (!enResult.success) {
-          throw new Error(enResult.error || 'Failed to update English translations');
+          throw new Error(
+            enResult.error || 'Failed to update English translations'
+          );
         }
 
         // Update Italian translations
@@ -731,7 +801,9 @@ export default function SkillsSection() {
           sectionData: translations.it,
         });
         if (!itResult.success) {
-          throw new Error(itResult.error || 'Failed to update Italian translations');
+          throw new Error(
+            itResult.error || 'Failed to update Italian translations'
+          );
         }
 
         setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
@@ -785,14 +857,18 @@ export default function SkillsSection() {
   };
 
   const cancelAllChanges = () => {
-    if (!confirm('Are you sure you want to cancel all changes? All unsaved edits will be lost.')) {
+    if (
+      !confirm(
+        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
+      )
+    ) {
       return;
     }
 
     // Reload original data
     fetchSkillsData();
     fetchTranslations();
-    
+
     // Reset all tracking
     setModifiedSkills(new Set());
     setNewSkills([]);
@@ -824,7 +900,9 @@ export default function SkillsSection() {
   };
 
   const hasTranslationChanges = () => {
-    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
+    return (
+      JSON.stringify(translations) !== JSON.stringify(originalTranslations)
+    );
   };
 
   const hasChanges = () => {
@@ -970,7 +1048,11 @@ export default function SkillsSection() {
                     type="text"
                     value={translations[translationLocale].title}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'title', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'title',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Skills & Tech Stack"
@@ -983,7 +1065,11 @@ export default function SkillsSection() {
                   <textarea
                     value={translations[translationLocale].subtitle}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'subtitle', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'subtitle',
+                        e.target.value
+                      )
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
@@ -1002,7 +1088,11 @@ export default function SkillsSection() {
                         </label>
                         <input
                           type="text"
-                          value={translations[translationLocale].skills[category.name] || ''}
+                          value={
+                            translations[translationLocale].skills[
+                              category.name
+                            ] || ''
+                          }
                           onChange={(e) =>
                             handleTranslationChange(
                               translationLocale,
@@ -1026,7 +1116,9 @@ export default function SkillsSection() {
       {/* Category Management */}
       <div className="bg-darkergray rounded-xl p-4 md:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h2 className="text-lg md:text-xl font-bold text-main">Manage Categories</h2>
+          <h2 className="text-lg md:text-xl font-bold text-main">
+            Manage Categories
+          </h2>
           {!isCreatingCategory && (
             <button
               type="button"
@@ -1038,7 +1130,7 @@ export default function SkillsSection() {
             </button>
           )}
         </div>
-        
+
         {isCreatingCategory && (
           <div className="flex items-center gap-3 mb-4">
             <input
@@ -1073,7 +1165,10 @@ export default function SkillsSection() {
 
       <div className="space-y-6 md:space-y-8">
         {categories.map((category) => (
-          <div key={category.id} className="bg-darkergray rounded-xl p-4 md:p-6">
+          <div
+            key={category.id}
+            className="bg-darkergray rounded-xl p-4 md:p-6"
+          >
             <div className="flex flex-col gap-4 mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 {category.isEditing ? (
@@ -1087,7 +1182,9 @@ export default function SkillsSection() {
                     <button
                       type="button"
                       onClick={() => {
-                        const input = document.getElementById(`category-name-${category.id}`) as HTMLInputElement;
+                        const input = document.getElementById(
+                          `category-name-${category.id}`
+                        ) as HTMLInputElement;
                         updateCategory(category.id, input.value);
                       }}
                       className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-blue-500 hover:text-blue-400 transition-colors"
@@ -1098,12 +1195,18 @@ export default function SkillsSection() {
                       type="button"
                       onClick={() => {
                         // Revert to original name
-                        const originalCategory = originalCategories.find((cat) => cat.id === category.id);
+                        const originalCategory = originalCategories.find(
+                          (cat) => cat.id === category.id
+                        );
                         if (originalCategory) {
                           setCategories((prev) =>
                             prev.map((cat) =>
                               cat.id === category.id
-                                ? { ...cat, name: originalCategory.name, isEditing: false }
+                                ? {
+                                    ...cat,
+                                    name: originalCategory.name,
+                                    isEditing: false,
+                                  }
                                 : cat
                             )
                           );
@@ -1115,7 +1218,9 @@ export default function SkillsSection() {
                         } else {
                           setCategories((prev) =>
                             prev.map((cat) =>
-                              cat.id === category.id ? { ...cat, isEditing: false } : cat
+                              cat.id === category.id
+                                ? { ...cat, isEditing: false }
+                                : cat
                             )
                           );
                         }
@@ -1131,7 +1236,11 @@ export default function SkillsSection() {
                       <button
                         type="button"
                         onClick={() => moveCategoryUp(category.id)}
-                        disabled={categories.findIndex((cat) => cat.id === category.id) === 0}
+                        disabled={
+                          categories.findIndex(
+                            (cat) => cat.id === category.id
+                          ) === 0
+                        }
                         className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move up"
                       >
@@ -1140,20 +1249,29 @@ export default function SkillsSection() {
                       <button
                         type="button"
                         onClick={() => moveCategoryDown(category.id)}
-                        disabled={categories.findIndex((cat) => cat.id === category.id) === categories.length - 1}
+                        disabled={
+                          categories.findIndex(
+                            (cat) => cat.id === category.id
+                          ) ===
+                          categories.length - 1
+                        }
                         className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move down"
                       >
                         <ArrowDown className="w-4 h-4" />
                       </button>
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold text-main flex-1">{category.name}</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-main flex-1">
+                      {category.name}
+                    </h2>
                     <button
                       type="button"
                       onClick={() =>
                         setCategories((prev) =>
                           prev.map((cat) =>
-                            cat.id === category.id ? { ...cat, isEditing: true } : cat
+                            cat.id === category.id
+                              ? { ...cat, isEditing: true }
+                              : cat
                           )
                         )
                       }
@@ -1313,7 +1431,9 @@ export default function SkillsSection() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => saveSkillChanges(category.id, skill.id)}
+                          onClick={() =>
+                            saveSkillChanges(category.id, skill.id)
+                          }
                           className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200"
                         >
                           Done
@@ -1361,10 +1481,12 @@ export default function SkillsSection() {
                       className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden"
                       placeholder="Skill title"
                     />
-                    
+
                     {/* Icon Upload */}
                     <div className="space-y-2">
-                      <label className="block text-sm text-lighttext2">Icon</label>
+                      <label className="block text-sm text-lighttext2">
+                        Icon
+                      </label>
                       <div className="flex items-center gap-3">
                         {category.newSkill.icon ? (
                           <Image
@@ -1387,7 +1509,8 @@ export default function SkillsSection() {
                             id={`new-skill-icon-${category.id}`}
                             onChange={(e) => {
                               const file = e.target.files?.[0];
-                              if (file) handleNewSkillFileChange(category.id, file);
+                              if (file)
+                                handleNewSkillFileChange(category.id, file);
                             }}
                           />
                           <label
@@ -1400,7 +1523,7 @@ export default function SkillsSection() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -1468,7 +1591,6 @@ export default function SkillsSection() {
           {error}
         </div>
       )}
-
 
       <PreviewModal
         isOpen={isPreviewOpen}

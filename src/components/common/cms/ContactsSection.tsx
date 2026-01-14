@@ -1,26 +1,25 @@
 'use client';
 
-import { contactsActions } from '@/app/actions/cms/sections/contactsActions';
-import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
-import { useLayoutStore } from '@/store/layoutStore';
-import type { Contact } from '@/types/fetchedData.types';
 import type { LucideProps } from 'lucide-react';
 import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronUp,
   Edit3,
+  Eye,
+  Globe,
   Plus,
   Save,
   Trash2,
   X,
-  Eye,
-  ArrowUp,
-  ArrowDown,
-  Globe,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import type React from 'react';
-import { Suspense, useEffect, useState } from 'react';
-import { ErrorDiv } from '../ErrorDiv';
+import { useEffect, useState } from 'react';
+import { contactsActions } from '@/app/actions/cms/sections/contactsActions';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
+import { useLayoutStore } from '@/store/layoutStore';
+import type { Contact } from '@/types/fetchedData.types';
 import { PreviewModal } from './PreviewModal';
 import { ContactsPreview } from './previews/ContactsPreview';
 
@@ -94,7 +93,9 @@ function IconComponent({
 export default function ContactsSection() {
   const { heroSection } = useLayoutStore();
   const [contacts, setContacts] = useState<EditableContact[]>([]);
-  const [originalContacts, setOriginalContacts] = useState<EditableContact[]>([]);
+  const [originalContacts, setOriginalContacts] = useState<EditableContact[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -108,9 +109,13 @@ export default function ContactsSection() {
   });
 
   // Track modifications
-  const [modifiedContacts, setModifiedContacts] = useState<Set<number>>(new Set());
+  const [modifiedContacts, setModifiedContacts] = useState<Set<number>>(
+    new Set()
+  );
   const [newContacts, setNewContacts] = useState<EditableContact[]>([]);
-  const [deletedContacts, setDeletedContacts] = useState<Set<number>>(new Set());
+  const [deletedContacts, setDeletedContacts] = useState<Set<number>>(
+    new Set()
+  );
   const [orderChanged, setOrderChanged] = useState(false);
 
   // Translation state
@@ -121,7 +126,8 @@ export default function ContactsSection() {
     en: { title: '', subtitle: '' },
     it: { title: '', subtitle: '' },
   });
-  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [originalTranslations, setOriginalTranslations] =
+    useState(translations);
   const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
   const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
@@ -140,20 +146,22 @@ export default function ContactsSection() {
           language: string;
           translations: Record<string, unknown>;
         }>;
-        
+
         const enData = i18nData.find((d) => d.language === 'en');
         const itData = i18nData.find((d) => d.language === 'it');
-        
-        const contactsEn = (enData?.translations?.['contacts-section'] as {
-          title?: string;
-          subtitle?: string;
-        }) || {};
-        
-        const contactsIt = (itData?.translations?.['contacts-section'] as {
-          title?: string;
-          subtitle?: string;
-        }) || {};
-        
+
+        const contactsEn =
+          (enData?.translations?.['contacts-section'] as {
+            title?: string;
+            subtitle?: string;
+          }) || {};
+
+        const contactsIt =
+          (itData?.translations?.['contacts-section'] as {
+            title?: string;
+            subtitle?: string;
+          }) || {};
+
         const newTranslations = {
           en: {
             title: contactsEn.title || '',
@@ -164,7 +172,7 @@ export default function ContactsSection() {
             subtitle: contactsIt.subtitle || '',
           },
         };
-        
+
         setTranslations(newTranslations);
         setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
       }
@@ -204,7 +212,7 @@ export default function ContactsSection() {
     }
   };
 
-  const handleInputChange = (
+  const _handleInputChange = (
     contactId: number,
     field: keyof Contact,
     value: string
@@ -269,7 +277,7 @@ export default function ContactsSection() {
   const handleDeleteContact = (id: number) => {
     // Check if it's a new contact
     const isNewContact = newContacts.some((nc) => nc.id === id);
-    
+
     if (isNewContact) {
       // Remove from new contacts
       setNewContacts((prev) => prev.filter((c) => c.id !== id));
@@ -327,7 +335,9 @@ export default function ContactsSection() {
   };
 
   const hasTranslationChanges = () => {
-    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
+    return (
+      JSON.stringify(translations) !== JSON.stringify(originalTranslations)
+    );
   };
 
   const applyAllChanges = async () => {
@@ -343,14 +353,16 @@ export default function ContactsSection() {
         });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to delete contact ${contactId}`);
+          throw new Error(
+            result.error || `Failed to delete contact ${contactId}`
+          );
         }
       }
 
       // 2. Create new contacts
       for (const newContact of newContacts) {
         const position = contacts.findIndex((c) => c.id === newContact.id);
-        
+
         const result = await contactsActions({
           type: 'CREATE',
           data: {
@@ -363,7 +375,9 @@ export default function ContactsSection() {
         });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to create contact ${newContact.label}`);
+          throw new Error(
+            result.error || `Failed to create contact ${newContact.label}`
+          );
         }
       }
 
@@ -376,7 +390,8 @@ export default function ContactsSection() {
 
         // Only update positions for existing contacts (not new ones)
         const existingUpdates = positionUpdates.filter(
-          (update) => update.id > 0 && !newContacts.some((nc) => nc.id === update.id)
+          (update) =>
+            update.id > 0 && !newContacts.some((nc) => nc.id === update.id)
         );
 
         if (existingUpdates.length > 0) {
@@ -409,7 +424,9 @@ export default function ContactsSection() {
         });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to update contact ${contactId}`);
+          throw new Error(
+            result.error || `Failed to update contact ${contactId}`
+          );
         }
       }
 
@@ -423,7 +440,9 @@ export default function ContactsSection() {
           sectionData: translations.en,
         });
         if (!enResult.success) {
-          throw new Error(enResult.error || 'Failed to update English translations');
+          throw new Error(
+            enResult.error || 'Failed to update English translations'
+          );
         }
 
         // Update Italian translations
@@ -434,7 +453,9 @@ export default function ContactsSection() {
           sectionData: translations.it,
         });
         if (!itResult.success) {
-          throw new Error(itResult.error || 'Failed to update Italian translations');
+          throw new Error(
+            itResult.error || 'Failed to update Italian translations'
+          );
         }
 
         setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
@@ -442,7 +463,7 @@ export default function ContactsSection() {
 
       // Refresh data
       await fetchContacts();
-      
+
       // Reset tracking
       setModifiedContacts(new Set());
       setNewContacts([]);
@@ -462,13 +483,13 @@ export default function ContactsSection() {
     // Revert to original data
     setContacts(JSON.parse(JSON.stringify(originalContacts)));
     setTranslations(JSON.parse(JSON.stringify(originalTranslations)));
-    
+
     // Reset tracking
     setModifiedContacts(new Set());
     setNewContacts([]);
     setDeletedContacts(new Set());
     setOrderChanged(false);
-    
+
     // Reset form
     setNewContact({
       label: '',
@@ -619,7 +640,11 @@ export default function ContactsSection() {
                     type="text"
                     value={translations[translationLocale].title}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'title', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'title',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Contacts"
@@ -632,7 +657,11 @@ export default function ContactsSection() {
                   <textarea
                     value={translations[translationLocale].subtitle}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'subtitle', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'subtitle',
+                        e.target.value
+                      )
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"

@@ -1,5 +1,5 @@
-import NextImage from '@/components/layout/NextImage';
 import Markdown from 'markdown-to-jsx';
+import NextImage from '@/components/layout/NextImage';
 import PreCustom, { type PreChild } from './PreCustom';
 
 const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
@@ -46,14 +46,16 @@ const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
             ),
           },
           p: {
-            component: ({ children, ...props }) => {
+            component: ({ children }) => {
               // For markdown-to-jsx, we need to check if children contain only images differently
-              const childrenArray = Array.isArray(children) ? children : [children];
+              const childrenArray = Array.isArray(children)
+                ? children
+                : [children];
               const isOnlyImages = childrenArray.every(
-                (child) => 
-                  typeof child === 'object' && 
-                  child !== null && 
-                  'type' in child && 
+                (child) =>
+                  typeof child === 'object' &&
+                  child !== null &&
+                  'type' in child &&
                   child.type === 'img'
               );
 
@@ -80,7 +82,9 @@ const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
               // Ensure src is a string before passing to NextImage
               const imageSrc = typeof src === 'string' ? src : '';
 
-              return <NextImage src={imageSrc} alt={altText} blurhash={blurhash} />;
+              return (
+                <NextImage src={imageSrc} alt={altText} blurhash={blurhash} />
+              );
             },
           },
         },

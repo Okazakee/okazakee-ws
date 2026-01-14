@@ -1,5 +1,6 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
   processImage,
@@ -8,7 +9,6 @@ import {
   validateImageFileWithSvg,
 } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 type SkillOperation =
   | { type: 'GET' }
@@ -63,16 +63,20 @@ type SkillsResult = {
 };
 
 // Validation functions
-function validateSkillData(
-  data: CreateSkillData | UpdateSkillData
-): { isValid: boolean; error?: string } {
+function validateSkillData(data: CreateSkillData | UpdateSkillData): {
+  isValid: boolean;
+  error?: string;
+} {
   // Title validation (for CreateSkillData)
   if ('title' in data && data.title !== undefined) {
     if (!data.title || data.title.trim().length === 0) {
       return { isValid: false, error: 'Skill title is required' };
     }
     if (data.title.length > 100) {
-      return { isValid: false, error: 'Skill title must be less than 100 characters' };
+      return {
+        isValid: false,
+        error: 'Skill title must be less than 100 characters',
+      };
     }
   }
 
@@ -81,21 +85,33 @@ function validateSkillData(
     return { isValid: false, error: 'Skill name cannot be empty' };
   }
   if (data.name && data.name.length > 100) {
-    return { isValid: false, error: 'Skill name must be less than 100 characters' };
+    return {
+      isValid: false,
+      error: 'Skill name must be less than 100 characters',
+    };
   }
 
   // Description validation
   if (data.description && data.description.length > 500) {
-    return { isValid: false, error: 'Description must be less than 500 characters' };
+    return {
+      isValid: false,
+      error: 'Description must be less than 500 characters',
+    };
   }
 
   // Position validation
-  if (data.position !== undefined && (data.position < 0 || !Number.isInteger(data.position))) {
+  if (
+    data.position !== undefined &&
+    (data.position < 0 || !Number.isInteger(data.position))
+  ) {
     return { isValid: false, error: 'Position must be a non-negative integer' };
   }
 
   // Category ID validation
-  if (data.category_id !== undefined && (data.category_id < 1 || !Number.isInteger(data.category_id))) {
+  if (
+    data.category_id !== undefined &&
+    (data.category_id < 1 || !Number.isInteger(data.category_id))
+  ) {
     return { isValid: false, error: 'Invalid category ID' };
   }
 
@@ -299,7 +315,8 @@ async function uploadSkillIcon(
     }
 
     // Check if file is SVG or WebP
-    const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+    const isSvg =
+      file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
     const isWebP = file.type === 'image/webp';
     const sanitizedTitle = sanitizeFilename(existingSkill.title || 'skill');
 
@@ -327,7 +344,10 @@ async function uploadSkillIcon(
       // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
-        return { success: false, error: processed.error || 'Failed to process image' };
+        return {
+          success: false,
+          error: processed.error || 'Failed to process image',
+        };
       }
       const format = processed.format || 'png';
       const fileExtension = format === 'png' ? 'png' : 'webp';
@@ -338,11 +358,13 @@ async function uploadSkillIcon(
     }
 
     // Delete old file if exists (try all possible extensions)
-    await supabase.storage.from('website').remove([
-      `skills/${skillId}-${sanitizedTitle}.svg`,
-      `skills/${skillId}-${sanitizedTitle}.webp`,
-      `skills/${skillId}-${sanitizedTitle}.png`,
-    ]);
+    await supabase.storage
+      .from('website')
+      .remove([
+        `skills/${skillId}-${sanitizedTitle}.svg`,
+        `skills/${skillId}-${sanitizedTitle}.webp`,
+        `skills/${skillId}-${sanitizedTitle}.png`,
+      ]);
 
     // Upload file to Supabase Storage
     const { error: uploadError } = await supabase.storage
@@ -398,7 +420,10 @@ async function createCategory(
     }
 
     if (categoryData.name.length > 100) {
-      return { success: false, error: 'Category name must be less than 100 characters' };
+      return {
+        success: false,
+        error: 'Category name must be less than 100 characters',
+      };
     }
 
     const { data, error } = await supabase
@@ -430,7 +455,10 @@ async function updateCategory(
         return { success: false, error: 'Category name cannot be empty' };
       }
       if (updateData.name.length > 100) {
-        return { success: false, error: 'Category name must be less than 100 characters' };
+        return {
+          success: false,
+          error: 'Category name must be less than 100 characters',
+        };
       }
     }
 

@@ -1,14 +1,14 @@
 import localFont from 'next/font/local';
 import '../globals.css';
-import Footer from '@/components/layout/Footer';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { cookies } from 'next/headers';
+import Script from 'next/script';
+import { NextIntlClientProvider } from 'next-intl';
 import ConditionalHeader from '@/components/layout/ConditionalHeader';
+import Footer from '@/components/layout/Footer';
 import ScrollTop from '@/components/layout/ScrollTop';
 import { getTranslationsSupabase } from '@/utils/getData';
-import { SpeedInsights } from '@vercel/speed-insights/next';
-import { NextIntlClientProvider } from 'next-intl';
-import Script from 'next/script';
 import { Providers } from '../providers';
-import { cookies } from 'next/headers';
 
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',
@@ -26,16 +26,16 @@ export default async function RootLayout({
   const { locale } = await params;
 
   const messages = await getTranslationsSupabase(locale);
-  
+
   // Read theme preference from cookies during SSR
   const cookieStore = await cookies();
   const themeMode = cookieStore.get('themeMode')?.value || 'auto';
   const resolvedTheme = cookieStore.get('resolvedTheme')?.value;
-  
+
   // Determine if dark mode should be applied
   // Use resolvedTheme if available (for auto mode), otherwise use themeMode
   let isDark = false;
-  
+
   if (resolvedTheme) {
     // Use the resolved theme (handles auto mode correctly)
     isDark = resolvedTheme === 'dark';
@@ -45,14 +45,27 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale} className={isDark ? 'dark' : ''} suppressHydrationWarning>
+    <html
+      lang={locale}
+      className={isDark ? 'dark' : ''}
+      suppressHydrationWarning
+    >
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
         <meta name="theme-color" content={isDark ? '#0a0a0a' : '#d4d4d4'} />
         <meta name="darkreader-lock" />
         <meta name="color-scheme" content={isDark ? 'dark' : 'light'} />
-        <link rel="preconnect" href="https://mtvwynyikouqzmhqespl.supabase.co" />
-        <link rel="dns-prefetch" href="https://mtvwynyikouqzmhqespl.supabase.co" />
+        <link
+          rel="preconnect"
+          href="https://mtvwynyikouqzmhqespl.supabase.co"
+        />
+        <link
+          rel="dns-prefetch"
+          href="https://mtvwynyikouqzmhqespl.supabase.co"
+        />
         <link rel="preconnect" href="https://umami.okazakee.dev" />
       </head>
       <Providers>

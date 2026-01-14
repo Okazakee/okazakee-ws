@@ -1,14 +1,14 @@
 'use client';
 
-import ResumeButton from '@/components/common/ResumeButton';
-import { formatLabels } from '@/utils/formatLabels';
 import type { LucideProps } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
-import type { Contact } from '@/types/fetchedData.types';
-import type { ResumeData } from '@/types/fetchedData.types';
+import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import ResumeButton from '@/components/common/ResumeButton';
+import type { Contact, ResumeData } from '@/types/fetchedData.types';
+import { formatLabels } from '@/utils/formatLabels';
 
 interface ContactsPreviewProps {
   contacts: Contact[];
@@ -76,7 +76,10 @@ function IconComponent({
   return <Icon size={size} className={className} />;
 }
 
-export function ContactsPreview({ contacts, resumeData }: ContactsPreviewProps) {
+export function ContactsPreview({
+  contacts,
+  resumeData,
+}: ContactsPreviewProps) {
   const pathname = usePathname();
   const locale = pathname.split('/')[1] || 'en';
   const t = useTranslations('contacts-section');
@@ -154,7 +157,9 @@ export function ContactsPreview({ contacts, resumeData }: ContactsPreviewProps) 
           ))}
 
           {/* Resume Link Button */}
-          {resumeLink && <ResumeButton resumeLink={resumeLink} locale={locale} />}
+          {resumeLink && (
+            <ResumeButton resumeLink={resumeLink} locale={locale} />
+          )}
         </div>
       </div>
     </section>

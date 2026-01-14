@@ -58,20 +58,20 @@ export async function processImageToWebP(
       // Cover mode: scale to cover the area, then crop to exact dimensions
       canvasWidth = maxWidth;
       canvasHeight = maxHeight;
-      
+
       // Calculate scale to cover the entire area
       const widthRatio = maxWidth / img.width;
       const heightRatio = maxHeight / img.height;
       const scale = Math.max(widthRatio, heightRatio);
-      
+
       // Scaled dimensions
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
-      
+
       // Calculate how much we need to crop from the scaled image
       const cropX = (scaledWidth - maxWidth) / 2;
       const cropY = (scaledHeight - maxHeight) / 2;
-      
+
       // Draw the full image scaled, then crop by drawing only the center portion
       // We'll draw the image scaled, but only show the center portion
       drawWidth = scaledWidth;
@@ -118,8 +118,14 @@ export async function processImageToWebP(
       // Cover mode: draw cropped portion of source image, scaled to canvas size
       ctx.drawImage(
         img,
-        sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle
-        0, 0, canvasWidth, canvasHeight // Destination rectangle
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight, // Source rectangle
+        0,
+        0,
+        canvasWidth,
+        canvasHeight // Destination rectangle
       );
     } else {
       ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
@@ -176,12 +182,12 @@ async function generateBlurhash(canvas: HTMLCanvasElement): Promise<string> {
     smallCanvas.width = 32;
     smallCanvas.height = 32;
     const smallCtx = smallCanvas.getContext('2d');
-    
+
     if (!smallCtx) return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
 
     smallCtx.drawImage(canvas, 0, 0, 32, 32);
-    const imageData = smallCtx.getImageData(0, 0, 32, 32);
-    
+    const _imageData = smallCtx.getImageData(0, 0, 32, 32);
+
     // Simple placeholder - in production, use proper blurhash encoding
     // For now, return a default blurhash
     return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';

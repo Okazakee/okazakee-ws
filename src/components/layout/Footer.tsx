@@ -1,6 +1,5 @@
-import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import React from 'react';
+import { getTranslations } from 'next-intl/server';
 import CopyLinkButton from '../common/CopyButton';
 
 export default async function Footer() {

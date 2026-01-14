@@ -1,7 +1,6 @@
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { Tags } from './Tags';
 import ViewDisplay from './ViewDisplay';
 
@@ -9,7 +8,11 @@ export default function Postcard({
   post,
   locale,
   index = 0,
-}: { post: PortfolioPost | BlogPost; locale: string; index?: number }) {
+}: {
+  post: PortfolioPost | BlogPost;
+  locale: string;
+  index?: number;
+}) {
   const isPortfolioPost = (
     post: PortfolioPost | BlogPost
   ): post is PortfolioPost => {
@@ -58,9 +61,9 @@ export default function Postcard({
             <h1 className="font-bold text-[1.4rem] md:text-2xl flex-shrink min-w-0">
               {initTitle}
             </h1>
-            <ViewDisplay 
-              postId={post.id.toString()} 
-              postType={checkPostType} 
+            <ViewDisplay
+              postId={post.id.toString()}
+              postType={checkPostType}
               initialViews={post.views}
               isCard={true}
             />

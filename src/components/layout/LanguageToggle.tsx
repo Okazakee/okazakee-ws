@@ -9,7 +9,7 @@ export default function LanguageToggle({
   compact?: boolean;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const _router = useRouter();
   const [mounted, setMounted] = useState(false);
   const isItalian = pathname.startsWith('/it');
 

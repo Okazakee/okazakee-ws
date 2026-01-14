@@ -1,14 +1,14 @@
 'use client';
 
-import { formatLabels } from '@/utils/formatLabels';
 import { SkillsCarousel } from '@components/common/SkillsCarousel';
 import { Calendar, MapPin } from 'lucide-react';
+import Markdown from 'markdown-to-jsx';
 import moment, { type MomentInput } from 'moment';
-import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Markdown from 'markdown-to-jsx';
+import { useTranslations } from 'next-intl';
+import { formatLabels } from '@/utils/formatLabels';
 
 interface PreviewCareerEntry {
   id: number;
@@ -116,7 +116,7 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
 
           {groupedEntries.map((companyGroup, index) => {
             const isEven = index % 2 === 0;
-            const isLast = index === groupedEntries.length - 1;
+            const _isLast = index === groupedEntries.length - 1;
             const latestPosition = companyGroup.positions[0];
             const olderPositions = companyGroup.positions.slice(1);
 
@@ -169,7 +169,11 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
 
                     <div className="mb-4 prose dark:prose-invert max-w-none text-left">
                       <Markdown options={{ forceBlock: true }}>
-                        {latestPosition[`description_${locale}` as keyof PreviewCareerEntry] as string}
+                        {
+                          latestPosition[
+                            `description_${locale}` as keyof PreviewCareerEntry
+                          ] as string
+                        }
                       </Markdown>
                     </div>
 
@@ -215,7 +219,11 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
                             </div>
                             <div className="prose dark:prose-invert max-w-none text-left mb-4">
                               <Markdown options={{ forceBlock: true }}>
-                                {position[`description_${locale}` as keyof PreviewCareerEntry] as string}
+                                {
+                                  position[
+                                    `description_${locale}` as keyof PreviewCareerEntry
+                                  ] as string
+                                }
                               </Markdown>
                             </div>
                             <div
@@ -263,12 +271,22 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
                           {latestPosition.company}
                         </h5>
                         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
-                          {latestPosition[`company_description_${locale}` as keyof PreviewCareerEntry] as string}
+                          {
+                            latestPosition[
+                              `company_description_${locale}` as keyof PreviewCareerEntry
+                            ] as string
+                          }
                         </p>
                         <div className="w-28 h-px bg-gray-300 dark:bg-gray-600 mx-auto mb-3" />
                         <div className="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 gap-1">
                           <MapPin size={16} className="inline mb-1 mr-1" />
-                          <span>{latestPosition[`location_${locale}` as keyof PreviewCareerEntry] as string}</span>
+                          <span>
+                            {
+                              latestPosition[
+                                `location_${locale}` as keyof PreviewCareerEntry
+                              ] as string
+                            }
+                          </span>
                           <span className="px-1 text-main">•</span>
                           <span className="bg-secondary text-white px-1.5 py-0.5 rounded-md text-xs">
                             {t(`remote.${latestPosition.remote}`)}
@@ -313,12 +331,22 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
                           </div>
                         </Link>
                         <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed text-center mb-4">
-                          {latestPosition[`company_description_${locale}` as keyof PreviewCareerEntry] as string}
+                          {
+                            latestPosition[
+                              `company_description_${locale}` as keyof PreviewCareerEntry
+                            ] as string
+                          }
                         </p>
 
                         <div className="flex items-center justify-center mb-4 text-xs text-gray-500 dark:text-gray-400 gap-1">
                           <MapPin size={14} className="inline mb-1 mr-1" />
-                          <span>{latestPosition[`location_${locale}` as keyof PreviewCareerEntry] as string}</span>
+                          <span>
+                            {
+                              latestPosition[
+                                `location_${locale}` as keyof PreviewCareerEntry
+                              ] as string
+                            }
+                          </span>
                           <span className="px-1 text-main">•</span>
                           <span className="bg-secondary text-white px-1.5 py-0.5 rounded-md text-xs">
                             {t(`remote.${latestPosition.remote}`)}
@@ -333,7 +361,11 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
 
                         <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
                           <Markdown options={{ forceBlock: true }}>
-                            {latestPosition[`description_${locale}` as keyof PreviewCareerEntry] as string}
+                            {
+                              latestPosition[
+                                `description_${locale}` as keyof PreviewCareerEntry
+                              ] as string
+                            }
                           </Markdown>
                         </div>
 
@@ -354,7 +386,9 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
 
                         <div className="flex flex-wrap gap-2 justify-center">
                           <SkillsCarousel
-                            skills={JSON.parse(latestPosition.skills) as string[]}
+                            skills={
+                              JSON.parse(latestPosition.skills) as string[]
+                            }
                           />
                         </div>
 
@@ -376,12 +410,19 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
 
                                     <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
                                       <Markdown options={{ forceBlock: true }}>
-                                        {position[`description_${locale}` as keyof PreviewCareerEntry] as string}
+                                        {
+                                          position[
+                                            `description_${locale}` as keyof PreviewCareerEntry
+                                          ] as string
+                                        }
                                       </Markdown>
                                     </div>
 
                                     <div className="flex items-center justify-center mb-5 text-xs text-gray-500 dark:text-gray-400 gap-1">
-                                      <Calendar size={14} className="inline mb-1" />
+                                      <Calendar
+                                        size={14}
+                                        className="inline mb-1"
+                                      />
                                       <span>
                                         {formatDate(position.startDate)} —{' '}
                                         {formatDate(position.endDate)}
@@ -397,7 +438,11 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
 
                                     <div className="flex flex-wrap gap-2 justify-center">
                                       <SkillsCarousel
-                                        skills={JSON.parse(position.skills) as string[]}
+                                        skills={
+                                          JSON.parse(
+                                            position.skills
+                                          ) as string[]
+                                        }
                                       />
                                     </div>
                                   </div>

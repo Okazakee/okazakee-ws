@@ -1,9 +1,7 @@
+import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import { getPrivacyPolicy } from '@/utils/getData';
-import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import React from 'react';
 
 export async function generateMetadata({
   params,
@@ -21,7 +19,9 @@ export async function generateMetadata({
 
 export default async function PrivacyPolicyPage({
   params,
-}: { params: Promise<{ locale: string }> }) {
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'privacyPolicy' });
   const privacyPolicy = await getPrivacyPolicy(locale);

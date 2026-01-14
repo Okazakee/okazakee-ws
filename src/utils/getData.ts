@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js';
+import { unstable_cache } from 'next/cache';
 import type {
   BlogPost,
   CareerEntry,
@@ -7,8 +9,6 @@ import type {
   ResumeData,
   SkillsCategory,
 } from '@/types/fetchedData.types';
-import { createClient } from '@supabase/supabase-js';
-import { unstable_cache } from 'next/cache';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
@@ -94,7 +94,9 @@ export const getHeroSection = unstable_cache(
 
 export const getSkillsCategories = unstable_cache(
   async (): Promise<SkillsCategory[] | null> => {
-    const { data, error } = await supabase.from('skills_categories').select(`
+    const { data, error } = await supabase
+      .from('skills_categories')
+      .select(`
         id,
         name,
         position,
@@ -106,7 +108,8 @@ export const getSkillsCategories = unstable_cache(
           category_id,
           blurhashURL
         )
-      `).order('position', { ascending: true });
+      `)
+      .order('position', { ascending: true });
 
     if (error) {
       console.error(error);
@@ -228,10 +231,7 @@ export type PostWithAuthor = (PortfolioPost | BlogPost) & {
 };
 
 export const getPost = unstable_cache(
-  async (
-    id: string,
-    type: string
-  ): Promise<PostWithAuthor | null> => {
+  async (id: string, type: string): Promise<PostWithAuthor | null> => {
     const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 
     let query = supabase.from(tableName).select('*').eq('id', id);
@@ -261,7 +261,7 @@ export const getPost = unstable_cache(
         .select('id, display_name, avatar_url')
         .eq('id', data.author_id)
         .single();
-      
+
       if (authorData) {
         author = authorData;
       }

@@ -36,13 +36,15 @@ const useThemeStore = create<ThemeState>((set, get) => {
       // Get stored mode or default to 'auto'
       const storedMode = localStorage.getItem('themeMode') as ThemeMode;
       let mode: ThemeMode;
-      
+
       if (storedMode && ['auto', 'light', 'dark'].includes(storedMode)) {
         // User has a saved preference
         mode = storedMode;
       } else {
         // First-time user - detect system preference
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const systemPrefersDark = window.matchMedia(
+          '(prefers-color-scheme: dark)'
+        ).matches;
         mode = systemPrefersDark ? 'dark' : 'light';
         // Save system preference to localStorage
         localStorage.setItem('themeMode', mode);
@@ -80,7 +82,7 @@ const useThemeStore = create<ThemeState>((set, get) => {
       }
       const isDark = isDarkActive(newMode);
       set({ mode: newMode, isDark });
-      
+
       // Update resolved theme cookie
       if (typeof window !== 'undefined') {
         const resolvedTheme = isDark ? 'dark' : 'light';
@@ -98,7 +100,7 @@ const useThemeStore = create<ThemeState>((set, get) => {
       }
       const isDark = isDarkActive(newMode);
       set({ mode: newMode, isDark });
-      
+
       // Update resolved theme cookie
       if (typeof window !== 'undefined') {
         const resolvedTheme = isDark ? 'dark' : 'light';

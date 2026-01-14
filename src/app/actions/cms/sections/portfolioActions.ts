@@ -1,5 +1,6 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
   isValidUrl,
@@ -8,9 +9,7 @@ import {
   sanitizeFilename,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
-import type { PortfolioPost } from '@/types/fetchedData.types';
 import { createClient } from '@/utils/supabase/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 type PortfolioOperation =
   | { type: 'GET' }
@@ -57,65 +56,96 @@ type PortfolioResult = {
 };
 
 // Validation functions
-function validatePortfolioData(data: CreatePortfolioData | UpdatePortfolioData): { isValid: boolean; error?: string } {
+function validatePortfolioData(
+  data: CreatePortfolioData | UpdatePortfolioData
+): { isValid: boolean; error?: string } {
   // Required fields validation
-  if (data.title_en !== undefined && (!data.title_en || data.title_en.trim().length === 0)) {
+  if (
+    data.title_en !== undefined &&
+    (!data.title_en || data.title_en.trim().length === 0)
+  ) {
     return { isValid: false, error: 'English title is required' };
   }
-  
-  if (data.title_it !== undefined && (!data.title_it || data.title_it.trim().length === 0)) {
+
+  if (
+    data.title_it !== undefined &&
+    (!data.title_it || data.title_it.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Italian title is required' };
   }
-  
-  if (data.description_en !== undefined && (!data.description_en || data.description_en.trim().length === 0)) {
+
+  if (
+    data.description_en !== undefined &&
+    (!data.description_en || data.description_en.trim().length === 0)
+  ) {
     return { isValid: false, error: 'English description is required' };
   }
-  
-  if (data.description_it !== undefined && (!data.description_it || data.description_it.trim().length === 0)) {
+
+  if (
+    data.description_it !== undefined &&
+    (!data.description_it || data.description_it.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Italian description is required' };
   }
-  
-  if (data.body_en !== undefined && (!data.body_en || data.body_en.trim().length === 0)) {
+
+  if (
+    data.body_en !== undefined &&
+    (!data.body_en || data.body_en.trim().length === 0)
+  ) {
     return { isValid: false, error: 'English content is required' };
   }
-  
-  if (data.body_it !== undefined && (!data.body_it || data.body_it.trim().length === 0)) {
+
+  if (
+    data.body_it !== undefined &&
+    (!data.body_it || data.body_it.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Italian content is required' };
   }
 
   // Length validation
   if (data.title_en && data.title_en.length > 200) {
-    return { isValid: false, error: 'English title must be less than 200 characters' };
+    return {
+      isValid: false,
+      error: 'English title must be less than 200 characters',
+    };
   }
-  
+
   if (data.title_it && data.title_it.length > 200) {
-    return { isValid: false, error: 'Italian title must be less than 200 characters' };
+    return {
+      isValid: false,
+      error: 'Italian title must be less than 200 characters',
+    };
   }
-  
+
   if (data.description_en && data.description_en.length > 500) {
-    return { isValid: false, error: 'English description must be less than 500 characters' };
+    return {
+      isValid: false,
+      error: 'English description must be less than 500 characters',
+    };
   }
-  
+
   if (data.description_it && data.description_it.length > 500) {
-    return { isValid: false, error: 'Italian description must be less than 500 characters' };
+    return {
+      isValid: false,
+      error: 'Italian description must be less than 500 characters',
+    };
   }
 
   // URL validation
-  if (data.source_link && data.source_link.trim() && !isValidUrl(data.source_link)) {
+  if (data.source_link?.trim() && !isValidUrl(data.source_link)) {
     return { isValid: false, error: 'Source link must be a valid URL' };
   }
-  
-  if (data.demo_link && data.demo_link.trim() && !isValidUrl(data.demo_link)) {
+
+  if (data.demo_link?.trim() && !isValidUrl(data.demo_link)) {
     return { isValid: false, error: 'Demo link must be a valid URL' };
   }
-  
-  if (data.store_link && data.store_link.trim() && !isValidUrl(data.store_link)) {
+
+  if (data.store_link?.trim() && !isValidUrl(data.store_link)) {
     return { isValid: false, error: 'Store link must be a valid URL' };
   }
 
   return { isValid: true };
 }
-
 
 export async function portfolioActions(
   operation: PortfolioOperation
@@ -362,14 +392,19 @@ async function uploadPortfolioImage(
       // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
-        return { success: false, error: processed.error || 'Failed to process image' };
+        return {
+          success: false,
+          error: processed.error || 'Failed to process image',
+        };
       }
       buffer = processed.buffer;
       blurhash = processed.blurhash;
     }
 
     // Generate filename: {postId}-{title_en}.webp
-    const sanitizedTitle = sanitizeFilename(existingPortfolio.title_en || 'untitled');
+    const sanitizedTitle = sanitizeFilename(
+      existingPortfolio.title_en || 'untitled'
+    );
     const fileName = `portfolio/images/${portfolioId}-${sanitizedTitle}.webp`;
 
     // Delete old file with same name if exists

@@ -5,10 +5,6 @@ export const metadata: Metadata = {
   description: 'Content Management System Dashboard',
 };
 
-export default function CMSLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function CMSLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

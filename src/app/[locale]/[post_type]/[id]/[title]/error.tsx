@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Home, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Home } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ErrorPage() {

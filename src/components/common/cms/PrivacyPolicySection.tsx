@@ -1,10 +1,8 @@
 'use client';
 
-import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
-import { FileText, Save, Eye } from 'lucide-react';
-import type React from 'react';
+import { Eye, FileText, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { ErrorDiv } from '../ErrorDiv';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { PreviewModal } from './PreviewModal';
 import { PrivacyPolicyPreview } from './previews/PrivacyPolicyPreview';
 
@@ -15,7 +13,9 @@ type PrivacyPolicyData = {
 };
 
 export default function PrivacyPolicySection() {
-  const [privacyPolicyData, setPrivacyPolicyData] = useState<PrivacyPolicyData[]>([]);
+  const [privacyPolicyData, setPrivacyPolicyData] = useState<
+    PrivacyPolicyData[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -56,7 +56,9 @@ export default function PrivacyPolicySection() {
     } catch (error) {
       console.error('Error fetching privacy policy data:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to fetch privacy policy data'
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch privacy policy data'
       );
     } finally {
       setIsLoading(false);
@@ -64,7 +66,9 @@ export default function PrivacyPolicySection() {
   };
 
   const handleLocaleChange = (locale: 'en' | 'it') => {
-    const localeData = privacyPolicyData.find((data) => data.language === locale);
+    const localeData = privacyPolicyData.find(
+      (data) => data.language === locale
+    );
     if (localeData) {
       setSelectedLocale(locale);
       setEditedPrivacyPolicy(localeData.privacy_policy || '');
@@ -72,8 +76,12 @@ export default function PrivacyPolicySection() {
     }
   };
 
-  const getCurrentTranslations = (locale: 'en' | 'it'): Record<string, unknown> => {
-    const localeData = privacyPolicyData.find((data) => data.language === locale);
+  const getCurrentTranslations = (
+    locale: 'en' | 'it'
+  ): Record<string, unknown> => {
+    const localeData = privacyPolicyData.find(
+      (data) => data.language === locale
+    );
     return (localeData?.translations as Record<string, unknown>) || {};
   };
 
@@ -88,7 +96,7 @@ export default function PrivacyPolicySection() {
     try {
       // Get current translations to preserve them
       const currentTranslations = getCurrentTranslations(selectedLocale);
-      
+
       const result = await i18nActions({
         type: 'UPDATE',
         locale: selectedLocale,
@@ -108,7 +116,9 @@ export default function PrivacyPolicySection() {
     } catch (error) {
       console.error('Error updating privacy policy:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to update privacy policy'
+        error instanceof Error
+          ? error.message
+          : 'Failed to update privacy policy'
       );
     } finally {
       setIsSaving(false);
@@ -116,7 +126,11 @@ export default function PrivacyPolicySection() {
   };
 
   const handleCancel = () => {
-    if (!confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
+    if (
+      !confirm(
+        'Are you sure you want to cancel? All unsaved changes will be lost.'
+      )
+    ) {
       return;
     }
     setEditedPrivacyPolicy(originalPrivacyPolicy);

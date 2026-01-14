@@ -1,33 +1,34 @@
 'use client';
 
-import { type Author, blogActions } from '@/app/actions/cms/sections/blogActions';
+import {
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Edit3,
+  Eye,
+  FileText,
+  Globe,
+  Image as ImageIcon,
+  Plus,
+  Trash2,
+  User,
+  X,
+} from 'lucide-react';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import {
+  type Author,
+  blogActions,
+} from '@/app/actions/cms/sections/blogActions';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { useLayoutStore } from '@/store/layoutStore';
 import type { BlogPost } from '@/types/fetchedData.types';
 import { processImageToWebP } from '@/utils/imageProcessor';
-import {
-  Calendar,
-  Edit3,
-  FileText,
-  Image as ImageIcon,
-  Plus,
-  Save,
-  Trash2,
-  Upload,
-  User,
-  X,
-  Eye,
-  Globe,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import Image from 'next/image';
-import type React from 'react';
-import { useEffect, useState } from 'react';
 import { PreviewModal } from './PreviewModal';
 import { BlogPreview } from './previews/BlogPreview';
 import { PostPreview } from './previews/PostPreview';
-import { usePathname } from 'next/navigation';
 
 type FormMode = 'list' | 'create' | 'edit';
 
@@ -72,7 +73,7 @@ export default function BlogSection() {
   const [error, setError] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPostPreviewOpen, setIsPostPreviewOpen] = useState(false);
-  
+
   // Form state
   const [mode, setMode] = useState<FormMode>('list');
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
@@ -82,7 +83,9 @@ export default function BlogSection() {
 
   // Track modifications
   const [modifiedPosts, setModifiedPosts] = useState<Set<number>>(new Set());
-  const [newPosts, setNewPosts] = useState<Array<{ post: EditableBlogPost; imageFile: File | null }>>([]);
+  const [newPosts, setNewPosts] = useState<
+    Array<{ post: EditableBlogPost; imageFile: File | null }>
+  >([]);
   const [deletedPosts, setDeletedPosts] = useState<Set<number>>(new Set());
 
   // Translation state
@@ -93,7 +96,8 @@ export default function BlogSection() {
     en: {},
     it: {},
   });
-  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [originalTranslations, setOriginalTranslations] =
+    useState(translations);
   const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
   const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
@@ -117,18 +121,22 @@ export default function BlogSection() {
           language: string;
           translations: Record<string, unknown>;
         }>;
-        
+
         const enData = i18nData.find((d) => d.language === 'en');
         const itData = i18nData.find((d) => d.language === 'it');
-        
-        const postsEn = (enData?.translations?.['posts-section'] as Record<string, string>) || {};
-        const postsIt = (itData?.translations?.['posts-section'] as Record<string, string>) || {};
-        
+
+        const postsEn =
+          (enData?.translations?.['posts-section'] as Record<string, string>) ||
+          {};
+        const postsIt =
+          (itData?.translations?.['posts-section'] as Record<string, string>) ||
+          {};
+
         const newTranslations = {
           en: postsEn,
           it: postsIt,
         };
-        
+
         setTranslations(newTranslations);
         setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
       }
@@ -142,7 +150,7 @@ export default function BlogSection() {
   // Set default author to current user when creating
   useEffect(() => {
     if (mode === 'create' && user && !formData.author_id) {
-      setFormData(prev => ({ ...prev, author_id: user.id }));
+      setFormData((prev) => ({ ...prev, author_id: user.id }));
     }
   }, [mode, user, formData.author_id]);
 
@@ -204,7 +212,9 @@ export default function BlogSection() {
       body_it: post.body_it ?? '',
       blurhashURL: post.blurhashURL ?? '',
       post_tags: post.post_tags ?? '',
-      created_at: post.created_at?.split('T')[0] ?? new Date().toISOString().split('T')[0],
+      created_at:
+        post.created_at?.split('T')[0] ??
+        new Date().toISOString().split('T')[0],
       author_id: post.author_id ?? user?.id ?? '',
     });
     setFormImage(null);
@@ -309,7 +319,7 @@ export default function BlogSection() {
 
     // Check if it's a new post (temp ID)
     const isNewPost = newPosts.some((np) => np.post.id === postId);
-    
+
     if (isNewPost) {
       // Remove from new posts
       setNewPosts((prev) => prev.filter((np) => np.post.id !== postId));
@@ -370,18 +380,24 @@ export default function BlogSection() {
   };
 
   const hasTranslationChanges = () => {
-    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
+    return (
+      JSON.stringify(translations) !== JSON.stringify(originalTranslations)
+    );
   };
 
   const cancelAllChanges = () => {
-    if (!confirm('Are you sure you want to cancel all changes? All unsaved edits will be lost.')) {
+    if (
+      !confirm(
+        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
+      )
+    ) {
       return;
     }
 
     // Reload original data
     fetchBlogData();
     fetchTranslations();
-    
+
     // Reset all tracking
     setModifiedPosts(new Set());
     setNewPosts([]);
@@ -399,7 +415,9 @@ export default function BlogSection() {
         const result = await blogActions({ type: 'DELETE', id: postId });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to delete blog post ${postId}`);
+          throw new Error(
+            result.error || `Failed to delete blog post ${postId}`
+          );
         }
       }
 
@@ -428,7 +446,9 @@ export default function BlogSection() {
         });
 
         if (!createResult.success) {
-          throw new Error(createResult.error || `Failed to create blog post ${post.title_en}`);
+          throw new Error(
+            createResult.error || `Failed to create blog post ${post.title_en}`
+          );
         }
 
         const createdPost = createResult.data as BlogPost;
@@ -452,7 +472,9 @@ export default function BlogSection() {
         });
 
         if (!imageResult.success) {
-          throw new Error(imageResult.error || `Failed to upload image for ${post.title_en}`);
+          throw new Error(
+            imageResult.error || `Failed to upload image for ${post.title_en}`
+          );
         }
       }
 
@@ -477,7 +499,9 @@ export default function BlogSection() {
         });
 
         if (!updateResult.success) {
-          throw new Error(updateResult.error || `Failed to update blog post ${post.title_en}`);
+          throw new Error(
+            updateResult.error || `Failed to update blog post ${post.title_en}`
+          );
         }
 
         // Upload image if there's a new file
@@ -501,7 +525,9 @@ export default function BlogSection() {
           });
 
           if (!imageResult.success) {
-            throw new Error(imageResult.error || `Failed to upload image for ${post.title_en}`);
+            throw new Error(
+              imageResult.error || `Failed to upload image for ${post.title_en}`
+            );
           }
         }
       }
@@ -516,7 +542,9 @@ export default function BlogSection() {
           sectionData: translations.en,
         });
         if (!enResult.success) {
-          throw new Error(enResult.error || 'Failed to update English translations');
+          throw new Error(
+            enResult.error || 'Failed to update English translations'
+          );
         }
 
         // Update Italian translations
@@ -527,7 +555,9 @@ export default function BlogSection() {
           sectionData: translations.it,
         });
         if (!itResult.success) {
-          throw new Error(itResult.error || 'Failed to update Italian translations');
+          throw new Error(
+            itResult.error || 'Failed to update Italian translations'
+          );
         }
 
         setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
@@ -570,9 +600,11 @@ export default function BlogSection() {
   // Form view (create or edit)
   if (mode === 'create' || mode === 'edit') {
     const isEditing = mode === 'edit';
-    const currentImage = formImage 
-      ? URL.createObjectURL(formImage) 
-      : isEditing ? formData.image : null;
+    const currentImage = formImage
+      ? URL.createObjectURL(formImage)
+      : isEditing
+        ? formData.image
+        : null;
 
     return (
       <div className="space-y-6">
@@ -599,10 +631,11 @@ export default function BlogSection() {
         <div className="p-6 bg-bglight dark:bg-darkgray rounded-lg border-2 border-main">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-title-en-input" className="block text-sm font-medium text-main mb-1">
                 English Title
               </label>
               <input
+                id="blog-title-en-input"
                 type="text"
                 value={formData.title_en}
                 onChange={(e) => handleFormChange('title_en', e.target.value)}
@@ -611,10 +644,11 @@ export default function BlogSection() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-title-it-input" className="block text-sm font-medium text-main mb-1">
                 Italian Title
               </label>
               <input
+                id="blog-title-it-input"
                 type="text"
                 value={formData.title_it}
                 onChange={(e) => handleFormChange('title_it', e.target.value)}
@@ -626,24 +660,30 @@ export default function BlogSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-description-en-input" className="block text-sm font-medium text-main mb-1">
                 English Description
               </label>
               <textarea
+                id="blog-description-en-input"
                 value={formData.description_en}
-                onChange={(e) => handleFormChange('description_en', e.target.value)}
+                onChange={(e) =>
+                  handleFormChange('description_en', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 rows={3}
                 placeholder="Enter English description"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-description-it-input" className="block text-sm font-medium text-main mb-1">
                 Italian Description
               </label>
               <textarea
+                id="blog-description-it-input"
                 value={formData.description_it}
-                onChange={(e) => handleFormChange('description_it', e.target.value)}
+                onChange={(e) =>
+                  handleFormChange('description_it', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 rows={3}
                 placeholder="Enter Italian description"
@@ -653,10 +693,11 @@ export default function BlogSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-content-en-input" className="block text-sm font-medium text-main mb-1">
                 English Content
               </label>
               <textarea
+                id="blog-content-en-input"
                 value={formData.body_en}
                 onChange={(e) => handleFormChange('body_en', e.target.value)}
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
@@ -665,10 +706,11 @@ export default function BlogSection() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-content-it-input" className="block text-sm font-medium text-main mb-1">
                 Italian Content
               </label>
               <textarea
+                id="blog-content-it-input"
                 value={formData.body_it}
                 onChange={(e) => handleFormChange('body_it', e.target.value)}
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
@@ -680,10 +722,11 @@ export default function BlogSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-tags-input" className="block text-sm font-medium text-main mb-1">
                 Tags
               </label>
               <input
+                id="blog-tags-input"
                 type="text"
                 value={formData.post_tags}
                 onChange={(e) => handleFormChange('post_tags', e.target.value)}
@@ -692,11 +735,12 @@ export default function BlogSection() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-publication-date-input" className="block text-sm font-medium text-main mb-1">
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Publication Date
               </label>
               <input
+                id="blog-publication-date-input"
                 type="date"
                 value={formData.created_at}
                 onChange={(e) => handleFormChange('created_at', e.target.value)}
@@ -704,11 +748,12 @@ export default function BlogSection() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-main mb-1">
+              <label htmlFor="blog-author-select" className="block text-sm font-medium text-main mb-1">
                 <User className="h-4 w-4 inline mr-1" />
                 Author
               </label>
               <select
+                id="blog-author-select"
                 value={formData.author_id}
                 onChange={(e) => handleFormChange('author_id', e.target.value)}
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
@@ -725,9 +770,10 @@ export default function BlogSection() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-main mb-2">
+            <label htmlFor="blog-image-upload" className="block text-sm font-medium text-main mb-2">
               Image {isEditing && !formImage && '(leave empty to keep current)'}
             </label>
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: Drag-and-drop zone requires div with drag handlers */}
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 dragActive
@@ -760,14 +806,14 @@ export default function BlogSection() {
                 </div>
               )}
               <input
+                id="blog-image-upload"
                 type="file"
                 accept="image/*"
                 onChange={handleFileInputChange}
                 className="hidden"
-                id="form-image"
               />
               <label
-                htmlFor="form-image"
+                htmlFor="blog-image-upload"
                 className="mt-2 inline-block px-4 py-2 bg-secondary text-white rounded-lg cursor-pointer hover:bg-tertiary transition-colors border-2 border-secondary hover:border-tertiary"
               >
                 {currentImage ? 'Change Image' : 'Select Image'}
@@ -813,7 +859,11 @@ export default function BlogSection() {
             locale={locale}
             imageFile={formImage}
             author={authors.find((a) => a.id === formData.author_id) || null}
-            views={isEditing && editingPostId ? blogPosts.find((p) => p.id === editingPostId)?.views || 0 : 0}
+            views={
+              isEditing && editingPostId
+                ? blogPosts.find((p) => p.id === editingPostId)?.views || 0
+                : 0
+            }
           />
         </PreviewModal>
       </div>
@@ -827,9 +877,7 @@ export default function BlogSection() {
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           Blog Section
         </h1>
-        <p className="text-lighttext2 text-lg mb-4">
-          Manage your blog posts
-        </p>
+        <p className="text-lighttext2 text-lg mb-4">Manage your blog posts</p>
         <div className="flex justify-center gap-3 mt-4">
           <button
             type="button"
@@ -919,27 +967,37 @@ export default function BlogSection() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-title-input" className="block text-sm font-medium text-lighttext mb-2">
                     Title (Blog)
                   </label>
                   <input
+                    id="blog-translation-title-input"
                     type="text"
                     value={translations[translationLocale].title2 || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'title2', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'title2',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Blog"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-subtitle-input" className="block text-sm font-medium text-lighttext mb-2">
                     Subtitle (Blog)
                   </label>
                   <textarea
+                    id="blog-translation-subtitle-input"
                     value={translations[translationLocale].subtitle2 || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'subtitle2', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'subtitle2',
+                        e.target.value
+                      )
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
@@ -947,126 +1005,171 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-button-input" className="block text-sm font-medium text-lighttext mb-2">
                     Button Text
                   </label>
                   <input
+                    id="blog-translation-button-input"
                     type="text"
                     value={translations[translationLocale].button || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'button', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'button',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Explore more"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-demo-input" className="block text-sm font-medium text-lighttext mb-2">
                     Demo Label
                   </label>
                   <input
+                    id="blog-translation-demo-input"
                     type="text"
                     value={translations[translationLocale].demo || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'demo', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'demo',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Live Demo"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-store-input" className="block text-sm font-medium text-lighttext mb-2">
                     Store Label
                   </label>
                   <input
+                    id="blog-translation-store-input"
                     type="text"
                     value={translations[translationLocale].store || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'store', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'store',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Play Store"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-source-input" className="block text-sm font-medium text-lighttext mb-2">
                     Source Label
                   </label>
                   <input
+                    id="blog-translation-source-input"
                     type="text"
                     value={translations[translationLocale].source || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'source', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'source',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Source Code"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-copy-button-input" className="block text-sm font-medium text-lighttext mb-2">
                     Copy Button Text
                   </label>
                   <input
+                    id="blog-translation-copy-button-input"
                     type="text"
                     value={translations[translationLocale].copyButton || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'copyButton', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'copyButton',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Copy post link"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-pre-copy-input" className="block text-sm font-medium text-lighttext mb-2">
                     Pre Copy Text
                   </label>
                   <input
+                    id="blog-translation-pre-copy-input"
                     type="text"
                     value={translations[translationLocale].preCopy || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'preCopy', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'preCopy',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Copied!"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-no-posts-input" className="block text-sm font-medium text-lighttext mb-2">
                     No Posts Message
                   </label>
                   <input
+                    id="blog-translation-no-posts-input"
                     type="text"
                     value={translations[translationLocale]['no-posts'] || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'no-posts', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'no-posts',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., There are no posts available!"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-ratelimit-input" className="block text-sm font-medium text-lighttext mb-2">
                     Rate Limit Message
                   </label>
                   <input
+                    id="blog-translation-ratelimit-input"
                     type="text"
                     value={translations[translationLocale].ratelimit || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'ratelimit', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'ratelimit',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Too many requests! Please wait and retry."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="blog-translation-searchbar-input" className="block text-sm font-medium text-lighttext mb-2">
                     Searchbar Placeholder
                   </label>
                   <input
+                    id="blog-translation-searchbar-input"
                     type="text"
                     value={translations[translationLocale].searchbar || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'searchbar', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'searchbar',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Search posts by title, desc or tag..."

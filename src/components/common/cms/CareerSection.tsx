@@ -1,26 +1,26 @@
 'use client';
 
-import { careerActions } from '@/app/actions/cms/sections/careerActions';
-import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
-import type { CareerEntry } from '@/types/fetchedData.types';
-import { processImageToWebP } from '@/utils/imageProcessor';
 import {
   Briefcase,
   Calendar,
+  ChevronDown,
+  ChevronUp,
   Edit3,
+  Eye,
+  Globe,
   Plus,
   Save,
   Trash2,
   Upload,
   X,
-  Eye,
-  Globe,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { careerActions } from '@/app/actions/cms/sections/careerActions';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
+import type { CareerEntry } from '@/types/fetchedData.types';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import { PreviewModal } from './PreviewModal';
 import { CareerPreview } from './previews/CareerPreview';
 
@@ -51,10 +51,10 @@ type EditableCareerEntry = CareerEntryWithEditing & {
 };
 
 export default function CareerSection() {
-  const [careerEntries, setCareerEntries] = useState<EditableCareerEntry[]>(
+  const [careerEntries, setCareerEntries] = useState<EditableCareerEntry[]>([]);
+  const [originalEntries, setOriginalEntries] = useState<EditableCareerEntry[]>(
     []
   );
-  const [originalEntries, setOriginalEntries] = useState<EditableCareerEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -79,8 +79,12 @@ export default function CareerSection() {
   });
 
   // Track modifications
-  const [modifiedEntries, setModifiedEntries] = useState<Set<number>>(new Set());
-  const [newEntries, setNewEntries] = useState<Array<{ entry: EditableCareerEntry; logoFile: File | null }>>([]);
+  const [modifiedEntries, setModifiedEntries] = useState<Set<number>>(
+    new Set()
+  );
+  const [newEntries, setNewEntries] = useState<
+    Array<{ entry: EditableCareerEntry; logoFile: File | null }>
+  >([]);
   const [deletedEntries, setDeletedEntries] = useState<Set<number>>(new Set());
 
   // Drag and drop states
@@ -131,7 +135,8 @@ export default function CareerSection() {
       remote: { full: '', hybrid: '', onSite: '' },
     },
   });
-  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [originalTranslations, setOriginalTranslations] =
+    useState(translations);
   const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
   const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
@@ -150,32 +155,34 @@ export default function CareerSection() {
           language: string;
           translations: Record<string, unknown>;
         }>;
-        
+
         const enData = i18nData.find((d) => d.language === 'en');
         const itData = i18nData.find((d) => d.language === 'it');
-        
-        const careerEn = (enData?.translations?.['career-section'] as {
-          title?: string;
-          subtitle?: string;
-          present?: string;
-          month?: string;
-          months?: string;
-          year?: string;
-          years?: string;
-          remote?: { full?: string; hybrid?: string; onSite?: string };
-        }) || {};
-        
-        const careerIt = (itData?.translations?.['career-section'] as {
-          title?: string;
-          subtitle?: string;
-          present?: string;
-          month?: string;
-          months?: string;
-          year?: string;
-          years?: string;
-          remote?: { full?: string; hybrid?: string; onSite?: string };
-        }) || {};
-        
+
+        const careerEn =
+          (enData?.translations?.['career-section'] as {
+            title?: string;
+            subtitle?: string;
+            present?: string;
+            month?: string;
+            months?: string;
+            year?: string;
+            years?: string;
+            remote?: { full?: string; hybrid?: string; onSite?: string };
+          }) || {};
+
+        const careerIt =
+          (itData?.translations?.['career-section'] as {
+            title?: string;
+            subtitle?: string;
+            present?: string;
+            month?: string;
+            months?: string;
+            year?: string;
+            years?: string;
+            remote?: { full?: string; hybrid?: string; onSite?: string };
+          }) || {};
+
         const newTranslations = {
           en: {
             title: careerEn.title || '',
@@ -206,7 +213,7 @@ export default function CareerSection() {
             },
           },
         };
-        
+
         setTranslations(newTranslations);
         setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
       }
@@ -252,7 +259,7 @@ export default function CareerSection() {
     field: string,
     value: string | boolean | null
   ) => {
-    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
+    const id = typeof entryId === 'string' ? parseInt(entryId, 10) : entryId;
     setCareerEntries((prev) =>
       prev.map((entry) =>
         entry.id === id ? { ...entry, [field]: value } : entry
@@ -276,7 +283,10 @@ export default function CareerSection() {
     setTranslations((prev) => {
       const newTranslations = { ...prev };
       if (field.startsWith('remote.')) {
-        const remoteType = field.replace('remote.', '') as 'full' | 'hybrid' | 'onSite';
+        const remoteType = field.replace('remote.', '') as
+          | 'full'
+          | 'hybrid'
+          | 'onSite';
         newTranslations[locale].remote = {
           ...newTranslations[locale].remote,
           [remoteType]: value,
@@ -289,7 +299,9 @@ export default function CareerSection() {
   };
 
   const hasTranslationChanges = () => {
-    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
+    return (
+      JSON.stringify(translations) !== JSON.stringify(originalTranslations)
+    );
   };
 
   const hasChanges = () => {
@@ -333,7 +345,10 @@ export default function CareerSection() {
 
     // Add to local state
     setCareerEntries((prev) => [...prev, newEntry]);
-    setNewEntries((prev) => [...prev, { entry: newEntry, logoFile: newEntryLogo }]);
+    setNewEntries((prev) => [
+      ...prev,
+      { entry: newEntry, logoFile: newEntryLogo },
+    ]);
 
     // Reset form
     setNewCareerEntry({
@@ -358,7 +373,7 @@ export default function CareerSection() {
   };
 
   const handleUpdateCareer = (entryId: number | string) => {
-    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
+    const id = typeof entryId === 'string' ? parseInt(entryId, 10) : entryId;
     // Just close edit mode, changes are tracked in state
     setCareerEntries((prev) =>
       prev.map((e) => (e.id === id ? { ...e, isEditing: false } : e))
@@ -366,10 +381,10 @@ export default function CareerSection() {
   };
 
   const cancelEntryEdit = (entryId: number | string) => {
-    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
+    const id = typeof entryId === 'string' ? parseInt(entryId, 10) : entryId;
     // Revert to original data
     const originalEntry = originalEntries.find((e) => e.id === id);
-    
+
     if (originalEntry) {
       setCareerEntries((prev) =>
         prev.map((entry) =>
@@ -390,11 +405,11 @@ export default function CareerSection() {
   const handleDeleteCareer = (entryId: number | string) => {
     if (!confirm('Are you sure you want to delete this career entry?')) return;
 
-    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
+    const id = typeof entryId === 'string' ? parseInt(entryId, 10) : entryId;
 
     // Check if it's a new entry (temp ID is negative)
     const isNewEntry = id < 0;
-    
+
     if (isNewEntry) {
       // Remove from new entries
       setNewEntries((prev) => prev.filter((ne) => ne.entry.id !== id));
@@ -415,7 +430,7 @@ export default function CareerSection() {
   };
 
   const handleLogoUpload = (entryId: number | string, file: File) => {
-    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
+    const id = typeof entryId === 'string' ? parseInt(entryId, 10) : entryId;
     // Store file for later upload
     setCareerEntries((prev) =>
       prev.map((entry) =>
@@ -429,14 +444,18 @@ export default function CareerSection() {
   };
 
   const cancelAllChanges = () => {
-    if (!confirm('Are you sure you want to cancel all changes? All unsaved edits will be lost.')) {
+    if (
+      !confirm(
+        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
+      )
+    ) {
       return;
     }
 
     // Reload original data
     fetchCareerData();
     fetchTranslations();
-    
+
     // Reset all tracking
     setModifiedEntries(new Set());
     setNewEntries([]);
@@ -455,7 +474,9 @@ export default function CareerSection() {
         const result = await careerActions({ type: 'DELETE', id: entryId });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to delete career entry ${entryId}`);
+          throw new Error(
+            result.error || `Failed to delete career entry ${entryId}`
+          );
         }
       }
 
@@ -484,7 +505,9 @@ export default function CareerSection() {
         });
 
         if (!createResult.success) {
-          throw new Error(createResult.error || `Failed to create career entry ${entry.title}`);
+          throw new Error(
+            createResult.error || `Failed to create career entry ${entry.title}`
+          );
         }
 
         const createdEntry = createResult.data as CareerEntry;
@@ -509,7 +532,9 @@ export default function CareerSection() {
           });
 
           if (!logoResult.success) {
-            throw new Error(logoResult.error || `Failed to upload logo for ${entry.title}`);
+            throw new Error(
+              logoResult.error || `Failed to upload logo for ${entry.title}`
+            );
           }
         }
       }
@@ -541,7 +566,9 @@ export default function CareerSection() {
         });
 
         if (!updateResult.success) {
-          throw new Error(updateResult.error || `Failed to update career entry ${entry.title}`);
+          throw new Error(
+            updateResult.error || `Failed to update career entry ${entry.title}`
+          );
         }
 
         // Upload logo if there's a new file
@@ -565,7 +592,9 @@ export default function CareerSection() {
           });
 
           if (!logoResult.success) {
-            throw new Error(logoResult.error || `Failed to upload logo for ${entry.title}`);
+            throw new Error(
+              logoResult.error || `Failed to upload logo for ${entry.title}`
+            );
           }
         }
       }
@@ -580,7 +609,9 @@ export default function CareerSection() {
           sectionData: translations.en,
         });
         if (!enResult.success) {
-          throw new Error(enResult.error || 'Failed to update English translations');
+          throw new Error(
+            enResult.error || 'Failed to update English translations'
+          );
         }
 
         // Update Italian translations
@@ -591,7 +622,9 @@ export default function CareerSection() {
           sectionData: translations.it,
         });
         if (!itResult.success) {
-          throw new Error(itResult.error || 'Failed to update Italian translations');
+          throw new Error(
+            itResult.error || 'Failed to update Italian translations'
+          );
         }
 
         setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
@@ -614,7 +647,6 @@ export default function CareerSection() {
     }
   };
 
-
   const handleDragOver = (e: React.DragEvent, entryId: string) => {
     e.preventDefault();
     setDragStates((prev) => ({ ...prev, [entryId]: true }));
@@ -636,7 +668,7 @@ export default function CareerSection() {
       if (entryId === 'new') {
         setNewEntryLogo(imageFile);
       } else {
-        handleLogoUpload(parseInt(entryId), imageFile);
+        handleLogoUpload(parseInt(entryId, 10), imageFile);
       }
     }
   };
@@ -650,7 +682,7 @@ export default function CareerSection() {
       if (entryId === 'new') {
         setNewEntryLogo(file);
       } else {
-        handleLogoUpload(parseInt(entryId), file);
+        handleLogoUpload(parseInt(entryId, 10), file);
       }
     }
   };
@@ -761,27 +793,37 @@ export default function CareerSection() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="career-translation-title-input" className="block text-sm font-medium text-lighttext mb-2">
                     Title
                   </label>
                   <input
+                    id="career-translation-title-input"
                     type="text"
                     value={translations[translationLocale].title}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'title', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'title',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Career History"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="career-translation-subtitle-input" className="block text-sm font-medium text-lighttext mb-2">
                     Subtitle
                   </label>
                   <textarea
+                    id="career-translation-subtitle-input"
                     value={translations[translationLocale].subtitle}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'subtitle', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'subtitle',
+                        e.target.value
+                      )
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
@@ -790,28 +832,38 @@ export default function CareerSection() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-lighttext mb-2">
+                    <label htmlFor="career-translation-present-input" className="block text-sm font-medium text-lighttext mb-2">
                       Present
                     </label>
                     <input
+                      id="career-translation-present-input"
                       type="text"
                       value={translations[translationLocale].present}
                       onChange={(e) =>
-                        handleTranslationChange(translationLocale, 'present', e.target.value)
+                        handleTranslationChange(
+                          translationLocale,
+                          'present',
+                          e.target.value
+                        )
                       }
                       className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., Present"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-lighttext mb-2">
+                    <label htmlFor="career-translation-month-input" className="block text-sm font-medium text-lighttext mb-2">
                       Month
                     </label>
                     <input
+                      id="career-translation-month-input"
                       type="text"
                       value={translations[translationLocale].month}
                       onChange={(e) =>
-                        handleTranslationChange(translationLocale, 'month', e.target.value)
+                        handleTranslationChange(
+                          translationLocale,
+                          'month',
+                          e.target.value
+                        )
                       }
                       className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., month"
@@ -825,7 +877,11 @@ export default function CareerSection() {
                       type="text"
                       value={translations[translationLocale].months}
                       onChange={(e) =>
-                        handleTranslationChange(translationLocale, 'months', e.target.value)
+                        handleTranslationChange(
+                          translationLocale,
+                          'months',
+                          e.target.value
+                        )
                       }
                       className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., months"
@@ -839,7 +895,11 @@ export default function CareerSection() {
                       type="text"
                       value={translations[translationLocale].year}
                       onChange={(e) =>
-                        handleTranslationChange(translationLocale, 'year', e.target.value)
+                        handleTranslationChange(
+                          translationLocale,
+                          'year',
+                          e.target.value
+                        )
                       }
                       className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., year"
@@ -853,7 +913,11 @@ export default function CareerSection() {
                       type="text"
                       value={translations[translationLocale].years}
                       onChange={(e) =>
-                        handleTranslationChange(translationLocale, 'years', e.target.value)
+                        handleTranslationChange(
+                          translationLocale,
+                          'years',
+                          e.target.value
+                        )
                       }
                       className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., years"
@@ -866,36 +930,54 @@ export default function CareerSection() {
                   </label>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs text-lighttext2 mb-1">Full Remote</label>
+                      <label className="block text-xs text-lighttext2 mb-1">
+                        Full Remote
+                      </label>
                       <input
                         type="text"
                         value={translations[translationLocale].remote.full}
                         onChange={(e) =>
-                          handleTranslationChange(translationLocale, 'remote.full', e.target.value)
+                          handleTranslationChange(
+                            translationLocale,
+                            'remote.full',
+                            e.target.value
+                          )
                         }
                         className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., Remote"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-lighttext2 mb-1">Hybrid</label>
+                      <label className="block text-xs text-lighttext2 mb-1">
+                        Hybrid
+                      </label>
                       <input
                         type="text"
                         value={translations[translationLocale].remote.hybrid}
                         onChange={(e) =>
-                          handleTranslationChange(translationLocale, 'remote.hybrid', e.target.value)
+                          handleTranslationChange(
+                            translationLocale,
+                            'remote.hybrid',
+                            e.target.value
+                          )
                         }
                         className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., Hybrid"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-lighttext2 mb-1">On-site</label>
+                      <label className="block text-xs text-lighttext2 mb-1">
+                        On-site
+                      </label>
                       <input
                         type="text"
                         value={translations[translationLocale].remote.onSite}
                         onChange={(e) =>
-                          handleTranslationChange(translationLocale, 'remote.onSite', e.target.value)
+                          handleTranslationChange(
+                            translationLocale,
+                            'remote.onSite',
+                            e.target.value
+                          )
                         }
                         className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., On-site"
@@ -933,7 +1015,7 @@ export default function CareerSection() {
           <h3 className="text-lg font-semibold mb-4 text-darktext dark:text-lighttext">
             Create New Career Entry
           </h3>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
@@ -954,7 +1036,9 @@ export default function CareerSection() {
               <input
                 type="text"
                 value={newCareerEntry.company}
-                onChange={(e) => handleNewEntryChange('company', e.target.value)}
+                onChange={(e) =>
+                  handleNewEntryChange('company', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 placeholder="Enter company name"
               />
@@ -968,7 +1052,9 @@ export default function CareerSection() {
             <input
               type="url"
               value={newCareerEntry.website_url}
-              onChange={(e) => handleNewEntryChange('website_url', e.target.value)}
+              onChange={(e) =>
+                handleNewEntryChange('website_url', e.target.value)
+              }
               className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
               placeholder="https://company.com"
             />
@@ -982,7 +1068,9 @@ export default function CareerSection() {
               <input
                 type="text"
                 value={newCareerEntry.location_en}
-                onChange={(e) => handleNewEntryChange('location_en', e.target.value)}
+                onChange={(e) =>
+                  handleNewEntryChange('location_en', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 placeholder="Enter location"
               />
@@ -994,7 +1082,9 @@ export default function CareerSection() {
               <input
                 type="text"
                 value={newCareerEntry.location_it}
-                onChange={(e) => handleNewEntryChange('location_it', e.target.value)}
+                onChange={(e) =>
+                  handleNewEntryChange('location_it', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 placeholder="Enter location"
               />
@@ -1007,7 +1097,12 @@ export default function CareerSection() {
             </label>
             <select
               value={newCareerEntry.remote}
-              onChange={(e) => handleNewEntryChange('remote', e.target.value as 'full' | 'hybrid' | 'onSite')}
+              onChange={(e) =>
+                handleNewEntryChange(
+                  'remote',
+                  e.target.value as 'full' | 'hybrid' | 'onSite'
+                )
+              }
               className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
             >
               <option value="full">Full Remote</option>
@@ -1024,7 +1119,9 @@ export default function CareerSection() {
               <input
                 type="date"
                 value={newCareerEntry.startDate}
-                onChange={(e) => handleNewEntryChange('startDate', e.target.value)}
+                onChange={(e) =>
+                  handleNewEntryChange('startDate', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
               />
             </div>
@@ -1035,7 +1132,9 @@ export default function CareerSection() {
               <input
                 type="date"
                 value={newCareerEntry.endDate || ''}
-                onChange={(e) => handleNewEntryChange('endDate', e.target.value || null)}
+                onChange={(e) =>
+                  handleNewEntryChange('endDate', e.target.value || null)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
               />
             </div>
@@ -1048,7 +1147,9 @@ export default function CareerSection() {
               </label>
               <textarea
                 value={newCareerEntry.description_en}
-                onChange={(e) => handleNewEntryChange('description_en', e.target.value)}
+                onChange={(e) =>
+                  handleNewEntryChange('description_en', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 rows={3}
                 placeholder="Enter job description"
@@ -1060,7 +1161,9 @@ export default function CareerSection() {
               </label>
               <textarea
                 value={newCareerEntry.description_it}
-                onChange={(e) => handleNewEntryChange('description_it', e.target.value)}
+                onChange={(e) =>
+                  handleNewEntryChange('description_it', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 rows={3}
                 placeholder="Enter job description"
@@ -1075,7 +1178,9 @@ export default function CareerSection() {
               </label>
               <textarea
                 value={newCareerEntry.company_description_en}
-                onChange={(e) => handleNewEntryChange('company_description_en', e.target.value)}
+                onChange={(e) =>
+                  handleNewEntryChange('company_description_en', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 rows={3}
                 placeholder="Enter company description"
@@ -1087,7 +1192,9 @@ export default function CareerSection() {
               </label>
               <textarea
                 value={newCareerEntry.company_description_it}
-                onChange={(e) => handleNewEntryChange('company_description_it', e.target.value)}
+                onChange={(e) =>
+                  handleNewEntryChange('company_description_it', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 rows={3}
                 placeholder="Enter company description"
@@ -1114,7 +1221,7 @@ export default function CareerSection() {
             </label>
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                dragStates['new']
+                dragStates.new
                   ? 'border-main bg-main/10 dark:bg-main/20'
                   : 'border-main dark:border-main'
               }`}
@@ -1211,7 +1318,9 @@ export default function CareerSection() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleFileInputChange(e, entry.id.toString())}
+                  onChange={(e) =>
+                    handleFileInputChange(e, entry.id.toString())
+                  }
                   className="hidden"
                   id={`logo-${entry.id}`}
                 />
@@ -1255,7 +1364,10 @@ export default function CareerSection() {
               <div className="flex items-center gap-2 text-xs text-darktext dark:text-lighttext2">
                 <Calendar className="h-3 w-3" />
                 <span>
-                  {new Date(entry.startDate).toLocaleDateString()} - {entry.endDate ? new Date(entry.endDate).toLocaleDateString() : 'Present'}
+                  {new Date(entry.startDate).toLocaleDateString()} -{' '}
+                  {entry.endDate
+                    ? new Date(entry.endDate).toLocaleDateString()
+                    : 'Present'}
                 </span>
               </div>
 
@@ -1295,7 +1407,11 @@ export default function CareerSection() {
                       type="url"
                       value={entry.website_url}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'website_url', e.target.value)
+                        handleInputChange(
+                          entry.id,
+                          'website_url',
+                          e.target.value
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
@@ -1308,7 +1424,11 @@ export default function CareerSection() {
                       type="text"
                       value={entry.location_en}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'location_en', e.target.value)
+                        handleInputChange(
+                          entry.id,
+                          'location_en',
+                          e.target.value
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
@@ -1321,7 +1441,11 @@ export default function CareerSection() {
                       type="text"
                       value={entry.location_it}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'location_it', e.target.value)
+                        handleInputChange(
+                          entry.id,
+                          'location_it',
+                          e.target.value
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
@@ -1333,7 +1457,11 @@ export default function CareerSection() {
                     <select
                       value={entry.remote}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'remote', e.target.value as 'full' | 'hybrid' | 'onSite')
+                        handleInputChange(
+                          entry.id,
+                          'remote',
+                          e.target.value as 'full' | 'hybrid' | 'onSite'
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     >
@@ -1363,7 +1491,11 @@ export default function CareerSection() {
                       type="date"
                       value={entry.endDate || ''}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'endDate', e.target.value || null)
+                        handleInputChange(
+                          entry.id,
+                          'endDate',
+                          e.target.value || null
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                     />
@@ -1389,7 +1521,11 @@ export default function CareerSection() {
                     <textarea
                       value={entry.description_en}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'description_en', e.target.value)
+                        handleInputChange(
+                          entry.id,
+                          'description_en',
+                          e.target.value
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
@@ -1402,7 +1538,11 @@ export default function CareerSection() {
                     <textarea
                       value={entry.description_it}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'description_it', e.target.value)
+                        handleInputChange(
+                          entry.id,
+                          'description_it',
+                          e.target.value
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
@@ -1415,7 +1555,11 @@ export default function CareerSection() {
                     <textarea
                       value={entry.company_description_en}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'company_description_en', e.target.value)
+                        handleInputChange(
+                          entry.id,
+                          'company_description_en',
+                          e.target.value
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}
@@ -1428,7 +1572,11 @@ export default function CareerSection() {
                     <textarea
                       value={entry.company_description_it}
                       onChange={(e) =>
-                        handleInputChange(entry.id, 'company_description_it', e.target.value)
+                        handleInputChange(
+                          entry.id,
+                          'company_description_it',
+                          e.target.value
+                        )
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                       rows={2}

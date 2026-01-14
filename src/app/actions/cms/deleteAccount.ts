@@ -1,15 +1,18 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@/utils/supabase/server';
 
 export async function deleteMyAccount() {
   const supabase = await createClient();
 
   // Get current authenticated user
-  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-  
+  const {
+    data: { user: authUser },
+    error: authError,
+  } = await supabase.auth.getUser();
+
   if (authError || !authUser) {
     return { success: false, error: 'Unauthorized: Authentication required' };
   }
@@ -56,7 +59,10 @@ export async function deleteMyAccount() {
         .eq('role', 'admin');
 
       if (admins && admins.length === 1 && admins[0].id === allowedUser.id) {
-        return { success: false, error: 'Cannot delete the last admin account' };
+        return {
+          success: false,
+          error: 'Cannot delete the last admin account',
+        };
       }
     }
 
@@ -67,7 +73,10 @@ export async function deleteMyAccount() {
       .eq('id', allowedUser.id);
 
     if (deleteAllowedError) {
-      console.error('Error deleting from cms_allowed_users:', deleteAllowedError);
+      console.error(
+        'Error deleting from cms_allowed_users:',
+        deleteAllowedError
+      );
       throw deleteAllowedError;
     }
 
@@ -96,7 +105,8 @@ export async function deleteMyAccount() {
     console.error('Error deleting account:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete account',
+      error:
+        error instanceof Error ? error.message : 'Failed to delete account',
     };
   }
 }

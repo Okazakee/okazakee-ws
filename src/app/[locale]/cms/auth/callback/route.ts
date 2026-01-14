@@ -1,5 +1,5 @@
-import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -14,14 +14,14 @@ export async function GET(request: Request) {
   if (code) {
     try {
       const supabase = await createClient();
-      
+
       // Exchange the code for a session - this replaces any existing session
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (!error && data.session) {
         // Use the user from the exchanged session directly, not getUser()
         const user = data.session.user;
-        
+
         if (!user) {
           const errorUrl = new URL(`/${locale}/cms/login`, origin);
           errorUrl.searchParams.set('error', 'Authentication failed');
@@ -57,18 +57,23 @@ export async function GET(request: Request) {
         if (!isAllowed) {
           await supabase.auth.signOut();
           const errorUrl = new URL(`/${locale}/cms/login`, origin);
-          errorUrl.searchParams.set('error', 'Access denied. Please contact the administrator.');
+          errorUrl.searchParams.set(
+            'error',
+            'Access denied. Please contact the administrator.'
+          );
           return NextResponse.redirect(errorUrl);
         }
 
         // User is allowed, redirect to CMS
         const forwardedHost = request.headers.get('x-forwarded-host');
         const isLocalEnv = process.env.NODE_ENV === 'development';
-        
+
         if (isLocalEnv) {
           return NextResponse.redirect(`${origin}/${locale}${next}`);
         } else if (forwardedHost) {
-          return NextResponse.redirect(`https://${forwardedHost}/${locale}${next}`);
+          return NextResponse.redirect(
+            `https://${forwardedHost}/${locale}${next}`
+          );
         } else {
           return NextResponse.redirect(`${origin}/${locale}${next}`);
         }

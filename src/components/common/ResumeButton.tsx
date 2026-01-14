@@ -8,7 +8,10 @@ interface ResumeButtonProps {
   locale: string;
 }
 
-export default function ResumeButton({ resumeLink, locale }: ResumeButtonProps) {
+export default function ResumeButton({
+  resumeLink,
+  locale,
+}: ResumeButtonProps) {
   return (
     <Link
       data-umami-event="Resume button"

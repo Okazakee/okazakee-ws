@@ -1,7 +1,7 @@
-import { useZoom } from '@/app/hooks/useZoom';
 import { X } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import { useZoom } from '@/app/hooks/useZoom';
 
 interface ImageModalProps {
   src: string;

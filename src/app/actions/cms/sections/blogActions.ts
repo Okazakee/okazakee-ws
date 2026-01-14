@@ -1,5 +1,6 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
   processImage,
@@ -7,9 +8,7 @@ import {
   sanitizeFilename,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
-import type { BlogPost } from '@/types/fetchedData.types';
 import { createClient } from '@/utils/supabase/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 type BlogOperation =
   | { type: 'GET' }
@@ -53,52 +52,84 @@ type BlogResult = {
 };
 
 // Validation functions
-function validateBlogData(data: CreateBlogData | UpdateBlogData): { isValid: boolean; error?: string } {
+function validateBlogData(data: CreateBlogData | UpdateBlogData): {
+  isValid: boolean;
+  error?: string;
+} {
   // Required fields validation
-  if (data.title_en !== undefined && (!data.title_en || data.title_en.trim().length === 0)) {
+  if (
+    data.title_en !== undefined &&
+    (!data.title_en || data.title_en.trim().length === 0)
+  ) {
     return { isValid: false, error: 'English title is required' };
   }
-  
-  if (data.title_it !== undefined && (!data.title_it || data.title_it.trim().length === 0)) {
+
+  if (
+    data.title_it !== undefined &&
+    (!data.title_it || data.title_it.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Italian title is required' };
   }
-  
-  if (data.description_en !== undefined && (!data.description_en || data.description_en.trim().length === 0)) {
+
+  if (
+    data.description_en !== undefined &&
+    (!data.description_en || data.description_en.trim().length === 0)
+  ) {
     return { isValid: false, error: 'English description is required' };
   }
-  
-  if (data.description_it !== undefined && (!data.description_it || data.description_it.trim().length === 0)) {
+
+  if (
+    data.description_it !== undefined &&
+    (!data.description_it || data.description_it.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Italian description is required' };
   }
-  
-  if (data.body_en !== undefined && (!data.body_en || data.body_en.trim().length === 0)) {
+
+  if (
+    data.body_en !== undefined &&
+    (!data.body_en || data.body_en.trim().length === 0)
+  ) {
     return { isValid: false, error: 'English content is required' };
   }
-  
-  if (data.body_it !== undefined && (!data.body_it || data.body_it.trim().length === 0)) {
+
+  if (
+    data.body_it !== undefined &&
+    (!data.body_it || data.body_it.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Italian content is required' };
   }
 
   // Length validation
   if (data.title_en && data.title_en.length > 200) {
-    return { isValid: false, error: 'English title must be less than 200 characters' };
+    return {
+      isValid: false,
+      error: 'English title must be less than 200 characters',
+    };
   }
-  
+
   if (data.title_it && data.title_it.length > 200) {
-    return { isValid: false, error: 'Italian title must be less than 200 characters' };
+    return {
+      isValid: false,
+      error: 'Italian title must be less than 200 characters',
+    };
   }
-  
+
   if (data.description_en && data.description_en.length > 500) {
-    return { isValid: false, error: 'English description must be less than 500 characters' };
+    return {
+      isValid: false,
+      error: 'English description must be less than 500 characters',
+    };
   }
-  
+
   if (data.description_it && data.description_it.length > 500) {
-    return { isValid: false, error: 'Italian description must be less than 500 characters' };
+    return {
+      isValid: false,
+      error: 'Italian description must be less than 500 characters',
+    };
   }
 
   return { isValid: true };
 }
-
 
 export async function blogActions(
   operation: BlogOperation
@@ -347,14 +378,19 @@ async function uploadBlogImage(
       // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
-        return { success: false, error: processed.error || 'Failed to process image' };
+        return {
+          success: false,
+          error: processed.error || 'Failed to process image',
+        };
       }
       buffer = processed.buffer;
       blurhash = processed.blurhash;
     }
 
     // Generate filename: {postId}-{title_en}.webp
-    const sanitizedTitle = sanitizeFilename(existingBlog.title_en || 'untitled');
+    const sanitizedTitle = sanitizeFilename(
+      existingBlog.title_en || 'untitled'
+    );
     const fileName = `blog/images/${blogId}-${sanitizedTitle}.webp`;
 
     // Delete old file with same name if exists (upsert doesn't work well with different content)

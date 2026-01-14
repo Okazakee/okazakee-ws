@@ -1,6 +1,5 @@
-import { getHeroSection, getResumeLink } from '@/utils/getData';
 import Image from 'next/image';
-import React from 'react';
+import { getHeroSection, getResumeLink } from '@/utils/getData';
 import { ErrorDiv } from '../ErrorDiv';
 
 export default async function PostsSection() {

@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 export const SkillsCarousel = ({
   skills,
   isEven,
-}: { skills: string[]; isEven?: boolean }) => {
+}: {
+  skills: string[];
+  isEven?: boolean;
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [totalWidth, setTotalWidth] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);

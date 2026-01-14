@@ -1,5 +1,6 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
   isValidDate,
@@ -12,7 +13,6 @@ import {
 import type { CareerEntry } from '@/types/fetchedData.types';
 import { getCareerEntries } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 type CareerOperation =
   | { type: 'GET' }
@@ -48,48 +48,79 @@ type UpdateCareerData = Partial<CreateCareerData>;
 
 type CareerResult = {
   success: boolean;
-  data?: CareerEntry | CareerEntry[] | { logo: string; blurhashURL: string } | null;
+  data?:
+    | CareerEntry
+    | CareerEntry[]
+    | { logo: string; blurhashURL: string }
+    | null;
   error?: string;
 };
 
 // Validation functions
-function validateCareerData(data: CreateCareerData | UpdateCareerData): { isValid: boolean; error?: string } {
+function validateCareerData(data: CreateCareerData | UpdateCareerData): {
+  isValid: boolean;
+  error?: string;
+} {
   // Required fields validation
-  if (data.title !== undefined && (!data.title || data.title.trim().length === 0)) {
+  if (
+    data.title !== undefined &&
+    (!data.title || data.title.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Job title is required' };
   }
-  
-  if (data.company !== undefined && (!data.company || data.company.trim().length === 0)) {
+
+  if (
+    data.company !== undefined &&
+    (!data.company || data.company.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Company name is required' };
   }
-  
-  if (data.description_en !== undefined && (!data.description_en || data.description_en.trim().length === 0)) {
+
+  if (
+    data.description_en !== undefined &&
+    (!data.description_en || data.description_en.trim().length === 0)
+  ) {
     return { isValid: false, error: 'English description is required' };
   }
-  
-  if (data.description_it !== undefined && (!data.description_it || data.description_it.trim().length === 0)) {
+
+  if (
+    data.description_it !== undefined &&
+    (!data.description_it || data.description_it.trim().length === 0)
+  ) {
     return { isValid: false, error: 'Italian description is required' };
   }
 
   // Length validation
   if (data.title && data.title.length > 200) {
-    return { isValid: false, error: 'Job title must be less than 200 characters' };
+    return {
+      isValid: false,
+      error: 'Job title must be less than 200 characters',
+    };
   }
-  
+
   if (data.company && data.company.length > 200) {
-    return { isValid: false, error: 'Company name must be less than 200 characters' };
+    return {
+      isValid: false,
+      error: 'Company name must be less than 200 characters',
+    };
   }
-  
+
   if (data.description_en && data.description_en.length > 1000) {
-    return { isValid: false, error: 'English description must be less than 1000 characters' };
+    return {
+      isValid: false,
+      error: 'English description must be less than 1000 characters',
+    };
   }
-  
+
   if (data.description_it && data.description_it.length > 1000) {
-    return { isValid: false, error: 'Italian description must be less than 1000 characters' };
+    return {
+      isValid: false,
+      error: 'Italian description must be less than 1000 characters',
+    };
   }
 
   // URL validation
-  if (data.website_url && data.website_url.trim() && !isValidUrl(data.website_url)) {
+  if (data.website_url?.trim() && !isValidUrl(data.website_url)) {
     return { isValid: false, error: 'Website URL must be a valid URL' };
   }
 
@@ -97,13 +128,17 @@ function validateCareerData(data: CreateCareerData | UpdateCareerData): { isVali
   if (data.startDate && !isValidDate(data.startDate)) {
     return { isValid: false, error: 'Start date must be a valid date' };
   }
-  
+
   if (data.endDate && !isValidDate(data.endDate)) {
     return { isValid: false, error: 'End date must be a valid date' };
   }
 
   // Date logic validation
-  if (data.startDate && data.endDate && new Date(data.startDate) > new Date(data.endDate)) {
+  if (
+    data.startDate &&
+    data.endDate &&
+    new Date(data.startDate) > new Date(data.endDate)
+  ) {
     return { isValid: false, error: 'Start date cannot be after end date' };
   }
 
@@ -157,7 +192,7 @@ export async function careerActions(
   }
 }
 
-async function getCareerData(supabase: SupabaseClient): Promise<CareerResult> {
+async function getCareerData(_supabase: SupabaseClient): Promise<CareerResult> {
   try {
     const careerEntries = await getCareerEntries();
     return { success: true, data: careerEntries };
@@ -317,14 +352,19 @@ async function uploadCareerLogo(
       // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
-        return { success: false, error: processed.error || 'Failed to process image' };
+        return {
+          success: false,
+          error: processed.error || 'Failed to process image',
+        };
       }
       buffer = processed.buffer;
       blurhash = processed.blurhash;
     }
 
     // Generate filename: {careerId}-{company}.webp
-    const sanitizedCompany = sanitizeFilename(existingCareer.company || 'company');
+    const sanitizedCompany = sanitizeFilename(
+      existingCareer.company || 'company'
+    );
     const fileName = `career/logos/${careerId}-${sanitizedCompany}.webp`;
 
     // Delete old file with same name if exists

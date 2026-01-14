@@ -1,14 +1,13 @@
-import { formatLabels } from '@/utils/formatLabels';
-import { getCareerEntries } from '@/utils/getData';
 import { ErrorDiv } from '@components/common/ErrorDiv';
 import { SkillsCarousel } from '@components/common/SkillsCarousel';
-import { Calendar, ExternalLink, MapPin } from 'lucide-react';
+import { Calendar, MapPin } from 'lucide-react';
+import Markdown from 'markdown-to-jsx';
 import moment, { type MomentInput } from 'moment';
-import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
-import Markdown from 'markdown-to-jsx';
+import { getTranslations } from 'next-intl/server';
+import { formatLabels } from '@/utils/formatLabels';
+import { getCareerEntries } from '@/utils/getData';
 
 interface CareerEntry {
   id: string;
@@ -105,7 +104,7 @@ export default async function Career() {
 
           {groupedEntries.map((companyGroup, index) => {
             const isEven = index % 2 === 0;
-            const isLast = index === groupedEntries.length - 1;
+            const _isLast = index === groupedEntries.length - 1;
             const locale = t('locale');
             const latestPosition = companyGroup.positions[0]; // Most recent position
             const olderPositions = companyGroup.positions.slice(1);
@@ -370,7 +369,7 @@ export default async function Career() {
                         {olderPositions.length > 0 && (
                           <div className="mt-6">
                             <div className="space-y-3">
-                              {olderPositions.map((position, posIndex) => (
+                              {olderPositions.map((position, _posIndex) => (
                                 <div key={position.id}>
                                   {/* Connecting line from previous position */}
                                   <div className="flex justify-center mb-3">

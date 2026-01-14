@@ -1,15 +1,15 @@
 'use client';
 
-import React from 'react';
-import Image from 'next/image';
+import { CirclePlay, Clock, ExternalLink, Github } from 'lucide-react';
 import moment from 'moment';
-import { Clock, CirclePlay, ExternalLink, Github, Star } from 'lucide-react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import React from 'react';
+import type { Author } from '@/app/actions/cms/sections/blogActions';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
-import type { Author } from '@/app/actions/cms/sections/blogActions';
 
 type BlogFormData = {
   title_en: string;
@@ -86,7 +86,8 @@ export function PostPreview({
 
   const formattedDate = moment(formData.created_at).format('DD/MM/YYYY');
 
-  const portfolioData = postType === 'portfolio' ? (formData as PortfolioFormData) : null;
+  const portfolioData =
+    postType === 'portfolio' ? (formData as PortfolioFormData) : null;
 
   // Generate a preview URL (won't be real, just for display)
   const slugifiedTitle = String(initTitle)
@@ -289,7 +290,9 @@ export function PostPreview({
               href={portfolioData.demo_link}
               rel="noopener noreferrer"
               className={`flex ${
-                portfolioData.source_link && portfolioData.demo_link ? 'w-full' : 'w-full'
+                portfolioData.source_link && portfolioData.demo_link
+                  ? 'w-full'
+                  : 'w-full'
               } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
             >
               <ExternalLink size={18} />
@@ -305,7 +308,9 @@ export function PostPreview({
               href={portfolioData.store_link}
               rel="noopener noreferrer"
               className={`flex ${
-                portfolioData.store_link && portfolioData.store_link ? 'w-full' : 'w-full'
+                portfolioData.store_link && portfolioData.store_link
+                  ? 'w-full'
+                  : 'w-full'
               } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
             >
               <CirclePlay size={18} />

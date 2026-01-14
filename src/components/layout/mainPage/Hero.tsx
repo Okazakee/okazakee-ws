@@ -1,9 +1,8 @@
+import { ErrorDiv } from '@components/common/ErrorDiv';
+import Image from 'next/image';
+import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
 import { getHeroSection } from '@/utils/getData';
-import { ErrorDiv } from '@components/common/ErrorDiv';
-import { getTranslations } from 'next-intl/server';
-import Image from 'next/image';
-import React from 'react';
 
 const PebbleClipPath = () => (
   <svg width="0" height="0" viewBox="0 0 500 500" className="absolute">

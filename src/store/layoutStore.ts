@@ -1,5 +1,5 @@
-import type { CMSUser } from '@/app/actions/cms/getUser';
 import { create } from 'zustand';
+import type { CMSUser } from '@/app/actions/cms/getUser';
 
 interface LayoutState {
   user: CMSUser | null;

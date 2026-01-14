@@ -1,10 +1,5 @@
 'use client';
 
-import { deleteMyAccount } from '@/app/actions/cms/deleteAccount';
-import { updateMyProfile } from '@/app/actions/cms/sections/usersActions';
-import { getUser } from '@/app/actions/cms/getUser';
-import { useLayoutStore } from '@/store/layoutStore';
-import { processImageToWebP } from '@/utils/imageProcessor';
 import {
   Camera,
   Check,
@@ -18,6 +13,11 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { deleteMyAccount } from '@/app/actions/cms/deleteAccount';
+import { getUser } from '@/app/actions/cms/getUser';
+import { updateMyProfile } from '@/app/actions/cms/sections/usersActions';
+import { useLayoutStore } from '@/store/layoutStore';
+import { processImageToWebP } from '@/utils/imageProcessor';
 
 export default function AccountSection() {
   const { user, setUser } = useLayoutStore();
@@ -104,7 +104,9 @@ export default function AccountSection() {
       }
     } catch (err) {
       console.error('Error updating display name:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update display name');
+      setError(
+        err instanceof Error ? err.message : 'Failed to update display name'
+      );
     } finally {
       setSavingName(false);
     }
@@ -148,9 +150,7 @@ export default function AccountSection() {
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           My Account
         </h1>
-        <p className="text-lighttext2 text-lg">
-          Manage your profile settings
-        </p>
+        <p className="text-lighttext2 text-lg">Manage your profile settings</p>
       </div>
 
       {/* Error display */}
@@ -190,7 +190,9 @@ export default function AccountSection() {
                   </div>
                 )}
                 {/* Upload overlay */}
-                <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity ${isUploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                <div
+                  className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity ${isUploadingAvatar ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                >
                   {isUploadingAvatar ? (
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
@@ -214,23 +216,25 @@ export default function AccountSection() {
             </div>
             <div>
               <p className="text-sm text-lighttext2 mb-1">Profile Picture</p>
-              <p className="text-xs text-lighttext2">Click to upload a new avatar</p>
+              <p className="text-xs text-lighttext2">
+                Click to upload a new avatar
+              </p>
             </div>
           </div>
 
           {/* Display Name Section */}
           <div>
-            <label className="block text-sm font-medium text-lighttext mb-2">
+            <label htmlFor="display-name-input" className="block text-sm font-medium text-lighttext mb-2">
               Display Name
             </label>
             {editingName ? (
               <div className="flex items-center gap-2">
                 <input
+                  id="display-name-input"
                   type="text"
                   value={editedName}
                   onChange={(e) => setEditedName(e.target.value)}
                   className="flex-1 px-3 py-2 bg-darkestgray border border-main rounded-lg text-lighttext focus:outline-none"
-                  autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSaveName();
                     if (e.key === 'Escape') handleCancelEditName();
@@ -271,46 +275,54 @@ export default function AccountSection() {
           {/* Email Section (Read-only) */}
           {user.email && (
             <div>
-              <label className="block text-sm font-medium text-lighttext mb-2">
+              <div className="block text-sm font-medium text-lighttext mb-2">
                 Email Address
-              </label>
+              </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-darkestgray rounded-lg text-lighttext2">
                 <Mail className="w-4 h-4" />
                 <span>{user.email}</span>
               </div>
-              <p className="text-xs text-lighttext2 mt-1">Email cannot be changed</p>
+              <p className="text-xs text-lighttext2 mt-1">
+                Email cannot be changed
+              </p>
             </div>
           )}
 
           {/* GitHub Username Section (Read-only) */}
           {user.githubUsername && (
             <div>
-              <label className="block text-sm font-medium text-lighttext mb-2">
+              <div className="block text-sm font-medium text-lighttext mb-2">
                 GitHub Username
-              </label>
+              </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-darkestgray rounded-lg text-lighttext2">
                 <Github className="w-4 h-4" />
                 <span>@{user.githubUsername}</span>
               </div>
-              <p className="text-xs text-lighttext2 mt-1">GitHub username cannot be changed</p>
+              <p className="text-xs text-lighttext2 mt-1">
+                GitHub username cannot be changed
+              </p>
             </div>
           )}
 
           {/* Role Section (Read-only) */}
           <div>
-            <label className="block text-sm font-medium text-lighttext mb-2">
+            <div className="block text-sm font-medium text-lighttext mb-2">
               Role
-            </label>
+            </div>
             <div className="px-3 py-2 bg-darkestgray rounded-lg">
-              <span className={`px-2 py-1 rounded text-xs ${
-                user.role === 'admin' 
-                  ? 'bg-yellow-500/20 text-yellow-500' 
-                  : 'bg-blue-500/20 text-blue-400'
-              }`}>
+              <span
+                className={`px-2 py-1 rounded text-xs ${
+                  user.role === 'admin'
+                    ? 'bg-yellow-500/20 text-yellow-500'
+                    : 'bg-blue-500/20 text-blue-400'
+                }`}
+              >
                 {user.role || 'user'}
               </span>
             </div>
-            <p className="text-xs text-lighttext2 mt-1">Role is managed by administrators</p>
+            <p className="text-xs text-lighttext2 mt-1">
+              Role is managed by administrators
+            </p>
           </div>
         </div>
       </div>
@@ -322,15 +334,19 @@ export default function AccountSection() {
           Danger Zone
         </h2>
         <p className="text-lighttext2 mb-4">
-          Once you delete your account, there is no going back. This will permanently delete your account and all associated data.
+          Once you delete your account, there is no going back. This will
+          permanently delete your account and all associated data.
         </p>
-        
+
         {showDeleteConfirm ? (
           <div className="space-y-4">
             <div className="bg-darkestgray rounded-lg p-4 border border-red-500/50">
-              <p className="text-red-400 font-semibold mb-2">Are you absolutely sure?</p>
+              <p className="text-red-400 font-semibold mb-2">
+                Are you absolutely sure?
+              </p>
               <p className="text-lighttext2 text-sm">
-                This action cannot be undone. This will permanently delete your account, profile, and all associated data.
+                This action cannot be undone. This will permanently delete your
+                account, profile, and all associated data.
               </p>
             </div>
             <div className="flex gap-3">

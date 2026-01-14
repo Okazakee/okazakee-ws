@@ -11,9 +11,9 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
@@ -207,7 +207,11 @@ export default function ResponsiveNav({
                 className="sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                 aria-label="Toggle menu"
               >
-                {isOpen ? <X className="w-6 h-6 sm:w-7 sm:h-7" /> : <Menu className="w-6 h-6 sm:w-7 sm:h-7" />}
+                {isOpen ? (
+                  <X className="w-6 h-6 sm:w-7 sm:h-7" />
+                ) : (
+                  <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
+                )}
               </button>
             </div>
 

@@ -1,13 +1,18 @@
 'use server';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
-import { revalidatePath } from 'next/cache';
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 type I18nOperation =
   | { type: 'GET' }
   | { type: 'UPDATE'; locale: string; data: UpdateI18nData }
-  | { type: 'UPDATE_SECTION'; locale: string; sectionKey: string; sectionData: Record<string, unknown> };
+  | {
+      type: 'UPDATE_SECTION';
+      locale: string;
+      sectionKey: string;
+      sectionData: Record<string, unknown>;
+    };
 
 type UpdateI18nData = {
   translations: Record<string, unknown>;
@@ -28,7 +33,10 @@ function validateI18nData(
   // Locale validation
   const validLocales = ['en', 'it'];
   if (!validLocales.includes(locale)) {
-    return { isValid: false, error: `Invalid locale. Must be one of: ${validLocales.join(', ')}` };
+    return {
+      isValid: false,
+      error: `Invalid locale. Must be one of: ${validLocales.join(', ')}`,
+    };
   }
 
   // Translations validation
@@ -47,7 +55,10 @@ function validateI18nData(
       return { isValid: false, error: 'Privacy policy must be a string' };
     }
     if (data.privacy_policy.length > 50000) {
-      return { isValid: false, error: 'Privacy policy content is too long (max 50,000 characters)' };
+      return {
+        isValid: false,
+        error: 'Privacy policy content is too long (max 50,000 characters)',
+      };
     }
   }
 
@@ -55,11 +66,18 @@ function validateI18nData(
 }
 
 // Helper function to deep merge objects
-function deepMerge(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
+function deepMerge(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>
+): Record<string, unknown> {
   const output = { ...target };
-  
+
   for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+    if (
+      source[key] &&
+      typeof source[key] === 'object' &&
+      !Array.isArray(source[key])
+    ) {
       output[key] = deepMerge(
         (target[key] as Record<string, unknown>) || {},
         source[key] as Record<string, unknown>
@@ -68,7 +86,7 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
       output[key] = source[key];
     }
   }
-  
+
   return output;
 }
 
@@ -87,7 +105,9 @@ export async function getSectionTranslations(
 
     if (error) throw error;
 
-    const translations = data?.translations as Record<string, unknown> | undefined;
+    const translations = data?.translations as
+      | Record<string, unknown>
+      | undefined;
     if (!translations) return null;
 
     return (translations[sectionKey] as Record<string, unknown>) || null;
@@ -218,7 +238,10 @@ async function updateSectionTranslations(
     // Validate locale
     const validLocales = ['en', 'it'];
     if (!validLocales.includes(locale)) {
-      return { success: false, error: `Invalid locale. Must be one of: ${validLocales.join(', ')}` };
+      return {
+        success: false,
+        error: `Invalid locale. Must be one of: ${validLocales.join(', ')}`,
+      };
     }
 
     // Fetch current translations
@@ -233,7 +256,8 @@ async function updateSectionTranslations(
     }
 
     // Get current translations or initialize empty object
-    const currentTranslations = (currentData?.translations as Record<string, unknown>) || {};
+    const currentTranslations =
+      (currentData?.translations as Record<string, unknown>) || {};
 
     // Merge section data into current translations
     const mergedTranslations = mergeSectionTranslations(

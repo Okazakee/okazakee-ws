@@ -1,9 +1,9 @@
 'use client';
 
-import { incrementViews } from '@/app/actions/incrementViews';
-import { getCurrentViews } from '@/app/actions/getCurrentViews';
 import { Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { getCurrentViews } from '@/app/actions/getCurrentViews';
+import { incrementViews } from '@/app/actions/incrementViews';
 
 interface ViewDisplayProps {
   postId: string;
@@ -12,7 +12,12 @@ interface ViewDisplayProps {
   isCard?: boolean;
 }
 
-export default function ViewDisplay({ postId, postType, initialViews, isCard = false }: ViewDisplayProps) {
+export default function ViewDisplay({
+  postId,
+  postType,
+  initialViews,
+  isCard = false,
+}: ViewDisplayProps) {
   const [views, setViews] = useState(initialViews);
   const [hasIncremented, setHasIncremented] = useState(false);
 
@@ -22,7 +27,11 @@ export default function ViewDisplay({ postId, postType, initialViews, isCard = f
       return;
     }
 
-    console.log('🚀 ViewDisplay useEffect triggered', { postId, postType, hasIncremented });
+    console.log('🚀 ViewDisplay useEffect triggered', {
+      postId,
+      postType,
+      hasIncremented,
+    });
 
     // Create a unique key for this post visit with 24-hour expiration
     const visitKey = `viewed_${postType}_${postId}`;
@@ -34,7 +43,7 @@ export default function ViewDisplay({ postId, postType, initialViews, isCard = f
 
     let hasViewedRecently = false;
     if (lastViewed) {
-      const lastViewedTime = parseInt(lastViewed);
+      const lastViewedTime = parseInt(lastViewed, 10);
       hasViewedRecently = now - lastViewedTime < twentyFourHours;
     }
 
@@ -42,7 +51,9 @@ export default function ViewDisplay({ postId, postType, initialViews, isCard = f
       visitKey,
       lastViewed,
       hasViewedRecently,
-      hoursSinceLastView: lastViewed ? Math.round((now - parseInt(lastViewed, 10)) / (60 * 60 * 1000)) : 'never',
+      hoursSinceLastView: lastViewed
+        ? Math.round((now - parseInt(lastViewed, 10)) / (60 * 60 * 1000))
+        : 'never',
       hasIncremented,
     });
 
@@ -95,7 +106,7 @@ export default function ViewDisplay({ postId, postType, initialViews, isCard = f
 
   return (
     <div className="flex items-center text-darktext dark:text-lighttext">
-      <Eye size={20} className={isCard ? "mr-1" : "mr-2"} />
+      <Eye size={20} className={isCard ? 'mr-1' : 'mr-2'} />
       <span className="mt-0.5">{views}</span>
     </div>
   );

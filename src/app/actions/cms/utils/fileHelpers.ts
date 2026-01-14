@@ -1,13 +1,13 @@
+import { createJimp } from '@jimp/core';
+import webp from '@jimp/wasm-webp';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { encode } from 'blurhash';
-import { createJimp } from '@jimp/core';
 import { defaultFormats, defaultPlugins } from 'jimp';
-import webp from '@jimp/wasm-webp';
 import { createClient } from '@/utils/supabase/server';
 
 // Create Jimp instance with WebP support
 // Initialize lazily to handle WASM loading issues
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: Jimp type compatibility issue
 let JimpInstance: any = null;
 
 function getJimp() {
@@ -35,7 +35,10 @@ function getJimp() {
  */
 export async function requireAuth(): Promise<{ id: string; email: string }> {
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
   if (error || !user) {
     throw new Error('Unauthorized: Authentication required');
@@ -50,7 +53,10 @@ export async function requireAuth(): Promise<{ id: string; email: string }> {
  */
 export async function requireAdmin(): Promise<{ id: string; email: string }> {
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
   if (error || !user) {
     throw new Error('Unauthorized: Authentication required');
@@ -89,7 +95,7 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
 /**
  * Result type for auth check - use this in actions
  */
-export type AuthResult = 
+export type AuthResult =
   | { authenticated: true; userId: string }
   | { authenticated: false; error: string };
 
@@ -152,7 +158,12 @@ export async function processImage(
         newHeight = Math.round(originalHeight * ratio);
         image.resize({ w: newWidth, h: newHeight });
         // Crop to exact dimensions
-        image.crop({ x: (newWidth - maxWidth) / 2, y: (newHeight - maxHeight) / 2, w: maxWidth, h: maxHeight });
+        image.crop({
+          x: (newWidth - maxWidth) / 2,
+          y: (newHeight - maxHeight) / 2,
+          w: maxWidth,
+          h: maxHeight,
+        });
         newWidth = maxWidth;
         newHeight = maxHeight;
       }
@@ -200,7 +211,7 @@ export async function processImage(
 /**
  * Generates a real blurhash from Jimp image
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: Jimp type compatibility issue
 async function generateBlurhash(image: any): Promise<string> {
   try {
     // Clone and resize for blurhash (32x32)
@@ -211,15 +222,15 @@ async function generateBlurhash(image: any): Promise<string> {
     // Get raw RGBA pixel data
     const pixels = new Uint8ClampedArray(width * height * 4);
     let idx = 0;
-    
+
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const color = smallImage.getPixelColor(x, y);
         // Jimp stores colors as 32-bit integers (RGBA)
         pixels[idx++] = (color >> 24) & 0xff; // R
         pixels[idx++] = (color >> 16) & 0xff; // G
-        pixels[idx++] = (color >> 8) & 0xff;  // B
-        pixels[idx++] = color & 0xff;          // A
+        pixels[idx++] = (color >> 8) & 0xff; // B
+        pixels[idx++] = color & 0xff; // A
       }
     }
 
@@ -260,17 +271,31 @@ const ALLOWED_IMAGE_TYPES = [
  * Rejects SVGs to prevent XSS/script injection attacks
  * Accepts WebP files (expected to be pre-processed client-side)
  */
-export function validateImageFile(file: File): { isValid: boolean; error?: string } {
+export function validateImageFile(file: File): {
+  isValid: boolean;
+  error?: string;
+} {
   // Reject SVG explicitly (security risk - can contain scripts)
-  if (file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')) {
-    return { isValid: false, error: 'SVG files are not allowed for security reasons. Please use JPG, PNG, or WebP.' };
+  if (
+    file.type === 'image/svg+xml' ||
+    file.name.toLowerCase().endsWith('.svg')
+  ) {
+    return {
+      isValid: false,
+      error:
+        'SVG files are not allowed for security reasons. Please use JPG, PNG, or WebP.',
+    };
   }
 
   // Accept WebP files (should be pre-processed client-side)
   if (file.type === 'image/webp') {
     // File size validation (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
-      return { isValid: false, error: 'Image file is too large. Please select an image smaller than 10MB' };
+      return {
+        isValid: false,
+        error:
+          'Image file is too large. Please select an image smaller than 10MB',
+      };
     }
     // File name validation
     if (file.name.length > 255) {
@@ -280,13 +305,24 @@ export function validateImageFile(file: File): { isValid: boolean; error?: strin
   }
 
   // File type validation - only allow specific raster formats
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
-    return { isValid: false, error: 'Please select a valid image file (JPG, PNG, WebP, GIF, or AVIF)' };
+  if (
+    !ALLOWED_IMAGE_TYPES.includes(
+      file.type as (typeof ALLOWED_IMAGE_TYPES)[number]
+    )
+  ) {
+    return {
+      isValid: false,
+      error: 'Please select a valid image file (JPG, PNG, WebP, GIF, or AVIF)',
+    };
   }
 
   // File size validation (10MB limit - will be compressed anyway)
   if (file.size > 10 * 1024 * 1024) {
-    return { isValid: false, error: 'Image file is too large. Please select an image smaller than 10MB' };
+    return {
+      isValid: false,
+      error:
+        'Image file is too large. Please select an image smaller than 10MB',
+    };
   }
 
   // File name validation
@@ -301,7 +337,10 @@ export function validateImageFile(file: File): { isValid: boolean; error?: strin
  * Validates an uploaded file for images (including SVG for skills)
  * Allows SVG files which are typically used for icons
  */
-export function validateImageFileWithSvg(file: File): { isValid: boolean; error?: string } {
+export function validateImageFileWithSvg(file: File): {
+  isValid: boolean;
+  error?: string;
+} {
   // File type validation - allow raster formats and SVG
   const allowedTypes = [
     'image/jpeg',
@@ -313,13 +352,21 @@ export function validateImageFileWithSvg(file: File): { isValid: boolean; error?
     'image/svg+xml',
   ] as const;
 
-  if (!allowedTypes.includes(file.type as typeof allowedTypes[number])) {
-    return { isValid: false, error: 'Please select a valid image file (JPG, PNG, WebP, GIF, AVIF, or SVG)' };
+  if (!allowedTypes.includes(file.type as (typeof allowedTypes)[number])) {
+    return {
+      isValid: false,
+      error:
+        'Please select a valid image file (JPG, PNG, WebP, GIF, AVIF, or SVG)',
+    };
   }
 
   // File size validation (10MB limit)
   if (file.size > 10 * 1024 * 1024) {
-    return { isValid: false, error: 'Image file is too large. Please select an image smaller than 10MB' };
+    return {
+      isValid: false,
+      error:
+        'Image file is too large. Please select an image smaller than 10MB',
+    };
   }
 
   // File name validation
@@ -333,7 +380,10 @@ export function validateImageFileWithSvg(file: File): { isValid: boolean; error?
 /**
  * Validates an uploaded PDF file
  */
-export function validatePdfFile(file: File): { isValid: boolean; error?: string } {
+export function validatePdfFile(file: File): {
+  isValid: boolean;
+  error?: string;
+} {
   // File type validation
   if (file.type !== 'application/pdf') {
     return { isValid: false, error: 'Please select a valid PDF file' };
@@ -341,7 +391,10 @@ export function validatePdfFile(file: File): { isValid: boolean; error?: string 
 
   // File size validation (10MB limit for PDFs)
   if (file.size > 10 * 1024 * 1024) {
-    return { isValid: false, error: 'PDF file is too large. Please select a file smaller than 10MB' };
+    return {
+      isValid: false,
+      error: 'PDF file is too large. Please select a file smaller than 10MB',
+    };
   }
 
   // File name validation
@@ -364,14 +417,14 @@ export async function backupOldFile(
     // Extract file path from URL
     const url = new URL(fileUrl);
     const pathParts = url.pathname.split('/');
-    
+
     // Find the bucket index and get the file path after it
-    const bucketIndex = pathParts.findIndex(part => part === bucket);
+    const bucketIndex = pathParts.indexOf(bucket);
     if (bucketIndex === -1) {
       console.warn('Could not extract file path from URL:', fileUrl);
       return;
     }
-    
+
     const filePath = pathParts.slice(bucketIndex + 1).join('/');
     if (!filePath) {
       console.warn('Empty file path extracted from URL:', fileUrl);
@@ -390,7 +443,10 @@ export async function backupOldFile(
       console.warn('Failed to backup old file:', error.message);
     }
   } catch (error) {
-    console.warn('Error backing up old file:', error instanceof Error ? error.message : 'Unknown error');
+    console.warn(
+      'Error backing up old file:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
   }
 }
 

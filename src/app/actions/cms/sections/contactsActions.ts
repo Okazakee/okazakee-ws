@@ -1,9 +1,8 @@
 'use server';
 
-import { isValidUrl, requireAdmin } from '@/app/actions/cms/utils/fileHelpers';
-import { getContacts } from '@/utils/getData';
-import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isValidUrl, requireAdmin } from '@/app/actions/cms/utils/fileHelpers';
+import { createClient } from '@/utils/supabase/server';
 
 type ContactOperation =
   | { type: 'GET' }
@@ -35,9 +34,10 @@ type ContactsResult = {
 };
 
 // Validation functions
-function validateContactData(
-  data: CreateContactData | UpdateContactData
-): { isValid: boolean; error?: string } {
+function validateContactData(data: CreateContactData | UpdateContactData): {
+  isValid: boolean;
+  error?: string;
+} {
   // Label validation
   if ('label' in data && data.label !== undefined) {
     if (!data.label || data.label.trim().length === 0) {
@@ -54,7 +54,10 @@ function validateContactData(
       return { isValid: false, error: 'Icon name is required' };
     }
     if (data.icon.length > 50) {
-      return { isValid: false, error: 'Icon name must be less than 50 characters' };
+      return {
+        isValid: false,
+        error: 'Icon name must be less than 50 characters',
+      };
     }
   }
 
@@ -63,8 +66,15 @@ function validateContactData(
     if (!data.link || data.link.trim().length === 0) {
       return { isValid: false, error: 'Contact link is required' };
     }
-    if (!isValidUrl(data.link) && !data.link.startsWith('mailto:') && !data.link.startsWith('tel:')) {
-      return { isValid: false, error: 'Link must be a valid URL, email (mailto:), or phone (tel:)' };
+    if (
+      !isValidUrl(data.link) &&
+      !data.link.startsWith('mailto:') &&
+      !data.link.startsWith('tel:')
+    ) {
+      return {
+        isValid: false,
+        error: 'Link must be a valid URL, email (mailto:), or phone (tel:)',
+      };
     }
   }
 
@@ -72,12 +82,18 @@ function validateContactData(
   if (data.bg_color !== undefined && data.bg_color) {
     const hexColorPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
     if (!hexColorPattern.test(data.bg_color)) {
-      return { isValid: false, error: 'Background color must be a valid hex color (e.g., #FF5733)' };
+      return {
+        isValid: false,
+        error: 'Background color must be a valid hex color (e.g., #FF5733)',
+      };
     }
   }
 
   // Position validation
-  if (data.position !== undefined && (data.position < 0 || !Number.isInteger(data.position))) {
+  if (
+    data.position !== undefined &&
+    (data.position < 0 || !Number.isInteger(data.position))
+  ) {
     return { isValid: false, error: 'Position must be a non-negative integer' };
   }
 

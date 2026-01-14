@@ -1,9 +1,9 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { checkLoginRateLimit } from '@/libs/rateLimiters';
 import { createClient } from '@/utils/supabase/server';
-import { headers } from 'next/headers';
-import { revalidatePath } from 'next/cache';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,15 +63,15 @@ export async function login(email: string, password: string) {
   const forwardedFor = headersList.get('x-forwarded-for');
   const realIp = headersList.get('x-real-ip');
   const clientIp = forwardedFor?.split(',')[0]?.trim() || realIp || 'unknown';
-  
+
   // Rate limit by both IP and email
   const rateLimitKey = `login:${clientIp}:${email.toLowerCase()}`;
   const rateLimit = checkLoginRateLimit(rateLimitKey);
 
   if (!rateLimit.allowed) {
     const minutes = Math.ceil((rateLimit.lockoutRemaining || 0) / 60);
-    return { 
-      error: `Too many login attempts. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.` 
+    return {
+      error: `Too many login attempts. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`,
     };
   }
 
@@ -101,12 +101,12 @@ export async function login(email: string, password: string) {
  */
 export async function getGitHubOAuthUrl(locale: string = 'en') {
   const supabase = await createClient();
-  
+
   const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${locale}/cms/auth/callback`;
   console.log('=== GitHub OAuth ===');
   console.log('NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
   console.log('Redirect URL:', redirectTo);
-  
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
@@ -129,9 +129,12 @@ export async function getGitHubOAuthUrl(locale: string = 'en') {
  */
 export async function verifyGitHubUser() {
   const supabase = await createClient();
-  
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
   if (userError || !user) {
     return { allowed: false, error: 'Authentication failed' };
   }
@@ -142,11 +145,14 @@ export async function verifyGitHubUser() {
 
   // Check allowlist by GitHub username OR email
   const allowlistCheck = await checkAllowlist(supabase, email, githubUsername);
-  
+
   if (!allowlistCheck.allowed) {
     // Sign out the user since they're not allowed
     await supabase.auth.signOut();
-    return { allowed: false, error: 'Access denied. Please contact the administrator.' };
+    return {
+      allowed: false,
+      error: 'Access denied. Please contact the administrator.',
+    };
   }
 
   return { allowed: true, role: allowlistCheck.role };

@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
         pathname: '/**',
-      }
+      },
     ],
   },
   // Ensure sharp is bundled correctly for serverless

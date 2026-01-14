@@ -1,9 +1,8 @@
+import { ErrorDiv } from '@components/common/ErrorDiv';
+import Image from 'next/image';
+import { getTranslations } from 'next-intl/server';
 import { formatLabels } from '@/utils/formatLabels';
 import { getSkillsCategories } from '@/utils/getData';
-import { ErrorDiv } from '@components/common/ErrorDiv';
-import { getTranslations } from 'next-intl/server';
-import Image from 'next/image';
-import React from 'react';
 
 export default async function Skills() {
   const skills_categories = await getSkillsCategories();
@@ -23,13 +22,13 @@ export default async function Skills() {
           className="xl:mb-20 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl mb-10"
           dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
         />
-        {skills_categories.map((skillCategory, index) => (
+        {skills_categories.map((skillCategory, _index) => (
           <div key={skillCategory.id} className="">
             <h2 className="text-lg xs:text-xl tablet:text-3xl md:text-[2.33rem] xs:tracking-wider my-5">
               {t(`skills.${skillCategory.name}`)}
             </h2>
             <div className="flex xl:flex-nowrap flex-wrap justify-center items-center">
-              {skillCategory.skills.map((skill, i) => (
+              {skillCategory.skills.map((skill, _i) => (
                 <div
                   key={skill.id}
                   className="md:drop-shadow-3xl drop-shadow-xl dark:drop-shadow-none hover:scale-110 transition-all mx-auto my-5 md:my-10 w-[calc(33.333%-1rem)]"

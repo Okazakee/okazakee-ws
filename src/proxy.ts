@@ -1,18 +1,27 @@
-import { updateSession } from '@/utils/supabase/middleware';
-import createMiddleware from 'next-intl/middleware';
 import { type NextRequest, NextResponse } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
+import { updateSession } from '@/utils/supabase/middleware';
 
 // Environment-based configuration with validation
 const LOCALES_ENV = process.env.NEXT_PUBLIC_LOCALES?.split(',') || ['en', 'it'];
 const DEFAULT_LOCALE_ENV = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'en';
 
 // Validate configuration at startup
-if (!Array.isArray(LOCALES_ENV) || !LOCALES_ENV.every(locale => typeof locale === 'string' && locale.length === 2)) {
-  throw new Error('Invalid LOCALES configuration: must be array of 2-character strings');
+if (
+  !Array.isArray(LOCALES_ENV) ||
+  !LOCALES_ENV.every(
+    (locale) => typeof locale === 'string' && locale.length === 2
+  )
+) {
+  throw new Error(
+    'Invalid LOCALES configuration: must be array of 2-character strings'
+  );
 }
 
 if (!LOCALES_ENV.includes(DEFAULT_LOCALE_ENV)) {
-  throw new Error(`DEFAULT_LOCALE '${DEFAULT_LOCALE_ENV}' must be included in LOCALES array`);
+  throw new Error(
+    `DEFAULT_LOCALE '${DEFAULT_LOCALE_ENV}' must be included in LOCALES array`
+  );
 }
 
 const LOCALES = LOCALES_ENV as string[];
@@ -25,7 +34,8 @@ const LOCALE_PATTERN = new RegExp(`^/(${LOCALES.join('|')})(?:/|$)`);
 const STATIC_ASSET_PATTERN = /\.[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*$/;
 const CMS_ROUTE_PATTERN = /^\/[a-z]{2}\/cms(?:\/.*)?$/;
 const LOCALE_COOKIE_PATTERN = /^[a-zA-Z0-9_-]+$/;
-const ACCEPT_LANGUAGE_PATTERN = /^([a-z]{2})(?:-[a-z]{2})?(?:;q=[0-9.]+)?(?:,|$)/i;
+const ACCEPT_LANGUAGE_PATTERN =
+  /^([a-z]{2})(?:-[a-z]{2})?(?:;q=[0-9.]+)?(?:,|$)/i;
 
 // Performance optimizations
 const LOCALE_CACHE = new Map<string, string>();
@@ -35,29 +45,29 @@ const REQUEST_DEDUP = new Map<string, Promise<NextResponse>>();
 function getCachedLocale(request: NextRequest): string | null {
   const acceptLang = request.headers.get('accept-language');
   const cookieValue = request.cookies.get('NEXT_LOCALE')?.value;
-  const cacheKey = acceptLang + '|' + cookieValue;
+  const cacheKey = `${acceptLang}|${cookieValue}`;
   const cached = LOCALE_CACHE.get(cacheKey);
-  
-  if (cached && Date.now() - parseInt(cached.split('-')[1]) < CACHE_TTL) {
+
+  if (cached && Date.now() - parseInt(cached.split('-')[1], 10) < CACHE_TTL) {
     return cached.split('-')[0];
   }
-  
+
   return null;
 }
 
 function setCachedLocale(request: NextRequest, locale: string): void {
   const acceptLang = request.headers.get('accept-language');
   const cookieValue = request.cookies.get('NEXT_LOCALE')?.value;
-  const cacheKey = acceptLang + '|' + cookieValue;
+  const cacheKey = `${acceptLang}|${cookieValue}`;
   LOCALE_CACHE.set(cacheKey, `${locale}-${Date.now()}`);
-  
+
   // Clean old cache entries periodically - more aggressive cleanup
   if (LOCALE_CACHE.size > 500) {
     const now = Date.now();
     const entries = Array.from(LOCALE_CACHE.entries());
     for (let i = entries.length - 1; i >= 0; i--) {
       const [key, value] = entries[i];
-      if (now - parseInt(value.split('-')[1]) > CACHE_TTL) {
+      if (now - parseInt(value.split('-')[1], 10) > CACHE_TTL) {
         LOCALE_CACHE.delete(key);
       }
     }
@@ -66,12 +76,12 @@ function setCachedLocale(request: NextRequest, locale: string): void {
 
 // Comprehensive path traversal protection
 const PATH_TRAVERSAL_PATTERNS = [
-  /\.\./,                    // ..
-  /%2e%2e/i,                 // URL encoded ..
-  /%2f/i,                    // URL encoded /
-  /\0/,                      // Null bytes
-  /[\u0000-\u001f]/,         // Control characters
-  /[\u007f-\u009f]/,         // Extended control characters
+  /\.\./, // ..
+  /%2e%2e/i, // URL encoded ..
+  /%2f/i, // URL encoded /
+  /\0/, // Null bytes
+  /[\u0000-\u001f]/, // Control characters
+  /[\u007f-\u009f]/, // Extended control characters
 ];
 
 const handleI18n = createMiddleware({
@@ -95,7 +105,7 @@ function isCMSRoute(pathname: string): boolean {
 
 function validatePathname(pathname: string): string {
   if (!pathname || typeof pathname !== 'string') return '/';
-  
+
   // Comprehensive path traversal protection
   for (const pattern of PATH_TRAVERSAL_PATTERNS) {
     if (pattern.test(pathname)) {
@@ -103,33 +113,35 @@ function validatePathname(pathname: string): string {
       return '/';
     }
   }
-  
+
   // Normalize path - single regex operation
-  const normalized = pathname.replace(/\/+/g, '/').replace(/^\/+/, '/').replace(/\/+$/, '') || '/';
-  
+  const normalized =
+    pathname.replace(/\/+/g, '/').replace(/^\/+/, '/').replace(/\/+$/, '') ||
+    '/';
+
   // Additional validation: ensure path doesn't exceed reasonable length
   if (normalized.length > 2048) {
     console.warn('Path too long:', normalized.length);
     return '/';
   }
-  
+
   return normalized;
 }
 
 function sanitizeCookieValue(value: string | undefined): string | null {
   if (!value || typeof value !== 'string') return null;
-  
+
   // Additional validation for cookie security
   if (value.length > 100) return null; // Prevent oversized cookies
-  
+
   if (!LOCALE_COOKIE_PATTERN.test(value)) return null;
-  
+
   return isValidLocale(value) ? value : null;
 }
 
 function parseAcceptLanguage(acceptLanguage: string | null): string | null {
   if (!acceptLanguage) return null;
-  
+
   try {
     const match = acceptLanguage.match(ACCEPT_LANGUAGE_PATTERN);
     if (match && isValidLocale(match[1])) {
@@ -138,11 +150,15 @@ function parseAcceptLanguage(acceptLanguage: string | null): string | null {
   } catch (error) {
     console.error('Failed to parse Accept-Language header:', error);
   }
-  
+
   return null;
 }
 
-function createRedirectResponse(request: NextRequest, pathname: string, locale: string): NextResponse {
+function createRedirectResponse(
+  request: NextRequest,
+  pathname: string,
+  locale: string
+): NextResponse {
   const url = request.nextUrl.clone();
   url.pathname = validatePathname(`/${locale}${pathname}`);
   const response = NextResponse.redirect(url);
@@ -150,26 +166,37 @@ function createRedirectResponse(request: NextRequest, pathname: string, locale: 
   return response;
 }
 
-function handleAuthError(request: NextRequest, locale: string, error: unknown): NextResponse {
+function handleAuthError(
+  request: NextRequest,
+  locale: string,
+  error: unknown
+): NextResponse {
   console.error('Authentication failed for CMS route:', {
     pathname: request.nextUrl.pathname,
     locale,
     error: error instanceof Error ? error.message : 'Unknown error',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-  
+
   return createRedirectResponse(request, '/cms/login', locale);
 }
 
-function handleMiddlewareError(request: NextRequest, error: unknown): NextResponse {
+function handleMiddlewareError(
+  request: NextRequest,
+  error: unknown
+): NextResponse {
   console.error('Middleware processing failed:', {
     pathname: request.nextUrl.pathname,
     error: error instanceof Error ? error.message : 'Unknown error',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-  
+
   try {
-    return createRedirectResponse(request, request.nextUrl.pathname, DEFAULT_LOCALE);
+    return createRedirectResponse(
+      request,
+      request.nextUrl.pathname,
+      DEFAULT_LOCALE
+    );
   } catch (redirectError) {
     console.error('Failed to create redirect URL:', redirectError);
     return NextResponse.next();
@@ -183,7 +210,9 @@ function getPreferredLocale(request: NextRequest): string {
   }
 
   try {
-    const savedLocale = sanitizeCookieValue(request.cookies.get('NEXT_LOCALE')?.value);
+    const savedLocale = sanitizeCookieValue(
+      request.cookies.get('NEXT_LOCALE')?.value
+    );
     if (savedLocale) {
       setCachedLocale(request, savedLocale);
       return savedLocale;
@@ -228,7 +257,7 @@ export default async function proxy(request: NextRequest) {
   // Request deduplication for concurrent requests
   const acceptLang = request.headers.get('accept-language');
   const cookieValue = request.cookies.get('NEXT_LOCALE')?.value;
-  const requestKey = pathname + '|' + acceptLang + '|' + cookieValue;
+  const requestKey = `${pathname}|${acceptLang}|${cookieValue}`;
   if (REQUEST_DEDUP.has(requestKey)) {
     return await REQUEST_DEDUP.get(requestKey)!;
   }
@@ -278,7 +307,7 @@ export default async function proxy(request: NextRequest) {
 
   const promise = processRequest();
   REQUEST_DEDUP.set(requestKey, promise);
-  
+
   // Clean up dedup cache after request completes
   promise.finally(() => {
     REQUEST_DEDUP.delete(requestKey);

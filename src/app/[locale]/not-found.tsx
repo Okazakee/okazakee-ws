@@ -1,6 +1,6 @@
 'use client';
 
-import { SearchX, Home, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Home, SearchX } from 'lucide-react';
 import Link from 'next/link';
 
 export default function GlobalNotFound() {

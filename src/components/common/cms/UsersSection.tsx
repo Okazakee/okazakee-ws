@@ -1,8 +1,5 @@
 'use client';
 
-import { updateUserDisplayName, uploadUserAvatar, usersActions } from '@/app/actions/cms/sections/usersActions';
-import { useLayoutStore } from '@/store/layoutStore';
-import { processImageToWebP } from '@/utils/imageProcessor';
 import {
   Camera,
   Check,
@@ -20,6 +17,13 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+import {
+  updateUserDisplayName,
+  uploadUserAvatar,
+  usersActions,
+} from '@/app/actions/cms/sections/usersActions';
+import { useLayoutStore } from '@/store/layoutStore';
+import { processImageToWebP } from '@/utils/imageProcessor';
 
 type AllowedUser = {
   id: number;
@@ -45,7 +49,9 @@ export default function UsersSection() {
   const [newUserInput, setNewUserInput] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'editor'>('editor');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingAvatarFor, setUploadingAvatarFor] = useState<string | null>(null);
+  const [uploadingAvatarFor, setUploadingAvatarFor] = useState<string | null>(
+    null
+  );
   const [editingNameFor, setEditingNameFor] = useState<string | null>(null);
   const [editedName, setEditedName] = useState('');
   const [savingNameFor, setSavingNameFor] = useState<string | null>(null);
@@ -91,13 +97,25 @@ export default function UsersSection() {
     setError(null);
 
     try {
-      let result;
+      let result: Awaited<ReturnType<typeof usersActions>>;
       if (addType === 'email') {
-        result = await usersActions({ type: 'ADD_EMAIL', email: newUserInput, role: newUserRole });
+        result = await usersActions({
+          type: 'ADD_EMAIL',
+          email: newUserInput,
+          role: newUserRole,
+        });
       } else if (addType === 'github') {
-        result = await usersActions({ type: 'ADD_GITHUB', github_username: newUserInput, role: newUserRole });
+        result = await usersActions({
+          type: 'ADD_GITHUB',
+          github_username: newUserInput,
+          role: newUserRole,
+        });
       } else {
-        result = await usersActions({ type: 'ADD_DUMMY', display_name: newUserInput, role: newUserRole });
+        result = await usersActions({
+          type: 'ADD_DUMMY',
+          display_name: newUserInput,
+          role: newUserRole,
+        });
       }
 
       if (!result.success) {
@@ -120,17 +138,25 @@ export default function UsersSection() {
     setUpdatingRoleFor(id);
 
     try {
-      const result = await usersActions({ type: 'UPDATE_ROLE', id, role: newRole });
+      const result = await usersActions({
+        type: 'UPDATE_ROLE',
+        id,
+        role: newRole,
+      });
       if (!result.success) {
         throw new Error(result.error || 'Failed to update role');
       }
       await fetchUsers();
       // If current user's role changed, refresh their session data
-      const updatedUser = users.find(u => u.id === id);
-      if (updatedUser && user && (
-        (user.email && updatedUser.email?.toLowerCase() === user.email.toLowerCase()) ||
-        (user.githubUsername && updatedUser.github_username === user.githubUsername)
-      )) {
+      const updatedUser = users.find((u) => u.id === id);
+      if (
+        updatedUser &&
+        user &&
+        ((user.email &&
+          updatedUser.email?.toLowerCase() === user.email.toLowerCase()) ||
+          (user.githubUsername &&
+            updatedUser.github_username === user.githubUsername))
+      ) {
         // Refresh user data from server
         const { getUser } = await import('@/app/actions/cms/getUser');
         const refreshedUser = await getUser();
@@ -147,7 +173,11 @@ export default function UsersSection() {
   };
 
   const handleRemoveUser = async (id: number) => {
-    if (!confirm('Are you sure you want to remove this user from the allowed list?')) {
+    if (
+      !confirm(
+        'Are you sure you want to remove this user from the allowed list?'
+      )
+    ) {
       return;
     }
 
@@ -222,16 +252,16 @@ export default function UsersSection() {
       if (!result.success) {
         throw new Error(result.error || 'Failed to update display name');
       }
-      
+
       setEditingNameFor(null);
       setEditedName('');
-      
+
       // Small delay to ensure database update is committed
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Refresh users list to get updated name from database
       await fetchUsers();
-      
+
       // If current user's name changed, refresh their session data
       if (user?.id === profileId) {
         const { getUser } = await import('@/app/actions/cms/getUser');
@@ -242,7 +272,9 @@ export default function UsersSection() {
       }
     } catch (err) {
       console.error('Error updating display name:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update display name');
+      setError(
+        err instanceof Error ? err.message : 'Failed to update display name'
+      );
       // Refresh to revert any changes
       await fetchUsers();
     } finally {
@@ -348,24 +380,38 @@ export default function UsersSection() {
               {/* Input fields */}
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-lighttext mb-2">
-                    {addType === 'email' ? 'Email Address' : addType === 'github' ? 'GitHub Username' : 'Display Name'}
+                  <label htmlFor="new-user-input" className="block text-sm font-medium text-lighttext mb-2">
+                    {addType === 'email'
+                      ? 'Email Address'
+                      : addType === 'github'
+                        ? 'GitHub Username'
+                        : 'Display Name'}
                   </label>
                   <input
+                    id="new-user-input"
                     type={addType === 'email' ? 'email' : 'text'}
                     value={newUserInput}
                     onChange={(e) => setNewUserInput(e.target.value)}
-                    placeholder={addType === 'email' ? 'user@example.com' : addType === 'github' ? '@username' : 'John Doe'}
+                    placeholder={
+                      addType === 'email'
+                        ? 'user@example.com'
+                        : addType === 'github'
+                          ? '@username'
+                          : 'John Doe'
+                    }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label htmlFor="new-user-role-select" className="block text-sm font-medium text-lighttext mb-2">
                     Role
                   </label>
                   <select
+                    id="new-user-role-select"
                     value={newUserRole}
-                    onChange={(e) => setNewUserRole(e.target.value as 'admin' | 'editor')}
+                    onChange={(e) =>
+                      setNewUserRole(e.target.value as 'admin' | 'editor')
+                    }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                   >
                     <option value="editor">Editor</option>
@@ -379,8 +425,8 @@ export default function UsersSection() {
                 {addType === 'email'
                   ? '📧 An invitation email will be sent automatically. The user will set their password.'
                   : addType === 'github'
-                  ? '🔗 The user can log in immediately using GitHub OAuth (no invite needed).'
-                  : '👤 Creates a dummy user profile that can be assigned to articles. No authentication required.'}
+                    ? '🔗 The user can log in immediately using GitHub OAuth (no invite needed).'
+                    : '👤 Creates a dummy user profile that can be assigned to articles. No authentication required.'}
               </p>
 
               {/* Action buttons */}
@@ -434,17 +480,24 @@ export default function UsersSection() {
           <div className="space-y-3">
             {users.map((allowedUser) => {
               const hasProfile = !!allowedUser.profile;
-              const isUploadingThis = uploadingAvatarFor === allowedUser.profile?.id;
-              const isDummyUser = allowedUser.email?.startsWith('dummy-') && allowedUser.email?.endsWith('@dummy.local');
+              const isUploadingThis =
+                uploadingAvatarFor === allowedUser.profile?.id;
+              const isDummyUser =
+                allowedUser.email?.startsWith('dummy-') &&
+                allowedUser.email?.endsWith('@dummy.local');
               // Check if this is the current user
-              const isCurrentUser = user && (
-                (user.email && allowedUser.email?.toLowerCase() === user.email.toLowerCase()) ||
-                (user.githubUsername && allowedUser.github_username === user.githubUsername) ||
-                (user.id && allowedUser.profile?.id === user.id)
-              );
+              const isCurrentUser =
+                user &&
+                ((user.email &&
+                  allowedUser.email?.toLowerCase() ===
+                    user.email.toLowerCase()) ||
+                  (user.githubUsername &&
+                    allowedUser.github_username === user.githubUsername) ||
+                  (user.id && allowedUser.profile?.id === user.id));
               // Check if this user is the last admin
-              const adminCount = users.filter(u => u.role === 'admin').length;
-              const isLastAdmin = allowedUser.role === 'admin' && adminCount === 1;
+              const adminCount = users.filter((u) => u.role === 'admin').length;
+              const isLastAdmin =
+                allowedUser.role === 'admin' && adminCount === 1;
 
               return (
                 <div
@@ -457,7 +510,9 @@ export default function UsersSection() {
                       <>
                         <button
                           type="button"
-                          onClick={() => handleAvatarClick(allowedUser.profile!.id)}
+                          onClick={() =>
+                            handleAvatarClick(allowedUser.profile!.id)
+                          }
                           disabled={isUploadingThis}
                           className="relative w-10 h-10 rounded-full overflow-hidden bg-darkgray flex-shrink-0 group cursor-pointer"
                         >
@@ -470,11 +525,20 @@ export default function UsersSection() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-main text-white text-sm font-bold">
-                              {(allowedUser.profile?.display_name || allowedUser.email || allowedUser.github_username || 'U').charAt(0).toUpperCase()}
+                              {(
+                                allowedUser.profile?.display_name ||
+                                allowedUser.email ||
+                                allowedUser.github_username ||
+                                'U'
+                              )
+                                .charAt(0)
+                                .toUpperCase()}
                             </div>
                           )}
                           {/* Upload overlay */}
-                          <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity ${isUploadingThis ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                          <div
+                            className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity ${isUploadingThis ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                          >
                             {isUploadingThis ? (
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             ) : (
@@ -485,7 +549,10 @@ export default function UsersSection() {
                         <input
                           ref={(el) => {
                             if (el && allowedUser.profile?.id) {
-                              fileInputRefs.current.set(allowedUser.profile.id, el);
+                              fileInputRefs.current.set(
+                                allowedUser.profile.id,
+                                el
+                              );
                             }
                           }}
                           type="file"
@@ -511,14 +578,25 @@ export default function UsersSection() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-main text-white text-sm font-bold">
-                            {(allowedUser.profile?.display_name || allowedUser.email || allowedUser.github_username || 'U').charAt(0).toUpperCase()}
+                            {(
+                              allowedUser.profile?.display_name ||
+                              allowedUser.email ||
+                              allowedUser.github_username ||
+                              'U'
+                            )
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        allowedUser.github_username ? 'bg-gray-700' : 'bg-blue-600/20'
-                      }`}>
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          allowedUser.github_username
+                            ? 'bg-gray-700'
+                            : 'bg-blue-600/20'
+                        }`}
+                      >
                         {allowedUser.github_username ? (
                           <Github className="w-5 h-5 text-white" />
                         ) : (
@@ -530,23 +608,30 @@ export default function UsersSection() {
                     {/* User info */}
                     <div>
                       <div className="flex items-center gap-2">
-                        {hasProfile && isAdmin && !isCurrentUser && editingNameFor === allowedUser.profile?.id ? (
+                        {hasProfile &&
+                        isAdmin &&
+                        !isCurrentUser &&
+                        editingNameFor === allowedUser.profile?.id ? (
                           <div className="flex items-center gap-1">
                             <input
                               type="text"
                               value={editedName}
                               onChange={(e) => setEditedName(e.target.value)}
                               className="w-28 px-1 py-0.5 text-sm bg-darkgray border border-main rounded text-lighttext focus:outline-none"
-                              autoFocus
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveName(allowedUser.profile!.id);
+                                if (e.key === 'Enter')
+                                  handleSaveName(allowedUser.profile!.id);
                                 if (e.key === 'Escape') handleCancelEditName();
                               }}
                             />
                             <button
                               type="button"
-                              onClick={() => handleSaveName(allowedUser.profile!.id)}
-                              disabled={savingNameFor === allowedUser.profile?.id}
+                              onClick={() =>
+                                handleSaveName(allowedUser.profile!.id)
+                              }
+                              disabled={
+                                savingNameFor === allowedUser.profile?.id
+                              }
                               className="p-0.5 text-green-400 hover:text-green-300"
                             >
                               <Check className="w-4 h-4" />
@@ -562,14 +647,24 @@ export default function UsersSection() {
                         ) : (
                           <>
                             <span className="font-medium text-lighttext">
-                              {allowedUser.profile?.display_name || 
-                               (allowedUser.email && !allowedUser.email.startsWith('dummy-') ? allowedUser.email : null) || 
-                               (allowedUser.github_username ? `@${allowedUser.github_username}` : 'Unknown User')}
+                              {allowedUser.profile?.display_name ||
+                                (allowedUser.email &&
+                                !allowedUser.email.startsWith('dummy-')
+                                  ? allowedUser.email
+                                  : null) ||
+                                (allowedUser.github_username
+                                  ? `@${allowedUser.github_username}`
+                                  : 'Unknown User')}
                             </span>
                             {hasProfile && isAdmin && !isCurrentUser && (
                               <button
                                 type="button"
-                                onClick={() => handleEditNameClick(allowedUser.profile!.id, allowedUser.profile?.display_name || '')}
+                                onClick={() =>
+                                  handleEditNameClick(
+                                    allowedUser.profile!.id,
+                                    allowedUser.profile?.display_name || ''
+                                  )
+                                }
                                 className="p-0.5 text-lighttext2 hover:text-main"
                               >
                                 <Pencil className="w-3 h-3" />
@@ -577,37 +672,53 @@ export default function UsersSection() {
                             )}
                           </>
                         )}
-                        {allowedUser.role === 'admin' && editingNameFor !== allowedUser.profile?.id && (
-                          <Crown className="w-4 h-4 text-yellow-500" />
-                        )}
+                        {allowedUser.role === 'admin' &&
+                          editingNameFor !== allowedUser.profile?.id && (
+                            <Crown className="w-4 h-4 text-yellow-500" />
+                          )}
                         {isCurrentUser && (
-                          <span className="px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400">You</span>
+                          <span className="px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400">
+                            You
+                          </span>
                         )}
                         {isDummyUser && (
-                          <span className="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400">Dummy</span>
+                          <span className="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400">
+                            Dummy
+                          </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-lighttext2">
-                        <span className={`px-2 py-0.5 rounded text-xs ${
-                          allowedUser.role === 'admin' 
-                            ? 'bg-yellow-500/20 text-yellow-500' 
-                            : 'bg-blue-500/20 text-blue-400'
-                        }`}>
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs ${
+                            allowedUser.role === 'admin'
+                              ? 'bg-yellow-500/20 text-yellow-500'
+                              : 'bg-blue-500/20 text-blue-400'
+                          }`}
+                        >
                           {allowedUser.role}
                         </span>
                         {isLastAdmin && !isCurrentUser && (
-                          <span className="text-yellow-500 text-xs">(Last admin - cannot demote)</span>
+                          <span className="text-yellow-500 text-xs">
+                            (Last admin - cannot demote)
+                          </span>
                         )}
                         {!hasProfile && !isDummyUser && (
-                          <span className="text-yellow-500 text-xs">Not logged in yet</span>
+                          <span className="text-yellow-500 text-xs">
+                            Not logged in yet
+                          </span>
                         )}
                         {allowedUser.invited_at && !hasProfile && (
-                          <span>Invited {new Date(allowedUser.invited_at).toLocaleDateString()}</span>
+                          <span>
+                            Invited{' '}
+                            {new Date(
+                              allowedUser.invited_at
+                            ).toLocaleDateString()}
+                          </span>
                         )}
                         {allowedUser.github_username && (
                           <span className="flex items-center gap-1">
-                            <Github className="w-3 h-3" />
-                            @{allowedUser.github_username}
+                            <Github className="w-3 h-3" />@
+                            {allowedUser.github_username}
                           </span>
                         )}
                       </div>
@@ -629,10 +740,16 @@ export default function UsersSection() {
                           handleUpdateRole(allowedUser.id, newRole);
                         }}
                         disabled={updatingRoleFor === allowedUser.id}
-                        title={isLastAdmin ? 'Cannot demote the last admin' : undefined}
+                        title={
+                          isLastAdmin
+                            ? 'Cannot demote the last admin'
+                            : undefined
+                        }
                         className="px-2 py-1.5 min-h-[44px] bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <option value="editor" disabled={isLastAdmin}>Editor</option>
+                        <option value="editor" disabled={isLastAdmin}>
+                          Editor
+                        </option>
                         <option value="admin">Admin</option>
                       </select>
                       <button

@@ -1,32 +1,34 @@
 'use client';
 
-import { type Author, portfolioActions } from '@/app/actions/cms/sections/portfolioActions';
-import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
-import { useLayoutStore } from '@/store/layoutStore';
-import type { PortfolioPost } from '@/types/fetchedData.types';
-import { processImageToWebP } from '@/utils/imageProcessor';
 import {
   Calendar,
+  ChevronDown,
+  ChevronUp,
   Edit3,
+  Eye,
   FileText,
+  Globe,
   Image as ImageIcon,
   Plus,
-  Save,
   Trash2,
   User,
   X,
-  Eye,
-  Globe,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
+import {
+  type Author,
+  portfolioActions,
+} from '@/app/actions/cms/sections/portfolioActions';
+import { useLayoutStore } from '@/store/layoutStore';
+import type { PortfolioPost } from '@/types/fetchedData.types';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import { PreviewModal } from './PreviewModal';
 import { PortfolioPreview } from './previews/PortfolioPreview';
 import { PostPreview } from './previews/PostPreview';
-import { usePathname } from 'next/navigation';
 
 type FormMode = 'list' | 'create' | 'edit';
 
@@ -69,8 +71,12 @@ type EditablePortfolioPost = PortfolioPost & {
 };
 
 export default function PortfolioSection() {
-  const [portfolioPosts, setPortfolioPosts] = useState<EditablePortfolioPost[]>([]);
-  const [originalPosts, setOriginalPosts] = useState<EditablePortfolioPost[]>([]);
+  const [portfolioPosts, setPortfolioPosts] = useState<EditablePortfolioPost[]>(
+    []
+  );
+  const [originalPosts, setOriginalPosts] = useState<EditablePortfolioPost[]>(
+    []
+  );
   const [authors, setAuthors] = useState<Author[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -87,7 +93,9 @@ export default function PortfolioSection() {
 
   // Track modifications
   const [modifiedPosts, setModifiedPosts] = useState<Set<number>>(new Set());
-  const [newPosts, setNewPosts] = useState<Array<{ post: EditablePortfolioPost; imageFile: File | null }>>([]);
+  const [newPosts, setNewPosts] = useState<
+    Array<{ post: EditablePortfolioPost; imageFile: File | null }>
+  >([]);
   const [deletedPosts, setDeletedPosts] = useState<Set<number>>(new Set());
 
   // Translation state
@@ -98,7 +106,8 @@ export default function PortfolioSection() {
     en: {},
     it: {},
   });
-  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [originalTranslations, setOriginalTranslations] =
+    useState(translations);
   const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
   const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
@@ -122,18 +131,22 @@ export default function PortfolioSection() {
           language: string;
           translations: Record<string, unknown>;
         }>;
-        
+
         const enData = i18nData.find((d) => d.language === 'en');
         const itData = i18nData.find((d) => d.language === 'it');
-        
-        const postsEn = (enData?.translations?.['posts-section'] as Record<string, string>) || {};
-        const postsIt = (itData?.translations?.['posts-section'] as Record<string, string>) || {};
-        
+
+        const postsEn =
+          (enData?.translations?.['posts-section'] as Record<string, string>) ||
+          {};
+        const postsIt =
+          (itData?.translations?.['posts-section'] as Record<string, string>) ||
+          {};
+
         const newTranslations = {
           en: postsEn,
           it: postsIt,
         };
-        
+
         setTranslations(newTranslations);
         setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
       }
@@ -147,7 +160,7 @@ export default function PortfolioSection() {
   // Set default author to current user when creating
   useEffect(() => {
     if (mode === 'create' && user && !formData.author_id) {
-      setFormData(prev => ({ ...prev, author_id: user.id }));
+      setFormData((prev) => ({ ...prev, author_id: user.id }));
     }
   }, [mode, user, formData.author_id]);
 
@@ -169,7 +182,9 @@ export default function PortfolioSection() {
     } catch (error) {
       console.error('Error fetching portfolio data:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to fetch portfolio data'
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch portfolio data'
       );
     } finally {
       setIsLoading(false);
@@ -212,7 +227,9 @@ export default function PortfolioSection() {
       blurhashURL: post.blurhashURL ?? '',
       post_tags: post.post_tags ?? '',
       store_link: post.store_link ?? '',
-      created_at: post.created_at?.split('T')[0] ?? new Date().toISOString().split('T')[0],
+      created_at:
+        post.created_at?.split('T')[0] ??
+        new Date().toISOString().split('T')[0],
       author_id: post.author_id ?? user?.id ?? '',
     });
     setFormImage(null);
@@ -318,11 +335,12 @@ export default function PortfolioSection() {
   };
 
   const handleDeletePortfolio = (postId: number) => {
-    if (!confirm('Are you sure you want to delete this portfolio post?')) return;
+    if (!confirm('Are you sure you want to delete this portfolio post?'))
+      return;
 
     // Check if it's a new post (temp ID)
     const isNewPost = newPosts.some((np) => np.post.id === postId);
-    
+
     if (isNewPost) {
       // Remove from new posts
       setNewPosts((prev) => prev.filter((np) => np.post.id !== postId));
@@ -383,18 +401,24 @@ export default function PortfolioSection() {
   };
 
   const hasTranslationChanges = () => {
-    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
+    return (
+      JSON.stringify(translations) !== JSON.stringify(originalTranslations)
+    );
   };
 
   const cancelAllChanges = () => {
-    if (!confirm('Are you sure you want to cancel all changes? All unsaved edits will be lost.')) {
+    if (
+      !confirm(
+        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
+      )
+    ) {
       return;
     }
 
     // Reload original data
     fetchPortfolioData();
     fetchTranslations();
-    
+
     // Reset all tracking
     setModifiedPosts(new Set());
     setNewPosts([]);
@@ -412,14 +436,18 @@ export default function PortfolioSection() {
         const result = await portfolioActions({ type: 'DELETE', id: postId });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to delete portfolio post ${postId}`);
+          throw new Error(
+            result.error || `Failed to delete portfolio post ${postId}`
+          );
         }
       }
 
       // 2. Create new posts
       for (const { post, imageFile } of newPosts) {
         if (!imageFile) {
-          throw new Error(`Image is required for portfolio post ${post.title_en}`);
+          throw new Error(
+            `Image is required for portfolio post ${post.title_en}`
+          );
         }
 
         // Create post
@@ -444,7 +472,10 @@ export default function PortfolioSection() {
         });
 
         if (!createResult.success) {
-          throw new Error(createResult.error || `Failed to create portfolio post ${post.title_en}`);
+          throw new Error(
+            createResult.error ||
+              `Failed to create portfolio post ${post.title_en}`
+          );
         }
 
         const createdPost = createResult.data as PortfolioPost;
@@ -468,7 +499,9 @@ export default function PortfolioSection() {
         });
 
         if (!imageResult.success) {
-          throw new Error(imageResult.error || `Failed to upload image for ${post.title_en}`);
+          throw new Error(
+            imageResult.error || `Failed to upload image for ${post.title_en}`
+          );
         }
       }
 
@@ -496,7 +529,10 @@ export default function PortfolioSection() {
         });
 
         if (!updateResult.success) {
-          throw new Error(updateResult.error || `Failed to update portfolio post ${post.title_en}`);
+          throw new Error(
+            updateResult.error ||
+              `Failed to update portfolio post ${post.title_en}`
+          );
         }
 
         // Upload image if there's a new file
@@ -520,7 +556,9 @@ export default function PortfolioSection() {
           });
 
           if (!imageResult.success) {
-            throw new Error(imageResult.error || `Failed to upload image for ${post.title_en}`);
+            throw new Error(
+              imageResult.error || `Failed to upload image for ${post.title_en}`
+            );
           }
         }
       }
@@ -535,7 +573,9 @@ export default function PortfolioSection() {
           sectionData: translations.en,
         });
         if (!enResult.success) {
-          throw new Error(enResult.error || 'Failed to update English translations');
+          throw new Error(
+            enResult.error || 'Failed to update English translations'
+          );
         }
 
         // Update Italian translations
@@ -546,7 +586,9 @@ export default function PortfolioSection() {
           sectionData: translations.it,
         });
         if (!itResult.success) {
-          throw new Error(itResult.error || 'Failed to update Italian translations');
+          throw new Error(
+            itResult.error || 'Failed to update Italian translations'
+          );
         }
 
         setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
@@ -591,7 +633,9 @@ export default function PortfolioSection() {
     const isEditing = mode === 'edit';
     const currentImage = formImage
       ? URL.createObjectURL(formImage)
-      : isEditing ? formData.image : null;
+      : isEditing
+        ? formData.image
+        : null;
 
     return (
       <div className="space-y-6">
@@ -651,7 +695,9 @@ export default function PortfolioSection() {
               <input
                 type="url"
                 value={formData.source_link}
-                onChange={(e) => handleFormChange('source_link', e.target.value)}
+                onChange={(e) =>
+                  handleFormChange('source_link', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 placeholder="https://github.com/..."
               />
@@ -689,7 +735,9 @@ export default function PortfolioSection() {
               </label>
               <textarea
                 value={formData.description_en}
-                onChange={(e) => handleFormChange('description_en', e.target.value)}
+                onChange={(e) =>
+                  handleFormChange('description_en', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 rows={3}
                 placeholder="Enter English description"
@@ -701,7 +749,9 @@ export default function PortfolioSection() {
               </label>
               <textarea
                 value={formData.description_it}
-                onChange={(e) => handleFormChange('description_it', e.target.value)}
+                onChange={(e) =>
+                  handleFormChange('description_it', e.target.value)
+                }
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
                 rows={3}
                 placeholder="Enter Italian description"
@@ -852,7 +902,9 @@ export default function PortfolioSection() {
             </button>
             <button
               type="button"
-              onClick={isEditing ? handleUpdatePortfolio : handleCreatePortfolio}
+              onClick={
+                isEditing ? handleUpdatePortfolio : handleCreatePortfolio
+              }
               className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white rounded-lg transition-colors"
             >
               Done
@@ -871,7 +923,11 @@ export default function PortfolioSection() {
             locale={locale}
             imageFile={formImage}
             author={authors.find((a) => a.id === formData.author_id) || null}
-            views={isEditing && editingPostId ? portfolioPosts.find((p) => p.id === editingPostId)?.views || 0 : 0}
+            views={
+              isEditing && editingPostId
+                ? portfolioPosts.find((p) => p.id === editingPostId)?.views || 0
+                : 0
+            }
           />
         </PreviewModal>
       </div>
@@ -984,7 +1040,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].title1 || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'title1', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'title1',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Portfolio"
@@ -997,7 +1057,11 @@ export default function PortfolioSection() {
                   <textarea
                     value={translations[translationLocale].subtitle1 || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'subtitle1', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'subtitle1',
+                        e.target.value
+                      )
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
@@ -1012,7 +1076,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].button || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'button', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'button',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Explore more"
@@ -1026,7 +1094,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].demo || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'demo', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'demo',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Live Demo"
@@ -1040,7 +1112,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].store || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'store', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'store',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Play Store"
@@ -1054,7 +1130,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].source || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'source', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'source',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Source Code"
@@ -1068,7 +1148,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].copyButton || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'copyButton', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'copyButton',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Copy post link"
@@ -1082,7 +1166,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].preCopy || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'preCopy', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'preCopy',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Copied!"
@@ -1096,7 +1184,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale]['no-posts'] || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'no-posts', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'no-posts',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., There are no posts available!"
@@ -1110,7 +1202,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].ratelimit || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'ratelimit', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'ratelimit',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Too many requests! Please wait and retry."
@@ -1124,7 +1220,11 @@ export default function PortfolioSection() {
                     type="text"
                     value={translations[translationLocale].searchbar || ''}
                     onChange={(e) =>
-                      handleTranslationChange(translationLocale, 'searchbar', e.target.value)
+                      handleTranslationChange(
+                        translationLocale,
+                        'searchbar',
+                        e.target.value
+                      )
                     }
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Search posts by title, desc or tag..."
@@ -1232,7 +1332,10 @@ export default function PortfolioSection() {
         onClose={() => setIsPreviewOpen(false)}
         title="Portfolio Section Preview"
       >
-        <PortfolioPreview posts={portfolioPosts} deletedPostIds={deletedPosts} />
+        <PortfolioPreview
+          posts={portfolioPosts}
+          deletedPostIds={deletedPosts}
+        />
       </PreviewModal>
     </div>
   );

@@ -7,7 +7,7 @@ import useThemeStore from '../store/themeStore';
 const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { mode, isDark, initializeTheme } = useThemeStore();
+  const { isDark, initializeTheme } = useThemeStore();
 
   useEffect(() => {
     // Initialize theme after hydration

@@ -1,9 +1,8 @@
 'use client';
 
-import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
-import { Globe, ChevronDown, ChevronUp, Eye, X, Save } from 'lucide-react';
-import type React from 'react';
+import { ChevronDown, ChevronUp, Eye, Globe, Save, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { ErrorDiv } from '../ErrorDiv';
 import { PreviewModal } from './PreviewModal';
 import { LayoutPreview } from './previews/LayoutPreview';
@@ -71,8 +70,10 @@ export default function LayoutSection() {
     },
   });
 
-  const [originalFooterTranslations, setOriginalFooterTranslations] = useState(footerTranslations);
-  const [originalHeaderTranslations, setOriginalHeaderTranslations] = useState(headerTranslations);
+  const [originalFooterTranslations, setOriginalFooterTranslations] =
+    useState(footerTranslations);
+  const [originalHeaderTranslations, setOriginalHeaderTranslations] =
+    useState(headerTranslations);
   const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
   const [isFooterExpanded, setIsFooterExpanded] = useState(false);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
@@ -94,16 +95,20 @@ export default function LayoutSection() {
           language: string;
           translations: Record<string, unknown>;
         }>;
-        
+
         const enData = i18nData.find((d) => d.language === 'en');
         const itData = i18nData.find((d) => d.language === 'it');
-        
-        const footerEn = (enData?.translations?.['footer'] as FooterTranslations) || {};
-        const footerIt = (itData?.translations?.['footer'] as FooterTranslations) || {};
-        
-        const headerEn = (enData?.translations?.['header'] as HeaderTranslations) || {};
-        const headerIt = (itData?.translations?.['header'] as HeaderTranslations) || {};
-        
+
+        const footerEn =
+          (enData?.translations?.footer as FooterTranslations) || {};
+        const footerIt =
+          (itData?.translations?.footer as FooterTranslations) || {};
+
+        const headerEn =
+          (enData?.translations?.header as HeaderTranslations) || {};
+        const headerIt =
+          (itData?.translations?.header as HeaderTranslations) || {};
+
         const newFooterTranslations = {
           en: {
             left: footerEn.left || '',
@@ -126,29 +131,35 @@ export default function LayoutSection() {
             privacyPolicy: footerIt.privacyPolicy || '',
           },
         };
-        
+
         const newHeaderTranslations = {
           en: {
             theme: headerEn.theme || '',
             language: headerEn.language || '',
             settings: headerEn.settings || '',
-            buttons: Array.isArray(headerEn.buttons) ? [...headerEn.buttons] : [],
+            buttons: Array.isArray(headerEn.buttons)
+              ? [...headerEn.buttons]
+              : [],
           },
           it: {
             theme: headerIt.theme || '',
             language: headerIt.language || '',
             settings: headerIt.settings || '',
-            buttons: Array.isArray(headerIt.buttons) ? [...headerIt.buttons] : [],
+            buttons: Array.isArray(headerIt.buttons)
+              ? [...headerIt.buttons]
+              : [],
           },
         };
-        
+
         setFooterTranslations(newFooterTranslations);
         setHeaderTranslations(newHeaderTranslations);
         setOriginalFooterTranslations(newFooterTranslations);
         setOriginalHeaderTranslations(newHeaderTranslations);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch translations');
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch translations'
+      );
     } finally {
       setIsLoadingTranslations(false);
     }
@@ -156,8 +167,10 @@ export default function LayoutSection() {
 
   const hasChanges = () => {
     return (
-      JSON.stringify(footerTranslations) !== JSON.stringify(originalFooterTranslations) ||
-      JSON.stringify(headerTranslations) !== JSON.stringify(originalHeaderTranslations)
+      JSON.stringify(footerTranslations) !==
+        JSON.stringify(originalFooterTranslations) ||
+      JSON.stringify(headerTranslations) !==
+        JSON.stringify(originalHeaderTranslations)
     );
   };
 
@@ -188,17 +201,20 @@ export default function LayoutSection() {
       // Update footer and header for both locales
       for (const item of i18nData) {
         const locale = item.language;
-        
+
         // Update footer
         const footerUpdateResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: locale,
           sectionKey: 'footer',
-          sectionData: locale === 'en' ? footerTranslations.en : footerTranslations.it,
+          sectionData:
+            locale === 'en' ? footerTranslations.en : footerTranslations.it,
         });
 
         if (!footerUpdateResult.success) {
-          throw new Error(footerUpdateResult.error || 'Failed to update footer translations');
+          throw new Error(
+            footerUpdateResult.error || 'Failed to update footer translations'
+          );
         }
 
         // Update header
@@ -206,24 +222,32 @@ export default function LayoutSection() {
           type: 'UPDATE_SECTION',
           locale: locale,
           sectionKey: 'header',
-          sectionData: locale === 'en' ? headerTranslations.en : headerTranslations.it,
+          sectionData:
+            locale === 'en' ? headerTranslations.en : headerTranslations.it,
         });
 
         if (!headerUpdateResult.success) {
-          throw new Error(headerUpdateResult.error || 'Failed to update header translations');
+          throw new Error(
+            headerUpdateResult.error || 'Failed to update header translations'
+          );
         }
       }
 
       setOriginalFooterTranslations(footerTranslations);
       setOriginalHeaderTranslations(headerTranslations);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update translations');
+      setError(
+        err instanceof Error ? err.message : 'Failed to update translations'
+      );
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const updateFooterTranslation = (key: keyof FooterTranslations, value: string) => {
+  const updateFooterTranslation = (
+    key: keyof FooterTranslations,
+    value: string
+  ) => {
     setFooterTranslations((prev) => ({
       ...prev,
       [translationLocale]: {
@@ -233,7 +257,10 @@ export default function LayoutSection() {
     }));
   };
 
-  const updateHeaderTranslation = (key: keyof Omit<HeaderTranslations, 'buttons'>, value: string) => {
+  const updateHeaderTranslation = (
+    key: keyof Omit<HeaderTranslations, 'buttons'>,
+    value: string
+  ) => {
     setHeaderTranslations((prev) => ({
       ...prev,
       [translationLocale]: {
@@ -268,7 +295,9 @@ export default function LayoutSection() {
   return (
     <div className="max-w-4xl mx-auto p-6 mb-8 md:mb-0 lg:mt-0">
       <div className="mb-8">
-        <h1 className="hidden lg:block text-4xl font-bold mb-4 text-center">Layout Translations</h1>
+        <h1 className="hidden lg:block text-4xl font-bold mb-4 text-center">
+          Layout Translations
+        </h1>
         <p className="text-lighttext2 text-center mb-8">
           Edit header and footer translations for English and Italian
         </p>
@@ -353,74 +382,106 @@ export default function LayoutSection() {
         {isFooterExpanded && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Left</label>
+              <label htmlFor="footer-left-input" className="block text-sm font-medium mb-2">Left</label>
               <input
+                id="footer-left-input"
                 type="text"
                 value={footerTranslations[translationLocale].left}
-                onChange={(e) => updateFooterTranslation('left', e.target.value)}
+                onChange={(e) =>
+                  updateFooterTranslation('left', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Right</label>
+              <label htmlFor="footer-right-input" className="block text-sm font-medium mb-2">Right</label>
               <input
+                id="footer-right-input"
                 type="text"
                 value={footerTranslations[translationLocale].right}
-                onChange={(e) => updateFooterTranslation('right', e.target.value)}
+                onChange={(e) =>
+                  updateFooterTranslation('right', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Middle</label>
+              <label htmlFor="footer-middle-input" className="block text-sm font-medium mb-2">Middle</label>
               <input
+                id="footer-middle-input"
                 type="text"
                 value={footerTranslations[translationLocale].middle}
-                onChange={(e) => updateFooterTranslation('middle', e.target.value)}
+                onChange={(e) =>
+                  updateFooterTranslation('middle', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Source</label>
+              <label htmlFor="footer-source-input" className="block text-sm font-medium mb-2">Source</label>
               <input
+                id="footer-source-input"
                 type="text"
                 value={footerTranslations[translationLocale].source}
-                onChange={(e) => updateFooterTranslation('source', e.target.value)}
+                onChange={(e) =>
+                  updateFooterTranslation('source', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Button Title</label>
+              <label htmlFor="footer-button-title-input" className="block text-sm font-medium mb-2">
+                Button Title
+              </label>
               <input
+                id="footer-button-title-input"
                 type="text"
                 value={footerTranslations[translationLocale].buttonTitle}
-                onChange={(e) => updateFooterTranslation('buttonTitle', e.target.value)}
+                onChange={(e) =>
+                  updateFooterTranslation('buttonTitle', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Privacy Policy</label>
+              <label htmlFor="footer-privacy-policy-input" className="block text-sm font-medium mb-2">
+                Privacy Policy
+              </label>
               <input
+                id="footer-privacy-policy-input"
                 type="text"
                 value={footerTranslations[translationLocale].privacyPolicy}
-                onChange={(e) => updateFooterTranslation('privacyPolicy', e.target.value)}
+                onChange={(e) =>
+                  updateFooterTranslation('privacyPolicy', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Dark Mode</label>
+              <label htmlFor="footer-darkmode-input" className="block text-sm font-medium mb-2">
+                Dark Mode
+              </label>
               <input
+                id="footer-darkmode-input"
                 type="text"
                 value={footerTranslations[translationLocale].darkmode}
-                onChange={(e) => updateFooterTranslation('darkmode', e.target.value)}
+                onChange={(e) =>
+                  updateFooterTranslation('darkmode', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Light Mode</label>
+              <label htmlFor="footer-lightmode-input" className="block text-sm font-medium mb-2">
+                Light Mode
+              </label>
               <input
+                id="footer-lightmode-input"
                 type="text"
                 value={footerTranslations[translationLocale].lightmode}
-                onChange={(e) => updateFooterTranslation('lightmode', e.target.value)}
+                onChange={(e) =>
+                  updateFooterTranslation('lightmode', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
@@ -449,45 +510,62 @@ export default function LayoutSection() {
         {isHeaderExpanded && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Theme</label>
+              <label htmlFor="header-theme-input" className="block text-sm font-medium mb-2">Theme</label>
               <input
+                id="header-theme-input"
                 type="text"
                 value={headerTranslations[translationLocale].theme}
-                onChange={(e) => updateHeaderTranslation('theme', e.target.value)}
+                onChange={(e) =>
+                  updateHeaderTranslation('theme', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Language</label>
+              <label htmlFor="header-language-input" className="block text-sm font-medium mb-2">Language</label>
               <input
+                id="header-language-input"
                 type="text"
                 value={headerTranslations[translationLocale].language}
-                onChange={(e) => updateHeaderTranslation('language', e.target.value)}
+                onChange={(e) =>
+                  updateHeaderTranslation('language', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Settings</label>
+              <label htmlFor="header-settings-input" className="block text-sm font-medium mb-2">Settings</label>
               <input
+                id="header-settings-input"
                 type="text"
                 value={headerTranslations[translationLocale].settings}
-                onChange={(e) => updateHeaderTranslation('settings', e.target.value)}
+                onChange={(e) =>
+                  updateHeaderTranslation('settings', e.target.value)
+                }
                 className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Navigation Buttons</label>
+              <div className="block text-sm font-medium mb-2">
+                Navigation Buttons
+              </div>
               <div className="space-y-2">
-                {headerTranslations[translationLocale].buttons.map((button, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    value={button}
-                    onChange={(e) => updateHeaderButton(index, e.target.value)}
-                    placeholder={`Button ${index + 1}`}
-                    className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
-                  />
-                ))}
+                {headerTranslations[translationLocale].buttons.map(
+                  (button, index) => (
+                    <input
+                      key={index}
+                      id={`header-button-${index}-input`}
+                      type="text"
+                      value={button}
+                      onChange={(e) =>
+                        updateHeaderButton(index, e.target.value)
+                      }
+                      placeholder={`Button ${index + 1}`}
+                      className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                      aria-label={`Navigation button ${index + 1}`}
+                    />
+                  )
+                )}
               </div>
             </div>
           </div>

@@ -1,15 +1,15 @@
+import { getPost, getPosts, type PostWithAuthor } from '@utils/getData';
+import { CirclePlay, Clock, ExternalLink, Github, Star } from 'lucide-react';
+import moment from 'moment';
+import Image from 'next/image';
+import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
-import { type PostWithAuthor, getPost, getPosts } from '@utils/getData';
-import { CirclePlay, Clock, ExternalLink, Github, Star } from 'lucide-react';
-import moment from 'moment';
-import { getTranslations } from 'next-intl/server';
-import Image from 'next/image';
-import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
 
 /* ONLY PORTFOLIO POSTS USE title_en AS TITLE FOR BOTH LANGS, BLOG POSTS CAN SWAP title_en and title_it */
 
@@ -77,7 +77,9 @@ export default async function Page({
           <h1 className="md:text-4xl text-2xl xs:text-3xl font-bold mb-4">
             {initTitle}
           </h1>
-          <p className="text-base xs:text-lg">{String(post[postDescription])}</p>
+          <p className="text-base xs:text-lg">
+            {String(post[postDescription])}
+          </p>
         </div>
       </header>
 
@@ -196,10 +198,10 @@ export default async function Page({
           </div>
         )}
 
-        <ViewDisplay 
-          postId={id} 
-          postType={post_type as 'blog' | 'portfolio'} 
-          initialViews={post.views || "⏳"} 
+        <ViewDisplay
+          postId={id}
+          postType={post_type as 'blog' | 'portfolio'}
+          initialViews={post.views || '⏳'}
         />
 
         <ShareButton
@@ -208,7 +210,7 @@ export default async function Page({
           url={postURL}
           title={post.title_en}
         />
-        </div>
+      </div>
 
       {/* Author - mobile only */}
       {post.author && (

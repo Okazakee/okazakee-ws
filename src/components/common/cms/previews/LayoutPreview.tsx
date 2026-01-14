@@ -1,8 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import React from 'react';
-
 type FooterTranslations = {
   left: string;
   right: string;
@@ -69,11 +66,15 @@ export function LayoutPreview({
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span>{header.language}:</span>
-                <span className="text-gray-500 dark:text-gray-400">EN / IT</span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  EN / IT
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span>{header.theme}:</span>
-                <span className="text-gray-500 dark:text-gray-400">Auto / Light / Dark</span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  Auto / Light / Dark
+                </span>
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 {header.settings}
@@ -91,13 +92,13 @@ export function LayoutPreview({
             {/* Left Section */}
             <div className="text-sm">
               {footer.left}{' '}
-              <a href="#" className="text-main hover:underline">
+              <button type="button" className="text-main hover:underline bg-transparent border-none p-0 cursor-default">
                 Okazakee
-              </a>{' '}
+              </button>{' '}
               |{' '}
-              <a href="#" className="text-main hover:underline">
+              <button type="button" className="text-main hover:underline bg-transparent border-none p-0 cursor-default">
                 {footer.source}
-              </a>
+              </button>
             </div>
 
             {/* Middle Section */}
@@ -113,13 +114,13 @@ export function LayoutPreview({
 
             {/* Right Section */}
             <div className="text-sm flex items-center gap-3">
-              <a href="#" className="text-main hover:underline">
+              <button type="button" className="text-main hover:underline bg-transparent border-none p-0 cursor-default">
                 CMS
-              </a>
+              </button>
               <span className="text-gray-500">|</span>
-              <a href="#" className="text-main hover:underline">
+              <button type="button" className="text-main hover:underline bg-transparent border-none p-0 cursor-default">
                 {footer.privacyPolicy}
-              </a>
+              </button>
             </div>
           </div>
 

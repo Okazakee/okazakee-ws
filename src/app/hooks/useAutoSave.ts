@@ -1,20 +1,27 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 interface UseAutoSaveOptions {
+  // biome-ignore lint/suspicious/noExplicitAny: Generic callback type
   data: any;
   onSave: () => Promise<void>;
   interval?: number; // in milliseconds
   enabled?: boolean;
 }
 
-export function useAutoSave({ data, onSave, interval = 30000, enabled = true }: UseAutoSaveOptions) {
+export function useAutoSave({
+  data,
+  onSave,
+  interval = 30000,
+  enabled = true,
+}: UseAutoSaveOptions) {
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  // biome-ignore lint/suspicious/noExplicitAny: Generic callback type
   const lastSavedRef = useRef<any>(undefined);
   const isSavingRef = useRef(false);
 
   const save = useCallback(async () => {
     if (isSavingRef.current) return;
-    
+
     try {
       isSavingRef.current = true;
       await onSave();
@@ -30,7 +37,7 @@ export function useAutoSave({ data, onSave, interval = 30000, enabled = true }: 
     if (!enabled) return;
 
     const currentDataString = JSON.stringify(data);
-    
+
     // Only auto-save if data has changed
     if (lastSavedRef.current !== currentDataString) {
       // Clear existing timeout

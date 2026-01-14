@@ -1,9 +1,9 @@
 'use client';
 
-import { formatLabels } from '@/utils/formatLabels';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { formatLabels } from '@/utils/formatLabels';
 
 const PebbleClipPath = () => (
   <svg width="0" height="0" viewBox="0 0 500 500" className="absolute">
@@ -26,7 +26,7 @@ interface HeroPreviewProps {
 
 export function HeroPreview({ mainImage, blurhashURL }: HeroPreviewProps) {
   const pathname = usePathname();
-  const locale = pathname.split('/')[1] || 'en';
+  const _locale = pathname.split('/')[1] || 'en';
   const t = useTranslations('hero-section');
 
   return (
