@@ -115,7 +115,8 @@
   body {
     @apply dark:text-lighttext text-darktext bg-bglight dark:bg-bgdark transition-all duration-400;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   body::before {

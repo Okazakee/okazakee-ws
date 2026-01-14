@@ -7,6 +7,7 @@ export type HeroSection = {
 export type SkillsCategory = {
   id: number;
   name: string;
+  position: number;
   skills: Skill[];
 };
 

@@ -241,12 +241,12 @@ export default function UsersSection() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-main mb-4">
+    <div className="space-y-6 md:space-y-8 mb-8 md:mb-0 lg:mt-0">
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="hidden lg:block text-2xl md:text-3xl lg:text-4xl font-bold text-main mb-2 md:mb-4">
           Manage Users
         </h1>
-        <p className="text-lighttext2 text-lg">
+        <p className="text-lighttext2 text-sm md:text-base lg:text-lg">
           Control who can access the CMS
         </p>
       </div>
@@ -262,9 +262,9 @@ export default function UsersSection() {
 
       {/* Add User Section */}
       {isAdmin && (
-        <div className="bg-darkergray rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-main flex items-center gap-2">
+        <div className="bg-darkergray rounded-xl p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-lg md:text-xl font-bold text-main flex items-center gap-2">
               <Plus className="w-5 h-5" />
               Add New User
             </h2>
@@ -272,7 +272,7 @@ export default function UsersSection() {
               <button
                 type="button"
                 onClick={() => setIsAdding(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
               >
                 <Plus className="w-4 h-4" />
                 Add User
@@ -283,11 +283,11 @@ export default function UsersSection() {
           {isAdding && (
             <div className="space-y-4">
               {/* Type selector */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   type="button"
                   onClick={() => setAddType('email')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg transition-all duration-200 ${
                     addType === 'email'
                       ? 'bg-main text-white'
                       : 'bg-darkestgray text-lighttext2 hover:bg-darkgray'
@@ -299,7 +299,7 @@ export default function UsersSection() {
                 <button
                   type="button"
                   onClick={() => setAddType('github')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg transition-all duration-200 ${
                     addType === 'github'
                       ? 'bg-main text-white'
                       : 'bg-darkestgray text-lighttext2 hover:bg-darkgray'
@@ -347,12 +347,12 @@ export default function UsersSection() {
               </p>
 
               {/* Action buttons */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   type="button"
                   onClick={handleAddUser}
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50"
                 >
                   <UserCheck className="w-4 h-4" />
                   {isSubmitting ? 'Adding...' : 'Add User'}
@@ -364,7 +364,7 @@ export default function UsersSection() {
                     setNewUserInput('');
                     setError(null);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-darkestgray hover:bg-darkgray text-lighttext font-medium rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-darkestgray hover:bg-darkgray text-lighttext font-medium rounded-lg transition-all duration-200"
                 >
                   <X className="w-4 h-4" />
                   Cancel
@@ -383,8 +383,8 @@ export default function UsersSection() {
       )}
 
       {/* Users List */}
-      <div className="bg-darkergray rounded-xl p-6">
-        <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
+      <div className="bg-darkergray rounded-xl p-4 md:p-6">
+        <h2 className="text-lg md:text-xl font-bold text-main mb-4 flex items-center gap-2">
           <Users className="w-5 h-5" />
           Allowed Users ({users.length})
         </h2>
@@ -411,9 +411,9 @@ export default function UsersSection() {
               return (
                 <div
                   key={allowedUser.id}
-                  className="flex items-center justify-between bg-darkestgray rounded-lg p-4"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-darkestgray rounded-lg p-4"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Avatar / Icon */}
                     {hasProfile && isAdmin ? (
                       <>
@@ -573,7 +573,7 @@ export default function UsersSection() {
 
                   {/* Actions */}
                   {isAdmin && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 sm:flex-shrink-0">
                       {isCurrentUser ? (
                         <span className="px-2 py-1 bg-darkgray border border-lighttext2 rounded text-sm text-lighttext2 opacity-75">
                           {allowedUser.role}
@@ -592,7 +592,7 @@ export default function UsersSection() {
                           }}
                           disabled={updatingRoleFor === allowedUser.id}
                           title={isLastAdmin ? 'Cannot demote the last admin' : undefined}
-                          className="px-2 py-1 bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-2 py-1.5 min-h-[44px] bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <option value="editor" disabled={isLastAdmin}>Editor</option>
                           <option value="admin">Admin</option>
@@ -601,7 +601,7 @@ export default function UsersSection() {
                       <button
                         type="button"
                         onClick={() => handleRemoveUser(allowedUser.id)}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                        className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
                         title="Remove user"
                       >
                         <Trash2 className="w-4 h-4" />

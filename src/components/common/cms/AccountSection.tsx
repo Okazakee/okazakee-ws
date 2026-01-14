@@ -131,9 +131,9 @@ export default function AccountSection() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-main mb-4">
+        <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           My Account
         </h1>
         <p className="text-lighttext2 text-lg">

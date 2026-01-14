@@ -768,12 +768,12 @@ export default function BlogSection() {
 
   // List view
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-main mb-4">
+        <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           Blog Section
         </h1>
-        <p className="text-lighttext2 text-lg">
+        <p className="text-lighttext2 text-lg mb-4">
           Manage your blog posts
         </p>
         <div className="flex justify-center gap-3 mt-4">

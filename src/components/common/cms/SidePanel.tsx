@@ -15,12 +15,18 @@ import {
   Settings,
   User2,
   Users,
+  X,
   Zap,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
-const SidePanel = () => {
+interface SidePanelProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Zustand store
@@ -35,6 +41,10 @@ const SidePanel = () => {
     // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('cms_active_section', section);
+    }
+    // Close drawer on mobile when a section is selected
+    if (onClose) {
+      onClose();
     }
   };
 
@@ -83,14 +93,57 @@ const SidePanel = () => {
   }, [user]); // Only run when user loads (once)
 
   return (
-    <div className="w-72 text-lighttext flex flex-col h-full mt-6 md:mt-8">
-      {/* Header */}
-      <div className="p-4 border-b border-darkgray flex-shrink-0 text-center">
-        <h1 className="text-xl font-bold text-main mb-1">CMS Dashboard</h1>
-        <p className="text-lighttext2 text-xs">
-          Manage your website content
-        </p>
-      </div>
+    <>
+      {/* Backdrop overlay for mobile */}
+      {onClose && (
+        <div
+          className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${
+            isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* SidePanel */}
+      <div
+        className={`w-72 text-lighttext flex flex-col h-full bg-bglight dark:bg-bgdark ${
+          onClose
+            ? `fixed inset-y-0 right-0 z-50 transform transition-transform duration-300 ease-in-out lg:static lg:transform-none lg:z-auto ${
+                isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
+              }`
+            : 'relative'
+        }`}
+      >
+        {/* Mobile Header with Close Button */}
+        {onClose && (
+          <div className="p-4 border-b border-darkgray flex-shrink-0 flex items-center justify-between lg:hidden">
+            <div className="flex-1">
+              <h1 className="text-xl font-bold text-main mb-1">CMS Dashboard</h1>
+              <p className="text-lighttext2 text-xs">
+                Manage your website content
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 text-lighttext2 hover:text-lighttext transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        )}
+
+        {/* Desktop Header */}
+        {!onClose && (
+          <div className="p-4 border-b border-darkgray flex-shrink-0 text-center">
+            <h1 className="text-xl font-bold text-main mb-1">CMS Dashboard</h1>
+            <p className="text-lighttext2 text-xs">
+              Manage your website content
+            </p>
+          </div>
+        )}
 
       {/* User Profile Section */}
       {user && (
@@ -201,6 +254,7 @@ const SidePanel = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

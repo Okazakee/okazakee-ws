@@ -1,14 +1,14 @@
 import localFont from 'next/font/local';
 import '../globals.css';
 import Footer from '@/components/layout/Footer';
-import Header from '@/components/layout/Header';
+import ConditionalHeader from '@/components/layout/ConditionalHeader';
 import ScrollTop from '@/components/layout/ScrollTop';
 import { getTranslationsSupabase } from '@/utils/getData';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { NextIntlClientProvider } from 'next-intl';
 import Script from 'next/script';
 import { Providers } from '../providers';
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',
@@ -26,10 +26,6 @@ export default async function RootLayout({
   const { locale } = await params;
 
   const messages = await getTranslationsSupabase(locale);
-  
-  // Check if we're on a CMS route
-  const headersList = await headers();
-  const isCMSRoute = headersList.get('x-cms-route') === 'true';
   
   // Read theme preference from cookies during SSR
   const cookieStore = await cookies();
@@ -65,10 +61,10 @@ export default async function RootLayout({
           className={`${whiteRabbit.variable} transition-colors duration-400 ease-in-out font-whiterabt antialiased rounded-xl scroll-smooth relative min-h-screen`}
         >
           <NextIntlClientProvider messages={messages} locale={locale}>
-            {!isCMSRoute && <Header locale={locale} />}
+            <ConditionalHeader locale={locale} />
             {children}
-            {!isCMSRoute && <ScrollTop />}
-            {!isCMSRoute && <Footer />}
+            <ScrollTop />
+            <Footer />
           </NextIntlClientProvider>
           <SpeedInsights />
         </body>

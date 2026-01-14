@@ -827,18 +827,18 @@ export default function SkillsSection() {
   }));
 
   return (
-    <div className="space-y-8">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-main mb-4">
+    <div className="space-y-6 md:space-y-8 mb-8 md:mb-0 lg:mt-0">
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="hidden lg:block text-2xl md:text-3xl lg:text-4xl font-bold text-main mb-2 md:mb-4">
           Skills Section Editor
         </h1>
-        <p className="text-lighttext2 text-lg">
+        <p className="text-lighttext2 text-sm md:text-base lg:text-lg">
           Manage your skills and categories
         </p>
-        <div className="flex justify-center gap-3 mt-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 mt-4">
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
@@ -846,7 +846,7 @@ export default function SkillsSection() {
           </button>
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!hasChanges() || isUpdating}
             onClick={cancelAllChanges}
           >
@@ -855,7 +855,7 @@ export default function SkillsSection() {
           </button>
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!hasChanges() || isUpdating}
             onClick={applyAllChanges}
           >
@@ -872,13 +872,13 @@ export default function SkillsSection() {
       </div>
 
       {/* Translations Section */}
-      <div className="bg-darkergray rounded-xl p-6">
+      <div className="bg-darkergray rounded-xl p-4 md:p-6">
         <button
           type="button"
           onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
-          className="w-full flex items-center justify-between text-left"
+          className="w-full flex items-center justify-between text-left min-h-[44px]"
         >
-          <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
+          <h2 className="text-lg md:text-xl font-bold text-main mb-4 flex items-center gap-2">
             <Globe className="w-5 h-5" />
             Translations
           </h2>
@@ -985,14 +985,14 @@ export default function SkillsSection() {
       </div>
 
       {/* Category Management */}
-      <div className="bg-darkergray rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-main">Manage Categories</h2>
+      <div className="bg-darkergray rounded-xl p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h2 className="text-lg md:text-xl font-bold text-main">Manage Categories</h2>
           {!isCreatingCategory && (
             <button
               type="button"
               onClick={() => setIsCreatingCategory(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
             >
               <Plus className="w-4 h-4" />
               Add Category
@@ -1032,112 +1032,114 @@ export default function SkillsSection() {
         )}
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 md:space-y-8">
         {categories.map((category) => (
-          <div key={category.id} className="bg-darkergray rounded-xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              {category.isEditing ? (
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    defaultValue={category.name}
-                    id={`category-name-${category.id}`}
-                    className="px-3 py-2 bg-darkgray text-lighttext rounded-lg border border-darkgray focus:border-main focus:outline-hidden text-xl font-bold"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const input = document.getElementById(`category-name-${category.id}`) as HTMLInputElement;
-                      updateCategory(category.id, input.value);
-                    }}
-                    className="p-2 text-blue-500 hover:text-blue-400 transition-colors"
-                  >
-                    Done
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Revert to original name
-                      const originalCategory = originalCategories.find((cat) => cat.id === category.id);
-                      if (originalCategory) {
-                        setCategories((prev) =>
-                          prev.map((cat) =>
-                            cat.id === category.id
-                              ? { ...cat, name: originalCategory.name, isEditing: false }
-                              : cat
-                          )
-                        );
-                        setModifiedCategories((prev) => {
-                          const newSet = new Set(prev);
-                          newSet.delete(category.id);
-                          return newSet;
-                        });
-                      } else {
-                        setCategories((prev) =>
-                          prev.map((cat) =>
-                            cat.id === category.id ? { ...cat, isEditing: false } : cat
-                          )
-                        );
-                      }
-                    }}
-                    className="p-2 text-lighttext2 hover:text-lighttext transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
+          <div key={category.id} className="bg-darkergray rounded-xl p-4 md:p-6">
+            <div className="flex flex-col gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                {category.isEditing ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <input
+                      type="text"
+                      defaultValue={category.name}
+                      id={`category-name-${category.id}`}
+                      className="flex-1 px-3 py-2 bg-darkgray text-lighttext rounded-lg border border-darkgray focus:border-main focus:outline-hidden text-lg md:text-xl font-bold"
+                    />
                     <button
                       type="button"
-                      onClick={() => moveCategoryUp(category.id)}
-                      disabled={categories.findIndex((cat) => cat.id === category.id) === 0}
-                      className="p-1 text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Move up"
+                      onClick={() => {
+                        const input = document.getElementById(`category-name-${category.id}`) as HTMLInputElement;
+                        updateCategory(category.id, input.value);
+                      }}
+                      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-blue-500 hover:text-blue-400 transition-colors"
                     >
-                      <ArrowUp className="w-4 h-4" />
+                      Done
                     </button>
                     <button
                       type="button"
-                      onClick={() => moveCategoryDown(category.id)}
-                      disabled={categories.findIndex((cat) => cat.id === category.id) === categories.length - 1}
-                      className="p-1 text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Move down"
+                      onClick={() => {
+                        // Revert to original name
+                        const originalCategory = originalCategories.find((cat) => cat.id === category.id);
+                        if (originalCategory) {
+                          setCategories((prev) =>
+                            prev.map((cat) =>
+                              cat.id === category.id
+                                ? { ...cat, name: originalCategory.name, isEditing: false }
+                                : cat
+                            )
+                          );
+                          setModifiedCategories((prev) => {
+                            const newSet = new Set(prev);
+                            newSet.delete(category.id);
+                            return newSet;
+                          });
+                        } else {
+                          setCategories((prev) =>
+                            prev.map((cat) =>
+                              cat.id === category.id ? { ...cat, isEditing: false } : cat
+                            )
+                          );
+                        }
+                      }}
+                      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-lighttext transition-colors"
                     >
-                      <ArrowDown className="w-4 h-4" />
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <h2 className="text-2xl font-bold text-main">{category.name}</h2>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setCategories((prev) =>
-                        prev.map((cat) =>
-                          cat.id === category.id ? { ...cat, isEditing: true } : cat
+                ) : (
+                  <div className="flex items-center gap-2 flex-1 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveCategoryUp(category.id)}
+                        disabled={categories.findIndex((cat) => cat.id === category.id) === 0}
+                        className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Move up"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveCategoryDown(category.id)}
+                        disabled={categories.findIndex((cat) => cat.id === category.id) === categories.length - 1}
+                        className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Move down"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <h2 className="text-xl md:text-2xl font-bold text-main flex-1">{category.name}</h2>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCategories((prev) =>
+                          prev.map((cat) =>
+                            cat.id === category.id ? { ...cat, isEditing: true } : cat
+                          )
                         )
-                      )
-                    }
-                    className="p-2 text-lighttext2 hover:text-main transition-colors"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteCategory(category.id)}
-                    className="p-2 text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => addNewSkill(category.id)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200"
-              >
-                <Plus className="w-4 h-4" />
-                Add Skill
-              </button>
+                      }
+                      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-main transition-colors"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteCategory(category.id)}
+                      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => addNewSkill(category.id)}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Skill
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">

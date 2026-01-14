@@ -505,7 +505,7 @@ export default function ContactsSection() {
   }
 
   return (
-    <div className="mt-6 md:mt-8">
+    <div className="md:mt-8 mb-8 md:mb-0 lg:mt-8">
       {error && (
         <div className="mb-6 text-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
           {error}
@@ -514,10 +514,10 @@ export default function ContactsSection() {
 
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-main mb-4">
+        <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           Contacts Section
         </h1>
-        <p className="text-lighttext2 text-lg">
+        <p className="text-lighttext2 text-lg mb-4">
           Manage your contact links and social media profiles
         </p>
         <div className="flex justify-center gap-3 mt-4">

@@ -15,7 +15,23 @@ import SidePanel from '@/components/common/cms/SidePanel';
 import SkillsSection from '@/components/common/cms/SkillsSection';
 import UsersSection from '@/components/common/cms/UsersSection';
 import { useLayoutStore } from '@/store/layoutStore';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Menu } from 'lucide-react';
+import Image from 'next/image';
+
+const sectionLabels: Record<string, string> = {
+  hero: 'Hero Section',
+  skills: 'Skills',
+  career: 'Career',
+  portfolio: 'Portfolio',
+  blog: 'Blog',
+  contacts: 'Contacts',
+  layout: 'Layout',
+  'privacy-policy': 'Privacy Policy',
+  users: 'Manage Users',
+  account: 'My Account',
+  settings: 'Settings',
+};
 
 export default function CMS() {
   const {
@@ -27,7 +43,9 @@ export default function CMS() {
     setError,
     loading,
     error,
+    user,
   } = useLayoutStore();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
     const initializeCMS = async () => {
@@ -115,11 +133,49 @@ export default function CMS() {
   }
 
   return (
-    <div className="bg-bglight dark:bg-bgdark min-h-screen">
-      <div className="flex h-screen max-w-(--breakpoint-2xl) mx-auto">
-        <SidePanel />
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          <div className="max-w-4xl mx-auto">
+    <>
+      {/* Mobile Header - Sticky at top */}
+      <div className="lg:hidden sticky top-0 z-30 bg-bglight dark:bg-bgdark border-b border-darkgray px-4 py-3 flex items-center justify-between">
+        {user && (
+          <div className="flex items-center gap-2">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-darkergray flex-shrink-0">
+              {user.avatarUrl && user.avatarUrl.length > 0 ? (
+                <Image
+                  src={user.avatarUrl}
+                  alt={user.displayName || 'User'}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-main text-white text-sm font-bold">
+                  {(user.displayName || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        <div className="flex-1 text-center">
+          <h1 className="text-lg font-bold text-main">
+            {sectionLabels[activeSection] || 'CMS Dashboard'}
+          </h1>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsDrawerOpen(true)}
+          className="p-2 text-lighttext hover:text-main transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* CMS Content Area */}
+      <div className="bg-bglight dark:bg-bgdark">
+        {/* Mobile: Natural flow, Desktop: Fixed sidebar layout */}
+        <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-80px)] max-w-(--breakpoint-2xl) mx-auto">
+          <SidePanel isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+          <main className="flex-1 lg:overflow-y-auto p-4 md:p-6 lg:p-8 pt-8 md:pt-6 lg:pt-8 pb-20 md:pb-12 lg:pb-8">
+            <div className="max-w-4xl mx-auto">
             {activeSection === 'hero' && <HeroSection />}
             {activeSection === 'skills' && <SkillsSection />}
             {activeSection === 'career' && <CareerSection />}
@@ -136,9 +192,10 @@ export default function CMS() {
                 <p className="text-lighttext2">Coming soon...</p>
               </div>
             )}
-          </div>
-        </main>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
