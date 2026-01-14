@@ -42,6 +42,7 @@ type UpdateSkillData = {
   description?: string;
   category_id?: number;
   position?: number;
+  icon?: string;
   icon_url?: string;
   blurhashURL?: string;
 };
@@ -52,6 +53,7 @@ type CreateCategoryData = {
 
 type UpdateCategoryData = {
   name?: string;
+  position?: number;
 };
 
 type SkillsResult = {
@@ -406,9 +408,17 @@ async function updateCategory(
       return { success: false, error: 'Category not found' };
     }
 
+    const updateFields: { name?: string; position?: number } = {};
+    if (updateData.name !== undefined) {
+      updateFields.name = updateData.name.trim();
+    }
+    if (updateData.position !== undefined) {
+      updateFields.position = updateData.position;
+    }
+
     const { data, error } = await supabase
       .from('skills_categories')
-      .update({ name: updateData.name?.trim() })
+      .update(updateFields)
       .eq('id', categoryId)
       .select()
       .single();

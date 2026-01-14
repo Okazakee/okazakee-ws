@@ -97,6 +97,7 @@ export const getSkillsCategories = unstable_cache(
     const { data, error } = await supabase.from('skills_categories').select(`
         id,
         name,
+        position,
         skills (
           id,
           title,
@@ -105,7 +106,7 @@ export const getSkillsCategories = unstable_cache(
           category_id,
           blurhashURL
         )
-      `);
+      `).order('position', { ascending: true });
 
     if (error) {
       console.error(error);

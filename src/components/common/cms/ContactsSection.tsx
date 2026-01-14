@@ -1,25 +1,30 @@
 'use client';
 
 import { contactsActions } from '@/app/actions/cms/sections/contactsActions';
+import { useLayoutStore } from '@/store/layoutStore';
 import type { Contact } from '@/types/fetchedData.types';
 import type { LucideProps } from 'lucide-react';
 import {
   Edit3,
-  Eye,
-  EyeOff,
-  GripVertical,
   Plus,
   Save,
   Trash2,
   X,
+  Eye,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import type React from 'react';
 import { Suspense, useEffect, useState } from 'react';
 import { ErrorDiv } from '../ErrorDiv';
+import { PreviewModal } from './PreviewModal';
+import { ContactsPreview } from './previews/ContactsPreview';
 
 type ContactWithEditing = Contact & {
   isEditing: boolean;
 };
+
+type EditableContact = ContactWithEditing;
 
 // Icon component with error handling
 function IconComponent({
@@ -83,9 +88,13 @@ function IconComponent({
 }
 
 export default function ContactsSection() {
-  const [contacts, setContacts] = useState<ContactWithEditing[]>([]);
+  const { heroSection } = useLayoutStore();
+  const [contacts, setContacts] = useState<EditableContact[]>([]);
+  const [originalContacts, setOriginalContacts] = useState<EditableContact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newContact, setNewContact] = useState({
     label: '',
@@ -93,6 +102,12 @@ export default function ContactsSection() {
     link: '',
     bg_color: '#3B82F6',
   });
+
+  // Track modifications
+  const [modifiedContacts, setModifiedContacts] = useState<Set<number>>(new Set());
+  const [newContacts, setNewContacts] = useState<EditableContact[]>([]);
+  const [deletedContacts, setDeletedContacts] = useState<Set<number>>(new Set());
+  const [orderChanged, setOrderChanged] = useState(false);
 
   useEffect(() => {
     fetchContacts();
@@ -116,6 +131,7 @@ export default function ContactsSection() {
       );
 
       setContacts(contactsWithEditing);
+      setOriginalContacts(JSON.parse(JSON.stringify(contactsWithEditing))); // Deep copy
     } catch (error) {
       console.error('Error fetching contacts:', error);
       setError(
@@ -126,140 +142,236 @@ export default function ContactsSection() {
     }
   };
 
-  const handleCreateContact = async () => {
+  const handleInputChange = (
+    contactId: number,
+    field: keyof Contact,
+    value: string
+  ) => {
+    setContacts((prev) =>
+      prev.map((contact) =>
+        contact.id === contactId ? { ...contact, [field]: value } : contact
+      )
+    );
+    // Track modification (only for existing contacts, not new ones)
+    if (contactId > 0) {
+      setModifiedContacts((prev) => new Set(prev).add(contactId));
+    }
+  };
+
+  const handleCreateContact = () => {
     if (!newContact.label || !newContact.icon || !newContact.link) {
       setError('Please fill in all required fields');
       return;
     }
 
-    setIsCreating(true);
-    setError(null);
+    // Generate temporary ID (negative to avoid conflicts)
+    const tempId = -Date.now();
+    const newContactEntry: EditableContact = {
+      id: tempId,
+      label: newContact.label,
+      icon: newContact.icon,
+      link: newContact.link,
+      bg_color: newContact.bg_color,
+      position: contacts.length + newContacts.length,
+      isEditing: false,
+    };
 
+    // Add to local state
+    setContacts((prev) => [...prev, newContactEntry]);
+    setNewContacts((prev) => [...prev, newContactEntry]);
+
+    // Reset form
+    setNewContact({
+      label: '',
+      icon: '',
+      link: '',
+      bg_color: '#3B82F6',
+    });
+    setIsCreating(false);
+  };
+
+  const handleUpdateContact = (id: number, updatedData: Partial<Contact>) => {
+    setContacts((prev) =>
+      prev.map((contact) =>
+        contact.id === id
+          ? { ...contact, ...updatedData, isEditing: false }
+          : contact
+      )
+    );
+    // Track modification
+    if (id > 0) {
+      setModifiedContacts((prev) => new Set(prev).add(id));
+    }
+  };
+
+  const handleDeleteContact = (id: number) => {
+    // Check if it's a new contact
+    const isNewContact = newContacts.some((nc) => nc.id === id);
+    
+    if (isNewContact) {
+      // Remove from new contacts
+      setNewContacts((prev) => prev.filter((c) => c.id !== id));
+    } else {
+      // Track for deletion
+      setDeletedContacts((prev) => new Set(prev).add(id));
+    }
+
+    // Remove from modified contacts if present
+    setModifiedContacts((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+
+    // Remove from local state
+    setContacts((prev) => prev.filter((contact) => contact.id !== id));
+  };
+
+  const moveContactUp = (contactId: number) => {
+    const currentIndex = contacts.findIndex((c) => c.id === contactId);
+    if (currentIndex <= 0) return; // Already at top
+
+    const newContacts = [...contacts];
+    [newContacts[currentIndex - 1], newContacts[currentIndex]] = [
+      newContacts[currentIndex],
+      newContacts[currentIndex - 1],
+    ];
+    setContacts(newContacts);
+    setOrderChanged(true);
+  };
+
+  const moveContactDown = (contactId: number) => {
+    const currentIndex = contacts.findIndex((c) => c.id === contactId);
+    if (currentIndex < 0 || currentIndex >= contacts.length - 1) return; // Already at bottom
+
+    const newContacts = [...contacts];
+    [newContacts[currentIndex], newContacts[currentIndex + 1]] = [
+      newContacts[currentIndex + 1],
+      newContacts[currentIndex],
+    ];
+    setContacts(newContacts);
+    setOrderChanged(true);
+  };
+
+  const applyAllChanges = async () => {
     try {
-      const result = await contactsActions({
-        type: 'CREATE',
-        data: {
-          ...newContact,
-          position: contacts.length,
-        },
-      });
+      setIsUpdating(true);
+      setError(null);
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create contact');
+      // 1. Delete contacts
+      for (const contactId of deletedContacts) {
+        const result = await contactsActions({
+          type: 'DELETE',
+          id: contactId,
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || `Failed to delete contact ${contactId}`);
+        }
       }
 
-      // Reset form and refresh contacts
-      setNewContact({
-        label: '',
-        icon: '',
-        link: '',
-        bg_color: '#3B82F6',
-      });
-      setIsCreating(false);
+      // 2. Create new contacts
+      for (const newContact of newContacts) {
+        const position = contacts.findIndex((c) => c.id === newContact.id);
+        
+        const result = await contactsActions({
+          type: 'CREATE',
+          data: {
+            label: newContact.label,
+            icon: newContact.icon,
+            link: newContact.link,
+            bg_color: newContact.bg_color,
+            position: position >= 0 ? position : contacts.length,
+          },
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || `Failed to create contact ${newContact.label}`);
+        }
+      }
+
+      // 3. Update contact order if changed
+      if (orderChanged) {
+        const positionUpdates = contacts.map((contact, index) => ({
+          id: contact.id,
+          position: index,
+        }));
+
+        // Only update positions for existing contacts (not new ones)
+        const existingUpdates = positionUpdates.filter(
+          (update) => update.id > 0 && !newContacts.some((nc) => nc.id === update.id)
+        );
+
+        if (existingUpdates.length > 0) {
+          const result = await contactsActions({
+            type: 'REORDER',
+            contacts: existingUpdates,
+          });
+
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to reorder contacts');
+          }
+        }
+      }
+
+      // 4. Update modified contacts
+      for (const contactId of modifiedContacts) {
+        const contact = contacts.find((c) => c.id === contactId);
+        if (!contact) continue;
+
+        const result = await contactsActions({
+          type: 'UPDATE',
+          id: contactId,
+          data: {
+            label: contact.label,
+            icon: contact.icon,
+            link: contact.link,
+            bg_color: contact.bg_color,
+            position: contact.position,
+          },
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || `Failed to update contact ${contactId}`);
+        }
+      }
+
+      // Refresh data
       await fetchContacts();
+      
+      // Reset tracking
+      setModifiedContacts(new Set());
+      setNewContacts([]);
+      setDeletedContacts(new Set());
+      setOrderChanged(false);
     } catch (error) {
-      console.error('Error creating contact:', error);
+      console.error('Error applying changes:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to create contact'
+        error instanceof Error ? error.message : 'Failed to apply changes'
       );
     } finally {
-      setIsCreating(false);
+      setIsUpdating(false);
     }
   };
 
-  const handleUpdateContact = async (
-    id: number,
-    updatedData: Partial<Contact>
-  ) => {
-    setError(null);
-
-    try {
-      const result = await contactsActions({
-        type: 'UPDATE',
-        id,
-        data: updatedData,
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update contact');
-      }
-
-      // Update local state
-      setContacts((prev) =>
-        prev.map((contact) =>
-          contact.id === id
-            ? { ...contact, ...updatedData, isEditing: false }
-            : contact
-        )
-      );
-    } catch (error) {
-      console.error('Error updating contact:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to update contact'
-      );
-    }
-  };
-
-  const handleDeleteContact = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this contact?')) {
-      return;
-    }
-
-    setError(null);
-
-    try {
-      const result = await contactsActions({
-        type: 'DELETE',
-        id,
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete contact');
-      }
-
-      // Remove from local state
-      setContacts((prev) => prev.filter((contact) => contact.id !== id));
-    } catch (error) {
-      console.error('Error deleting contact:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to delete contact'
-      );
-    }
-  };
-
-  const handleReorderContacts = async (
-    reorderedContacts: ContactWithEditing[]
-  ) => {
-    setError(null);
-
-    try {
-      const positionUpdates = reorderedContacts.map((contact, index) => ({
-        id: contact.id,
-        position: index,
-      }));
-
-      const result = await contactsActions({
-        type: 'REORDER',
-        contacts: positionUpdates,
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to reorder contacts');
-      }
-
-      // Update local state with new positions
-      setContacts(
-        reorderedContacts.map((contact, index) => ({
-          ...contact,
-          position: index,
-        }))
-      );
-    } catch (error) {
-      console.error('Error reordering contacts:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to reorder contacts'
-      );
-    }
+  const cancelAllChanges = () => {
+    // Revert to original data
+    setContacts(JSON.parse(JSON.stringify(originalContacts)));
+    
+    // Reset tracking
+    setModifiedContacts(new Set());
+    setNewContacts([]);
+    setDeletedContacts(new Set());
+    setOrderChanged(false);
+    
+    // Reset form
+    setNewContact({
+      label: '',
+      icon: '',
+      link: '',
+      bg_color: '#3B82F6',
+    });
+    setIsCreating(false);
   };
 
   const toggleEditing = (id: number) => {
@@ -272,6 +384,12 @@ export default function ContactsSection() {
     );
   };
 
+  const hasChanges =
+    modifiedContacts.size > 0 ||
+    newContacts.length > 0 ||
+    deletedContacts.size > 0 ||
+    orderChanged;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -281,18 +399,62 @@ export default function ContactsSection() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="mt-6 md:mt-8">
+      {error && (
+        <div className="mb-6 text-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+          {error}
+        </div>
+      )}
+
+      {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-main mb-4">
-          Contacts Section Editor
+          Contacts Section
         </h1>
         <p className="text-lighttext2 text-lg">
           Manage your contact links and social media profiles
         </p>
+        <div className="flex justify-center gap-3 mt-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            <Eye className="w-4 h-4" />
+            Preview
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!hasChanges || isUpdating}
+            onClick={cancelAllChanges}
+          >
+            <X className="w-4 h-4" />
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!hasChanges || isUpdating}
+            onClick={applyAllChanges}
+          >
+            {isUpdating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                Applying...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Apply Changes
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Create New Contact */}
-      <div className="bg-darkergray rounded-xl p-6">
+      <div className="bg-darkergray rounded-xl p-6 mb-6">
         <h2 className="text-2xl font-bold text-main mb-4">Add New Contact</h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -430,6 +592,10 @@ export default function ContactsSection() {
                     onEdit={() => toggleEditing(contact.id)}
                     onDelete={() => handleDeleteContact(contact.id)}
                     index={index}
+                    onMoveUp={() => moveContactUp(contact.id)}
+                    onMoveDown={() => moveContactDown(contact.id)}
+                    isFirst={index === 0}
+                    isLast={index === contacts.length - 1}
                   />
                 )}
               </div>
@@ -438,11 +604,23 @@ export default function ContactsSection() {
         )}
       </div>
 
-      {error && (
-        <div className="mt-6 text-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
-          {error}
-        </div>
-      )}
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title="Contacts Section Preview"
+      >
+        <ContactsPreview
+          contacts={contacts.filter((c) => !deletedContacts.has(c.id))}
+          resumeData={
+            heroSection
+              ? {
+                  resume_en: heroSection.resume_en || '',
+                  resume_it: heroSection.resume_it || '',
+                }
+              : undefined
+          }
+        />
+      </PreviewModal>
     </div>
   );
 }
@@ -452,18 +630,45 @@ function ContactDisplay({
   onEdit,
   onDelete,
   index,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
 }: {
   contact: ContactWithEditing;
   onEdit: () => void;
   onDelete: () => void;
   index: number;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isFirst: boolean;
+  isLast: boolean;
 }) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-lighttext2">
-          <GripVertical className="w-4 h-4" />
-          <span className="text-sm">#{index + 1}</span>
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={onMoveUp}
+              disabled={isFirst}
+              className="p-1 text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Move up"
+            >
+              <ArrowUp className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onMoveDown}
+              disabled={isLast}
+              className="p-1 text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Move down"
+            >
+              <ArrowDown className="w-4 h-4" />
+            </button>
+          </div>
+          <span className="text-sm text-lighttext2">#{index + 1}</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -617,7 +822,7 @@ function EditContactForm({
           className="flex items-center gap-2 px-3 py-2 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
         >
           <Save className="w-4 h-4" />
-          Save
+          Done
         </button>
         <button
           type="button"

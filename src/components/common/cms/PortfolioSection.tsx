@@ -13,10 +13,13 @@ import {
   Trash2,
   User,
   X,
+  Eye,
 } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { PreviewModal } from './PreviewModal';
+import { PortfolioPreview } from './previews/PortfolioPreview';
 
 type FormMode = 'list' | 'create' | 'edit';
 
@@ -54,12 +57,18 @@ const emptyFormData: PortfolioFormData = {
   author_id: '',
 };
 
+type EditablePortfolioPost = PortfolioPost & {
+  image_file?: File | null;
+};
+
 export default function PortfolioSection() {
-  const [portfolioPosts, setPortfolioPosts] = useState<PortfolioPost[]>([]);
+  const [portfolioPosts, setPortfolioPosts] = useState<EditablePortfolioPost[]>([]);
+  const [originalPosts, setOriginalPosts] = useState<EditablePortfolioPost[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Form state
   const [mode, setMode] = useState<FormMode>('list');
@@ -67,6 +76,11 @@ export default function PortfolioSection() {
   const [formData, setFormData] = useState<PortfolioFormData>(emptyFormData);
   const [formImage, setFormImage] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+
+  // Track modifications
+  const [modifiedPosts, setModifiedPosts] = useState<Set<number>>(new Set());
+  const [newPosts, setNewPosts] = useState<Array<{ post: EditablePortfolioPost; imageFile: File | null }>>([]);
+  const [deletedPosts, setDeletedPosts] = useState<Set<number>>(new Set());
 
   const { user } = useLayoutStore();
 
@@ -91,7 +105,12 @@ export default function PortfolioSection() {
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch portfolio data');
       }
-      setPortfolioPosts(result.data as PortfolioPost[]);
+      const loadedPosts = (result.data as PortfolioPost[]).map((post) => ({
+        ...post,
+        image_file: null,
+      }));
+      setPortfolioPosts(loadedPosts);
+      setOriginalPosts(JSON.parse(JSON.stringify(loadedPosts))); // Deep copy
     } catch (error) {
       console.error('Error fetching portfolio data:', error);
       setError(
@@ -153,125 +172,119 @@ export default function PortfolioSection() {
     setMode('list');
   };
 
-  const handleCreatePortfolio = async () => {
+  const cancelFormEdit = () => {
+    if (editingPostId) {
+      // Revert to original data
+      const originalPost = originalPosts.find((p) => p.id === editingPostId);
+      if (originalPost) {
+        setPortfolioPosts((prev) =>
+          prev.map((post) =>
+            post.id === editingPostId
+              ? { ...originalPost, image_file: null }
+              : post
+          )
+        );
+        // Remove from modified set
+        setModifiedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(editingPostId);
+          return newSet;
+        });
+      }
+    }
+    closeForm();
+  };
+
+  const handleCreatePortfolio = () => {
     if (!formImage) {
       setError('Please select an image for the portfolio post');
       return;
     }
 
-    setIsSaving(true);
-    setError(null);
+    // Generate temporary ID
+    const tempId = -Date.now();
+    const newPost: EditablePortfolioPost = {
+      id: tempId,
+      title_en: formData.title_en,
+      title_it: formData.title_it,
+      image: '',
+      source_link: formData.source_link,
+      demo_link: formData.demo_link,
+      description_en: formData.description_en,
+      description_it: formData.description_it,
+      body_en: formData.body_en,
+      body_it: formData.body_it,
+      blurhashURL: formData.blurhashURL,
+      post_tags: formData.post_tags,
+      store_link: formData.store_link,
+      created_at: formData.created_at,
+      views: 0,
+      image_file: formImage,
+    };
 
-    try {
-      const result = await portfolioActions({
-        type: 'CREATE',
-        data: {
-          ...formData,
-          image: '',
-        },
-      });
+    // Add to local state
+    setPortfolioPosts((prev) => [...prev, newPost]);
+    setNewPosts((prev) => [...prev, { post: newPost, imageFile: formImage }]);
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create portfolio post');
-      }
-
-      const newPost = result.data as PortfolioPost;
-
-      const imageResult = await portfolioActions({
-        type: 'UPLOAD_IMAGE',
-        portfolioId: newPost.id,
-        file: formImage,
-      });
-
-      if (!imageResult.success) {
-        throw new Error(imageResult.error || 'Failed to upload image');
-      }
-
-      closeForm();
-      await fetchPortfolioData();
-    } catch (error) {
-      console.error('Error creating portfolio post:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to create portfolio post'
-      );
-    } finally {
-      setIsSaving(false);
-    }
+    // Close form
+    closeForm();
   };
 
-  const handleUpdatePortfolio = async () => {
+  const handleUpdatePortfolio = () => {
     if (!editingPostId) return;
 
-    setIsSaving(true);
-    setError(null);
+    // Update local state
+    setPortfolioPosts((prev) =>
+      prev.map((post) =>
+        post.id === editingPostId
+          ? {
+              ...post,
+              title_en: formData.title_en,
+              title_it: formData.title_it,
+              source_link: formData.source_link,
+              demo_link: formData.demo_link,
+              store_link: formData.store_link,
+              description_en: formData.description_en,
+              description_it: formData.description_it,
+              body_en: formData.body_en,
+              body_it: formData.body_it,
+              post_tags: formData.post_tags,
+              image_file: formImage || post.image_file,
+            }
+          : post
+      )
+    );
 
-    try {
-      const result = await portfolioActions({
-        type: 'UPDATE',
-        id: editingPostId,
-        data: {
-          title_en: formData.title_en,
-          title_it: formData.title_it,
-          source_link: formData.source_link,
-          demo_link: formData.demo_link,
-          store_link: formData.store_link,
-          description_en: formData.description_en,
-          description_it: formData.description_it,
-          body_en: formData.body_en,
-          body_it: formData.body_it,
-          post_tags: formData.post_tags,
-        },
-      });
+    // Track modification
+    setModifiedPosts((prev) => new Set(prev).add(editingPostId));
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update portfolio post');
-      }
-
-      // Upload new image if selected
-      if (formImage) {
-        const imageResult = await portfolioActions({
-          type: 'UPLOAD_IMAGE',
-          portfolioId: editingPostId,
-          file: formImage,
-          currentImageUrl: formData.image,
-        });
-
-        if (!imageResult.success) {
-          throw new Error(imageResult.error || 'Failed to upload image');
-        }
-      }
-
-      closeForm();
-      await fetchPortfolioData();
-    } catch (error) {
-      console.error('Error updating portfolio post:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to update portfolio post'
-      );
-    } finally {
-      setIsSaving(false);
-    }
+    // Close form
+    closeForm();
   };
 
-  const handleDeletePortfolio = async (postId: number) => {
+  const handleDeletePortfolio = (postId: number) => {
     if (!confirm('Are you sure you want to delete this portfolio post?')) return;
 
-    setError(null);
-
-    try {
-      const result = await portfolioActions({ type: 'DELETE', id: postId });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete portfolio post');
-      }
-
-      setPortfolioPosts((prev) => prev.filter((p) => p.id !== postId));
-    } catch (error) {
-      console.error('Error deleting portfolio post:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to delete portfolio post'
-      );
+    // Check if it's a new post (temp ID)
+    const isNewPost = newPosts.some((np) => np.post.id === postId);
+    
+    if (isNewPost) {
+      // Remove from new posts
+      setNewPosts((prev) => prev.filter((np) => np.post.id !== postId));
+    } else {
+      // Track for deletion
+      setDeletedPosts((prev) => new Set(prev).add(postId));
     }
+
+    // Remove from modified posts if present
+    setModifiedPosts((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(postId);
+      return newSet;
+    });
+
+    // Remove from local state
+    setPortfolioPosts((prev) => prev.filter((p) => p.id !== postId));
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -301,6 +314,146 @@ export default function PortfolioSection() {
     if (file) {
       setFormImage(file);
     }
+  };
+
+  const cancelAllChanges = () => {
+    if (!confirm('Are you sure you want to cancel all changes? All unsaved edits will be lost.')) {
+      return;
+    }
+
+    // Reload original data
+    fetchPortfolioData();
+    
+    // Reset all tracking
+    setModifiedPosts(new Set());
+    setNewPosts([]);
+    setDeletedPosts(new Set());
+    closeForm();
+  };
+
+  const applyAllChanges = async () => {
+    try {
+      setIsUpdating(true);
+      setError(null);
+
+      // 1. Delete posts
+      for (const postId of deletedPosts) {
+        const result = await portfolioActions({ type: 'DELETE', id: postId });
+
+        if (!result.success) {
+          throw new Error(result.error || `Failed to delete portfolio post ${postId}`);
+        }
+      }
+
+      // 2. Create new posts
+      for (const { post, imageFile } of newPosts) {
+        if (!imageFile) {
+          throw new Error(`Image is required for portfolio post ${post.title_en}`);
+        }
+
+        // Create post
+        const createResult = await portfolioActions({
+          type: 'CREATE',
+          data: {
+            title_en: post.title_en,
+            title_it: post.title_it,
+            source_link: post.source_link,
+            demo_link: post.demo_link,
+            store_link: post.store_link,
+            description_en: post.description_en,
+            description_it: post.description_it,
+            body_en: post.body_en,
+            body_it: post.body_it,
+            post_tags: post.post_tags,
+            created_at: post.created_at,
+            author_id: user?.id || '',
+            image: '', // Will be set after image upload
+          },
+        });
+
+        if (!createResult.success) {
+          throw new Error(createResult.error || `Failed to create portfolio post ${post.title_en}`);
+        }
+
+        const createdPost = createResult.data as PortfolioPost;
+
+        // Upload image
+        const imageResult = await portfolioActions({
+          type: 'UPLOAD_IMAGE',
+          portfolioId: createdPost.id,
+          file: imageFile,
+        });
+
+        if (!imageResult.success) {
+          throw new Error(imageResult.error || `Failed to upload image for ${post.title_en}`);
+        }
+      }
+
+      // 3. Update modified posts
+      for (const postId of modifiedPosts) {
+        const post = portfolioPosts.find((p) => p.id === postId);
+        if (!post) continue;
+
+        // Update post data
+        const updateResult = await portfolioActions({
+          type: 'UPDATE',
+          id: postId,
+          data: {
+            title_en: post.title_en,
+            title_it: post.title_it,
+            source_link: post.source_link,
+            demo_link: post.demo_link,
+            store_link: post.store_link,
+            description_en: post.description_en,
+            description_it: post.description_it,
+            body_en: post.body_en,
+            body_it: post.body_it,
+            post_tags: post.post_tags,
+          },
+        });
+
+        if (!updateResult.success) {
+          throw new Error(updateResult.error || `Failed to update portfolio post ${post.title_en}`);
+        }
+
+        // Upload image if there's a new file
+        if (post.image_file) {
+          const imageResult = await portfolioActions({
+            type: 'UPLOAD_IMAGE',
+            portfolioId: postId,
+            file: post.image_file,
+            currentImageUrl: post.image,
+          });
+
+          if (!imageResult.success) {
+            throw new Error(imageResult.error || `Failed to upload image for ${post.title_en}`);
+          }
+        }
+      }
+
+      // Refresh data and reset all tracking
+      await fetchPortfolioData();
+      setModifiedPosts(new Set());
+      setNewPosts([]);
+      setDeletedPosts(new Set());
+
+      alert('All changes applied successfully!');
+    } catch (error) {
+      console.error('Error applying changes:', error);
+      setError(
+        error instanceof Error ? error.message : 'Failed to apply changes'
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const hasChanges = () => {
+    return (
+      modifiedPosts.size > 0 ||
+      newPosts.length > 0 ||
+      deletedPosts.size > 0
+    );
   };
 
   if (isLoading) {
@@ -561,19 +714,18 @@ export default function PortfolioSection() {
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={isEditing ? handleUpdatePortfolio : handleCreatePortfolio}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary disabled:opacity-50 transition-colors border-2 border-main hover:border-secondary"
+              onClick={isEditing ? cancelFormEdit : closeForm}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
             >
-              <Save className="h-4 w-4" />
-              {isSaving ? 'Saving...' : isEditing ? 'Update Portfolio Post' : 'Create Portfolio Post'}
+              <X className="h-4 w-4" />
+              Cancel
             </button>
             <button
               type="button"
-              onClick={closeForm}
-              className="px-4 py-2 bg-darkgray dark:bg-darkergray text-lighttext rounded-lg hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border-2 border-darkgray dark:border-darkergray"
+              onClick={isEditing ? handleUpdatePortfolio : handleCreatePortfolio}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
-              Cancel
+              Done
             </button>
           </div>
         </div>
@@ -584,6 +736,49 @@ export default function PortfolioSection() {
   // List view
   return (
     <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-main mb-4">
+          Portfolio Section
+        </h1>
+        <p className="text-lighttext2 text-lg">
+          Manage your portfolio posts
+        </p>
+        <div className="flex justify-center gap-3 mt-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            <Eye className="w-4 h-4" />
+            Preview
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!hasChanges() || isUpdating}
+            onClick={cancelAllChanges}
+          >
+            <X className="w-4 h-4" />
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!hasChanges() || isUpdating}
+            onClick={applyAllChanges}
+          >
+            {isUpdating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Applying Changes...
+              </>
+            ) : (
+              'Apply Changes'
+            )}
+          </button>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
           Portfolio Posts
@@ -674,6 +869,14 @@ export default function PortfolioSection() {
           </p>
         </div>
       )}
+
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title="Portfolio Section Preview"
+      >
+        <PortfolioPreview posts={portfolioPosts} deletedPostIds={deletedPosts} />
+      </PreviewModal>
     </div>
   );
 }

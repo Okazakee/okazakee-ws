@@ -3,6 +3,7 @@
 import { processImage, requireAuth, validateImageFile } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { revalidatePath } from 'next/cache';
 
 type UserOperation =
   | { type: 'GET' }
@@ -151,16 +152,20 @@ async function getAllowedUsers(
 
   if (error) throw error;
 
-  // Fetch all user profiles to match with allowed users
-  const { data: profiles } = await supabase
+  // Fetch all user profiles to match with allowed users (no cache to ensure fresh data)
+  const { data: profiles, error: profilesError } = await supabase
     .from('user_profiles')
     .select('id, email, display_name, avatar_url, github_username');
+
+  if (profilesError) {
+    console.error('Error fetching profiles:', profilesError);
+  }
 
   // Match profiles with allowed users
   const usersWithProfiles = (data as AllowedUser[]).map((allowedUser) => {
     const profile = profiles?.find(
       (p) => 
-        (allowedUser.email && p.email === allowedUser.email) ||
+        (allowedUser.email && p.email?.toLowerCase() === allowedUser.email.toLowerCase()) ||
         (allowedUser.github_username && p.github_username === allowedUser.github_username)
     );
     return {
@@ -326,6 +331,9 @@ async function updateUserRole(
     .single();
 
   if (error) throw error;
+
+  // Revalidate CMS paths to ensure fresh data
+  revalidatePath('/cms', 'layout');
 
   return { success: true, data: data as AllowedUser };
 }
@@ -501,8 +509,11 @@ export async function updateUserDisplayName(profileId: string, displayName: stri
     return { success: false, error: 'Display name is required' };
   }
 
-  // Update user_profiles table
-  const { error: updateError } = await supabase
+  // Use admin client to bypass RLS when updating other users' profiles
+  const adminClient = getAdminClient();
+
+  // Update user_profiles table using admin client
+  const { error: updateError } = await adminClient
     .from('user_profiles')
     .update({ display_name: displayName.trim() })
     .eq('id', profileId);
@@ -511,6 +522,9 @@ export async function updateUserDisplayName(profileId: string, displayName: stri
     console.error('Profile update error:', updateError);
     return { success: false, error: 'Failed to update display name' };
   }
+
+  // Revalidate CMS paths to ensure fresh data
+  revalidatePath('/cms', 'layout');
 
   return { success: true };
 }
@@ -611,6 +625,9 @@ export async function updateMyProfile(formData: FormData): Promise<ProfileUpdate
     console.error('Profile update error:', updateError);
     return { success: false, error: 'Failed to update profile' };
   }
+
+  // Revalidate CMS paths to ensure fresh data
+  revalidatePath('/cms', 'layout');
 
   return { success: true, avatarUrl: updates.avatar_url };
 }

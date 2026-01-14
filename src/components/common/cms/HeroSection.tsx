@@ -1,11 +1,13 @@
 import { heroActions } from '@/app/actions/cms/sections/heroActions';
 import { useLayoutStore } from '@/store/layoutStore';
 import { encode } from 'blurhash';
-import { Copy, Download, Upload } from 'lucide-react';
+import { Copy, Download, Home, Upload, FileText, Eye, X } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
 import { useRef, useState } from 'react';
 import { ErrorDiv } from '../ErrorDiv';
+import { PreviewModal } from './PreviewModal';
+import { HeroPreview } from './previews/HeroPreview';
 
 type HeroUpdateData = {
   mainImage?: string;
@@ -37,6 +39,7 @@ export default function HeroSection() {
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Drag and drop states
   const [dragStates, setDragStates] = useState({
@@ -277,21 +280,84 @@ export default function HeroSection() {
     }
   };
 
+  const cancelAllChanges = () => {
+    if (!confirm('Are you sure you want to cancel all changes? All unsaved edits will be lost.')) {
+      return;
+    }
+
+    // Reset to original data
+    setEditedData({
+      mainImage: heroSection?.mainImage || '',
+      blurhashURL: heroSection?.blurhashURL || '',
+      resume_en: heroSection?.resume_en || '',
+      resume_it: heroSection?.resume_it || '',
+      mainImage_file: null,
+      resume_en_file: null,
+      resume_it_file: null,
+    });
+    setModifiedFields(new Set());
+    setError(null);
+  };
+
   return (
     <div className="space-y-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-main mb-4">
-          Hero Section Editor
+          Hero Section
         </h1>
         <p className="text-lighttext2 text-lg">
           Update your hero section content and image
         </p>
+        <div className="flex justify-center gap-3 mt-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            <Eye className="w-4 h-4" />
+            Preview
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={modifiedFields.size === 0 || isUpdating}
+            onClick={cancelAllChanges}
+          >
+            <X className="w-4 h-4" />
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={modifiedFields.size === 0 || isUpdating}
+            onClick={handleApplyChanges}
+          >
+            {isUpdating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Applying Changes...
+              </>
+            ) : (
+              'Apply Changes'
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4">
+          <p className="text-red-500">{error}</p>
+        </div>
+      )}
 
       <div className="space-y-8">
         {/* Hero Image Section */}
         <div className="bg-darkergray rounded-xl p-6">
-          <h2 className="text-2xl font-bold text-main mb-4">Hero Image</h2>
+          <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
+            <Home className="w-5 h-5" />
+            Hero Image
+          </h2>
 
           <div className="space-y-4">
             <div className="flex justify-center">
@@ -376,7 +442,10 @@ export default function HeroSection() {
 
         {/* Resume Links Section */}
         <div className="bg-darkergray rounded-xl p-6">
-          <h2 className="text-2xl font-bold text-main mb-4">Resume Links</h2>
+          <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Resume Links
+          </h2>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Italian Resume */}
@@ -480,22 +549,17 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {error && (
-        <div className="mt-6 text-red-500 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
-          {error}
-        </div>
-      )}
 
-      <div className="flex justify-end mt-8">
-        <button
-          type="submit"
-          className="bg-main hover:bg-secondary text-white font-semibold px-8 py-3 rounded-lg shadow-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          disabled={modifiedFields.size === 0 || isUpdating}
-          onClick={handleApplyChanges}
-        >
-          {isUpdating ? 'Updating...' : 'Apply Changes'}
-        </button>
-      </div>
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title="Hero Section Preview"
+      >
+        <HeroPreview
+          mainImage={editedData.mainImage || heroSection?.mainImage || ''}
+          blurhashURL={editedData.blurhashURL || heroSection?.blurhashURL || ''}
+        />
+      </PreviewModal>
     </div>
   );
 }

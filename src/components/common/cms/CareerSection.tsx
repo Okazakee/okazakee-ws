@@ -11,10 +11,13 @@ import {
   Trash2,
   Upload,
   X,
+  Eye,
 } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { PreviewModal } from './PreviewModal';
+import { CareerPreview } from './previews/CareerPreview';
 
 type CareerEntryWithEditing = CareerEntry & {
   isEditing: boolean;
@@ -38,13 +41,20 @@ type NewCareerEntry = {
   company_description_it: string;
 };
 
+type EditableCareerEntry = CareerEntryWithEditing & {
+  logo_file?: File | null;
+};
+
 export default function CareerSection() {
-  const [careerEntries, setCareerEntries] = useState<CareerEntryWithEditing[]>(
+  const [careerEntries, setCareerEntries] = useState<EditableCareerEntry[]>(
     []
   );
+  const [originalEntries, setOriginalEntries] = useState<EditableCareerEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [newCareerEntry, setNewCareerEntry] = useState<NewCareerEntry>({
     title: '',
     company: '',
@@ -62,6 +72,11 @@ export default function CareerSection() {
     company_description_en: '',
     company_description_it: '',
   });
+
+  // Track modifications
+  const [modifiedEntries, setModifiedEntries] = useState<Set<number>>(new Set());
+  const [newEntries, setNewEntries] = useState<Array<{ entry: EditableCareerEntry; logoFile: File | null }>>([]);
+  const [deletedEntries, setDeletedEntries] = useState<Set<number>>(new Set());
 
   // Drag and drop states
   const [dragStates, setDragStates] = useState<Record<string, boolean>>({});
@@ -85,10 +100,12 @@ export default function CareerSection() {
         (entry: CareerEntry) => ({
           ...entry,
           isEditing: false,
+          logo_file: null,
         })
       );
 
       setCareerEntries(entriesWithEditing);
+      setOriginalEntries(JSON.parse(JSON.stringify(entriesWithEditing))); // Deep copy
     } catch (error) {
       console.error('Error fetching career data:', error);
       setError(
@@ -100,179 +117,293 @@ export default function CareerSection() {
   };
 
   const handleInputChange = (
-    entryId: number,
+    entryId: number | string,
     field: string,
     value: string | boolean | null
   ) => {
+    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
     setCareerEntries((prev) =>
       prev.map((entry) =>
-        entry.id === entryId ? { ...entry, [field]: value } : entry
+        entry.id === id ? { ...entry, [field]: value } : entry
       )
     );
+    // Track modification (only for existing entries, not new ones)
+    if (id > 0) {
+      setModifiedEntries((prev) => new Set(prev).add(id));
+    }
   };
 
   const handleNewEntryChange = (field: string, value: string | null) => {
     setNewCareerEntry((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleCreateCareer = async () => {
+  const handleCreateCareer = () => {
     if (!newEntryLogo) {
       setError('Please select a logo for the career entry');
       return;
     }
 
-    setIsCreating(true);
-    setError(null);
+    // Generate temporary ID (negative to avoid conflicts)
+    const tempId = -Date.now();
+    const newEntry: EditableCareerEntry = {
+      id: tempId,
+      title: newCareerEntry.title,
+      company: newCareerEntry.company,
+      website_url: newCareerEntry.website_url,
+      logo: '',
+      blurhashURL: '',
+      location_en: newCareerEntry.location_en,
+      location_it: newCareerEntry.location_it,
+      remote: newCareerEntry.remote,
+      startDate: newCareerEntry.startDate,
+      endDate: newCareerEntry.endDate,
+      description_en: newCareerEntry.description_en,
+      description_it: newCareerEntry.description_it,
+      skills: newCareerEntry.skills,
+      company_description_en: newCareerEntry.company_description_en,
+      company_description_it: newCareerEntry.company_description_it,
+      isEditing: false,
+      logo_file: newEntryLogo,
+    };
 
-    try {
-      const result = await careerActions({
-        type: 'CREATE',
-        data: {
-          ...newCareerEntry,
-          logo: '', // Will be set after logo upload
-        },
-      });
+    // Add to local state
+    setCareerEntries((prev) => [...prev, newEntry]);
+    setNewEntries((prev) => [...prev, { entry: newEntry, logoFile: newEntryLogo }]);
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create career entry');
-      }
-
-      const newEntry = result.data as CareerEntry;
-
-      // Upload logo
-      const logoResult = await careerActions({
-        type: 'UPLOAD_LOGO',
-        careerId: newEntry.id,
-        file: newEntryLogo,
-      });
-
-      if (!logoResult.success) {
-        throw new Error(logoResult.error || 'Failed to upload logo');
-      }
-
-      // Reset form
-      setNewCareerEntry({
-        title: '',
-        company: '',
-        website_url: '',
-        logo: '',
-        blurhashURL: '',
-        location_en: '',
-        location_it: '',
-        remote: 'onSite',
-        startDate: '',
-        endDate: null,
-        description_en: '',
-        description_it: '',
-        skills: '',
-        company_description_en: '',
-        company_description_it: '',
-      });
-      setNewEntryLogo(null);
-      setIsCreating(false);
-
-      // Refresh data
-      await fetchCareerData();
-    } catch (error) {
-      console.error('Error creating career entry:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to create career entry'
-      );
-      setIsCreating(false);
-    }
+    // Reset form
+    setNewCareerEntry({
+      title: '',
+      company: '',
+      website_url: '',
+      logo: '',
+      blurhashURL: '',
+      location_en: '',
+      location_it: '',
+      remote: 'onSite',
+      startDate: '',
+      endDate: null,
+      description_en: '',
+      description_it: '',
+      skills: '',
+      company_description_en: '',
+      company_description_it: '',
+    });
+    setNewEntryLogo(null);
+    setIsCreating(false);
   };
 
-  const handleUpdateCareer = async (entryId: number) => {
-    const entry = careerEntries.find((e) => e.id === entryId);
-    if (!entry) return;
+  const handleUpdateCareer = (entryId: number | string) => {
+    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
+    // Just close edit mode, changes are tracked in state
+    setCareerEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, isEditing: false } : e))
+    );
+  };
 
-    setError(null);
-
-    try {
-      const result = await careerActions({
-        type: 'UPDATE',
-        id: entryId,
-        data: {
-          title: entry.title,
-          company: entry.company,
-          website_url: entry.website_url,
-          location_en: entry.location_en,
-          location_it: entry.location_it,
-          remote: entry.remote,
-          startDate: entry.startDate,
-          endDate: entry.endDate,
-          description_en: entry.description_en,
-          description_it: entry.description_it,
-          skills: entry.skills,
-          company_description_en: entry.company_description_en,
-          company_description_it: entry.company_description_it,
-        },
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update career entry');
-      }
-
-      // Update local state
+  const cancelEntryEdit = (entryId: number | string) => {
+    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
+    // Revert to original data
+    const originalEntry = originalEntries.find((e) => e.id === id);
+    
+    if (originalEntry) {
       setCareerEntries((prev) =>
-        prev.map((e) => (e.id === entryId ? { ...e, isEditing: false } : e))
+        prev.map((entry) =>
+          entry.id === id
+            ? { ...originalEntry, isEditing: false, logo_file: null }
+            : entry
+        )
       );
-    } catch (error) {
-      console.error('Error updating career entry:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to update career entry'
-      );
+      // Remove from modified set
+      setModifiedEntries((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
     }
   };
 
-  const handleDeleteCareer = async (entryId: number) => {
+  const handleDeleteCareer = (entryId: number | string) => {
     if (!confirm('Are you sure you want to delete this career entry?')) return;
 
-    setError(null);
+    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
 
-    try {
-      const result = await careerActions({ type: 'DELETE', id: entryId });
+    // Check if it's a new entry (temp ID is negative)
+    const isNewEntry = id < 0;
+    
+    if (isNewEntry) {
+      // Remove from new entries
+      setNewEntries((prev) => prev.filter((ne) => ne.entry.id !== id));
+    } else {
+      // Track for deletion
+      setDeletedEntries((prev) => new Set(prev).add(id));
+    }
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete career entry');
-      }
+    // Remove from modified entries if present
+    setModifiedEntries((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
 
-      // Remove from local state
-      setCareerEntries((prev) => prev.filter((e) => e.id !== entryId));
-    } catch (error) {
-      console.error('Error deleting career entry:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to delete career entry'
-      );
+    // Remove from local state
+    setCareerEntries((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  const handleLogoUpload = (entryId: number | string, file: File) => {
+    const id = typeof entryId === 'string' ? parseInt(entryId) : entryId;
+    // Store file for later upload
+    setCareerEntries((prev) =>
+      prev.map((entry) =>
+        entry.id === id ? { ...entry, logo_file: file } : entry
+      )
+    );
+    // Track modification (only for existing entries)
+    if (id > 0) {
+      setModifiedEntries((prev) => new Set(prev).add(id));
     }
   };
 
-  const handleLogoUpload = async (entryId: number, file: File) => {
-    setError(null);
+  const cancelAllChanges = () => {
+    if (!confirm('Are you sure you want to cancel all changes? All unsaved edits will be lost.')) {
+      return;
+    }
 
+    // Reload original data
+    fetchCareerData();
+    
+    // Reset all tracking
+    setModifiedEntries(new Set());
+    setNewEntries([]);
+    setDeletedEntries(new Set());
+    setIsCreating(false);
+    setNewEntryLogo(null);
+  };
+
+  const applyAllChanges = async () => {
     try {
-      const entry = careerEntries.find((e) => e.id === entryId);
-      if (!entry) return;
+      setIsUpdating(true);
+      setError(null);
 
-      const result = await careerActions({
-        type: 'UPLOAD_LOGO',
-        careerId: entryId,
-        file,
-        currentLogoUrl: entry.logo,
-      });
+      // 1. Delete entries
+      for (const entryId of deletedEntries) {
+        const result = await careerActions({ type: 'DELETE', id: entryId });
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to upload logo');
+        if (!result.success) {
+          throw new Error(result.error || `Failed to delete career entry ${entryId}`);
+        }
       }
 
-      // Refresh data to get updated logo
+      // 2. Create new entries
+      for (const { entry, logoFile } of newEntries) {
+        // Create entry
+        const createResult = await careerActions({
+          type: 'CREATE',
+          data: {
+            title: entry.title,
+            company: entry.company,
+            website_url: entry.website_url,
+            location_en: entry.location_en,
+            location_it: entry.location_it,
+            remote: entry.remote,
+            startDate: entry.startDate,
+            endDate: entry.endDate,
+            description_en: entry.description_en,
+            description_it: entry.description_it,
+            skills: entry.skills,
+            company_description_en: entry.company_description_en,
+            company_description_it: entry.company_description_it,
+            logo: '', // Will be set after logo upload
+          },
+        });
+
+        if (!createResult.success) {
+          throw new Error(createResult.error || `Failed to create career entry ${entry.title}`);
+        }
+
+        const createdEntry = createResult.data as CareerEntry;
+
+        // Upload logo
+        if (logoFile) {
+          const logoResult = await careerActions({
+            type: 'UPLOAD_LOGO',
+            careerId: createdEntry.id,
+            file: logoFile,
+          });
+
+          if (!logoResult.success) {
+            throw new Error(logoResult.error || `Failed to upload logo for ${entry.title}`);
+          }
+        }
+      }
+
+      // 3. Update modified entries
+      for (const entryId of modifiedEntries) {
+        const entry = careerEntries.find((e) => e.id === entryId);
+        if (!entry) continue;
+
+        // Update entry data
+        const updateResult = await careerActions({
+          type: 'UPDATE',
+          id: entryId,
+          data: {
+            title: entry.title,
+            company: entry.company,
+            website_url: entry.website_url,
+            location_en: entry.location_en,
+            location_it: entry.location_it,
+            remote: entry.remote,
+            startDate: entry.startDate,
+            endDate: entry.endDate,
+            description_en: entry.description_en,
+            description_it: entry.description_it,
+            skills: entry.skills,
+            company_description_en: entry.company_description_en,
+            company_description_it: entry.company_description_it,
+          },
+        });
+
+        if (!updateResult.success) {
+          throw new Error(updateResult.error || `Failed to update career entry ${entry.title}`);
+        }
+
+        // Upload logo if there's a new file
+        if (entry.logo_file) {
+          const logoResult = await careerActions({
+            type: 'UPLOAD_LOGO',
+            careerId: entryId,
+            file: entry.logo_file,
+            currentLogoUrl: entry.logo,
+          });
+
+          if (!logoResult.success) {
+            throw new Error(logoResult.error || `Failed to upload logo for ${entry.title}`);
+          }
+        }
+      }
+
+      // Refresh data and reset all tracking
       await fetchCareerData();
+      setModifiedEntries(new Set());
+      setNewEntries([]);
+      setDeletedEntries(new Set());
+
+      alert('All changes applied successfully!');
     } catch (error) {
-      console.error('Error uploading logo:', error);
+      console.error('Error applying changes:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to upload logo'
+        error instanceof Error ? error.message : 'Failed to apply changes'
       );
+    } finally {
+      setIsUpdating(false);
     }
+  };
+
+  const hasChanges = () => {
+    return (
+      modifiedEntries.size > 0 ||
+      newEntries.length > 0 ||
+      deletedEntries.size > 0
+    );
   };
 
   const handleDragOver = (e: React.DragEvent, entryId: string) => {
@@ -325,6 +456,49 @@ export default function CareerSection() {
 
   return (
     <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-main mb-4">
+          Career Section
+        </h1>
+        <p className="text-lighttext2 text-lg">
+          Manage your career entries
+        </p>
+        <div className="flex justify-center gap-3 mt-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            <Eye className="w-4 h-4" />
+            Preview
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!hasChanges() || isUpdating}
+            onClick={cancelAllChanges}
+          >
+            <X className="w-4 h-4" />
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!hasChanges() || isUpdating}
+            onClick={applyAllChanges}
+          >
+            {isUpdating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Applying Changes...
+              </>
+            ) : (
+              'Apply Changes'
+            )}
+          </button>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
           Career Entries
@@ -851,19 +1025,17 @@ export default function CareerSection() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleUpdateCareer(entry.id)}
-                      className="flex items-center gap-1 px-3 py-1 bg-main text-white text-sm rounded-sm hover:bg-secondary transition-colors border border-main hover:border-secondary"
-                    >
-                      <Save className="h-3 w-3" />
-                      Save
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleInputChange(entry.id, 'isEditing', false)
-                      }
-                      className="px-3 py-1 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext text-sm rounded-sm hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
+                      onClick={() => cancelEntryEdit(entry.id)}
+                      className="flex items-center gap-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-sm transition-colors"
                     >
                       <X className="h-3 w-3" />
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleUpdateCareer(entry.id)}
+                      className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-sm transition-colors"
+                    >
+                      Done
                     </button>
                   </div>
                 </div>
@@ -881,6 +1053,33 @@ export default function CareerSection() {
           </p>
         </div>
       )}
+
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title="Career Section Preview"
+      >
+        <CareerPreview
+          entries={careerEntries.map((entry) => ({
+            id: entry.id,
+            title: entry.title,
+            company: entry.company,
+            remote: entry.remote,
+            startDate: entry.startDate,
+            endDate: entry.endDate,
+            skills: entry.skills,
+            logo: entry.logo || '',
+            blurhashURL: entry.blurhashURL || '',
+            website_url: entry.website_url,
+            location_en: entry.location_en,
+            location_it: entry.location_it,
+            description_en: entry.description_en,
+            description_it: entry.description_it,
+            company_description_en: entry.company_description_en,
+            company_description_it: entry.company_description_it,
+          }))}
+        />
+      </PreviewModal>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { NextIntlClientProvider } from 'next-intl';
 import Script from 'next/script';
 import { Providers } from '../providers';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',
@@ -26,6 +26,10 @@ export default async function RootLayout({
   const { locale } = await params;
 
   const messages = await getTranslationsSupabase(locale);
+  
+  // Check if we're on a CMS route
+  const headersList = await headers();
+  const isCMSRoute = headersList.get('x-cms-route') === 'true';
   
   // Read theme preference from cookies during SSR
   const cookieStore = await cookies();
@@ -61,10 +65,10 @@ export default async function RootLayout({
           className={`${whiteRabbit.variable} transition-colors duration-400 ease-in-out font-whiterabt antialiased rounded-xl scroll-smooth relative min-h-screen`}
         >
           <NextIntlClientProvider messages={messages} locale={locale}>
-            <Header locale={locale} />
+            {!isCMSRoute && <Header locale={locale} />}
             {children}
-            <ScrollTop />
-            <Footer />
+            {!isCMSRoute && <ScrollTop />}
+            {!isCMSRoute && <Footer />}
           </NextIntlClientProvider>
           <SpeedInsights />
         </body>

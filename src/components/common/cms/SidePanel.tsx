@@ -11,6 +11,7 @@ import {
   Home,
   LogOut,
   NotebookPen,
+  Settings,
   User2,
   Users,
   Zap,
@@ -30,6 +31,10 @@ const SidePanel = () => {
 
   const handleButtonClick = (section: string) => {
     setActiveSection(section);
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cms_active_section', section);
+    }
   };
 
   const handleLogout = async () => {
@@ -57,14 +62,26 @@ const SidePanel = () => {
   useEffect(() => {
     if (!isAdmin && activeSection === 'hero') {
       setActiveSection(defaultSection);
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cms_active_section', defaultSection);
+      }
     }
   }, [isAdmin, activeSection, defaultSection, setActiveSection]);
 
   return (
-    <div className="w-72 text-lighttext flex flex-col h-fit">
+    <div className="w-72 text-lighttext flex flex-col h-full mt-6 md:mt-8">
+      {/* Header */}
+      <div className="p-4 border-b border-darkgray flex-shrink-0 text-center">
+        <h1 className="text-xl font-bold text-main mb-1">CMS Dashboard</h1>
+        <p className="text-lighttext2 text-xs">
+          Manage your website content
+        </p>
+      </div>
+
       {/* User Profile Section */}
       {user && (
-        <div className="p-4 border-b border-darkgray">
+        <div className="p-4 border-b border-darkgray flex-shrink-0">
           <div className="flex items-center gap-3">
             {/* Avatar */}
             <div className="relative w-12 h-12 rounded-full overflow-hidden bg-darkergray flex-shrink-0">
@@ -114,47 +131,61 @@ const SidePanel = () => {
         </div>
       )}
 
-      {/* Navigation */}
-      <div className="p-4">
-        <nav className="space-y-2">
-          {menuItems
-            .filter((item) => !item.adminOnly || isAdmin)
-            .map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-left ${
-                  activeSection === item.id
-                    ? 'bg-main text-white shadow-lg'
-                    : 'bg-darkergray hover:bg-darkgray text-lighttext hover:text-white'
-                }`}
-                onClick={() => handleButtonClick(item.id)}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-              </button>
-            ))}
-        </nav>
-      </div>
+      {/* Navigation and Account Actions */}
+      <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="p-4 pb-4">
+          <nav className="space-y-2">
+            {menuItems
+              .filter((item) => !item.adminOnly || isAdmin)
+              .map((item) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-left ${
+                    activeSection === item.id
+                      ? 'bg-main text-white shadow-lg'
+                      : 'bg-darkergray hover:bg-darkgray text-lighttext hover:text-white'
+                  }`}
+                  onClick={() => handleButtonClick(item.id)}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              ))}
+          </nav>
+        </div>
 
-      {/* Logout & Home Buttons */}
-      <div className="p-4 mt-auto border-t border-darkgray space-y-2">
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className="w-full flex items-center gap-3 p-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 disabled:opacity-50"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
-        </button>
-        <a
-          href="/"
-          className="w-full flex items-center gap-3 p-3 rounded-lg bg-darkergray hover:bg-darkgray text-lighttext hover:text-white transition-all duration-200"
-        >
-          <Home className="w-5 h-5" />
-          <span className="font-medium">Home</span>
-        </a>
+        {/* Account, Home & Logout Buttons */}
+        <div className="px-4 pt-4 pb-4 border-t border-darkgray space-y-2">
+          <button
+            type="button"
+            onClick={() => handleButtonClick('account')}
+            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+              activeSection === 'account'
+                ? 'bg-main text-white shadow-lg'
+                : 'bg-darkergray hover:bg-darkgray text-lighttext hover:text-white'
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+            <span className="font-medium">My Account</span>
+          </button>
+          <a
+            href="/"
+            className="w-full flex items-center gap-3 p-3 rounded-lg bg-darkergray hover:bg-darkgray text-lighttext hover:text-white transition-all duration-200"
+          >
+            <Home className="w-5 h-5" />
+            <span className="font-medium">Home</span>
+          </a>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full flex items-center gap-3 p-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 disabled:opacity-50"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

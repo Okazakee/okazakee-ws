@@ -1,11 +1,13 @@
 'use client';
 
 import { skillsActions } from '@/app/actions/cms/sections/skillsActions';
-import { Edit3, Plus, Save, Trash2, Upload, X } from 'lucide-react';
+import { Edit3, Plus, Save, Trash2, Upload, X, Eye, ArrowUp, ArrowDown } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { ErrorDiv } from '../ErrorDiv';
+import { PreviewModal } from './PreviewModal';
+import { SkillsPreview } from './previews/SkillsPreview';
 
 type Skill = {
   isEditing: boolean;
@@ -58,9 +60,20 @@ type UploadApiResponse = {
 
 export default function SkillsSection() {
   const [categories, setCategories] = useState<EditableCategory[]>([]);
+  const [originalCategories, setOriginalCategories] = useState<EditableCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // Track modifications
+  const [modifiedSkills, setModifiedSkills] = useState<Set<string>>(new Set());
+  const [newSkills, setNewSkills] = useState<Array<{ categoryId: number; skill: EditableSkill }>>([]);
+  const [deletedSkills, setDeletedSkills] = useState<Set<number>>(new Set());
+  const [modifiedCategories, setModifiedCategories] = useState<Set<number>>(new Set());
+  const [newCategories, setNewCategories] = useState<Array<{ name: string; tempId: number }>>([]);
+  const [deletedCategories, setDeletedCategories] = useState<Set<number>>(new Set());
+  const [categoryOrderChanged, setCategoryOrderChanged] = useState(false);
 
   // Drag and drop states
   const [dragStates, setDragStates] = useState<Record<string, boolean>>({});
@@ -80,15 +93,15 @@ export default function SkillsSection() {
         throw new Error(result.error || 'Failed to fetch skills data');
       }
 
-      setCategories(
-        result.data.map((cat: SkillsCategory) => ({
-          ...cat,
-          skills: cat.skills.map((skill: Skill) => ({
-            ...skill,
-            isEditing: false,
-          })),
-        }))
-      );
+      const loadedCategories = result.data.map((cat: SkillsCategory) => ({
+        ...cat,
+        skills: cat.skills.map((skill: Skill) => ({
+          ...skill,
+          isEditing: false,
+        })),
+      }));
+      setCategories(loadedCategories);
+      setOriginalCategories(JSON.parse(JSON.stringify(loadedCategories))); // Deep copy
     } catch (err) {
       setError('Failed to load skills data');
       console.error(err);
@@ -115,6 +128,8 @@ export default function SkillsSection() {
           : cat
       )
     );
+    // Track modification
+    setModifiedSkills((prev) => new Set(prev).add(`${categoryId}-${skillId}`));
   };
 
   const handleFileChange = async (
@@ -190,80 +205,51 @@ export default function SkillsSection() {
     );
   };
 
-  const saveSkillChanges = async (categoryId: number, skillId: number) => {
-    const category = categories.find((cat) => cat.id === categoryId);
-    const skill = category?.skills.find((s) => s.id === skillId) as
-      | EditableSkill
-      | undefined;
-
-    if (!skill) return;
-
-    try {
-      setIsUpdating(true);
-      setError(null);
-
-      const updateData: Partial<Skill> = {
-        title: skill.title,
-        invert: skill.invert,
-      };
-
-      // If there's a new icon file, upload it first
-      if (skill.icon_file) {
-        const uploadResult = (await skillsActions({
-          type: 'UPLOAD_ICON',
-          skillId: skill.id,
-          file: skill.icon_file,
-          currentIconUrl: skill.icon,
-        })) as UploadApiResponse;
-
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.error || 'Failed to upload icon');
-        }
-
-        updateData.icon = uploadResult.data.icon_url;
-        updateData.blurhashURL = uploadResult.data.blurhashURL;
-      }
-
-      // Update the skill in database
-      const result = (await skillsActions({
-        type: 'UPDATE',
-        id: skillId,
-        data: updateData,
-      })) as SkillApiResponse;
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update skill');
-      }
-
-      // Update local state
+  const cancelSkillEdit = (categoryId: number, skillId: number) => {
+    // Revert to original data
+    const originalCategory = originalCategories.find((cat) => cat.id === categoryId);
+    const originalSkill = originalCategory?.skills.find((s) => s.id === skillId);
+    
+    if (originalSkill) {
       setCategories((prev) =>
         prev.map((cat) =>
           cat.id === categoryId
             ? {
                 ...cat,
-                skills: cat.skills.map((s) =>
-                  s.id === skillId
-                    ? {
-                        ...s,
-                        isEditing: false,
-                        icon_file: undefined,
-                        icon: updateData.icon || s.icon,
-                        blurhashURL: updateData.blurhashURL || s.blurhashURL,
-                      }
-                    : s
+                skills: cat.skills.map((skill) =>
+                  skill.id === skillId
+                    ? { ...originalSkill, isEditing: false, icon_file: undefined }
+                    : skill
                 ),
               }
             : cat
         )
       );
-    } catch (error) {
-      console.error('Error saving skill changes:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to save changes'
-      );
-    } finally {
-      setIsUpdating(false);
+      // Remove from modified set
+      setModifiedSkills((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(`${categoryId}-${skillId}`);
+        return newSet;
+      });
     }
+  };
+
+  const saveSkillChanges = (categoryId: number, skillId: number) => {
+    // Just close edit mode, changes are tracked in state
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              skills: cat.skills.map((skill) =>
+                skill.id === skillId
+                  ? { ...skill, isEditing: false }
+                  : skill
+              ),
+            }
+          : cat
+      )
+    );
   };
 
   const addNewSkill = (categoryId: number) => {
@@ -286,7 +272,7 @@ export default function SkillsSection() {
     );
   };
 
-  const saveNewSkill = async (categoryId: number) => {
+  const saveNewSkill = (categoryId: number) => {
     const category = categories.find((cat) => cat.id === categoryId);
     const newSkill = category?.newSkill;
 
@@ -301,159 +287,85 @@ export default function SkillsSection() {
       return;
     }
 
-    try {
-      setIsUpdating(true);
-      setError(null);
+    // Generate temporary ID for new skill
+    const tempId = Date.now();
+    const skillToAdd: EditableSkill = {
+      id: tempId,
+      title: newSkill.title,
+      icon: newSkill.icon || '',
+      invert: newSkill.invert || false,
+      category_id: categoryId,
+      blurhashURL: newSkill.blurhashURL || '',
+      icon_file: newSkill.icon_file,
+      isEditing: false,
+    };
 
-      // Create the new skill with placeholder icon if we're uploading a file
-      const result = (await skillsActions({
-        type: 'CREATE',
-        data: {
-          title: newSkill.title,
-          icon: newSkill.icon || 'pending-upload',
-          invert: newSkill.invert || false,
-          category_id: categoryId,
-          blurhashURL: newSkill.blurhashURL || '',
-        },
-      })) as SkillApiResponse;
+    // Add to local state
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              skills: [...cat.skills, skillToAdd],
+              newSkill: undefined,
+            }
+          : cat
+      )
+    );
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create skill');
-      }
-
-      const createdSkill = result.data;
-
-      // If there's an icon file, upload it
-      if (newSkill.icon_file) {
-        const uploadResult = (await skillsActions({
-          type: 'UPLOAD_ICON',
-          skillId: createdSkill.id,
-          file: newSkill.icon_file,
-        })) as UploadApiResponse;
-
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.error || 'Failed to upload icon');
-        }
-
-        createdSkill.icon = uploadResult.data.icon_url;
-        createdSkill.blurhashURL = uploadResult.data.blurhashURL;
-      }
-
-      // Add the new skill to local state
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === categoryId
-            ? {
-                ...cat,
-                skills: [...cat.skills, { ...createdSkill, isEditing: false }],
-                newSkill: undefined,
-              }
-            : cat
-        )
-      );
-    } catch (error) {
-      console.error('Error creating skill:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to create skill'
-      );
-    } finally {
-      setIsUpdating(false);
-    }
+    // Track as new skill
+    setNewSkills((prev) => [...prev, { categoryId, skill: skillToAdd }]);
   };
 
   // Category management functions
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
-  const createCategory = async () => {
+  const createCategory = () => {
     if (!newCategoryName.trim()) {
       setError('Category name is required');
       return;
     }
 
-    try {
-      setIsUpdating(true);
-      setError(null);
+    const tempId = Date.now();
+    const newCategory: EditableCategory = {
+      id: tempId,
+      name: newCategoryName.trim(),
+      skills: [],
+    };
 
-      const result = await skillsActions({
-        type: 'CREATE_CATEGORY',
-        data: { name: newCategoryName.trim() },
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create category');
-      }
-
-      setNewCategoryName('');
-      setIsCreatingCategory(false);
-      await fetchSkillsData();
-    } catch (error) {
-      console.error('Error creating category:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to create category'
-      );
-    } finally {
-      setIsUpdating(false);
-    }
+    setCategories((prev) => [...prev, newCategory]);
+    setNewCategories((prev) => [...prev, { name: newCategoryName.trim(), tempId }]);
+    setIsCreatingCategory(false);
+    setNewCategoryName('');
   };
 
-  const updateCategory = async (categoryId: number, newName: string) => {
-    try {
-      setIsUpdating(true);
-      setError(null);
-
-      const result = await skillsActions({
-        type: 'UPDATE_CATEGORY',
-        id: categoryId,
-        data: { name: newName },
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update category');
-      }
-
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === categoryId ? { ...cat, name: newName, isEditing: false } : cat
-        )
-      );
-    } catch (error) {
-      console.error('Error updating category:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to update category'
-      );
-    } finally {
-      setIsUpdating(false);
-    }
+  const updateCategory = (categoryId: number, newName: string) => {
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId ? { ...cat, name: newName, isEditing: false } : cat
+      )
+    );
+    setModifiedCategories((prev) => new Set(prev).add(categoryId));
   };
 
-  const deleteCategory = async (categoryId: number) => {
+  const deleteCategory = (categoryId: number) => {
     if (!confirm('Are you sure you want to delete this category? All skills in this category must be removed first.')) {
       return;
     }
 
-    try {
-      setIsUpdating(true);
-      setError(null);
-
-      const result = await skillsActions({
-        type: 'DELETE_CATEGORY',
-        id: categoryId,
-      });
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete category');
-      }
-
-      setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to delete category'
-      );
-    } finally {
-      setIsUpdating(false);
+    // Check if it's a new category (temp ID)
+    const isNewCategory = newCategories.some((nc) => nc.tempId === categoryId);
+    
+    if (isNewCategory) {
+      // Remove from new categories
+      setNewCategories((prev) => prev.filter((nc) => nc.tempId !== categoryId));
+    } else {
+      // Track for deletion
+      setDeletedCategories((prev) => new Set(prev).add(categoryId));
     }
+
+    setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
   };
 
   const handleNewSkillFileChange = (categoryId: number, file: File) => {
@@ -477,41 +389,300 @@ export default function SkillsSection() {
     reader.readAsDataURL(file);
   };
 
-  const deleteSkillHandler = async (categoryId: number, skillId: number) => {
+  const deleteSkillHandler = (categoryId: number, skillId: number) => {
     if (!confirm('Are you sure you want to delete this skill?')) return;
 
+    // Check if it's a new skill (temp ID)
+    const isNewSkill = newSkills.some((ns) => ns.skill.id === skillId);
+    
+    if (isNewSkill) {
+      // Remove from new skills
+      setNewSkills((prev) => prev.filter((ns) => ns.skill.id !== skillId));
+    } else {
+      // Track for deletion
+      setDeletedSkills((prev) => new Set(prev).add(skillId));
+    }
+
+    // Remove from modified skills if present
+    setModifiedSkills((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(`${categoryId}-${skillId}`);
+      return newSet;
+    });
+
+    // Remove from local state
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              skills: cat.skills.filter((skill) => skill.id !== skillId),
+            }
+          : cat
+      )
+    );
+  };
+
+  const applyAllChanges = async () => {
     try {
       setIsUpdating(true);
       setError(null);
 
-      const result = (await skillsActions({
-        type: 'DELETE',
-        id: skillId,
-      })) as { success: boolean; error?: string };
+      // 1. Delete skills
+      for (const skillId of deletedSkills) {
+        const result = (await skillsActions({
+          type: 'DELETE',
+          id: skillId,
+        })) as { success: boolean; error?: string };
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete skill');
+        if (!result.success) {
+          throw new Error(result.error || `Failed to delete skill ${skillId}`);
+        }
       }
 
-      // Remove from local state
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === categoryId
-            ? {
-                ...cat,
-                skills: cat.skills.filter((skill) => skill.id !== skillId),
-              }
-            : cat
-        )
-      );
+      // 2. Delete categories
+      for (const categoryId of deletedCategories) {
+        const result = await skillsActions({
+          type: 'DELETE_CATEGORY',
+          id: categoryId,
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || `Failed to delete category ${categoryId}`);
+        }
+      }
+
+      // 3. Create new categories (with position)
+      for (const newCat of newCategories) {
+        const category = categories.find((cat) => cat.id === newCat.tempId);
+        const position = category ? categories.indexOf(category) : categories.length;
+        
+        const result = await skillsActions({
+          type: 'CREATE_CATEGORY',
+          data: { name: newCat.name },
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || `Failed to create category ${newCat.name}`);
+        }
+
+        // Update position after creation
+        const createdId = (result as { data: { id: number } }).data.id;
+        const positionResult = await skillsActions({
+          type: 'UPDATE_CATEGORY',
+          id: createdId,
+          data: { position },
+        });
+
+        if (!positionResult.success) {
+          console.warn(`Failed to set position for category ${newCat.name}`);
+        }
+      }
+
+      // 4. Update category order if changed
+      if (categoryOrderChanged) {
+        for (let i = 0; i < categories.length; i++) {
+          const category = categories[i];
+          // Skip new categories (they'll be created with position)
+          const isNewCategory = newCategories.some((nc) => nc.tempId === category.id);
+          if (!isNewCategory) {
+            const result = await skillsActions({
+              type: 'UPDATE_CATEGORY',
+              id: category.id,
+              data: { position: i },
+            });
+
+            if (!result.success) {
+              throw new Error(result.error || `Failed to update category order for ${category.name}`);
+            }
+          }
+        }
+      }
+
+      // 5. Update categories (name changes)
+      for (const categoryId of modifiedCategories) {
+        const category = categories.find((cat) => cat.id === categoryId);
+        if (category) {
+          const result = await skillsActions({
+            type: 'UPDATE_CATEGORY',
+            id: categoryId,
+            data: { name: category.name },
+          });
+
+          if (!result.success) {
+            throw new Error(result.error || `Failed to update category ${categoryId}`);
+          }
+        }
+      }
+
+      // 6. Create new skills
+      for (const { categoryId, skill } of newSkills) {
+        // Find the actual category ID (might be temp ID)
+        const category = categories.find((cat) => cat.id === categoryId);
+        const actualCategoryId = category?.id || categoryId;
+
+        // Create skill
+        const createResult = (await skillsActions({
+          type: 'CREATE',
+          data: {
+            title: skill.title,
+            icon: skill.icon || 'pending-upload',
+            invert: skill.invert || false,
+            category_id: actualCategoryId,
+            blurhashURL: skill.blurhashURL || '',
+          },
+        })) as SkillApiResponse;
+
+        if (!createResult.success) {
+          throw new Error(createResult.error || `Failed to create skill ${skill.title}`);
+        }
+
+        const createdSkill = createResult.data;
+
+        // Upload icon if there's a file
+        if (skill.icon_file) {
+          const uploadResult = (await skillsActions({
+            type: 'UPLOAD_ICON',
+            skillId: createdSkill.id,
+            file: skill.icon_file,
+          })) as UploadApiResponse;
+
+          if (!uploadResult.success) {
+            throw new Error(uploadResult.error || `Failed to upload icon for ${skill.title}`);
+          }
+
+          // Update the skill with the new icon
+          await skillsActions({
+            type: 'UPDATE',
+            id: createdSkill.id,
+            data: {
+              icon: uploadResult.data.icon_url,
+              blurhashURL: uploadResult.data.blurhashURL,
+            },
+          });
+        }
+      }
+
+      // 7. Update modified skills
+      for (const modifiedKey of modifiedSkills) {
+        const [categoryIdStr, skillIdStr] = modifiedKey.split('-');
+        const categoryId = parseInt(categoryIdStr);
+        const skillId = parseInt(skillIdStr);
+
+        const category = categories.find((cat) => cat.id === categoryId);
+        const skill = category?.skills.find((s) => s.id === skillId) as EditableSkill | undefined;
+
+        if (!skill) continue;
+
+        const updateData: Partial<Skill> = {
+          title: skill.title,
+          invert: skill.invert,
+        };
+
+        // Upload icon if there's a new file
+        if (skill.icon_file) {
+          const uploadResult = (await skillsActions({
+            type: 'UPLOAD_ICON',
+            skillId: skill.id,
+            file: skill.icon_file,
+            currentIconUrl: skill.icon,
+          })) as UploadApiResponse;
+
+          if (!uploadResult.success) {
+            throw new Error(uploadResult.error || `Failed to upload icon for ${skill.title}`);
+          }
+
+          updateData.icon = uploadResult.data.icon_url;
+          updateData.blurhashURL = uploadResult.data.blurhashURL;
+        }
+
+        // Update the skill
+        const result = (await skillsActions({
+          type: 'UPDATE',
+          id: skillId,
+          data: updateData,
+        })) as SkillApiResponse;
+
+        if (!result.success) {
+          throw new Error(result.error || `Failed to update skill ${skill.title}`);
+        }
+      }
+
+      // Refresh data and reset all tracking
+      await fetchSkillsData();
+      setModifiedSkills(new Set());
+      setNewSkills([]);
+      setDeletedSkills(new Set());
+      setModifiedCategories(new Set());
+      setNewCategories([]);
+      setDeletedCategories(new Set());
+      setCategoryOrderChanged(false);
+
+      alert('All changes applied successfully!');
     } catch (error) {
-      console.error('Error deleting skill:', error);
+      console.error('Error applying changes:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to delete skill'
+        error instanceof Error ? error.message : 'Failed to apply changes'
       );
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const moveCategoryUp = (categoryId: number) => {
+    const currentIndex = categories.findIndex((cat) => cat.id === categoryId);
+    if (currentIndex <= 0) return; // Already at top
+
+    const newCategories = [...categories];
+    [newCategories[currentIndex - 1], newCategories[currentIndex]] = [
+      newCategories[currentIndex],
+      newCategories[currentIndex - 1],
+    ];
+    setCategories(newCategories);
+    setCategoryOrderChanged(true);
+  };
+
+  const moveCategoryDown = (categoryId: number) => {
+    const currentIndex = categories.findIndex((cat) => cat.id === categoryId);
+    if (currentIndex < 0 || currentIndex >= categories.length - 1) return; // Already at bottom
+
+    const newCategories = [...categories];
+    [newCategories[currentIndex], newCategories[currentIndex + 1]] = [
+      newCategories[currentIndex + 1],
+      newCategories[currentIndex],
+    ];
+    setCategories(newCategories);
+    setCategoryOrderChanged(true);
+  };
+
+  const cancelAllChanges = () => {
+    if (!confirm('Are you sure you want to cancel all changes? All unsaved edits will be lost.')) {
+      return;
+    }
+
+    // Reload original data
+    fetchSkillsData();
+    
+    // Reset all tracking
+    setModifiedSkills(new Set());
+    setNewSkills([]);
+    setDeletedSkills(new Set());
+    setModifiedCategories(new Set());
+    setNewCategories([]);
+    setDeletedCategories(new Set());
+    setCategoryOrderChanged(false);
+  };
+
+  const hasChanges = () => {
+    return (
+      modifiedSkills.size > 0 ||
+      newSkills.length > 0 ||
+      deletedSkills.size > 0 ||
+      modifiedCategories.size > 0 ||
+      newCategories.length > 0 ||
+      deletedCategories.size > 0 ||
+      categoryOrderChanged
+    );
   };
 
   if (isLoading) {
@@ -526,6 +697,19 @@ export default function SkillsSection() {
     return <ErrorDiv>{error}</ErrorDiv>;
   }
 
+  // Convert editable categories to preview format
+  const previewCategories = categories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    skills: cat.skills.map((skill) => ({
+      id: skill.id,
+      title: skill.title,
+      icon: skill.icon,
+      invert: skill.invert,
+      blurhashURL: skill.blurhashURL,
+    })),
+  }));
+
   return (
     <div className="space-y-8">
       <div className="text-center mb-8">
@@ -535,6 +719,40 @@ export default function SkillsSection() {
         <p className="text-lighttext2 text-lg">
           Manage your skills and categories
         </p>
+        <div className="flex justify-center gap-3 mt-4">
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            <Eye className="w-4 h-4" />
+            Preview
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!hasChanges() || isUpdating}
+            onClick={cancelAllChanges}
+          >
+            <X className="w-4 h-4" />
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!hasChanges() || isUpdating}
+            onClick={applyAllChanges}
+          >
+            {isUpdating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Applying Changes...
+              </>
+            ) : (
+              'Apply Changes'
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Category Management */}
@@ -603,20 +821,36 @@ export default function SkillsSection() {
                       const input = document.getElementById(`category-name-${category.id}`) as HTMLInputElement;
                       updateCategory(category.id, input.value);
                     }}
-                    disabled={isUpdating}
-                    className="p-2 text-green-500 hover:text-green-400 transition-colors"
+                    className="p-2 text-blue-500 hover:text-blue-400 transition-colors"
                   >
-                    <Save className="w-5 h-5" />
+                    Done
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      setCategories((prev) =>
-                        prev.map((cat) =>
-                          cat.id === category.id ? { ...cat, isEditing: false } : cat
-                        )
-                      )
-                    }
+                    onClick={() => {
+                      // Revert to original name
+                      const originalCategory = originalCategories.find((cat) => cat.id === category.id);
+                      if (originalCategory) {
+                        setCategories((prev) =>
+                          prev.map((cat) =>
+                            cat.id === category.id
+                              ? { ...cat, name: originalCategory.name, isEditing: false }
+                              : cat
+                          )
+                        );
+                        setModifiedCategories((prev) => {
+                          const newSet = new Set(prev);
+                          newSet.delete(category.id);
+                          return newSet;
+                        });
+                      } else {
+                        setCategories((prev) =>
+                          prev.map((cat) =>
+                            cat.id === category.id ? { ...cat, isEditing: false } : cat
+                          )
+                        );
+                      }
+                    }}
                     className="p-2 text-lighttext2 hover:text-lighttext transition-colors"
                   >
                     <X className="w-5 h-5" />
@@ -624,6 +858,26 @@ export default function SkillsSection() {
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => moveCategoryUp(category.id)}
+                      disabled={categories.findIndex((cat) => cat.id === category.id) === 0}
+                      className="p-1 text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Move up"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveCategoryDown(category.id)}
+                      disabled={categories.findIndex((cat) => cat.id === category.id) === categories.length - 1}
+                      className="p-1 text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Move down"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                  </div>
                   <h2 className="text-2xl font-bold text-main">{category.name}</h2>
                   <button
                     type="button"
@@ -781,23 +1035,18 @@ export default function SkillsSection() {
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() =>
-                            saveSkillChanges(category.id, skill.id)
-                          }
-                          className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-sm transition-all duration-200"
-                          disabled={isUpdating}
-                        >
-                          <Save className="w-3 h-3" />
-                          {isUpdating ? 'Saving...' : 'Save'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleEditSkill(category.id, skill.id)}
+                          onClick={() => cancelSkillEdit(category.id, skill.id)}
                           className="flex items-center gap-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-sm transition-all duration-200"
-                          disabled={isUpdating}
                         >
                           <X className="w-3 h-3" />
                           Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => saveSkillChanges(category.id, skill.id)}
+                          className="flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-sm transition-all duration-200"
+                        >
+                          Done
                         </button>
                       </div>
                     </div>
@@ -915,11 +1164,9 @@ export default function SkillsSection() {
                       <button
                         type="button"
                         onClick={() => saveNewSkill(category.id)}
-                        className="flex items-center gap-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-sm transition-all duration-200"
-                        disabled={isUpdating}
+                        className="flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-sm transition-all duration-200"
                       >
-                        <Save className="w-3 h-3" />
-                        {isUpdating ? 'Saving...' : 'Save'}
+                        Add
                       </button>
                       <button
                         type="button"
@@ -933,7 +1180,6 @@ export default function SkillsSection() {
                           )
                         }
                         className="flex items-center gap-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-sm transition-all duration-200"
-                        disabled={isUpdating}
                       >
                         <X className="w-3 h-3" />
                         Cancel
@@ -952,6 +1198,15 @@ export default function SkillsSection() {
           {error}
         </div>
       )}
+
+
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        title="Skills Section Preview"
+      >
+        <SkillsPreview categories={previewCategories} />
+      </PreviewModal>
     </div>
   );
 }

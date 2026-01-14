@@ -236,8 +236,14 @@ export default async function middleware(request: NextRequest) {
         try {
           const response = await updateSession(request, currentLocale);
           if (response instanceof NextResponse) {
+            // Add header to indicate CMS route
+            response.headers.set('x-cms-route', 'true');
             return response;
           }
+          // If response is not a NextResponse, create one and add header
+          const nextResponse = NextResponse.next();
+          nextResponse.headers.set('x-cms-route', 'true');
+          return nextResponse;
         } catch (authError) {
           return handleAuthError(request, currentLocale, authError);
         }
@@ -245,7 +251,14 @@ export default async function middleware(request: NextRequest) {
 
       // Handle i18n for existing locale paths - simplified chaining
       if (hasLocale) {
-        return handleI18n(request);
+        const i18nResponse = handleI18n(request);
+        // Check if this is a CMS route and add header
+        if (isCMSRoute(pathname)) {
+          if (i18nResponse instanceof NextResponse) {
+            i18nResponse.headers.set('x-cms-route', 'true');
+          }
+        }
+        return i18nResponse;
       }
 
       // Redirect to localized path

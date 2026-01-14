@@ -3,6 +3,7 @@
 import { getUser } from '@/app/actions/cms/getUser';
 import { heroActions } from '@/app/actions/cms/sections/heroActions';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import AccountSection from '@/components/common/cms/AccountSection';
 import BlogSection from '@/components/common/cms/BlogSection';
 import CareerSection from '@/components/common/cms/CareerSection';
 import ContactsSection from '@/components/common/cms/ContactsSection';
@@ -38,9 +39,30 @@ export default function CMS() {
         setUser(fetchedUser);
 
         if (fetchedUser) {
-          // Set default section based on user role
+          // Try to load saved section from localStorage
+          const savedSection = typeof window !== 'undefined' 
+            ? localStorage.getItem('cms_active_section') 
+            : null;
+          
+          // Validate saved section based on user role
           const defaultSection = fetchedUser.role === 'admin' ? 'hero' : 'blog';
-          setActiveSection(defaultSection);
+          const adminOnlySections = ['hero', 'skills', 'career', 'contacts', 'i18n', 'users'];
+          
+          let sectionToUse = defaultSection;
+          
+          if (savedSection) {
+            // Check if saved section is valid for this user
+            if (fetchedUser.role === 'admin' || !adminOnlySections.includes(savedSection)) {
+              sectionToUse = savedSection;
+            }
+          }
+          
+          setActiveSection(sectionToUse);
+          
+          // Save to localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('cms_active_section', sectionToUse);
+          }
 
           // Only fetch hero data for admins
           if (fetchedUser.role === 'admin') {
@@ -90,17 +112,9 @@ export default function CMS() {
   }
 
   return (
-    <div className=" bg-bglight dark:bg-bgdark">
-      <div className="flex max-w-(--breakpoint-2xl) mx-auto mt-6">
-        <div className="flex flex-col">
-          <SidePanel />
-          <div className="w-72 p-4 text-center">
-            <h1 className="text-2xl font-bold text-main">CMS Dashboard</h1>
-            <p className="text-lighttext2 text-sm">
-              Manage your website content
-            </p>
-          </div>
-        </div>
+    <div className="bg-bglight dark:bg-bgdark min-h-screen">
+      <div className="flex h-screen max-w-(--breakpoint-2xl) mx-auto">
+        <SidePanel />
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="max-w-4xl mx-auto">
             {activeSection === 'hero' && <HeroSection />}
@@ -111,6 +125,7 @@ export default function CMS() {
             {activeSection === 'contacts' && <ContactsSection />}
             {activeSection === 'i18n' && <I18nSection />}
             {activeSection === 'users' && <UsersSection />}
+            {activeSection === 'account' && <AccountSection />}
             {activeSection === 'settings' && (
               <div className="text-center py-12">
                 <h2 className="text-3xl font-bold text-main mb-4">Settings</h2>

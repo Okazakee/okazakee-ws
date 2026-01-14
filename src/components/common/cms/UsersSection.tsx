@@ -34,7 +34,7 @@ type AllowedUser = {
 };
 
 export default function UsersSection() {
-  const { user } = useLayoutStore();
+  const { user, setUser } = useLayoutStore();
   const [users, setUsers] = useState<AllowedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,6 +113,19 @@ export default function UsersSection() {
         throw new Error(result.error || 'Failed to update role');
       }
       await fetchUsers();
+      // If current user's role changed, refresh their session data
+      const updatedUser = users.find(u => u.id === id);
+      if (updatedUser && user && (
+        (user.email && updatedUser.email?.toLowerCase() === user.email.toLowerCase()) ||
+        (user.githubUsername && updatedUser.github_username === user.githubUsername)
+      )) {
+        // Refresh user data from server
+        const { getUser } = await import('@/app/actions/cms/getUser');
+        const refreshedUser = await getUser();
+        if (refreshedUser) {
+          setUser(refreshedUser);
+        }
+      }
     } catch (err) {
       console.error('Error updating role:', err);
       setError(err instanceof Error ? err.message : 'Failed to update role');
@@ -177,20 +190,38 @@ export default function UsersSection() {
   const handleSaveName = async (profileId: string) => {
     if (!editedName.trim()) return;
 
+    const nameToSave = editedName.trim();
     setSavingNameFor(profileId);
     setError(null);
 
     try {
-      const result = await updateUserDisplayName(profileId, editedName.trim());
+      const result = await updateUserDisplayName(profileId, nameToSave);
       if (!result.success) {
         throw new Error(result.error || 'Failed to update display name');
       }
+      
       setEditingNameFor(null);
       setEditedName('');
+      
+      // Small delay to ensure database update is committed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Refresh users list to get updated name from database
       await fetchUsers();
+      
+      // If current user's name changed, refresh their session data
+      if (user?.id === profileId) {
+        const { getUser } = await import('@/app/actions/cms/getUser');
+        const refreshedUser = await getUser();
+        if (refreshedUser) {
+          setUser(refreshedUser);
+        }
+      }
     } catch (err) {
       console.error('Error updating display name:', err);
       setError(err instanceof Error ? err.message : 'Failed to update display name');
+      // Refresh to revert any changes
+      await fetchUsers();
     } finally {
       setSavingNameFor(null);
     }
@@ -367,6 +398,15 @@ export default function UsersSection() {
             {users.map((allowedUser) => {
               const hasProfile = !!allowedUser.profile;
               const isUploadingThis = uploadingAvatarFor === allowedUser.profile?.id;
+              // Check if this is the current user
+              const isCurrentUser = user && (
+                (user.email && allowedUser.email?.toLowerCase() === user.email.toLowerCase()) ||
+                (user.githubUsername && allowedUser.github_username === user.githubUsername) ||
+                (user.id && allowedUser.profile?.id === user.id)
+              );
+              // Check if this user is the last admin
+              const adminCount = users.filter(u => u.role === 'admin').length;
+              const isLastAdmin = allowedUser.role === 'admin' && adminCount === 1;
 
               return (
                 <div
@@ -500,6 +540,9 @@ export default function UsersSection() {
                         {allowedUser.role === 'admin' && editingNameFor !== allowedUser.profile?.id && (
                           <Crown className="w-4 h-4 text-yellow-500" />
                         )}
+                        {isCurrentUser && (
+                          <span className="px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400">You</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-lighttext2">
                         <span className={`px-2 py-0.5 rounded text-xs ${
@@ -509,6 +552,12 @@ export default function UsersSection() {
                         }`}>
                           {allowedUser.role}
                         </span>
+                        {isCurrentUser && (
+                          <span className="text-lighttext2 text-xs">(Cannot change your own role)</span>
+                        )}
+                        {isLastAdmin && !isCurrentUser && (
+                          <span className="text-yellow-500 text-xs">(Last admin - cannot demote)</span>
+                        )}
                         {!hasProfile && (
                           <span className="text-yellow-500 text-xs">Not logged in yet</span>
                         )}
@@ -528,15 +577,30 @@ export default function UsersSection() {
                   {/* Actions */}
                   {isAdmin && (
                     <div className="flex items-center gap-2">
-                      <select
-                        value={allowedUser.role}
-                        onChange={(e) => handleUpdateRole(allowedUser.id, e.target.value as 'admin' | 'editor')}
-                        disabled={updatingRoleFor === allowedUser.id}
-                        className="px-2 py-1 bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <option value="editor">Editor</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                      {isCurrentUser ? (
+                        <span className="px-2 py-1 bg-darkgray border border-lighttext2 rounded text-sm text-lighttext2 opacity-75">
+                          {allowedUser.role}
+                        </span>
+                      ) : (
+                        <select
+                          value={allowedUser.role}
+                          onChange={(e) => {
+                            const newRole = e.target.value as 'admin' | 'editor';
+                            // Prevent demoting last admin
+                            if (isLastAdmin && newRole === 'editor') {
+                              setError('Cannot demote the last admin');
+                              return;
+                            }
+                            handleUpdateRole(allowedUser.id, newRole);
+                          }}
+                          disabled={updatingRoleFor === allowedUser.id}
+                          title={isLastAdmin ? 'Cannot demote the last admin' : undefined}
+                          className="px-2 py-1 bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <option value="editor" disabled={isLastAdmin}>Editor</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      )}
                       <button
                         type="button"
                         onClick={() => handleRemoveUser(allowedUser.id)}
