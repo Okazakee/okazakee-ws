@@ -179,12 +179,25 @@ async function uploadHeroImage(
       await backupOldFile(supabase, currentImageUrl, 'website');
     }
 
-    // Process image: resize, convert to WebP, generate blurhash
-    const processed = await processImage(file);
-    if (!processed.success || !processed.buffer) {
-      return { success: false, error: processed.error || 'Failed to process image' };
+    // Check if file is already WebP (pre-processed client-side)
+    const isWebP = file.type === 'image/webp';
+    let buffer: Buffer;
+    let blurhash: string | undefined;
+
+    if (isWebP) {
+      // File is already WebP - upload directly
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      blurhash = undefined;
+    } else {
+      // Fallback: process image server-side (should be rare)
+      const processed = await processImage(file);
+      if (!processed.success || !processed.buffer) {
+        return { success: false, error: processed.error || 'Failed to process image' };
+      }
+      buffer = processed.buffer;
+      blurhash = processed.blurhash;
     }
-    const { buffer, blurhash } = processed;
 
     // Upload to Supabase Storage
     const fileName = 'hero/profile.webp';
@@ -208,13 +221,17 @@ async function uploadHeroImage(
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update hero section with new image URL and blurhash
+    // Update hero section with new image URL and blurhash (if available)
+    const updateData: { propic: string; blurhashURL?: string | null } = {
+      propic: urlData.publicUrl,
+    };
+    if (blurhash !== undefined) {
+      updateData.blurhashURL = blurhash || null;
+    }
+
     const { error: updateError } = await supabase
       .from('hero_section')
-      .update({
-        propic: urlData.publicUrl,
-        blurhashURL: blurhash,
-      })
+      .update(updateData)
       .eq('id', 1);
 
     if (updateError) throw updateError;

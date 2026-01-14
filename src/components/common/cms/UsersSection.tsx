@@ -2,6 +2,7 @@
 
 import { updateUserDisplayName, uploadUserAvatar, usersActions } from '@/app/actions/cms/sections/usersActions';
 import { useLayoutStore } from '@/store/layoutStore';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import {
   Camera,
   Check,
@@ -12,6 +13,7 @@ import {
   Plus,
   Shield,
   Trash2,
+  User,
   UserCheck,
   Users,
   X,
@@ -39,7 +41,7 @@ export default function UsersSection() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [addType, setAddType] = useState<'email' | 'github'>('email');
+  const [addType, setAddType] = useState<'email' | 'github' | 'dummy'>('email');
   const [newUserInput, setNewUserInput] = useState('');
   const [newUserRole, setNewUserRole] = useState<'admin' | 'editor'>('editor');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,8 +77,13 @@ export default function UsersSection() {
   };
 
   const handleAddUser = async () => {
-    if (!newUserInput.trim()) {
+    if (!newUserInput.trim() && addType !== 'dummy') {
       setError('Please enter an email or GitHub username');
+      return;
+    }
+
+    if (addType === 'dummy' && !newUserInput.trim()) {
+      setError('Please enter a display name');
       return;
     }
 
@@ -84,9 +91,14 @@ export default function UsersSection() {
     setError(null);
 
     try {
-      const result = addType === 'email'
-        ? await usersActions({ type: 'ADD_EMAIL', email: newUserInput, role: newUserRole })
-        : await usersActions({ type: 'ADD_GITHUB', github_username: newUserInput, role: newUserRole });
+      let result;
+      if (addType === 'email') {
+        result = await usersActions({ type: 'ADD_EMAIL', email: newUserInput, role: newUserRole });
+      } else if (addType === 'github') {
+        result = await usersActions({ type: 'ADD_GITHUB', github_username: newUserInput, role: newUserRole });
+      } else {
+        result = await usersActions({ type: 'ADD_DUMMY', display_name: newUserInput, role: newUserRole });
+      }
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to add user');
@@ -164,11 +176,22 @@ export default function UsersSection() {
     setUploadingAvatarFor(profileId);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('profileId', profileId);
-    formData.append('avatar', file);
-
     try {
+      // Process image to WebP before upload
+      const processed = await processImageToWebP(file, {
+        maxWidth: 256,
+        maxHeight: 256,
+        quality: 0.85,
+      });
+
+      if (!processed.success || !processed.file) {
+        throw new Error(processed.error || 'Failed to process image');
+      }
+
+      const formData = new FormData();
+      formData.append('profileId', profileId);
+      formData.append('avatar', processed.file);
+
       const result = await uploadUserAvatar(formData);
       if (!result.success) {
         throw new Error(result.error || 'Failed to upload avatar');
@@ -308,19 +331,31 @@ export default function UsersSection() {
                   <Github className="w-4 h-4" />
                   GitHub Username
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setAddType('dummy')}
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg transition-all duration-200 ${
+                    addType === 'dummy'
+                      ? 'bg-main text-white'
+                      : 'bg-darkestgray text-lighttext2 hover:bg-darkgray'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  Dummy User
+                </button>
               </div>
 
               {/* Input fields */}
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-lighttext mb-2">
-                    {addType === 'email' ? 'Email Address' : 'GitHub Username'}
+                    {addType === 'email' ? 'Email Address' : addType === 'github' ? 'GitHub Username' : 'Display Name'}
                   </label>
                   <input
                     type={addType === 'email' ? 'email' : 'text'}
                     value={newUserInput}
                     onChange={(e) => setNewUserInput(e.target.value)}
-                    placeholder={addType === 'email' ? 'user@example.com' : '@username'}
+                    placeholder={addType === 'email' ? 'user@example.com' : addType === 'github' ? '@username' : 'John Doe'}
                     className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
                   />
                 </div>
@@ -343,7 +378,9 @@ export default function UsersSection() {
               <p className="text-sm text-lighttext2">
                 {addType === 'email'
                   ? '📧 An invitation email will be sent automatically. The user will set their password.'
-                  : '🔗 The user can log in immediately using GitHub OAuth (no invite needed).'}
+                  : addType === 'github'
+                  ? '🔗 The user can log in immediately using GitHub OAuth (no invite needed).'
+                  : '👤 Creates a dummy user profile that can be assigned to articles. No authentication required.'}
               </p>
 
               {/* Action buttons */}
@@ -398,6 +435,7 @@ export default function UsersSection() {
             {users.map((allowedUser) => {
               const hasProfile = !!allowedUser.profile;
               const isUploadingThis = uploadingAvatarFor === allowedUser.profile?.id;
+              const isDummyUser = allowedUser.email?.startsWith('dummy-') && allowedUser.email?.endsWith('@dummy.local');
               // Check if this is the current user
               const isCurrentUser = user && (
                 (user.email && allowedUser.email?.toLowerCase() === user.email.toLowerCase()) ||
@@ -415,7 +453,7 @@ export default function UsersSection() {
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Avatar / Icon */}
-                    {hasProfile && isAdmin ? (
+                    {hasProfile && isAdmin && !isCurrentUser ? (
                       <>
                         <button
                           type="button"
@@ -492,7 +530,7 @@ export default function UsersSection() {
                     {/* User info */}
                     <div>
                       <div className="flex items-center gap-2">
-                        {hasProfile && isAdmin && editingNameFor === allowedUser.profile?.id ? (
+                        {hasProfile && isAdmin && !isCurrentUser && editingNameFor === allowedUser.profile?.id ? (
                           <div className="flex items-center gap-1">
                             <input
                               type="text"
@@ -524,9 +562,11 @@ export default function UsersSection() {
                         ) : (
                           <>
                             <span className="font-medium text-lighttext">
-                              {allowedUser.profile?.display_name || allowedUser.email || `@${allowedUser.github_username}`}
+                              {allowedUser.profile?.display_name || 
+                               (allowedUser.email && !allowedUser.email.startsWith('dummy-') ? allowedUser.email : null) || 
+                               (allowedUser.github_username ? `@${allowedUser.github_username}` : 'Unknown User')}
                             </span>
-                            {hasProfile && isAdmin && (
+                            {hasProfile && isAdmin && !isCurrentUser && (
                               <button
                                 type="button"
                                 onClick={() => handleEditNameClick(allowedUser.profile!.id, allowedUser.profile?.display_name || '')}
@@ -543,6 +583,9 @@ export default function UsersSection() {
                         {isCurrentUser && (
                           <span className="px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400">You</span>
                         )}
+                        {isDummyUser && (
+                          <span className="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400">Dummy</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-lighttext2">
                         <span className={`px-2 py-0.5 rounded text-xs ${
@@ -555,7 +598,7 @@ export default function UsersSection() {
                         {isLastAdmin && !isCurrentUser && (
                           <span className="text-yellow-500 text-xs">(Last admin - cannot demote)</span>
                         )}
-                        {!hasProfile && (
+                        {!hasProfile && !isDummyUser && (
                           <span className="text-yellow-500 text-xs">Not logged in yet</span>
                         )}
                         {allowedUser.invited_at && !hasProfile && (
@@ -572,32 +615,26 @@ export default function UsersSection() {
                   </div>
 
                   {/* Actions */}
-                  {isAdmin && (
+                  {isAdmin && !isCurrentUser && (
                     <div className="flex items-center gap-2 sm:flex-shrink-0">
-                      {isCurrentUser ? (
-                        <span className="px-2 py-1 bg-darkgray border border-lighttext2 rounded text-sm text-lighttext2 opacity-75">
-                          {allowedUser.role}
-                        </span>
-                      ) : (
-                        <select
-                          value={allowedUser.role}
-                          onChange={(e) => {
-                            const newRole = e.target.value as 'admin' | 'editor';
-                            // Prevent demoting last admin
-                            if (isLastAdmin && newRole === 'editor') {
-                              setError('Cannot demote the last admin');
-                              return;
-                            }
-                            handleUpdateRole(allowedUser.id, newRole);
-                          }}
-                          disabled={updatingRoleFor === allowedUser.id}
-                          title={isLastAdmin ? 'Cannot demote the last admin' : undefined}
-                          className="px-2 py-1.5 min-h-[44px] bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <option value="editor" disabled={isLastAdmin}>Editor</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      )}
+                      <select
+                        value={allowedUser.role}
+                        onChange={(e) => {
+                          const newRole = e.target.value as 'admin' | 'editor';
+                          // Prevent demoting last admin
+                          if (isLastAdmin && newRole === 'editor') {
+                            setError('Cannot demote the last admin');
+                            return;
+                          }
+                          handleUpdateRole(allowedUser.id, newRole);
+                        }}
+                        disabled={updatingRoleFor === allowedUser.id}
+                        title={isLastAdmin ? 'Cannot demote the last admin' : undefined}
+                        className="px-2 py-1.5 min-h-[44px] bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <option value="editor" disabled={isLastAdmin}>Editor</option>
+                        <option value="admin">Admin</option>
+                      </select>
                       <button
                         type="button"
                         onClick={() => handleRemoveUser(allowedUser.id)}

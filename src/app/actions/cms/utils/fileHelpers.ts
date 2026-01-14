@@ -6,10 +6,27 @@ import webp from '@jimp/wasm-webp';
 import { createClient } from '@/utils/supabase/server';
 
 // Create Jimp instance with WebP support
-const Jimp = createJimp({
-  formats: [...defaultFormats, webp],
-  plugins: defaultPlugins,
-});
+// Initialize lazily to handle WASM loading issues
+let JimpInstance: ReturnType<typeof createJimp> | null = null;
+
+function getJimp() {
+  if (!JimpInstance) {
+    try {
+      JimpInstance = createJimp({
+        formats: [...defaultFormats, webp],
+        plugins: defaultPlugins,
+      });
+    } catch (error) {
+      console.error('Error initializing Jimp with WebP support:', error);
+      // Fallback to Jimp without WebP if WASM fails
+      JimpInstance = createJimp({
+        formats: defaultFormats,
+        plugins: defaultPlugins,
+      });
+    }
+  }
+  return JimpInstance;
+}
 
 /**
  * Verifies the user is authenticated before allowing CMS operations
@@ -90,6 +107,7 @@ type ProcessImageResult = {
   width?: number;
   height?: number;
   blurhash?: string;
+  format?: 'webp' | 'png'; // Format actually used
   error?: string;
 };
 
@@ -109,6 +127,9 @@ export async function processImage(
 
     const arrayBuffer = await file.arrayBuffer();
     const inputBuffer = Buffer.from(arrayBuffer);
+
+    // Get Jimp instance (with lazy initialization)
+    const Jimp = getJimp();
 
     // Read image with Jimp
     const image = await Jimp.read(inputBuffer);
@@ -143,7 +164,17 @@ export async function processImage(
     }
 
     // Convert to WebP buffer with quality setting using WASM encoder
-    const processedBuffer = await image.getBuffer('image/webp', { quality });
+    // Fallback to PNG if WebP encoding fails (WASM loading issues)
+    let processedBuffer: Buffer;
+    let format: 'webp' | 'png' = 'webp';
+    try {
+      processedBuffer = await image.getBuffer('image/webp', { quality });
+    } catch (webpError) {
+      console.warn('WebP encoding failed, falling back to PNG:', webpError);
+      // Fallback to PNG if WebP fails
+      processedBuffer = await image.getBuffer('image/png');
+      format = 'png';
+    }
 
     // Generate blurhash
     const blurhash = await generateBlurhash(image);
@@ -154,6 +185,7 @@ export async function processImage(
       width: newWidth,
       height: newHeight,
       blurhash,
+      format,
     };
   } catch (error) {
     console.error('Error processing image:', error);
@@ -224,11 +256,25 @@ const ALLOWED_IMAGE_TYPES = [
 /**
  * Validates an uploaded file for images
  * Rejects SVGs to prevent XSS/script injection attacks
+ * Accepts WebP files (expected to be pre-processed client-side)
  */
 export function validateImageFile(file: File): { isValid: boolean; error?: string } {
   // Reject SVG explicitly (security risk - can contain scripts)
   if (file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')) {
     return { isValid: false, error: 'SVG files are not allowed for security reasons. Please use JPG, PNG, or WebP.' };
+  }
+
+  // Accept WebP files (should be pre-processed client-side)
+  if (file.type === 'image/webp') {
+    // File size validation (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      return { isValid: false, error: 'Image file is too large. Please select an image smaller than 10MB' };
+    }
+    // File name validation
+    if (file.name.length > 255) {
+      return { isValid: false, error: 'File name is too long' };
+    }
+    return { isValid: true };
   }
 
   // File type validation - only allow specific raster formats
@@ -237,6 +283,39 @@ export function validateImageFile(file: File): { isValid: boolean; error?: strin
   }
 
   // File size validation (10MB limit - will be compressed anyway)
+  if (file.size > 10 * 1024 * 1024) {
+    return { isValid: false, error: 'Image file is too large. Please select an image smaller than 10MB' };
+  }
+
+  // File name validation
+  if (file.name.length > 255) {
+    return { isValid: false, error: 'File name is too long' };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validates an uploaded file for images (including SVG for skills)
+ * Allows SVG files which are typically used for icons
+ */
+export function validateImageFileWithSvg(file: File): { isValid: boolean; error?: string } {
+  // File type validation - allow raster formats and SVG
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/avif',
+    'image/svg+xml',
+  ] as const;
+
+  if (!allowedTypes.includes(file.type as typeof allowedTypes[number])) {
+    return { isValid: false, error: 'Please select a valid image file (JPG, PNG, WebP, GIF, AVIF, or SVG)' };
+  }
+
+  // File size validation (10MB limit)
   if (file.size > 10 * 1024 * 1024) {
     return { isValid: false, error: 'Image file is too large. Please select an image smaller than 10MB' };
   }

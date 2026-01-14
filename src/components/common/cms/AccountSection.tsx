@@ -4,6 +4,7 @@ import { deleteMyAccount } from '@/app/actions/cms/deleteAccount';
 import { updateMyProfile } from '@/app/actions/cms/sections/usersActions';
 import { getUser } from '@/app/actions/cms/getUser';
 import { useLayoutStore } from '@/store/layoutStore';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import {
   Camera,
   Check,
@@ -44,10 +45,21 @@ export default function AccountSection() {
     setIsUploadingAvatar(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('avatar', file);
-
     try {
+      // Process image to WebP before upload
+      const processed = await processImageToWebP(file, {
+        maxWidth: 256,
+        maxHeight: 256,
+        quality: 0.85,
+      });
+
+      if (!processed.success || !processed.file) {
+        throw new Error(processed.error || 'Failed to process image');
+      }
+
+      const formData = new FormData();
+      formData.append('avatar', processed.file);
+
       const result = await updateMyProfile(formData);
       if (!result.success) {
         throw new Error(result.error || 'Failed to upload avatar');

@@ -2,6 +2,7 @@ import { heroActions } from '@/app/actions/cms/sections/heroActions';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { useLayoutStore } from '@/store/layoutStore';
 import { encode } from 'blurhash';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import { Copy, Download, Home, Upload, FileText, Eye, X, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
@@ -295,9 +296,20 @@ export default function HeroSection() {
       const filesToUpload: Record<string, File> = {};
       const currentData: Record<string, string> = {};
 
-      // Check which fields have file changes
+      // Check which fields have file changes and process images
       if (editedData.mainImage_file) {
-        filesToUpload.mainImage = editedData.mainImage_file;
+        // Process image to WebP before upload
+        const processed = await processImageToWebP(editedData.mainImage_file, {
+          maxWidth: 512,
+          maxHeight: 512,
+          quality: 0.85,
+        });
+
+        if (!processed.success || !processed.file) {
+          throw new Error(processed.error || 'Failed to process image');
+        }
+
+        filesToUpload.mainImage = processed.file;
         currentData.mainImage = heroSection?.mainImage || '';
       }
       if (editedData.resume_en_file) {

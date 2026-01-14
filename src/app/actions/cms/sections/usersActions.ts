@@ -9,6 +9,7 @@ type UserOperation =
   | { type: 'GET' }
   | { type: 'ADD_EMAIL'; email: string; role?: 'admin' | 'editor' }
   | { type: 'ADD_GITHUB'; github_username: string; role?: 'admin' | 'editor' }
+  | { type: 'ADD_DUMMY'; display_name: string; role?: 'admin' | 'editor' }
   | { type: 'UPDATE_ROLE'; id: number; role: 'admin' | 'editor' }
   | { type: 'REMOVE'; id: number }
   | { type: 'UPDATE_PROFILE'; profileId: string; displayName?: string };
@@ -120,6 +121,9 @@ export async function usersActions(operation: UserOperation): Promise<UsersResul
 
       case 'ADD_GITHUB':
         return await addGitHubUser(supabase, operation.github_username, operation.role);
+
+      case 'ADD_DUMMY':
+        return await addDummyUser(supabase, operation.display_name, operation.role);
 
       case 'UPDATE_ROLE':
         return await updateUserRole(supabase, operation.id, operation.role);
@@ -352,6 +356,146 @@ async function addGitHubUser(
   return { success: true, data: newUser as AllowedUser };
 }
 
+async function addDummyUser(
+  supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  displayName: string,
+  role: 'admin' | 'editor' = 'editor'
+): Promise<UsersResult> {
+  // Validate display name
+  const trimmedName = displayName.trim();
+  if (!trimmedName || trimmedName.length === 0) {
+    return { success: false, error: 'Please enter a display name' };
+  }
+
+  if (trimmedName.length > 100) {
+    return { success: false, error: 'Display name must be 100 characters or less' };
+  }
+
+  // Generate a UUID for the email format
+  const emailUuid = crypto.randomUUID();
+  
+  // Create dummy email for matching (format: dummy-{uuid}@dummy.local)
+  const dummyEmail = `dummy-${emailUuid}@dummy.local`;
+  
+  // Use admin client to create auth user and profile (bypasses RLS)
+  const adminClient = getAdminClient();
+
+  // Check if a dummy user with this email already exists in cms_allowed_users
+  const { data: existingAllowed } = await supabase
+    .from('cms_allowed_users')
+    .select('id')
+    .eq('email', dummyEmail)
+    .single();
+  
+  if (existingAllowed) {
+    return { success: false, error: 'A dummy user already exists. Please try again.' };
+  }
+
+  // Check if auth user with this email already exists (from a previous failed attempt)
+  let authUserId: string | null = null;
+  try {
+    const { data: existingAuthUser } = await adminClient.auth.admin.getUserByEmail(dummyEmail);
+    if (existingAuthUser?.user) {
+      authUserId = existingAuthUser.user.id;
+    }
+  } catch (checkError) {
+    // User doesn't exist or error checking - continue to create
+    console.log('No existing auth user found, proceeding with creation');
+  }
+
+  // Create auth user if it doesn't exist
+  if (!authUserId) {
+    // Use a random password that won't be used (dummy users can't log in)
+    const tempPassword = crypto.randomUUID() + crypto.randomUUID(); // Long random password
+    const { data: createdAuthUser, error: authError } = await adminClient.auth.admin.createUser({
+      email: dummyEmail,
+      password: tempPassword,
+      email_confirm: true, // Auto-confirm
+      user_metadata: {
+        is_dummy: true, // Mark as dummy user
+      },
+    });
+
+    if (authError || !createdAuthUser.user) {
+      console.error('Error creating dummy auth user:', authError);
+      return { success: false, error: `Failed to create auth user: ${authError?.message || 'Unknown error'}` };
+    }
+
+    authUserId = createdAuthUser.user.id;
+  }
+
+  // Check if profile already exists and update or create
+  const { data: existingProfile } = await adminClient
+    .from('user_profiles')
+    .select('id')
+    .eq('id', authUserId)
+    .single();
+
+  if (existingProfile) {
+    // Profile exists, update it
+    const { error: updateError } = await adminClient
+      .from('user_profiles')
+      .update({
+        display_name: trimmedName,
+        email: dummyEmail,
+        github_username: null,
+        auth_provider: 'dummy',
+      })
+      .eq('id', authUserId);
+
+    if (updateError) {
+      console.error('Error updating dummy user profile:', updateError);
+      return { success: false, error: `Failed to update profile: ${updateError.message}` };
+    }
+  } else {
+    // Profile doesn't exist, create it
+    const { error: profileError } = await adminClient
+      .from('user_profiles')
+      .insert({
+        id: authUserId,
+        display_name: trimmedName,
+        email: dummyEmail,
+        github_username: null,
+        auth_provider: 'dummy',
+        avatar_url: null,
+      });
+
+    if (profileError) {
+      console.error('Error creating dummy user profile:', profileError);
+      // Clean up auth user if profile creation fails
+      try {
+        await adminClient.auth.admin.deleteUser(authUserId);
+      } catch (deleteError) {
+        console.error('Error cleaning up auth user:', deleteError);
+      }
+      return { success: false, error: `Failed to create profile: ${profileError.message}` };
+    }
+  }
+  
+  // Create entry in cms_allowed_users
+  const { data: newUser, error: insertError } = await supabase
+    .from('cms_allowed_users')
+    .insert({ email: dummyEmail, role })
+    .select()
+    .single();
+
+  if (insertError) {
+    // If insert fails, clean up both profile and auth user
+    try {
+      await adminClient.from('user_profiles').delete().eq('id', authUserId);
+      await adminClient.auth.admin.deleteUser(authUserId);
+    } catch (cleanupError) {
+      console.error('Error cleaning up after failed insert:', cleanupError);
+    }
+    throw insertError;
+  }
+
+  // Revalidate CMS paths to ensure fresh data
+  revalidatePath('/cms', 'layout');
+
+  return { success: true, data: newUser as AllowedUser };
+}
+
 async function updateUserRole(
   supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
   id: number,
@@ -414,7 +558,10 @@ async function removeUser(
   const adminClient = getAdminClient();
   let profileId: string | null = null;
 
-  // Try to find profile by email
+  // Check if this is a dummy user (email format: dummy-{uuid}@dummy.local)
+  const isDummyUser = user.email?.startsWith('dummy-') && user.email?.endsWith('@dummy.local');
+
+  // Try to find profile by email (works for both dummy and regular users)
   if (user.email) {
     const { data: profileByEmail } = await adminClient
       .from('user_profiles')
@@ -452,6 +599,16 @@ async function removeUser(
     if (deleteProfileError) {
       console.error('Error deleting user profile:', deleteProfileError);
       // Don't throw - profile deletion is not critical if it fails
+    }
+
+    // For dummy users, also delete the auth user
+    if (isDummyUser) {
+      try {
+        await adminClient.auth.admin.deleteUser(profileId);
+      } catch (deleteAuthError) {
+        console.error('Error deleting dummy auth user:', deleteAuthError);
+        // Don't throw - auth user deletion is not critical if it fails
+      }
     }
   }
 
@@ -521,15 +678,27 @@ export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdat
     return { success: false, error: validation.error };
   }
 
-  // Process the image (resize, convert to webp)
-  const processed = await processImage(avatarFile, {
-    maxWidth: 256,
-    maxHeight: 256,
-    quality: 85,
-  });
+  // Check if file is already WebP (pre-processed client-side)
+  const isWebP = avatarFile.type === 'image/webp';
+  let buffer: Buffer;
 
-  if (!processed.success || !processed.buffer) {
-    return { success: false, error: processed.error || 'Failed to process image' };
+  if (isWebP) {
+    // File is already WebP - upload directly
+    const arrayBuffer = await avatarFile.arrayBuffer();
+    buffer = Buffer.from(arrayBuffer);
+  } else {
+    // Fallback: process image server-side (should be rare)
+    const processed = await processImage(avatarFile, {
+      maxWidth: 256,
+      maxHeight: 256,
+      quality: 85,
+    });
+
+    if (!processed.success || !processed.buffer) {
+      return { success: false, error: processed.error || 'Failed to process image' };
+    }
+
+    buffer = processed.buffer;
   }
 
   // Use admin client for storage uploads (bypasses RLS)
@@ -538,11 +707,37 @@ export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdat
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Upload to Supabase Storage
+  // Get current avatar URL to delete old file
+  const { data: currentProfile } = await adminClient
+    .from('user_profiles')
+    .select('avatar_url')
+    .eq('id', profileId)
+    .single();
+
+  // Delete old avatar file if it exists
+  if (currentProfile?.avatar_url) {
+    try {
+      // Extract file path from URL (remove query params and get path after bucket name)
+      const url = new URL(currentProfile.avatar_url.split('?')[0]); // Remove query params
+      const pathParts = url.pathname.split('/');
+      const bucketIndex = pathParts.findIndex(part => part === 'website');
+      if (bucketIndex !== -1) {
+        const filePath = pathParts.slice(bucketIndex + 1).join('/');
+        if (filePath) {
+          await adminClient.storage.from('website').remove([filePath]);
+        }
+      }
+    } catch (deleteError) {
+      // Log but don't fail - old file might not exist or URL format might be different
+      console.warn('Failed to delete old avatar file:', deleteError);
+    }
+  }
+
+  // Upload to Supabase Storage as WebP
   const filePath = `Website Assets/avatars/${profileId}-avatar.webp`;
   const { error: uploadError } = await adminClient.storage
     .from('website')
-    .upload(filePath, processed.buffer, {
+    .upload(filePath, buffer, {
       contentType: 'image/webp',
       upsert: true,
     });
@@ -560,8 +755,8 @@ export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdat
   // Add cache-busting param
   const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
-  // Update user_profiles table
-  const { error: updateError } = await supabase
+  // Update user_profiles table using admin client to bypass RLS
+  const { error: updateError } = await adminClient
     .from('user_profiles')
     .update({ avatar_url: avatarUrl })
     .eq('id', profileId);
@@ -570,6 +765,9 @@ export async function uploadUserAvatar(formData: FormData): Promise<ProfileUpdat
     console.error('Profile update error:', updateError);
     return { success: false, error: 'Failed to update profile' };
   }
+
+  // Revalidate CMS paths to ensure fresh data
+  revalidatePath('/cms', 'layout');
 
   return { success: true, avatarUrl };
 }
@@ -661,15 +859,27 @@ export async function updateMyProfile(formData: FormData): Promise<ProfileUpdate
       return { success: false, error: validation.error };
     }
 
-    // Process the image (resize, convert to webp)
-    const processed = await processImage(avatarFile, {
-      maxWidth: 256,
-      maxHeight: 256,
-      quality: 85,
-    });
+    // Check if file is already WebP (pre-processed client-side)
+    const isWebP = avatarFile.type === 'image/webp';
+    let buffer: Buffer;
 
-    if (!processed.success || !processed.buffer) {
-      return { success: false, error: processed.error || 'Failed to process image' };
+    if (isWebP) {
+      // File is already WebP - upload directly
+      const arrayBuffer = await avatarFile.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+    } else {
+      // Fallback: process image server-side (should be rare)
+      const processed = await processImage(avatarFile, {
+        maxWidth: 256,
+        maxHeight: 256,
+        quality: 85,
+      });
+
+      if (!processed.success || !processed.buffer) {
+        return { success: false, error: processed.error || 'Failed to process image' };
+      }
+
+      buffer = processed.buffer;
     }
 
     // Use admin client for storage uploads (bypasses RLS)
@@ -678,11 +888,37 @@ export async function updateMyProfile(formData: FormData): Promise<ProfileUpdate
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Upload to Supabase Storage
+    // Get current avatar URL to delete old file
+    const { data: currentProfile } = await supabase
+      .from('user_profiles')
+      .select('avatar_url')
+      .eq('id', user.id)
+      .single();
+
+    // Delete old avatar file if it exists
+    if (currentProfile?.avatar_url) {
+      try {
+        // Extract file path from URL (remove query params and get path after bucket name)
+        const url = new URL(currentProfile.avatar_url.split('?')[0]); // Remove query params
+        const pathParts = url.pathname.split('/');
+        const bucketIndex = pathParts.findIndex(part => part === 'website');
+        if (bucketIndex !== -1) {
+          const filePath = pathParts.slice(bucketIndex + 1).join('/');
+          if (filePath) {
+            await adminClient.storage.from('website').remove([filePath]);
+          }
+        }
+      } catch (deleteError) {
+        // Log but don't fail - old file might not exist or URL format might be different
+        console.warn('Failed to delete old avatar file:', deleteError);
+      }
+    }
+
+    // Upload to Supabase Storage as WebP
     const filePath = `Website Assets/avatars/${user.id}-avatar.webp`;
     const { error: uploadError } = await adminClient.storage
       .from('website')
-      .upload(filePath, processed.buffer, {
+      .upload(filePath, buffer, {
         contentType: 'image/webp',
         upsert: true,
       });

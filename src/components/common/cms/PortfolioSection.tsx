@@ -4,6 +4,7 @@ import { type Author, portfolioActions } from '@/app/actions/cms/sections/portfo
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { useLayoutStore } from '@/store/layoutStore';
 import type { PortfolioPost } from '@/types/fetchedData.types';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import {
   Calendar,
   Edit3,
@@ -24,6 +25,8 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { PreviewModal } from './PreviewModal';
 import { PortfolioPreview } from './previews/PortfolioPreview';
+import { PostPreview } from './previews/PostPreview';
+import { usePathname } from 'next/navigation';
 
 type FormMode = 'list' | 'create' | 'edit';
 
@@ -73,6 +76,7 @@ export default function PortfolioSection() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isPostPreviewOpen, setIsPostPreviewOpen] = useState(false);
 
   // Form state
   const [mode, setMode] = useState<FormMode>('list');
@@ -100,6 +104,8 @@ export default function PortfolioSection() {
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
 
   const { user } = useLayoutStore();
+  const pathname = usePathname();
+  const locale = (pathname.split('/')[1] || 'en') as 'en' | 'it';
 
   useEffect(() => {
     fetchPortfolioData();
@@ -443,11 +449,22 @@ export default function PortfolioSection() {
 
         const createdPost = createResult.data as PortfolioPost;
 
-        // Upload image
+        // Process image to WebP before upload
+        const processed = await processImageToWebP(imageFile, {
+          maxWidth: 1920,
+          maxHeight: 1080,
+          quality: 0.85,
+        });
+
+        if (!processed.success || !processed.file) {
+          throw new Error(processed.error || 'Failed to process image');
+        }
+
+        // Upload processed WebP image
         const imageResult = await portfolioActions({
           type: 'UPLOAD_IMAGE',
           portfolioId: createdPost.id,
-          file: imageFile,
+          file: processed.file,
         });
 
         if (!imageResult.success) {
@@ -484,10 +501,21 @@ export default function PortfolioSection() {
 
         // Upload image if there's a new file
         if (post.image_file) {
+          // Process image to WebP before upload
+          const processed = await processImageToWebP(post.image_file, {
+            maxWidth: 1920,
+            maxHeight: 1080,
+            quality: 0.85,
+          });
+
+          if (!processed.success || !processed.file) {
+            throw new Error(processed.error || 'Failed to process image');
+          }
+
           const imageResult = await portfolioActions({
             type: 'UPLOAD_IMAGE',
             portfolioId: postId,
-            file: post.image_file,
+            file: processed.file,
             currentImageUrl: post.image,
           });
 
@@ -816,13 +844,36 @@ export default function PortfolioSection() {
             </button>
             <button
               type="button"
+              onClick={() => setIsPostPreviewOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-tertiary text-white rounded-lg transition-colors"
+            >
+              <Eye className="h-4 w-4" />
+              Preview Post
+            </button>
+            <button
+              type="button"
               onClick={isEditing ? handleUpdatePortfolio : handleCreatePortfolio}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white rounded-lg transition-colors"
             >
               Done
             </button>
           </div>
         </div>
+
+        <PreviewModal
+          isOpen={isPostPreviewOpen}
+          onClose={() => setIsPostPreviewOpen(false)}
+          title="Post Preview"
+        >
+          <PostPreview
+            formData={formData}
+            postType="portfolio"
+            locale={locale}
+            imageFile={formImage}
+            author={authors.find((a) => a.id === formData.author_id) || null}
+            views={isEditing && editingPostId ? portfolioPosts.find((p) => p.id === editingPostId)?.views || 0 : 0}
+          />
+        </PreviewModal>
       </div>
     );
   }

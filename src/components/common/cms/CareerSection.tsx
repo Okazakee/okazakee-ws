@@ -3,6 +3,7 @@
 import { careerActions } from '@/app/actions/cms/sections/careerActions';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import type { CareerEntry } from '@/types/fetchedData.types';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import {
   Briefcase,
   Calendar,
@@ -490,10 +491,21 @@ export default function CareerSection() {
 
         // Upload logo
         if (logoFile) {
+          // Process image to WebP before upload
+          const processed = await processImageToWebP(logoFile, {
+            maxWidth: 512,
+            maxHeight: 512,
+            quality: 0.85,
+          });
+
+          if (!processed.success || !processed.file) {
+            throw new Error(processed.error || 'Failed to process logo');
+          }
+
           const logoResult = await careerActions({
             type: 'UPLOAD_LOGO',
             careerId: createdEntry.id,
-            file: logoFile,
+            file: processed.file,
           });
 
           if (!logoResult.success) {
@@ -534,10 +546,21 @@ export default function CareerSection() {
 
         // Upload logo if there's a new file
         if (entry.logo_file) {
+          // Process image to WebP before upload
+          const processed = await processImageToWebP(entry.logo_file, {
+            maxWidth: 512,
+            maxHeight: 512,
+            quality: 0.85,
+          });
+
+          if (!processed.success || !processed.file) {
+            throw new Error(processed.error || 'Failed to process logo');
+          }
+
           const logoResult = await careerActions({
             type: 'UPLOAD_LOGO',
             careerId: entryId,
-            file: entry.logo_file,
+            file: processed.file,
             currentLogoUrl: entry.logo,
           });
 
@@ -1420,7 +1443,7 @@ export default function CareerSection() {
                     </button>
                     <button
                       onClick={() => handleUpdateCareer(entry.id)}
-                      className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-sm transition-colors"
+                      className="flex items-center gap-1 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-colors"
                     >
                       Done
                     </button>

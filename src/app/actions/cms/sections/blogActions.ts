@@ -332,12 +332,26 @@ async function uploadBlogImage(
       await backupOldFile(supabase, currentImageUrl, 'website');
     }
 
-    // Process image: resize, convert to WebP, generate blurhash
-    const processed = await processImage(file);
-    if (!processed.success || !processed.buffer) {
-      return { success: false, error: processed.error || 'Failed to process image' };
+    // Check if file is already WebP (pre-processed client-side)
+    const isWebP = file.type === 'image/webp';
+    let buffer: Buffer;
+    let blurhash: string | undefined;
+
+    if (isWebP) {
+      // File is already WebP - upload directly
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      // Generate a simple blurhash placeholder (client should provide this)
+      blurhash = undefined;
+    } else {
+      // Fallback: process image server-side (should be rare)
+      const processed = await processImage(file);
+      if (!processed.success || !processed.buffer) {
+        return { success: false, error: processed.error || 'Failed to process image' };
+      }
+      buffer = processed.buffer;
+      blurhash = processed.blurhash;
     }
-    const { buffer, blurhash } = processed;
 
     // Generate filename: {postId}-{title_en}.webp
     const sanitizedTitle = sanitizeFilename(existingBlog.title_en || 'untitled');
@@ -362,13 +376,17 @@ async function uploadBlogImage(
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update blog post with new image URL and blurhash
+    // Update blog post with new image URL and blurhash (if available)
+    const updateData: { image: string; blurhashURL?: string | null } = {
+      image: urlData.publicUrl,
+    };
+    if (blurhash !== undefined) {
+      updateData.blurhashURL = blurhash || null;
+    }
+
     const { error: updateError } = await supabase
       .from('blog_posts')
-      .update({
-        image: urlData.publicUrl,
-        blurhashURL: blurhash,
-      })
+      .update(updateData)
       .eq('id', blogId);
 
     if (updateError) throw updateError;

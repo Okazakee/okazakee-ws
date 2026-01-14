@@ -2,6 +2,7 @@
 
 import { skillsActions } from '@/app/actions/cms/sections/skillsActions';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
+import { processImageToWebP } from '@/utils/imageProcessor';
 import { Edit3, Plus, Save, Trash2, Upload, X, Eye, ArrowUp, ArrowDown, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
@@ -604,10 +605,29 @@ export default function SkillsSection() {
 
         // Upload icon if there's a file
         if (skill.icon_file) {
+          // Check if file is SVG (upload as-is) or process to WebP
+          const isSvg = skill.icon_file.type === 'image/svg+xml' || skill.icon_file.name.toLowerCase().endsWith('.svg');
+          let fileToUpload = skill.icon_file;
+
+          if (!isSvg) {
+            // Process raster images to WebP
+            const processed = await processImageToWebP(skill.icon_file, {
+              maxWidth: 512,
+              maxHeight: 512,
+              quality: 0.85,
+            });
+
+            if (!processed.success || !processed.file) {
+              throw new Error(processed.error || 'Failed to process icon');
+            }
+
+            fileToUpload = processed.file;
+          }
+
           const uploadResult = (await skillsActions({
             type: 'UPLOAD_ICON',
             skillId: createdSkill.id,
-            file: skill.icon_file,
+            file: fileToUpload,
           })) as UploadApiResponse;
 
           if (!uploadResult.success) {
@@ -644,10 +664,29 @@ export default function SkillsSection() {
 
         // Upload icon if there's a new file
         if (skill.icon_file) {
+          // Check if file is SVG (upload as-is) or process to WebP
+          const isSvg = skill.icon_file.type === 'image/svg+xml' || skill.icon_file.name.toLowerCase().endsWith('.svg');
+          let fileToUpload = skill.icon_file;
+
+          if (!isSvg) {
+            // Process raster images to WebP
+            const processed = await processImageToWebP(skill.icon_file, {
+              maxWidth: 512,
+              maxHeight: 512,
+              quality: 0.85,
+            });
+
+            if (!processed.success || !processed.file) {
+              throw new Error(processed.error || 'Failed to process icon');
+            }
+
+            fileToUpload = processed.file;
+          }
+
           const uploadResult = (await skillsActions({
             type: 'UPLOAD_ICON',
             skillId: skill.id,
-            file: skill.icon_file,
+            file: fileToUpload,
             currentIconUrl: skill.icon,
           })) as UploadApiResponse;
 
@@ -1275,7 +1314,7 @@ export default function SkillsSection() {
                         <button
                           type="button"
                           onClick={() => saveSkillChanges(category.id, skill.id)}
-                          className="flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-sm transition-all duration-200"
+                          className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200"
                         >
                           Done
                         </button>
@@ -1395,7 +1434,7 @@ export default function SkillsSection() {
                       <button
                         type="button"
                         onClick={() => saveNewSkill(category.id)}
-                        className="flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-sm transition-all duration-200"
+                        className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200"
                       >
                         Add
                       </button>

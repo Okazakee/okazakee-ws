@@ -5,7 +5,7 @@ import {
   processImage,
   requireAdmin,
   sanitizeFilename,
-  validateImageFile,
+  validateImageFileWithSvg,
 } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -276,8 +276,8 @@ async function uploadSkillIcon(
   currentIconUrl?: string
 ): Promise<SkillsResult> {
   try {
-    // Validate file
-    const fileValidation = validateImageFile(file);
+    // Validate file (allows SVG for skills)
+    const fileValidation = validateImageFileWithSvg(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
     }
@@ -298,26 +298,58 @@ async function uploadSkillIcon(
       await backupOldFile(supabase, currentIconUrl, 'website');
     }
 
-    // Process image: resize, convert to WebP, generate blurhash
-    const processed = await processImage(file);
-    if (!processed.success || !processed.buffer) {
-      return { success: false, error: processed.error || 'Failed to process image' };
-    }
-    const { buffer, blurhash } = processed;
-
-    // Generate filename: {skillId}-{title}.webp
+    // Check if file is SVG or WebP
+    const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+    const isWebP = file.type === 'image/webp';
     const sanitizedTitle = sanitizeFilename(existingSkill.title || 'skill');
-    const fileName = `skills/${skillId}-${sanitizedTitle}.webp`;
 
-    // Delete old file if exists
-    await supabase.storage.from('website').remove([fileName]);
+    let buffer: Buffer;
+    let contentType: string;
+    let fileName: string;
+    let blurhash: string | undefined;
 
-    // Upload processed image to Supabase Storage
+    if (isSvg) {
+      // For SVG files, upload directly without processing
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      contentType = 'image/svg+xml';
+      fileName = `skills/${skillId}-${sanitizedTitle}.svg`;
+      // No blurhash for SVG (vector format)
+      blurhash = undefined;
+    } else if (isWebP) {
+      // File is already WebP (pre-processed client-side) - upload directly
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      contentType = 'image/webp';
+      fileName = `skills/${skillId}-${sanitizedTitle}.webp`;
+      blurhash = undefined;
+    } else {
+      // Fallback: process image server-side (should be rare)
+      const processed = await processImage(file);
+      if (!processed.success || !processed.buffer) {
+        return { success: false, error: processed.error || 'Failed to process image' };
+      }
+      const format = processed.format || 'png';
+      const fileExtension = format === 'png' ? 'png' : 'webp';
+      contentType = format === 'png' ? 'image/png' : 'image/webp';
+      buffer = processed.buffer;
+      blurhash = processed.blurhash;
+      fileName = `skills/${skillId}-${sanitizedTitle}.${fileExtension}`;
+    }
+
+    // Delete old file if exists (try all possible extensions)
+    await supabase.storage.from('website').remove([
+      `skills/${skillId}-${sanitizedTitle}.svg`,
+      `skills/${skillId}-${sanitizedTitle}.webp`,
+      `skills/${skillId}-${sanitizedTitle}.png`,
+    ]);
+
+    // Upload file to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
-        contentType: 'image/webp',
+        contentType,
         upsert: true,
       });
 
@@ -328,20 +360,24 @@ async function uploadSkillIcon(
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update skill with new icon URL and blurhash
+    // Update skill with new icon URL and blurhash (if available)
+    const updateData: { icon_url: string; blurhashURL?: string | null } = {
+      icon_url: urlData.publicUrl,
+    };
+    if (blurhash !== undefined) {
+      updateData.blurhashURL = blurhash || null;
+    }
+
     const { error: updateError } = await supabase
       .from('skills')
-      .update({
-        icon_url: urlData.publicUrl,
-        blurhashURL: blurhash,
-      })
+      .update(updateData)
       .eq('id', skillId);
 
     if (updateError) throw updateError;
 
     return {
       success: true,
-      data: { icon_url: urlData.publicUrl, blurhashURL: blurhash },
+      data: { icon_url: urlData.publicUrl, blurhashURL: blurhash || '' },
     };
   } catch (error) {
     console.error('Error uploading skill icon:', error);
