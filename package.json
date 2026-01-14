@@ -11,13 +11,15 @@
     "format": "biome format . --write"
   },
   "dependencies": {
+    "@jimp/core": "^1.6.0",
+    "@jimp/wasm-webp": "^1.6.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.49.4",
     "@types/lodash": "^4.17.13",
-    "@types/unist": "^3.0.3",
     "@types/validator": "^13.12.2",
     "@vercel/speed-insights": "^1.2.0",
     "blurhash": "^2.0.5",
+    "jimp": "^1.6.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.545.0",
     "markdown-to-jsx": "^7.7.15",
@@ -26,9 +28,6 @@
     "next-intl": "^4.3.11",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "jimp": "^1.6.0",
-    "@jimp/core": "^1.6.0",
-    "@jimp/wasm-webp": "^1.6.0",
     "validator": "^13.12.0",
     "zustand": "^5.0.3"
   },
