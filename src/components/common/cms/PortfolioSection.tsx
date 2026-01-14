@@ -746,7 +746,7 @@ export default function PortfolioSection() {
                 value={formData.post_tags}
                 onChange={(e) => handleFormChange('post_tags', e.target.value)}
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                placeholder="Enter tags (comma separated)"
+                placeholder={`Enter tags ("tag1" "tag2"...)`}
               />
             </div>
             <div>
