@@ -1104,7 +1104,7 @@ export default function CareerSection() {
               value={newCareerEntry.skills}
               onChange={(e) => handleNewEntryChange('skills', e.target.value)}
               className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-              placeholder="Enter skills (comma separated)"
+              placeholder='["ReactJS", "Express.js", "Angular", "CMS"]'
             />
           </div>
 
@@ -1379,6 +1379,7 @@ export default function CareerSection() {
                         handleInputChange(entry.id, 'skills', e.target.value)
                       }
                       className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      placeholder='["ReactJS", "Express.js", "Angular", "CMS"]'
                     />
                   </div>
                   <div>
