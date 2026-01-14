@@ -1,3 +1,0 @@
-- Better reeadme.
-- CMS misses supabase rules and server functions need to add user.id in requests to allow field editing.
-- Major query functions refactoring.
