@@ -6,9 +6,10 @@ import {
   Briefcase,
   Contact,
   Crown,
+  FileText,
   Github,
-  Globe,
   Home,
+  LayoutGrid,
   LogOut,
   NotebookPen,
   Settings,
@@ -54,20 +55,32 @@ const SidePanel = () => {
     { id: 'portfolio', label: 'Portfolio', icon: Briefcase },
     { id: 'blog', label: 'Blog', icon: NotebookPen },
     { id: 'contacts', label: 'Contacts', icon: Contact, adminOnly: true },
-    { id: 'i18n', label: 'I18n Strings', icon: Globe, adminOnly: true },
+    { id: 'layout', label: 'Layout', icon: LayoutGrid, adminOnly: true },
+    { id: 'privacy-policy', label: 'Privacy Policy', icon: FileText, adminOnly: true },
     { id: 'users', label: 'Manage Users', icon: Users, adminOnly: true },
   ];
 
-  // Set default section for editors on first render
+  // Set default section for editors only once after user loads
+  // This ensures editors don't stay on admin-only sections
   useEffect(() => {
-    if (!isAdmin && activeSection === 'hero') {
-      setActiveSection(defaultSection);
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
+    // Don't run if user is not loaded yet or if user is admin
+    if (!user || isAdmin) return;
+    
+      // Only run once after user is loaded
+      if (typeof window !== 'undefined' && activeSection) {
+        const savedSection = localStorage.getItem('cms_active_section');
+        const adminOnlySections = ['hero', 'skills', 'career', 'contacts', 'layout', 'privacy-policy', 'users'];
+      
+      // Only redirect if:
+      // 1. Current section is admin-only AND
+      // 2. There's no saved section OR saved section is also admin-only
+      if (adminOnlySections.includes(activeSection) && (!savedSection || adminOnlySections.includes(savedSection))) {
+        setActiveSection(defaultSection);
         localStorage.setItem('cms_active_section', defaultSection);
       }
     }
-  }, [isAdmin, activeSection, defaultSection, setActiveSection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Only run when user loads (once)
 
   return (
     <div className="w-72 text-lighttext flex flex-col h-full mt-6 md:mt-8">

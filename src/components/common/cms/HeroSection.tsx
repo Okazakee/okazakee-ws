@@ -1,10 +1,11 @@
 import { heroActions } from '@/app/actions/cms/sections/heroActions';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { useLayoutStore } from '@/store/layoutStore';
 import { encode } from 'blurhash';
-import { Copy, Download, Home, Upload, FileText, Eye, X } from 'lucide-react';
+import { Copy, Download, Home, Upload, FileText, Eye, X, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ErrorDiv } from '../ErrorDiv';
 import { PreviewModal } from './PreviewModal';
 import { HeroPreview } from './previews/HeroPreview';
@@ -40,6 +41,19 @@ export default function HeroSection() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  
+  // Translation state
+  const [translations, setTranslations] = useState<{
+    en: { top: { name: string; role: string }; aboutme: { title: string; paragraph: string } };
+    it: { top: { name: string; role: string }; aboutme: { title: string; paragraph: string } };
+  }>({
+    en: { top: { name: '', role: '' }, aboutme: { title: '', paragraph: '' } },
+    it: { top: { name: '', role: '' }, aboutme: { title: '', paragraph: '' } },
+  });
+  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
+  const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
+  const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
 
   // Drag and drop states
   const [dragStates, setDragStates] = useState({
@@ -48,6 +62,67 @@ export default function HeroSection() {
     resumeEn: false,
   });
 
+  // Fetch translations on mount
+  useEffect(() => {
+    const fetchTranslations = async () => {
+      setIsLoadingTranslations(true);
+      try {
+        const result = await i18nActions({ type: 'GET' });
+        if (result.success && result.data) {
+          const i18nData = result.data as Array<{
+            language: string;
+            translations: Record<string, unknown>;
+          }>;
+          
+          const enData = i18nData.find((d) => d.language === 'en');
+          const itData = i18nData.find((d) => d.language === 'it');
+          
+          const heroEn = (enData?.translations?.['hero-section'] as {
+            top?: { name?: string; role?: string };
+            aboutme?: { title?: string; paragraph?: string };
+          }) || {};
+          
+          const heroIt = (itData?.translations?.['hero-section'] as {
+            top?: { name?: string; role?: string };
+            aboutme?: { title?: string; paragraph?: string };
+          }) || {};
+          
+          const newTranslations = {
+            en: {
+              top: {
+                name: heroEn.top?.name || '',
+                role: heroEn.top?.role || '',
+              },
+              aboutme: {
+                title: heroEn.aboutme?.title || '',
+                paragraph: heroEn.aboutme?.paragraph || '',
+              },
+            },
+            it: {
+              top: {
+                name: heroIt.top?.name || '',
+                role: heroIt.top?.role || '',
+              },
+              aboutme: {
+                title: heroIt.aboutme?.title || '',
+                paragraph: heroIt.aboutme?.paragraph || '',
+              },
+            },
+          };
+          
+          setTranslations(newTranslations);
+          setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
+        }
+      } catch (error) {
+        console.error('Error fetching translations:', error);
+      } finally {
+        setIsLoadingTranslations(false);
+      }
+    };
+    
+    fetchTranslations();
+  }, []);
+
   if (!heroSection) {
     return <ErrorDiv>Error loading Hero data</ErrorDiv>;
   }
@@ -55,6 +130,28 @@ export default function HeroSection() {
   const handleInputChange = (field: string, value: string) => {
     setEditedData((prev) => ({ ...prev, [field]: value }));
     setModifiedFields((prev) => new Set(prev).add(field));
+  };
+
+  const handleTranslationChange = (
+    locale: 'en' | 'it',
+    path: 'top.name' | 'top.role' | 'aboutme.title' | 'aboutme.paragraph',
+    value: string
+  ) => {
+    setTranslations((prev) => {
+      const newTranslations = { ...prev };
+      const [section, key] = path.split('.');
+      if (section === 'top') {
+        newTranslations[locale].top = { ...newTranslations[locale].top, [key]: value };
+      } else if (section === 'aboutme') {
+        newTranslations[locale].aboutme = { ...newTranslations[locale].aboutme, [key]: value };
+      }
+      return newTranslations;
+    });
+    setModifiedFields((prev) => new Set(prev).add(`translations.${locale}.${path}`));
+  };
+
+  const hasTranslationChanges = () => {
+    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
   };
 
   const generateBlurhash = async (imageUrl: string) => {
@@ -268,6 +365,33 @@ export default function HeroSection() {
         }
       }
 
+      // Save translations if changed
+      if (hasTranslationChanges()) {
+        // Update English translations
+        const enResult = await i18nActions({
+          type: 'UPDATE_SECTION',
+          locale: 'en',
+          sectionKey: 'hero-section',
+          sectionData: translations.en,
+        });
+        if (!enResult.success) {
+          throw new Error(enResult.error || 'Failed to update English translations');
+        }
+
+        // Update Italian translations
+        const itResult = await i18nActions({
+          type: 'UPDATE_SECTION',
+          locale: 'it',
+          sectionKey: 'hero-section',
+          sectionData: translations.it,
+        });
+        if (!itResult.success) {
+          throw new Error(itResult.error || 'Failed to update Italian translations');
+        }
+
+        setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
+      }
+
       setModifiedFields(new Set());
       alert('Hero section updated successfully!');
     } catch (error) {
@@ -295,6 +419,7 @@ export default function HeroSection() {
       resume_en_file: null,
       resume_it_file: null,
     });
+    setTranslations(JSON.parse(JSON.stringify(originalTranslations)));
     setModifiedFields(new Set());
     setError(null);
   };
@@ -320,7 +445,7 @@ export default function HeroSection() {
           <button
             type="button"
             className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={modifiedFields.size === 0 || isUpdating}
+            disabled={(modifiedFields.size === 0 && !hasTranslationChanges()) || isUpdating}
             onClick={cancelAllChanges}
           >
             <X className="w-4 h-4" />
@@ -329,7 +454,7 @@ export default function HeroSection() {
           <button
             type="button"
             className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={modifiedFields.size === 0 || isUpdating}
+            disabled={(modifiedFields.size === 0 && !hasTranslationChanges()) || isUpdating}
             onClick={handleApplyChanges}
           >
             {isUpdating ? (
@@ -352,6 +477,129 @@ export default function HeroSection() {
       )}
 
       <div className="space-y-8">
+        {/* Translations Section */}
+        <div className="bg-darkergray rounded-xl p-6">
+          <button
+            type="button"
+            onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
+              <Globe className="w-5 h-5" />
+              Translations
+            </h2>
+            {isTranslationsExpanded ? (
+              <ChevronUp className="w-5 h-5 text-lighttext2" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-lighttext2" />
+            )}
+          </button>
+
+          {isTranslationsExpanded && (
+            <div className="space-y-6 mt-4">
+              {/* Locale Tabs */}
+              <div className="flex gap-2 border-b border-darkgray">
+                <button
+                  type="button"
+                  onClick={() => setTranslationLocale('en')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    translationLocale === 'en'
+                      ? 'text-main border-b-2 border-main'
+                      : 'text-lighttext2 hover:text-lighttext'
+                  }`}
+                >
+                  English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTranslationLocale('it')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    translationLocale === 'it'
+                      ? 'text-main border-b-2 border-main'
+                      : 'text-lighttext2 hover:text-lighttext'
+                  }`}
+                >
+                  Italian
+                </button>
+              </div>
+
+              {isLoadingTranslations ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-main" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Top Section */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-lighttext">Top Section</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-lighttext mb-2">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={translations[translationLocale].top.name}
+                        onChange={(e) =>
+                          handleTranslationChange(translationLocale, 'top.name', e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        placeholder="e.g., Cristian ****Di Carlo****"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-lighttext mb-2">
+                        Role
+                      </label>
+                      <input
+                        type="text"
+                        value={translations[translationLocale].top.role}
+                        onChange={(e) =>
+                          handleTranslationChange(translationLocale, 'top.role', e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        placeholder="e.g., Fullstack ****Developer****"
+                      />
+                    </div>
+                  </div>
+
+                  {/* About Me Section */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-lighttext">About Me Section</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-lighttext mb-2">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        value={translations[translationLocale].aboutme.title}
+                        onChange={(e) =>
+                          handleTranslationChange(translationLocale, 'aboutme.title', e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        placeholder="e.g., About me"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-lighttext mb-2">
+                        Paragraph
+                      </label>
+                      <textarea
+                        value={translations[translationLocale].aboutme.paragraph}
+                        onChange={(e) =>
+                          handleTranslationChange(translationLocale, 'aboutme.paragraph', e.target.value)
+                        }
+                        rows={8}
+                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                        placeholder="Enter about me paragraph..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Hero Image Section */}
         <div className="bg-darkergray rounded-xl p-6">
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">

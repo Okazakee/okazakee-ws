@@ -8,7 +8,8 @@ import BlogSection from '@/components/common/cms/BlogSection';
 import CareerSection from '@/components/common/cms/CareerSection';
 import ContactsSection from '@/components/common/cms/ContactsSection';
 import HeroSection from '@/components/common/cms/HeroSection';
-import I18nSection from '@/components/common/cms/I18nSection';
+import LayoutSection from '@/components/common/cms/LayoutSection';
+import PrivacyPolicySection from '@/components/common/cms/PrivacyPolicySection';
 import PortfolioSection from '@/components/common/cms/PortfolioSection';
 import SidePanel from '@/components/common/cms/SidePanel';
 import SkillsSection from '@/components/common/cms/SkillsSection';
@@ -34,32 +35,34 @@ export default function CMS() {
       setError(null);
 
       try {
-        // Fetch user first
+        // Load saved section FIRST, before fetching user (to avoid race conditions)
+        const savedSection = typeof window !== 'undefined' 
+          ? localStorage.getItem('cms_active_section') 
+          : null;
+
+        // Fetch user
         const fetchedUser = await getUser();
         setUser(fetchedUser);
 
         if (fetchedUser) {
-          // Try to load saved section from localStorage
-          const savedSection = typeof window !== 'undefined' 
-            ? localStorage.getItem('cms_active_section') 
-            : null;
-          
           // Validate saved section based on user role
           const defaultSection = fetchedUser.role === 'admin' ? 'hero' : 'blog';
-          const adminOnlySections = ['hero', 'skills', 'career', 'contacts', 'i18n', 'users'];
+          const adminOnlySections = ['hero', 'skills', 'career', 'contacts', 'layout', 'privacy-policy', 'users'];
+          const validSections = ['hero', 'skills', 'career', 'portfolio', 'blog', 'contacts', 'layout', 'privacy-policy', 'users', 'account', 'settings'];
           
           let sectionToUse = defaultSection;
           
-          if (savedSection) {
+          if (savedSection && validSections.includes(savedSection)) {
             // Check if saved section is valid for this user
             if (fetchedUser.role === 'admin' || !adminOnlySections.includes(savedSection)) {
               sectionToUse = savedSection;
             }
           }
           
+          // Set active section immediately
           setActiveSection(sectionToUse);
           
-          // Save to localStorage
+          // Always save to localStorage to ensure it's persisted
           if (typeof window !== 'undefined') {
             localStorage.setItem('cms_active_section', sectionToUse);
           }
@@ -123,7 +126,8 @@ export default function CMS() {
             {activeSection === 'portfolio' && <PortfolioSection />}
             {activeSection === 'blog' && <BlogSection />}
             {activeSection === 'contacts' && <ContactsSection />}
-            {activeSection === 'i18n' && <I18nSection />}
+            {activeSection === 'layout' && <LayoutSection />}
+            {activeSection === 'privacy-policy' && <PrivacyPolicySection />}
             {activeSection === 'users' && <UsersSection />}
             {activeSection === 'account' && <AccountSection />}
             {activeSection === 'settings' && (

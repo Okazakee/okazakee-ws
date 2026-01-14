@@ -1,6 +1,7 @@
 'use client';
 
 import { careerActions } from '@/app/actions/cms/sections/careerActions';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import type { CareerEntry } from '@/types/fetchedData.types';
 import {
   Briefcase,
@@ -12,6 +13,9 @@ import {
   Upload,
   X,
   Eye,
+  Globe,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
@@ -82,9 +86,135 @@ export default function CareerSection() {
   const [dragStates, setDragStates] = useState<Record<string, boolean>>({});
   const [newEntryLogo, setNewEntryLogo] = useState<File | null>(null);
 
+  // Translation state
+  const [translations, setTranslations] = useState<{
+    en: {
+      title: string;
+      subtitle: string;
+      present: string;
+      month: string;
+      months: string;
+      year: string;
+      years: string;
+      remote: { full: string; hybrid: string; onSite: string };
+    };
+    it: {
+      title: string;
+      subtitle: string;
+      present: string;
+      month: string;
+      months: string;
+      year: string;
+      years: string;
+      remote: { full: string; hybrid: string; onSite: string };
+    };
+  }>({
+    en: {
+      title: '',
+      subtitle: '',
+      present: '',
+      month: '',
+      months: '',
+      year: '',
+      years: '',
+      remote: { full: '', hybrid: '', onSite: '' },
+    },
+    it: {
+      title: '',
+      subtitle: '',
+      present: '',
+      month: '',
+      months: '',
+      year: '',
+      years: '',
+      remote: { full: '', hybrid: '', onSite: '' },
+    },
+  });
+  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
+  const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
+  const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
+
   useEffect(() => {
     fetchCareerData();
+    fetchTranslations();
   }, []);
+
+  const fetchTranslations = async () => {
+    setIsLoadingTranslations(true);
+    try {
+      const result = await i18nActions({ type: 'GET' });
+      if (result.success && result.data) {
+        const i18nData = result.data as Array<{
+          language: string;
+          translations: Record<string, unknown>;
+        }>;
+        
+        const enData = i18nData.find((d) => d.language === 'en');
+        const itData = i18nData.find((d) => d.language === 'it');
+        
+        const careerEn = (enData?.translations?.['career-section'] as {
+          title?: string;
+          subtitle?: string;
+          present?: string;
+          month?: string;
+          months?: string;
+          year?: string;
+          years?: string;
+          remote?: { full?: string; hybrid?: string; onSite?: string };
+        }) || {};
+        
+        const careerIt = (itData?.translations?.['career-section'] as {
+          title?: string;
+          subtitle?: string;
+          present?: string;
+          month?: string;
+          months?: string;
+          year?: string;
+          years?: string;
+          remote?: { full?: string; hybrid?: string; onSite?: string };
+        }) || {};
+        
+        const newTranslations = {
+          en: {
+            title: careerEn.title || '',
+            subtitle: careerEn.subtitle || '',
+            present: careerEn.present || '',
+            month: careerEn.month || '',
+            months: careerEn.months || '',
+            year: careerEn.year || '',
+            years: careerEn.years || '',
+            remote: {
+              full: careerEn.remote?.full || '',
+              hybrid: careerEn.remote?.hybrid || '',
+              onSite: careerEn.remote?.onSite || '',
+            },
+          },
+          it: {
+            title: careerIt.title || '',
+            subtitle: careerIt.subtitle || '',
+            present: careerIt.present || '',
+            month: careerIt.month || '',
+            months: careerIt.months || '',
+            year: careerIt.year || '',
+            years: careerIt.years || '',
+            remote: {
+              full: careerIt.remote?.full || '',
+              hybrid: careerIt.remote?.hybrid || '',
+              onSite: careerIt.remote?.onSite || '',
+            },
+          },
+        };
+        
+        setTranslations(newTranslations);
+        setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
+      }
+    } catch (error) {
+      console.error('Error fetching translations:', error);
+    } finally {
+      setIsLoadingTranslations(false);
+    }
+  };
 
   const fetchCareerData = async () => {
     setIsLoading(true);
@@ -135,6 +265,39 @@ export default function CareerSection() {
 
   const handleNewEntryChange = (field: string, value: string | null) => {
     setNewCareerEntry((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTranslationChange = (
+    locale: 'en' | 'it',
+    field: string,
+    value: string
+  ) => {
+    setTranslations((prev) => {
+      const newTranslations = { ...prev };
+      if (field.startsWith('remote.')) {
+        const remoteType = field.replace('remote.', '') as 'full' | 'hybrid' | 'onSite';
+        newTranslations[locale].remote = {
+          ...newTranslations[locale].remote,
+          [remoteType]: value,
+        };
+      } else {
+        (newTranslations[locale] as Record<string, unknown>)[field] = value;
+      }
+      return newTranslations;
+    });
+  };
+
+  const hasTranslationChanges = () => {
+    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
+  };
+
+  const hasChanges = () => {
+    return (
+      modifiedEntries.size > 0 ||
+      newEntries.length > 0 ||
+      deletedEntries.size > 0 ||
+      hasTranslationChanges()
+    );
   };
 
   const handleCreateCareer = () => {
@@ -270,6 +433,7 @@ export default function CareerSection() {
 
     // Reload original data
     fetchCareerData();
+    fetchTranslations();
     
     // Reset all tracking
     setModifiedEntries(new Set());
@@ -381,6 +545,33 @@ export default function CareerSection() {
         }
       }
 
+      // Save translations if changed
+      if (hasTranslationChanges()) {
+        // Update English translations
+        const enResult = await i18nActions({
+          type: 'UPDATE_SECTION',
+          locale: 'en',
+          sectionKey: 'career-section',
+          sectionData: translations.en,
+        });
+        if (!enResult.success) {
+          throw new Error(enResult.error || 'Failed to update English translations');
+        }
+
+        // Update Italian translations
+        const itResult = await i18nActions({
+          type: 'UPDATE_SECTION',
+          locale: 'it',
+          sectionKey: 'career-section',
+          sectionData: translations.it,
+        });
+        if (!itResult.success) {
+          throw new Error(itResult.error || 'Failed to update Italian translations');
+        }
+
+        setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
+      }
+
       // Refresh data and reset all tracking
       await fetchCareerData();
       setModifiedEntries(new Set());
@@ -398,13 +589,6 @@ export default function CareerSection() {
     }
   };
 
-  const hasChanges = () => {
-    return (
-      modifiedEntries.size > 0 ||
-      newEntries.length > 0 ||
-      deletedEntries.size > 0
-    );
-  };
 
   const handleDragOver = (e: React.DragEvent, entryId: string) => {
     e.preventDefault();
@@ -497,6 +681,207 @@ export default function CareerSection() {
             )}
           </button>
         </div>
+      </div>
+
+      {/* Translations Section */}
+      <div className="bg-darkergray rounded-xl p-6">
+        <button
+          type="button"
+          onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
+            <Globe className="w-5 h-5" />
+            Translations
+          </h2>
+          {isTranslationsExpanded ? (
+            <ChevronUp className="w-5 h-5 text-lighttext2" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-lighttext2" />
+          )}
+        </button>
+
+        {isTranslationsExpanded && (
+          <div className="space-y-6 mt-4">
+            {/* Locale Tabs */}
+            <div className="flex gap-2 border-b border-darkgray">
+              <button
+                type="button"
+                onClick={() => setTranslationLocale('en')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  translationLocale === 'en'
+                    ? 'text-main border-b-2 border-main'
+                    : 'text-lighttext2 hover:text-lighttext'
+                }`}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => setTranslationLocale('it')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  translationLocale === 'it'
+                    ? 'text-main border-b-2 border-main'
+                    : 'text-lighttext2 hover:text-lighttext'
+                }`}
+              >
+                Italian
+              </button>
+            </div>
+
+            {isLoadingTranslations ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-main" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-lighttext mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={translations[translationLocale].title}
+                    onChange={(e) =>
+                      handleTranslationChange(translationLocale, 'title', e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    placeholder="e.g., Career History"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-lighttext mb-2">
+                    Subtitle
+                  </label>
+                  <textarea
+                    value={translations[translationLocale].subtitle}
+                    onChange={(e) =>
+                      handleTranslationChange(translationLocale, 'subtitle', e.target.value)
+                    }
+                    rows={3}
+                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                    placeholder="e.g., My professional journey and experience"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-lighttext mb-2">
+                      Present
+                    </label>
+                    <input
+                      type="text"
+                      value={translations[translationLocale].present}
+                      onChange={(e) =>
+                        handleTranslationChange(translationLocale, 'present', e.target.value)
+                      }
+                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      placeholder="e.g., Present"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-lighttext mb-2">
+                      Month
+                    </label>
+                    <input
+                      type="text"
+                      value={translations[translationLocale].month}
+                      onChange={(e) =>
+                        handleTranslationChange(translationLocale, 'month', e.target.value)
+                      }
+                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      placeholder="e.g., month"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-lighttext mb-2">
+                      Months
+                    </label>
+                    <input
+                      type="text"
+                      value={translations[translationLocale].months}
+                      onChange={(e) =>
+                        handleTranslationChange(translationLocale, 'months', e.target.value)
+                      }
+                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      placeholder="e.g., months"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-lighttext mb-2">
+                      Year
+                    </label>
+                    <input
+                      type="text"
+                      value={translations[translationLocale].year}
+                      onChange={(e) =>
+                        handleTranslationChange(translationLocale, 'year', e.target.value)
+                      }
+                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      placeholder="e.g., year"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-lighttext mb-2">
+                      Years
+                    </label>
+                    <input
+                      type="text"
+                      value={translations[translationLocale].years}
+                      onChange={(e) =>
+                        handleTranslationChange(translationLocale, 'years', e.target.value)
+                      }
+                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      placeholder="e.g., years"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-lighttext mb-2">
+                    Remote Types
+                  </label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs text-lighttext2 mb-1">Full Remote</label>
+                      <input
+                        type="text"
+                        value={translations[translationLocale].remote.full}
+                        onChange={(e) =>
+                          handleTranslationChange(translationLocale, 'remote.full', e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        placeholder="e.g., Remote"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-lighttext2 mb-1">Hybrid</label>
+                      <input
+                        type="text"
+                        value={translations[translationLocale].remote.hybrid}
+                        onChange={(e) =>
+                          handleTranslationChange(translationLocale, 'remote.hybrid', e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        placeholder="e.g., Hybrid"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-lighttext2 mb-1">On-site</label>
+                      <input
+                        type="text"
+                        value={translations[translationLocale].remote.onSite}
+                        onChange={(e) =>
+                          handleTranslationChange(translationLocale, 'remote.onSite', e.target.value)
+                        }
+                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        placeholder="e.g., On-site"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between">

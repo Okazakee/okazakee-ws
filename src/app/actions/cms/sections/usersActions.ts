@@ -152,6 +152,10 @@ async function getAllowedUsers(
 
   if (error) throw error;
 
+  // Get current authenticated user to check their auth metadata for GitHub username
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const authGithubUsername = authUser?.user_metadata?.user_name || null;
+
   // Fetch all user profiles to match with allowed users (no cache to ensure fresh data)
   const { data: profiles, error: profilesError } = await supabase
     .from('user_profiles')
@@ -161,22 +165,64 @@ async function getAllowedUsers(
     console.error('Error fetching profiles:', profilesError);
   }
 
-  // Match profiles with allowed users
-  const usersWithProfiles = (data as AllowedUser[]).map((allowedUser) => {
-    const profile = profiles?.find(
-      (p) => 
-        (allowedUser.email && p.email?.toLowerCase() === allowedUser.email.toLowerCase()) ||
-        (allowedUser.github_username && p.github_username === allowedUser.github_username)
-    );
-    return {
-      ...allowedUser,
-      profile: profile ? {
-        id: profile.id,
-        display_name: profile.display_name,
-        avatar_url: profile.avatar_url,
-      } : null,
-    };
-  });
+  // If current user's profile is missing GitHub username but auth metadata has it, update the profile
+  if (authUser && authGithubUsername && profiles) {
+    const currentUserProfileIndex = profiles.findIndex((p) => p.id === authUser.id);
+    if (currentUserProfileIndex !== -1 && !profiles[currentUserProfileIndex].github_username) {
+      try {
+        await supabase
+          .from('user_profiles')
+          .update({ github_username: authGithubUsername })
+          .eq('id', authUser.id);
+        // Update the profiles array in memory for immediate use
+        profiles[currentUserProfileIndex].github_username = authGithubUsername;
+      } catch (updateError) {
+        console.error('Failed to sync GitHub username to profile:', updateError);
+      }
+    }
+  }
+
+  // Match profiles with allowed users and sync GitHub usernames
+  const usersWithProfiles = await Promise.all(
+    (data as AllowedUser[]).map(async (allowedUser) => {
+      // Find profile by email, GitHub username, or current user's ID
+      const profile = profiles?.find(
+        (p) => 
+          (allowedUser.email && p.email?.toLowerCase() === allowedUser.email.toLowerCase()) ||
+          (allowedUser.github_username && p.github_username === allowedUser.github_username) ||
+          (authUser?.id && p.id === authUser.id && allowedUser.email && p.email?.toLowerCase() === allowedUser.email.toLowerCase())
+      );
+      
+      // For current user, also check auth metadata for GitHub username
+      let githubUsername = profile?.github_username || allowedUser.github_username;
+      if (authUser && profile?.id === authUser.id && authGithubUsername) {
+        githubUsername = authGithubUsername;
+      }
+      
+      // If profile has GitHub username but cms_allowed_users doesn't, update it
+      if (githubUsername && !allowedUser.github_username && allowedUser.email) {
+        try {
+          await supabase
+            .from('cms_allowed_users')
+            .update({ github_username: githubUsername })
+            .eq('id', allowedUser.id);
+        } catch (updateError) {
+          // Silently fail - this is just a sync operation
+          console.error('Failed to sync GitHub username to cms_allowed_users:', updateError);
+        }
+      }
+      
+      return {
+        ...allowedUser,
+        github_username: githubUsername, // Update github_username with profile/auth value if available
+        profile: profile ? {
+          id: profile.id,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+        } : null,
+      };
+    })
+  );
 
   return { success: true, data: usersWithProfiles };
 }
@@ -345,11 +391,15 @@ async function removeUser(
   // Prevent removing the last admin
   const { data: user } = await supabase
     .from('cms_allowed_users')
-    .select('role')
+    .select('role, email, github_username')
     .eq('id', id)
     .single();
 
-  if (user?.role === 'admin') {
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+
+  if (user.role === 'admin') {
     const { data: admins } = await supabase
       .from('cms_allowed_users')
       .select('id')
@@ -360,12 +410,53 @@ async function removeUser(
     }
   }
 
+  // Find and delete user profile
+  const adminClient = getAdminClient();
+  let profileId: string | null = null;
+
+  // Try to find profile by email
+  if (user.email) {
+    const { data: profileByEmail } = await adminClient
+      .from('user_profiles')
+      .select('id')
+      .eq('email', user.email.toLowerCase())
+      .single();
+    if (profileByEmail) profileId = profileByEmail.id;
+  }
+
+  // Try to find profile by GitHub username if not found by email
+  if (!profileId && user.github_username) {
+    const { data: profileByGithub } = await adminClient
+      .from('user_profiles')
+      .select('id')
+      .eq('github_username', user.github_username)
+      .single();
+    if (profileByGithub) profileId = profileByGithub.id;
+  }
+
+  // Delete from cms_allowed_users
   const { error } = await supabase
     .from('cms_allowed_users')
     .delete()
     .eq('id', id);
 
   if (error) throw error;
+
+  // Delete from user_profiles if found (using admin client to bypass RLS)
+  if (profileId) {
+    const { error: deleteProfileError } = await adminClient
+      .from('user_profiles')
+      .delete()
+      .eq('id', profileId);
+
+    if (deleteProfileError) {
+      console.error('Error deleting user profile:', deleteProfileError);
+      // Don't throw - profile deletion is not critical if it fails
+    }
+  }
+
+  // Revalidate CMS paths to ensure fresh data
+  revalidatePath('/cms', 'layout');
 
   return { success: true };
 }

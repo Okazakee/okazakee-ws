@@ -552,9 +552,6 @@ export default function UsersSection() {
                         }`}>
                           {allowedUser.role}
                         </span>
-                        {isCurrentUser && (
-                          <span className="text-lighttext2 text-xs">(Cannot change your own role)</span>
-                        )}
                         {isLastAdmin && !isCurrentUser && (
                           <span className="text-yellow-500 text-xs">(Last admin - cannot demote)</span>
                         )}

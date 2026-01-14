@@ -1,6 +1,7 @@
 'use client';
 
 import { contactsActions } from '@/app/actions/cms/sections/contactsActions';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { useLayoutStore } from '@/store/layoutStore';
 import type { Contact } from '@/types/fetchedData.types';
 import type { LucideProps } from 'lucide-react';
@@ -13,6 +14,9 @@ import {
   Eye,
   ArrowUp,
   ArrowDown,
+  Globe,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import type React from 'react';
 import { Suspense, useEffect, useState } from 'react';
@@ -109,9 +113,67 @@ export default function ContactsSection() {
   const [deletedContacts, setDeletedContacts] = useState<Set<number>>(new Set());
   const [orderChanged, setOrderChanged] = useState(false);
 
+  // Translation state
+  const [translations, setTranslations] = useState<{
+    en: { title: string; subtitle: string };
+    it: { title: string; subtitle: string };
+  }>({
+    en: { title: '', subtitle: '' },
+    it: { title: '', subtitle: '' },
+  });
+  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
+  const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
+  const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
+
   useEffect(() => {
     fetchContacts();
+    fetchTranslations();
   }, []);
+
+  const fetchTranslations = async () => {
+    setIsLoadingTranslations(true);
+    try {
+      const result = await i18nActions({ type: 'GET' });
+      if (result.success && result.data) {
+        const i18nData = result.data as Array<{
+          language: string;
+          translations: Record<string, unknown>;
+        }>;
+        
+        const enData = i18nData.find((d) => d.language === 'en');
+        const itData = i18nData.find((d) => d.language === 'it');
+        
+        const contactsEn = (enData?.translations?.['contacts-section'] as {
+          title?: string;
+          subtitle?: string;
+        }) || {};
+        
+        const contactsIt = (itData?.translations?.['contacts-section'] as {
+          title?: string;
+          subtitle?: string;
+        }) || {};
+        
+        const newTranslations = {
+          en: {
+            title: contactsEn.title || '',
+            subtitle: contactsEn.subtitle || '',
+          },
+          it: {
+            title: contactsIt.title || '',
+            subtitle: contactsIt.subtitle || '',
+          },
+        };
+        
+        setTranslations(newTranslations);
+        setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
+      }
+    } catch (error) {
+      console.error('Error fetching translations:', error);
+    } finally {
+      setIsLoadingTranslations(false);
+    }
+  };
 
   const fetchContacts = async () => {
     setIsLoading(true);
@@ -253,6 +315,21 @@ export default function ContactsSection() {
     setOrderChanged(true);
   };
 
+  const handleTranslationChange = (
+    locale: 'en' | 'it',
+    field: 'title' | 'subtitle',
+    value: string
+  ) => {
+    setTranslations((prev) => ({
+      ...prev,
+      [locale]: { ...prev[locale], [field]: value },
+    }));
+  };
+
+  const hasTranslationChanges = () => {
+    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
+  };
+
   const applyAllChanges = async () => {
     try {
       setIsUpdating(true);
@@ -336,6 +413,33 @@ export default function ContactsSection() {
         }
       }
 
+      // Save translations if changed
+      if (hasTranslationChanges()) {
+        // Update English translations
+        const enResult = await i18nActions({
+          type: 'UPDATE_SECTION',
+          locale: 'en',
+          sectionKey: 'contacts-section',
+          sectionData: translations.en,
+        });
+        if (!enResult.success) {
+          throw new Error(enResult.error || 'Failed to update English translations');
+        }
+
+        // Update Italian translations
+        const itResult = await i18nActions({
+          type: 'UPDATE_SECTION',
+          locale: 'it',
+          sectionKey: 'contacts-section',
+          sectionData: translations.it,
+        });
+        if (!itResult.success) {
+          throw new Error(itResult.error || 'Failed to update Italian translations');
+        }
+
+        setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
+      }
+
       // Refresh data
       await fetchContacts();
       
@@ -357,6 +461,7 @@ export default function ContactsSection() {
   const cancelAllChanges = () => {
     // Revert to original data
     setContacts(JSON.parse(JSON.stringify(originalContacts)));
+    setTranslations(JSON.parse(JSON.stringify(originalTranslations)));
     
     // Reset tracking
     setModifiedContacts(new Set());
@@ -388,7 +493,8 @@ export default function ContactsSection() {
     modifiedContacts.size > 0 ||
     newContacts.length > 0 ||
     deletedContacts.size > 0 ||
-    orderChanged;
+    orderChanged ||
+    hasTranslationChanges();
 
   if (isLoading) {
     return (
@@ -451,6 +557,92 @@ export default function ContactsSection() {
             )}
           </button>
         </div>
+      </div>
+
+      {/* Translations Section */}
+      <div className="bg-darkergray rounded-xl p-6 mb-6">
+        <button
+          type="button"
+          onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
+            <Globe className="w-5 h-5" />
+            Translations
+          </h2>
+          {isTranslationsExpanded ? (
+            <ChevronUp className="w-5 h-5 text-lighttext2" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-lighttext2" />
+          )}
+        </button>
+
+        {isTranslationsExpanded && (
+          <div className="space-y-6 mt-4">
+            {/* Locale Tabs */}
+            <div className="flex gap-2 border-b border-darkgray">
+              <button
+                type="button"
+                onClick={() => setTranslationLocale('en')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  translationLocale === 'en'
+                    ? 'text-main border-b-2 border-main'
+                    : 'text-lighttext2 hover:text-lighttext'
+                }`}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => setTranslationLocale('it')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  translationLocale === 'it'
+                    ? 'text-main border-b-2 border-main'
+                    : 'text-lighttext2 hover:text-lighttext'
+                }`}
+              >
+                Italian
+              </button>
+            </div>
+
+            {isLoadingTranslations ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-main" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-lighttext mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={translations[translationLocale].title}
+                    onChange={(e) =>
+                      handleTranslationChange(translationLocale, 'title', e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    placeholder="e.g., Contacts"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-lighttext mb-2">
+                    Subtitle
+                  </label>
+                  <textarea
+                    value={translations[translationLocale].subtitle}
+                    onChange={(e) =>
+                      handleTranslationChange(translationLocale, 'subtitle', e.target.value)
+                    }
+                    rows={3}
+                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                    placeholder="e.g., You can ****reach out**** to me through the following channels:"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Create New Contact */}

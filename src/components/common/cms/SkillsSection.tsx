@@ -1,7 +1,8 @@
 'use client';
 
 import { skillsActions } from '@/app/actions/cms/sections/skillsActions';
-import { Edit3, Plus, Save, Trash2, Upload, X, Eye, ArrowUp, ArrowDown } from 'lucide-react';
+import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
+import { Edit3, Plus, Save, Trash2, Upload, X, Eye, ArrowUp, ArrowDown, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -75,12 +76,74 @@ export default function SkillsSection() {
   const [deletedCategories, setDeletedCategories] = useState<Set<number>>(new Set());
   const [categoryOrderChanged, setCategoryOrderChanged] = useState(false);
 
+  // Translation state
+  const [translations, setTranslations] = useState<{
+    en: { title: string; subtitle: string; skills: Record<string, string> };
+    it: { title: string; subtitle: string; skills: Record<string, string> };
+  }>({
+    en: { title: '', subtitle: '', skills: {} },
+    it: { title: '', subtitle: '', skills: {} },
+  });
+  const [originalTranslations, setOriginalTranslations] = useState(translations);
+  const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
+  const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
+  const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
+
   // Drag and drop states
   const [dragStates, setDragStates] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchSkillsData();
+    fetchTranslations();
   }, []);
+
+  const fetchTranslations = async () => {
+    setIsLoadingTranslations(true);
+    try {
+      const result = await i18nActions({ type: 'GET' });
+      if (result.success && result.data) {
+        const i18nData = result.data as Array<{
+          language: string;
+          translations: Record<string, unknown>;
+        }>;
+        
+        const enData = i18nData.find((d) => d.language === 'en');
+        const itData = i18nData.find((d) => d.language === 'it');
+        
+        const skillsEn = (enData?.translations?.['skills-section'] as {
+          title?: string;
+          subtitle?: string;
+          skills?: Record<string, string>;
+        }) || {};
+        
+        const skillsIt = (itData?.translations?.['skills-section'] as {
+          title?: string;
+          subtitle?: string;
+          skills?: Record<string, string>;
+        }) || {};
+        
+        const newTranslations = {
+          en: {
+            title: skillsEn.title || '',
+            subtitle: skillsEn.subtitle || '',
+            skills: skillsEn.skills || {},
+          },
+          it: {
+            title: skillsIt.title || '',
+            subtitle: skillsIt.subtitle || '',
+            skills: skillsIt.skills || {},
+          },
+        };
+        
+        setTranslations(newTranslations);
+        setOriginalTranslations(JSON.parse(JSON.stringify(newTranslations)));
+      }
+    } catch (error) {
+      console.error('Error fetching translations:', error);
+    } finally {
+      setIsLoadingTranslations(false);
+    }
+  };
 
   const fetchSkillsData = async () => {
     try {
@@ -608,6 +671,33 @@ export default function SkillsSection() {
         }
       }
 
+      // Save translations if changed
+      if (hasTranslationChanges()) {
+        // Update English translations
+        const enResult = await i18nActions({
+          type: 'UPDATE_SECTION',
+          locale: 'en',
+          sectionKey: 'skills-section',
+          sectionData: translations.en,
+        });
+        if (!enResult.success) {
+          throw new Error(enResult.error || 'Failed to update English translations');
+        }
+
+        // Update Italian translations
+        const itResult = await i18nActions({
+          type: 'UPDATE_SECTION',
+          locale: 'it',
+          sectionKey: 'skills-section',
+          sectionData: translations.it,
+        });
+        if (!itResult.success) {
+          throw new Error(itResult.error || 'Failed to update Italian translations');
+        }
+
+        setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
+      }
+
       // Refresh data and reset all tracking
       await fetchSkillsData();
       setModifiedSkills(new Set());
@@ -662,6 +752,7 @@ export default function SkillsSection() {
 
     // Reload original data
     fetchSkillsData();
+    fetchTranslations();
     
     // Reset all tracking
     setModifiedSkills(new Set());
@@ -673,6 +764,30 @@ export default function SkillsSection() {
     setCategoryOrderChanged(false);
   };
 
+  const handleTranslationChange = (
+    locale: 'en' | 'it',
+    field: 'title' | 'subtitle' | `skills.${string}`,
+    value: string
+  ) => {
+    setTranslations((prev) => {
+      const newTranslations = { ...prev };
+      if (field === 'title' || field === 'subtitle') {
+        newTranslations[locale][field] = value;
+      } else if (field.startsWith('skills.')) {
+        const categoryName = field.replace('skills.', '');
+        newTranslations[locale].skills = {
+          ...newTranslations[locale].skills,
+          [categoryName]: value,
+        };
+      }
+      return newTranslations;
+    });
+  };
+
+  const hasTranslationChanges = () => {
+    return JSON.stringify(translations) !== JSON.stringify(originalTranslations);
+  };
+
   const hasChanges = () => {
     return (
       modifiedSkills.size > 0 ||
@@ -681,7 +796,8 @@ export default function SkillsSection() {
       modifiedCategories.size > 0 ||
       newCategories.length > 0 ||
       deletedCategories.size > 0 ||
-      categoryOrderChanged
+      categoryOrderChanged ||
+      hasTranslationChanges()
     );
   };
 
@@ -753,6 +869,119 @@ export default function SkillsSection() {
             )}
           </button>
         </div>
+      </div>
+
+      {/* Translations Section */}
+      <div className="bg-darkergray rounded-xl p-6">
+        <button
+          type="button"
+          onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
+          className="w-full flex items-center justify-between text-left"
+        >
+          <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
+            <Globe className="w-5 h-5" />
+            Translations
+          </h2>
+          {isTranslationsExpanded ? (
+            <ChevronUp className="w-5 h-5 text-lighttext2" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-lighttext2" />
+          )}
+        </button>
+
+        {isTranslationsExpanded && (
+          <div className="space-y-6 mt-4">
+            {/* Locale Tabs */}
+            <div className="flex gap-2 border-b border-darkgray">
+              <button
+                type="button"
+                onClick={() => setTranslationLocale('en')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  translationLocale === 'en'
+                    ? 'text-main border-b-2 border-main'
+                    : 'text-lighttext2 hover:text-lighttext'
+                }`}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => setTranslationLocale('it')}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  translationLocale === 'it'
+                    ? 'text-main border-b-2 border-main'
+                    : 'text-lighttext2 hover:text-lighttext'
+                }`}
+              >
+                Italian
+              </button>
+            </div>
+
+            {isLoadingTranslations ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-main" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-lighttext mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={translations[translationLocale].title}
+                    onChange={(e) =>
+                      handleTranslationChange(translationLocale, 'title', e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    placeholder="e.g., Skills & Tech Stack"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-lighttext mb-2">
+                    Subtitle
+                  </label>
+                  <textarea
+                    value={translations[translationLocale].subtitle}
+                    onChange={(e) =>
+                      handleTranslationChange(translationLocale, 'subtitle', e.target.value)
+                    }
+                    rows={3}
+                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                    placeholder="e.g., This section outlines the ****key technologies****..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-lighttext mb-2">
+                    Category Names
+                  </label>
+                  <div className="space-y-2">
+                    {categories.map((category) => (
+                      <div key={category.id}>
+                        <label className="block text-xs text-lighttext2 mb-1">
+                          {category.name}
+                        </label>
+                        <input
+                          type="text"
+                          value={translations[translationLocale].skills[category.name] || ''}
+                          onChange={(e) =>
+                            handleTranslationChange(
+                              translationLocale,
+                              `skills.${category.name}` as `skills.${string}`,
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                          placeholder={`Translation for ${category.name}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Category Management */}

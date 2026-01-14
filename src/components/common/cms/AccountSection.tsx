@@ -1,5 +1,6 @@
 'use client';
 
+import { deleteMyAccount } from '@/app/actions/cms/deleteAccount';
 import { updateMyProfile } from '@/app/actions/cms/sections/usersActions';
 import { getUser } from '@/app/actions/cms/getUser';
 import { useLayoutStore } from '@/store/layoutStore';
@@ -9,19 +10,24 @@ import {
   Github,
   Mail,
   Pencil,
+  Trash2,
   User,
   X,
 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 export default function AccountSection() {
   const { user, setUser } = useLayoutStore();
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [savingName, setSavingName] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -95,6 +101,25 @@ export default function AccountSection() {
   const handleCancelEditName = () => {
     setEditingName(false);
     setEditedName(user?.displayName || '');
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const result = await deleteMyAccount();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete account');
+      }
+      // Redirect to login page after successful deletion
+      router.push('/cms/login');
+    } catch (err) {
+      console.error('Error deleting account:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete account');
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   if (!user) {
@@ -276,6 +301,68 @@ export default function AccountSection() {
             <p className="text-xs text-lighttext2 mt-1">Role is managed by administrators</p>
           </div>
         </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-6">
+        <h2 className="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
+          <Trash2 className="w-5 h-5" />
+          Danger Zone
+        </h2>
+        <p className="text-lighttext2 mb-4">
+          Once you delete your account, there is no going back. This will permanently delete your account and all associated data.
+        </p>
+        
+        {showDeleteConfirm ? (
+          <div className="space-y-4">
+            <div className="bg-darkestgray rounded-lg p-4 border border-red-500/50">
+              <p className="text-red-400 font-semibold mb-2">Are you absolutely sure?</p>
+              <p className="text-lighttext2 text-sm">
+                This action cannot be undone. This will permanently delete your account, profile, and all associated data.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Yes, delete my account
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setError(null);
+                }}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 font-medium rounded-lg transition-colors border border-red-500/50"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Account
+          </button>
+        )}
       </div>
     </div>
   );
