@@ -61,9 +61,12 @@ export default function CMS() {
 
       const startedAt = Date.now();
       const errorDelayMs = 5000;
-      const showErrorTimer = setTimeout(() => {
-        setCanShowError(true);
-      }, errorDelayMs);
+      let cancelled = false;
+
+      // If component unmounts, prevent setting state
+      const cleanup = () => {
+        cancelled = true;
+      };
 
       try {
         // Load saved section FIRST, before fetching user (to avoid race conditions)
@@ -131,18 +134,18 @@ export default function CMS() {
 
         // Fetch hero data for admins (required for initial render to avoid section-level flashes)
         if (fetchedUser.role === 'admin') {
+          type HeroBootData = {
+            hero: { propic: string; blurhashURL: string } | null;
+            resume: { resume_en: string; resume_it: string } | null;
+          };
+
           let lastError: string | null = null;
-          let data:
-            | {
-                hero: { propic: string; blurhashURL: string } | null;
-                resume: { resume_en: string; resume_it: string } | null;
-              }
-            | null = null;
+          let data: HeroBootData | null = null;
 
           while (!data && Date.now() - startedAt < errorDelayMs) {
             const result = await heroActions({ type: 'GET' });
             if (result.success && result.data) {
-              data = result.data as typeof data;
+              data = result.data as HeroBootData;
               break;
             }
 
@@ -164,15 +167,26 @@ export default function CMS() {
             resume_it: data.resume?.resume_it || null,
           });
         }
+        if (cancelled) return;
+        setLoading(false);
+        setCanShowError(false);
       } catch (err) {
-        // Keep spinner up until the 5s timer allows showing errors
-        setError(
-          err instanceof Error ? err.message : 'Failed to initialize CMS'
-        );
-      } finally {
-        clearTimeout(showErrorTimer);
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Failed to initialize CMS');
+
+        // Keep showing the full-page spinner until 5s have elapsed since init started
+        const elapsed = Date.now() - startedAt;
+        const remaining = errorDelayMs - elapsed;
+        if (remaining > 0) {
+          await sleep(remaining);
+        }
+
+        if (cancelled) return;
+        setCanShowError(true);
         setLoading(false);
       }
+
+      return cleanup;
     };
 
     initializeCMS();
