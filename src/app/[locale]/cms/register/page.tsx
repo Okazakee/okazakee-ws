@@ -3,9 +3,14 @@ import { redirect } from 'next/navigation';
 // Registration is disabled for security (single-user CMS)
 // To re-enable, uncomment the RegisterPageContent component below
 
-export default function RegisterPage() {
+export default async function RegisterPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
   // Redirect to login - registration disabled
-  redirect('/cms/login');
+  redirect(`/${locale}/cms/login`);
 }
 
 /*

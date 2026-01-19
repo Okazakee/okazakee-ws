@@ -17,6 +17,7 @@ import {
   Zap,
 } from 'lucide-react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { logout } from '@/app/actions/cms/logout';
 import { useLayoutStore } from '@/store/layoutStore';
@@ -28,6 +29,8 @@ interface SidePanelProps {
 
 const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1] || 'en';
 
   // Zustand store
   const { activeSection, setActiveSection, user } = useLayoutStore();
@@ -52,7 +55,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
     setIsLoggingOut(true);
     const result = await logout();
     if (result.success) {
-      window.location.href = '/cms/login';
+      window.location.href = `/${locale}/cms/login`;
     } else {
       setIsLoggingOut(false);
     }
@@ -255,7 +258,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
               <span className="font-medium">My Account</span>
             </button>
             <a
-              href="/"
+              href={`/${locale}`}
               className="w-full flex items-center gap-3 p-3 rounded-lg bg-darkergray hover:bg-darkgray text-lighttext hover:text-white transition-all duration-200"
             >
               <Home className="w-5 h-5" />

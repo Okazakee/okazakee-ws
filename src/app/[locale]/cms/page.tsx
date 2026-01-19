@@ -33,12 +33,17 @@ const sectionLabels: Record<string, string> = {
   settings: 'Settings',
 };
 
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
 export default function CMS() {
   const {
     setUser,
     activeSection,
     setActiveSection,
     setHeroSection,
+    heroSection,
     setLoading,
     setError,
     loading,
@@ -46,11 +51,19 @@ export default function CMS() {
     user,
   } = useLayoutStore();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [canShowError, setCanShowError] = useState(false);
 
   useEffect(() => {
     const initializeCMS = async () => {
       setLoading(true);
       setError(null);
+      setCanShowError(false);
+
+      const startedAt = Date.now();
+      const errorDelayMs = 5000;
+      const showErrorTimer = setTimeout(() => {
+        setCanShowError(true);
+      }, errorDelayMs);
 
       try {
         // Load saved section FIRST, before fetching user (to avoid race conditions)
@@ -59,82 +72,105 @@ export default function CMS() {
             ? localStorage.getItem('cms_active_section')
             : null;
 
-        // Fetch user
-        const fetchedUser = await getUser();
+        // Fetch user (keep spinner up; retry until either success or 5s timeout)
+        let fetchedUser = await getUser();
+        while (!fetchedUser && Date.now() - startedAt < errorDelayMs) {
+          await sleep(250);
+          fetchedUser = await getUser();
+        }
+
+        if (!fetchedUser) {
+          throw new Error('Authentication not ready yet. Please try again.');
+        }
         setUser(fetchedUser);
 
-        if (fetchedUser) {
-          // Validate saved section based on user role
-          const defaultSection = fetchedUser.role === 'admin' ? 'hero' : 'blog';
-          const adminOnlySections = [
-            'hero',
-            'skills',
-            'career',
-            'contacts',
-            'layout',
-            'privacy-policy',
-            'users',
-          ];
-          const validSections = [
-            'hero',
-            'skills',
-            'career',
-            'portfolio',
-            'blog',
-            'contacts',
-            'layout',
-            'privacy-policy',
-            'users',
-            'account',
-            'settings',
-          ];
+        // Validate saved section based on user role
+        const defaultSection = fetchedUser.role === 'admin' ? 'hero' : 'blog';
+        const adminOnlySections = [
+          'hero',
+          'skills',
+          'career',
+          'contacts',
+          'layout',
+          'privacy-policy',
+          'users',
+        ];
+        const validSections = [
+          'hero',
+          'skills',
+          'career',
+          'portfolio',
+          'blog',
+          'contacts',
+          'layout',
+          'privacy-policy',
+          'users',
+          'account',
+          'settings',
+        ];
 
-          let sectionToUse = defaultSection;
+        let sectionToUse = defaultSection;
 
-          if (savedSection && validSections.includes(savedSection)) {
-            // Check if saved section is valid for this user
-            if (
-              fetchedUser.role === 'admin' ||
-              !adminOnlySections.includes(savedSection)
-            ) {
-              sectionToUse = savedSection;
-            }
-          }
-
-          // Set active section immediately
-          setActiveSection(sectionToUse);
-
-          // Always save to localStorage to ensure it's persisted
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('cms_active_section', sectionToUse);
-          }
-
-          // Only fetch hero data for admins
-          if (fetchedUser.role === 'admin') {
-            const result = await heroActions({ type: 'GET' });
-            if (!result.success) {
-              throw new Error(
-                result.error || 'Failed to fetch hero section data'
-              );
-            }
-
-            const data = result.data as {
-              hero: { propic: string; blurhashURL: string } | null;
-              resume: { resume_en: string; resume_it: string } | null;
-            };
-            setHeroSection({
-              mainImage: data.hero?.propic || null,
-              blurhashURL: data.hero?.blurhashURL || null,
-              resume_en: data.resume?.resume_en || null,
-              resume_it: data.resume?.resume_it || null,
-            });
+        if (savedSection && validSections.includes(savedSection)) {
+          // Check if saved section is valid for this user
+          if (
+            fetchedUser.role === 'admin' ||
+            !adminOnlySections.includes(savedSection)
+          ) {
+            sectionToUse = savedSection;
           }
         }
+
+        // Set active section immediately
+        setActiveSection(sectionToUse);
+
+        // Always save to localStorage to ensure it's persisted
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('cms_active_section', sectionToUse);
+        }
+
+        // Fetch hero data for admins (required for initial render to avoid section-level flashes)
+        if (fetchedUser.role === 'admin') {
+          let lastError: string | null = null;
+          let data:
+            | {
+                hero: { propic: string; blurhashURL: string } | null;
+                resume: { resume_en: string; resume_it: string } | null;
+              }
+            | null = null;
+
+          while (!data && Date.now() - startedAt < errorDelayMs) {
+            const result = await heroActions({ type: 'GET' });
+            if (result.success && result.data) {
+              data = result.data as typeof data;
+              break;
+            }
+
+            lastError =
+              result.error || 'Failed to fetch hero section data';
+
+            // Transient right-after-login auth propagation: wait and retry
+            await sleep(250);
+          }
+
+          if (!data) {
+            throw new Error(lastError || 'Failed to fetch hero section data');
+          }
+
+          setHeroSection({
+            mainImage: data.hero?.propic || null,
+            blurhashURL: data.hero?.blurhashURL || null,
+            resume_en: data.resume?.resume_en || null,
+            resume_it: data.resume?.resume_it || null,
+          });
+        }
       } catch (err) {
+        // Keep spinner up until the 5s timer allows showing errors
         setError(
           err instanceof Error ? err.message : 'Failed to initialize CMS'
         );
       } finally {
+        clearTimeout(showErrorTimer);
         setLoading(false);
       }
     };
@@ -142,7 +178,18 @@ export default function CMS() {
     initializeCMS();
   }, [setUser, setActiveSection, setHeroSection, setLoading, setError]);
 
-  if (loading) {
+  const needsAdminBootData = user?.role === 'admin' && !heroSection;
+
+  if (loading || needsAdminBootData) {
+    if (error && canShowError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-red-500 bg-red-50 dark:bg-red-900/20 p-6 rounded-lg border border-red-200 dark:border-red-800">
+            {error}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
@@ -150,7 +197,7 @@ export default function CMS() {
     );
   }
 
-  if (error) {
+  if (error && canShowError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-red-500 bg-red-50 dark:bg-red-900/20 p-6 rounded-lg border border-red-200 dark:border-red-800">

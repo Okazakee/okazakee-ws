@@ -144,8 +144,26 @@ export default function HeroSection() {
     fetchTranslations();
   }, []);
 
+  // Sync initial form data once hero data arrives (avoids brief "error" state after login)
+  useEffect(() => {
+    if (!heroSection) return;
+    // Only auto-sync if the user hasn't started editing yet
+    if (modifiedFields.size > 0) return;
+    setEditedData((prev) => ({
+      ...prev,
+      mainImage: heroSection.mainImage || '',
+      blurhashURL: heroSection.blurhashURL || '',
+      resume_en: heroSection.resume_en || '',
+      resume_it: heroSection.resume_it || '',
+    }));
+  }, [heroSection, modifiedFields.size]);
+
   if (!heroSection) {
-    return <ErrorDiv>Error loading Hero data</ErrorDiv>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-main" />
+      </div>
+    );
   }
 
   const handleInputChange = (field: string, value: string) => {

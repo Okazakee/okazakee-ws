@@ -77,7 +77,7 @@ export default async function RootLayout({
             <ConditionalHeader locale={locale} />
             {children}
             <ScrollTop />
-            <Footer />
+            <Footer locale={locale} />
           </NextIntlClientProvider>
           <SpeedInsights />
         </body>

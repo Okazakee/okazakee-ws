@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { deleteMyAccount } from '@/app/actions/cms/deleteAccount';
 import { getUser } from '@/app/actions/cms/getUser';
@@ -22,6 +22,8 @@ import { processImageToWebP } from '@/utils/imageProcessor';
 export default function AccountSection() {
   const { user, setUser } = useLayoutStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1] || 'en';
   const [error, setError] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -127,7 +129,7 @@ export default function AccountSection() {
         throw new Error(result.error || 'Failed to delete account');
       }
       // Redirect to login page after successful deletion
-      router.push('/cms/login');
+      router.push(`/${locale}/cms/login`);
     } catch (err) {
       console.error('Error deleting account:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete account');

@@ -3,6 +3,19 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 /* PLEASE REFER TO https://supabase.com/docs/guides/auth/server-side/nextjs?queryGroups=router&router=app */
 
+function clearSupabaseAuthCookies(
+  response: NextResponse,
+  request: NextRequest
+): NextResponse {
+  for (const { name } of request.cookies.getAll()) {
+    // Supabase SSR auth cookies are prefixed with `sb-`
+    if (name.startsWith('sb-')) {
+      response.cookies.set(name, '', { path: '/', maxAge: 0 });
+    }
+  }
+  return response;
+}
+
 // Secure path matching for CMS routes
 // Note: /cms/register is disabled - only login and auth callback are public
 const CMS_PUBLIC_PATHS = ['/cms/login', '/cms/auth/callback'] as const;
@@ -45,17 +58,59 @@ export async function updateSession(request: NextRequest, locale: string) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
+  const isPublic = isPublicCMSPath(pathname, locale);
+  const isAuthPage = isAuthCMSPath(pathname);
+
+  let user: unknown = null;
+  let shouldClearAuthCookies = false;
+
+  // Avoid hitting auth endpoints unless we plausibly have a Supabase session cookie.
+  // This prevents noisy errors on anonymous visits.
+  const hasSupabaseCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith('sb-'));
+
+  if (hasSupabaseCookie) {
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        // Treat stale/invalid refresh token as logged-out and clear cookies to stop repeats.
+        if (
+          (error as { code?: string; status?: number }).code ===
+            'refresh_token_not_found' ||
+          (error as { code?: string; status?: number }).status === 400
+        ) {
+          shouldClearAuthCookies = true;
+        }
+      } else {
+        user = data.user;
+      }
+    } catch (err) {
+      const code = (err as { code?: string })?.code;
+      if (code === 'refresh_token_not_found') {
+        shouldClearAuthCookies = true;
+      }
+    }
+  }
+
+  if (shouldClearAuthCookies) {
+    supabaseResponse = clearSupabaseAuthCookies(supabaseResponse, request);
+    user = null;
+  }
 
   // Secure path checking - only allow exact public paths
-  if (!user && !isPublicCMSPath(request.nextUrl.pathname, locale)) {
-    return NextResponse.redirect(new URL(`/${locale}/cms/login`, request.url));
+  if (!user && !isPublic) {
+    const redirectResponse = NextResponse.redirect(
+      new URL(`/${locale}/cms/login`, request.url)
+    );
+    return shouldClearAuthCookies
+      ? clearSupabaseAuthCookies(redirectResponse, request)
+      : redirectResponse;
   }
 
   // Redirect authenticated users away from auth pages
-  if (user && isAuthCMSPath(request.nextUrl.pathname)) {
+  if (user && isAuthPage) {
     return NextResponse.redirect(new URL(`/${locale}/cms`, request.url));
   }
 

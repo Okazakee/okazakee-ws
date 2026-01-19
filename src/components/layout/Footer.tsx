@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import CopyLinkButton from '../common/CopyButton';
 
-export default async function Footer() {
+export default async function Footer({ locale }: { locale: string }) {
   const t = await getTranslations('footer');
 
   return (
@@ -35,14 +35,15 @@ export default async function Footer() {
 
         <div className="text-xs xs:text-base sm:text-base md:my-0 w-fit lg:mr-5 flex items-center gap-3">
           <Link
-            href="/cms"
+            href={`/${locale}/cms`}
+            prefetch={false}
             className="hover:text-main text-xs xs:text-sm md:text-base text-right transition-colors duration-0"
           >
             CMS
           </Link>
           <span className="text-gray-500 dark:text-gray-400">|</span>
           <Link
-            href="/privacy-policy"
+            href={`/${locale}/privacy-policy`}
             className="hover:text-main text-xs xs:text-sm md:text-base text-right transition-colors duration-0"
           >
             {t('privacyPolicy')}
