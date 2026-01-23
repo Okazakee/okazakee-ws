@@ -21,7 +21,7 @@
     "@vercel/speed-insights": "^1.2.0",
     "blurhash": "^2.0.5",
     "jimp": "^1.6.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "lucide-react": "^0.562.0",
     "markdown-to-jsx": "^9.5.7",
     "moment": "^2.30.1",
