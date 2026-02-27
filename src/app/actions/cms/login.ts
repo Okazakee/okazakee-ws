@@ -128,37 +128,3 @@ export async function getGitHubOAuthUrl(locale: string = 'en') {
 
   return { url: data.url };
 }
-
-/**
- * Verify GitHub user is in allowlist (called after OAuth callback)
- */
-export async function verifyGitHubUser() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return { allowed: false, error: 'Authentication failed' };
-  }
-
-  // Get GitHub username from user metadata
-  const githubUsername = user.user_metadata?.user_name;
-  const email = user.email;
-
-  // Check allowlist by GitHub username OR email
-  const allowlistCheck = await checkAllowlist(supabase, email, githubUsername);
-
-  if (!allowlistCheck.allowed) {
-    // Sign out the user since they're not allowed
-    await supabase.auth.signOut();
-    return {
-      allowed: false,
-      error: 'Access denied. Please contact the administrator.',
-    };
-  }
-
-  return { allowed: true, role: allowlistCheck.role };
-}

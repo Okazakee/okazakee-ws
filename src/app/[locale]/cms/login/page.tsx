@@ -58,6 +58,9 @@ function LoginFormContent({
       setIsGitHubLoading(false);
     } else if (result.url) {
       window.location.href = result.url;
+    } else {
+      setError('Failed to get OAuth URL');
+      setIsGitHubLoading(false);
     }
   };
 
