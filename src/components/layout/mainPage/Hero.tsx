@@ -1,6 +1,7 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
+import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { getHeroSection } from '@/utils/getData';
 
@@ -70,26 +71,28 @@ export default async function Hero() {
             </div>
           </div>
           <div className="text-center text-xl xs:text-2xl tablet:text-4xl lg:text-[3.5rem] drop-shadow-2xl dark:drop-shadow-none">
-            <h1
+            <InnerHtml
+              as="h1"
               className="xl:mb-10 md:mb-12 mb-5"
-              dangerouslySetInnerHTML={{ __html: formatLabels(t('top.name')) }}
+              html={formatLabels(t('top.name'))}
             />
-            <h2
-              dangerouslySetInnerHTML={{ __html: formatLabels(t('top.role')) }}
+            <InnerHtml
+              as="h2"
+              html={formatLabels(t('top.role'))}
             />
           </div>
         </div>
         <div className="flex items-center text-center mt-10 md:mt-20">
           <div>
-            <h1
+            <InnerHtml
+              as="h1"
               className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-10"
-              dangerouslySetInnerHTML={{ __html: t('aboutme.title') }}
+              html={formatLabels(t('aboutme.title'))}
             />
-            <p
+            <InnerHtml
+              as="p"
               className="text-left text-base xs:text-[1.2rem] tablet:text-lg tablet:mx-8 tracking-[0.02em] xs:leading-snug md:leading-normal lg:text-2xl"
-              dangerouslySetInnerHTML={{
-                __html: formatLabels(t('aboutme.paragraph')),
-              }}
+              html={formatLabels(t('aboutme.paragraph'))}
             />
           </div>
         </div>

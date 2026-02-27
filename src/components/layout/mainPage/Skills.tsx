@@ -1,6 +1,7 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
+import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { getSkillsCategories } from '@/utils/getData';
 
@@ -15,12 +16,15 @@ export default async function Skills() {
       className="flex items-center justify-center text-center mx-5 xl:mx-16 md:min-h-lvh mt-20 md:mt-20 lg:mt-32 xl:mt-40 mb-20 md:mb-32"
     >
       <div className="w-full h-full ">
-        <h1 className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-10 xl:mb-5 ">
-          {t('title')}
-        </h1>
-        <h2
+        <InnerHtml
+          as="h1"
+          className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-10 xl:mb-5"
+          html={formatLabels(t('title'))}
+        />
+        <InnerHtml
+          as="h2"
           className="xl:mb-20 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl mb-10"
-          dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
+          html={formatLabels(t('subtitle'))}
         />
         {skills_categories.map((skillCategory, _index) => (
           <div key={skillCategory.id} className="">

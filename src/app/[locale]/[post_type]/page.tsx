@@ -1,6 +1,7 @@
 import { CircleX } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { InnerHtml } from '@/components/common/InnerHtml';
 import PostList from '@/components/common/PostList';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { formatLabels } from '@/utils/formatLabels';
@@ -81,14 +82,10 @@ export default async function PostsPage({
         <h1 className="xl:text-5xl text-2xl xs:text-3xl mb-5">
           {post_type === 'blog' ? t('title2') : t('title1')}
         </h1>
-        <h3
+        <InnerHtml
+          as="h3"
           className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-lg md:text-2xl"
-          dangerouslySetInnerHTML={{
-            __html:
-              post_type === 'blog'
-                ? formatLabels(t('subtitle2'))
-                : formatLabels(t('subtitle1')),
-          }}
+          html={post_type === 'blog' ? formatLabels(t('subtitle2')) : formatLabels(t('subtitle1'))}
         />
         {posts.length > 0 ? (
           <PostList

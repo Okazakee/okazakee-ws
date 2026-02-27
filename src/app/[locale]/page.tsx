@@ -1,9 +1,8 @@
 import Hero from '@layout/mainPage/Hero';
 import dynamic from 'next/dynamic';
 
-// Dynamic imports for below-fold sections
 const Skills = dynamic(() => import('@layout/mainPage/Skills'));
-const Career = dynamic(() => import('@/components/layout/mainPage/Career'));
+const Career = dynamic(() => import('@layout/mainPage/Career'));
 const PostsSection = dynamic(() => import('@layout/mainPage/PostsSections'));
 const Contacts = dynamic(() => import('@layout/mainPage/Contacts'));
 
@@ -46,7 +45,7 @@ export async function generateStaticParams() {
 export default async function Home({
   params,
 }: {
-  params: Promise<{ post_type: string; locale: string }>;
+  params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
 

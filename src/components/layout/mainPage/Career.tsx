@@ -1,11 +1,12 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
+import { ClientMarkdown } from '@components/common/ClientMarkdown';
 import { SkillsCarousel } from '@components/common/SkillsCarousel';
 import { Calendar, MapPin } from 'lucide-react';
-import Markdown from 'markdown-to-jsx';
 import moment, { type MomentInput } from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { getCareerEntries } from '@/utils/getData';
 
@@ -88,12 +89,15 @@ export default async function Career() {
       className="flex items-center justify-center text-center mx-5 xl:mx-16 min-h-screen my-20 md:my-0 mb-20 md:mb-32"
     >
       <div className="w-full max-w-6xl">
-        <h1 className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-10 xl:mb-5">
-          {t('title')}
-        </h1>
-        <h2
+        <InnerHtml
+          as="h1"
+          className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-10 xl:mb-5"
+          html={formatLabels(t('title'))}
+        />
+        <InnerHtml
+          as="h2"
           className="xl:mb-20 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl mb-10"
-          dangerouslySetInnerHTML={{ __html: formatLabels(t('subtitle')) }}
+          html={formatLabels(t('subtitle'))}
         />
 
         <div className="relative">
@@ -157,15 +161,11 @@ export default async function Career() {
                       </span>
                     </div>
 
-                    <div
-                      className={
-                        'mb-4 prose dark:prose-invert max-w-none text-left'
-                      }
+                    <ClientMarkdown
+                      className="mb-4 prose dark:prose-invert max-w-none text-left"
                     >
-                      <Markdown options={{ forceBlock: true }}>
-                        {latestPosition[`description_${locale}`]}
-                      </Markdown>
-                    </div>
+                      {latestPosition[`description_${locale}`] ?? ''}
+                    </ClientMarkdown>
 
                     <div
                       className={`flex flex-wrap gap-2 ${
@@ -208,11 +208,9 @@ export default async function Career() {
                                 )}
                               </span>
                             </div>
-                            <div className="prose dark:prose-invert max-w-none text-left mb-4">
-                              <Markdown options={{ forceBlock: true }}>
-                                {position[`description_${locale}`]}
-                              </Markdown>
-                            </div>
+                            <ClientMarkdown className="prose dark:prose-invert max-w-none text-left mb-4">
+                              {position[`description_${locale}`] ?? ''}
+                            </ClientMarkdown>
                             <div
                               className={`flex flex-wrap gap-2 ${
                                 isEven ? 'justify-end' : 'justify-start'
@@ -334,11 +332,9 @@ export default async function Career() {
                         </h3>
 
                         {/* Description */}
-                        <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
-                          <Markdown options={{ forceBlock: true }}>
-                            {latestPosition[`description_${locale}`]}
-                          </Markdown>
-                        </div>
+                        <ClientMarkdown className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
+                          {latestPosition[`description_${locale}`] ?? ''}
+                        </ClientMarkdown>
 
                         {/* Date and duration */}
                         <div className="flex items-center justify-center mb-5 text-xs text-gray-500 dark:text-gray-400 gap-1">
@@ -383,11 +379,9 @@ export default async function Career() {
                                       {position.title}
                                     </h3>
 
-                                    <div className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
-                                      <Markdown options={{ forceBlock: true }}>
-                                        {position[`description_${locale}`]}
-                                      </Markdown>
-                                    </div>
+                                    <ClientMarkdown className="mb-4 prose dark:prose-invert max-w-none text-sm text-left">
+                                      {position[`description_${locale}`] ?? ''}
+                                    </ClientMarkdown>
 
                                     {/* Date and duration */}
                                     <div className="flex items-center justify-center mb-5 text-xs text-gray-500 dark:text-gray-400 gap-1">

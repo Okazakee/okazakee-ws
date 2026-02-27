@@ -2,6 +2,7 @@ import { ErrorDiv } from '@components/common/ErrorDiv';
 import PostCard from '@components/common/PostCard';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { getBlogPosts, getPortfolioPosts } from '@/utils/getData';
 
@@ -31,14 +32,15 @@ export default async function PostsSection({ locale }: { locale: string }) {
                 postsCheck.length > 2 && 'md:min-h-lvh'
               }`}
             >
-              <h1 className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-5">
-                {t(isBlog ? 'title2' : 'title1')}
-              </h1>
-              <h2
+              <InnerHtml
+                as="h1"
+                className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-5"
+                html={formatLabels(t(isBlog ? 'title2' : 'title1'))}
+              />
+              <InnerHtml
+                as="h2"
                 className="mb-10 md:mb-20 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl"
-                dangerouslySetInnerHTML={{
-                  __html: formatLabels(t(isBlog ? 'subtitle2' : 'subtitle1')),
-                }}
+                html={formatLabels(t(isBlog ? 'subtitle2' : 'subtitle1'))}
               />
               <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
                 {postsCheck.map((post, index) => (

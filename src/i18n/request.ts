@@ -1,10 +1,7 @@
+import { getRequestConfig } from 'next-intl/server';
 import { getTranslationsSupabase } from '@/utils/getData';
 
-export default async function request({
-  requestLocale,
-}: {
-  requestLocale: Promise<string | undefined>;
-}) {
+export default getRequestConfig(async ({ requestLocale }) => {
   let locale = await requestLocale;
 
   if (!locale) {
@@ -17,4 +14,4 @@ export default async function request({
     locale,
     messages,
   };
-}
+});
