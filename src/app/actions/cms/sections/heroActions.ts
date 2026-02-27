@@ -272,9 +272,7 @@ async function uploadResume(
     }
 
     // Upload to Supabase Storage
-    const fileName = `resumes/${field}_${Date.now()}.${file.name
-      .split('.')
-      .pop()}`;
+    const fileName = `resumes/${field}_${Date.now()}.pdf`;
     const { error: uploadError } = await supabase.storage
       .from('website')
       .upload(fileName, file, {

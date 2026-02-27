@@ -54,8 +54,8 @@ export async function login(email: string, password: string) {
     return { error: 'Please enter a valid email address' };
   }
 
-  if (!password || typeof password !== 'string' || password.length < 1) {
-    return { error: 'Password is required' };
+  if (!password || typeof password !== 'string' || password.length < 8) {
+    return { error: 'Password must be at least 8 characters' };
   }
 
   // Get client IP for rate limiting
@@ -103,9 +103,12 @@ export async function getGitHubOAuthUrl(locale: string = 'en') {
   const supabase = await createClient();
 
   const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${locale}/cms/auth/callback`;
-  console.log('=== GitHub OAuth ===');
-  console.log('NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
-  console.log('Redirect URL:', redirectTo);
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('=== GitHub OAuth ===');
+    console.log('NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
+    console.log('Redirect URL:', redirectTo);
+  }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
@@ -114,8 +117,10 @@ export async function getGitHubOAuthUrl(locale: string = 'en') {
     },
   });
 
-  console.log('OAuth URL:', data?.url);
-  console.log('OAuth Error:', error);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('OAuth URL:', data?.url);
+    console.log('OAuth Error:', error);
+  }
 
   if (error) {
     return { error: error.message };
