@@ -3,6 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
+  generateBlurhashFromBuffer,
   isValidDate,
   isValidUrl,
   processImage,
@@ -347,7 +348,7 @@ async function uploadCareerLogo(
       // File is already WebP - upload directly
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
-      blurhash = undefined;
+      blurhash = await generateBlurhashFromBuffer(buffer);
     } else {
       // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);

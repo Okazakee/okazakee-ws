@@ -243,6 +243,22 @@ async function generateBlurhash(image: any): Promise<string> {
 }
 
 /**
+ * Generates a blurhash from a raw image Buffer (e.g. a pre-processed WebP).
+ * Used server-side when a client-uploaded WebP skips the processImage path.
+ */
+export async function generateBlurhashFromBuffer(
+  buffer: Buffer
+): Promise<string> {
+  try {
+    const Jimp = getJimp();
+    const image = await Jimp.read(buffer);
+    return generateBlurhash(image);
+  } catch {
+    return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
+  }
+}
+
+/**
  * Sanitizes a string for use in filenames
  * Removes special characters, replaces spaces with hyphens, converts to lowercase
  */

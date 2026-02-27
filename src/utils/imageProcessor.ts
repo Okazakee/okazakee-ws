@@ -1,7 +1,8 @@
 /**
  * Client-side image processing utility
- * Converts images to WebP format using browser Canvas API
+ * Converts images to WebP format using browser Canvas API and generates blurhash
  */
+import { encode } from 'blurhash';
 
 type ProcessImageOptions = {
   maxWidth?: number;
@@ -172,12 +173,10 @@ export async function processImageToWebP(
 }
 
 /**
- * Generates a simple blurhash-like string from canvas
- * This is a simplified version - for production, consider using a proper blurhash library
+ * Generates a real blurhash from a canvas element using the blurhash library
  */
 async function generateBlurhash(canvas: HTMLCanvasElement): Promise<string> {
   try {
-    // Create a small version for blurhash
     const smallCanvas = document.createElement('canvas');
     smallCanvas.width = 32;
     smallCanvas.height = 32;
@@ -186,11 +185,44 @@ async function generateBlurhash(canvas: HTMLCanvasElement): Promise<string> {
     if (!smallCtx) return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
 
     smallCtx.drawImage(canvas, 0, 0, 32, 32);
-    const _imageData = smallCtx.getImageData(0, 0, 32, 32);
-
-    // Simple placeholder - in production, use proper blurhash encoding
-    // For now, return a default blurhash
+    const imageData = smallCtx.getImageData(0, 0, 32, 32);
+    return encode(imageData.data, 32, 32, 4, 4);
+  } catch {
     return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
+  }
+}
+
+/**
+ * Generates a blurhash from any image File or URL string.
+ * Useful for generating blurhash when an image is set via CDN URL rather than file upload.
+ */
+export async function generateBlurhashFromImage(
+  source: File | string
+): Promise<string> {
+  try {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    const objectUrl =
+      typeof source === 'string' ? null : URL.createObjectURL(source);
+
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = objectUrl ?? (source as string);
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width || 32;
+    canvas.height = img.height || 32;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
+
+    ctx.drawImage(img, 0, 0);
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+
+    return generateBlurhash(canvas);
   } catch {
     return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
   }

@@ -3,6 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
+  generateBlurhashFromBuffer,
   processImage,
   requireAdmin,
   sanitizeFilename,
@@ -339,7 +340,7 @@ async function uploadSkillIcon(
       buffer = Buffer.from(arrayBuffer);
       contentType = 'image/webp';
       fileName = `skills/${skillId}-${sanitizedTitle}.webp`;
-      blurhash = undefined;
+      blurhash = await generateBlurhashFromBuffer(buffer);
     } else {
       // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
@@ -383,8 +384,8 @@ async function uploadSkillIcon(
       .getPublicUrl(fileName);
 
     // Update skill with new icon URL and blurhash (if available)
-    const updateData: { icon_url: string; blurhashURL?: string | null } = {
-      icon_url: urlData.publicUrl,
+    const updateData: { icon: string; blurhashURL?: string | null } = {
+      icon: urlData.publicUrl,
     };
     if (blurhash !== undefined) {
       updateData.blurhashURL = blurhash || null;

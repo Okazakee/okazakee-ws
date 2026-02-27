@@ -45,7 +45,7 @@ type EditableSkill = Skill & {
   isEditing?: boolean;
 };
 
-type EditableCategory = SkillsCategory & {
+type EditableCategory = Omit<SkillsCategory, 'skills'> & {
   skills: EditableSkill[];
   isEditing?: boolean;
   newSkill?: Partial<EditableSkill> & { icon_file?: File | null };
@@ -252,6 +252,28 @@ export default function SkillsSection() {
       console.error('Error handling file change:', error);
       setError('Failed to process file');
     }
+  };
+
+  const handleIconUrlChange = (
+    categoryId: number,
+    skillId: number,
+    url: string
+  ) => {
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId
+          ? {
+              ...cat,
+              skills: cat.skills.map((skill) =>
+                skill.id === skillId
+                  ? { ...skill, icon: url, icon_file: null }
+                  : skill
+              ),
+            }
+          : cat
+      )
+    );
+    setModifiedSkills((prev) => new Set(prev).add(`${categoryId}-${skillId}`));
   };
 
   const handleDragOver = (e: React.DragEvent, skillId: string) => {
@@ -693,16 +715,7 @@ export default function SkillsSection() {
               uploadResult.error || `Failed to upload icon for ${skill.title}`
             );
           }
-
-          // Update the skill with the new icon
-          await skillsActions({
-            type: 'UPDATE',
-            id: createdSkill.id,
-            data: {
-              icon: uploadResult.data.icon_url,
-              blurhashURL: uploadResult.data.blurhashURL,
-            },
-          });
+          // UPLOAD_ICON already updates `icon` and `blurhashURL` in DB
         }
       }
 
@@ -724,7 +737,7 @@ export default function SkillsSection() {
           invert: skill.invert,
         };
 
-        // Upload icon if there's a new file
+        // Upload icon if there's a new file, otherwise persist any URL change
         if (skill.icon_file) {
           // Check if file is SVG (upload as-is) or process to WebP
           const isSvg =
@@ -760,8 +773,10 @@ export default function SkillsSection() {
             );
           }
 
-          updateData.icon = uploadResult.data.icon_url;
-          updateData.blurhashURL = uploadResult.data.blurhashURL;
+          // UPLOAD_ICON already updates `icon` and `blurhashURL` in DB
+        } else {
+          // URL was typed directly — persist it
+          updateData.icon = skill.icon;
         }
 
         // Update the skill
@@ -1346,8 +1361,7 @@ export default function SkillsSection() {
                         height={80}
                         className={`rounded-lg pb-2 ${skill.invert ? 'dark:invert' : ''}`}
                         alt={skill.title}
-                        placeholder="blur"
-                        blurDataURL={skill.blurhashURL}
+                        {...(skill.blurhashURL ? { placeholder: 'blur' as const, blurDataURL: skill.blurhashURL } : {})}
                       />
                       {dragStates[`skill-${skill.id}`] && (
                         <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
@@ -1397,6 +1411,20 @@ export default function SkillsSection() {
                         }
                         className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden"
                         placeholder="Skill title"
+                      />
+                      <input
+                        type="text"
+                        value={skill.icon_file ? '' : skill.icon}
+                        onChange={(e) =>
+                          handleIconUrlChange(
+                            category.id,
+                            skill.id,
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden text-xs"
+                        placeholder={skill.icon_file ? 'File selected — clear it to type a URL' : 'Icon URL (or use Change Icon above)'}
+                        disabled={!!skill.icon_file}
                       />
                       <div className="flex items-center gap-2">
                         <input
@@ -1482,44 +1510,94 @@ export default function SkillsSection() {
                       placeholder="Skill title"
                     />
 
-                    {/* Icon Upload */}
+                    {/* Icon */}
                     <div className="space-y-2">
-                      <label className="block text-sm text-lighttext2">
+                      <p className="block text-sm text-lighttext2">
                         Icon
-                      </label>
-                      <div className="flex items-center gap-3">
+                      </p>
+                      <div className="flex items-start gap-3">
                         {category.newSkill.icon ? (
                           <Image
                             src={category.newSkill.icon}
                             width={48}
                             height={48}
-                            className="rounded-lg"
+                            className="rounded-lg shrink-0"
                             alt="New skill icon preview"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-darkgray rounded-lg flex items-center justify-center text-lighttext2 text-xs">
+                          <div className="w-12 h-12 bg-darkgray rounded-lg flex items-center justify-center text-lighttext2 text-xs shrink-0">
                             No icon
                           </div>
                         )}
-                        <div className="flex-1">
+                        <div className="flex-1 space-y-2">
                           <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            id={`new-skill-icon-${category.id}`}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file)
-                                handleNewSkillFileChange(category.id, file);
-                            }}
+                            type="text"
+                            value={category.newSkill.icon_file ? '' : (category.newSkill.icon || '')}
+                            onChange={(e) =>
+                              setCategories((prev) =>
+                                prev.map((cat) =>
+                                  cat.id === category.id
+                                    ? {
+                                        ...cat,
+                                        newSkill: {
+                                          ...cat.newSkill!,
+                                          icon: e.target.value,
+                                          icon_file: null,
+                                        },
+                                      }
+                                    : cat
+                                )
+                              )
+                            }
+                            className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden text-xs"
+                            placeholder={category.newSkill.icon_file ? 'File selected' : 'https://cdn.example.com/icon.svg'}
+                            disabled={!!category.newSkill.icon_file}
                           />
-                          <label
-                            htmlFor={`new-skill-icon-${category.id}`}
-                            className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200 cursor-pointer w-fit"
-                          >
-                            <Upload className="w-3 h-3" />
-                            Upload Icon
-                          </label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-lighttext2">or</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              id={`new-skill-icon-${category.id}`}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file)
+                                  handleNewSkillFileChange(category.id, file);
+                              }}
+                            />
+                            <label
+                              htmlFor={`new-skill-icon-${category.id}`}
+                              className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200 cursor-pointer w-fit"
+                            >
+                              <Upload className="w-3 h-3" />
+                              Upload
+                            </label>
+                            {category.newSkill.icon_file && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setCategories((prev) =>
+                                    prev.map((cat) =>
+                                      cat.id === category.id
+                                        ? {
+                                            ...cat,
+                                            newSkill: {
+                                              ...cat.newSkill!,
+                                              icon: '',
+                                              icon_file: null,
+                                            },
+                                          }
+                                        : cat
+                                    )
+                                  )
+                                }
+                                className="text-lighttext2 hover:text-red-400 transition-colors"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
