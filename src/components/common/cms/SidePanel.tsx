@@ -33,7 +33,8 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
   const locale = pathname.split('/')[1] || 'en';
 
   // Zustand store
-  const { activeSection, setActiveSection, user } = useLayoutStore();
+  const { activeSection, setActiveSection, user, setUser, setHeroSection } =
+    useLayoutStore();
 
   const isAdmin = user?.role === 'admin';
   // Default section: admin gets 'hero', editor gets 'blog'
@@ -55,6 +56,8 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
     setIsLoggingOut(true);
     const result = await logout();
     if (result.success) {
+      setUser(null);
+      setHeroSection(null);
       window.location.href = `/${locale}/cms/login`;
     } else {
       setIsLoggingOut(false);

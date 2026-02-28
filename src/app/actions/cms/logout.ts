@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
 
 export async function logout() {
@@ -12,6 +11,7 @@ export async function logout() {
     return { success: false, error: error.message };
   }
 
-  revalidatePath('/cms', 'layout');
+  // Do not revalidatePath here: it can trigger layout refetch before the client
+  // redirects, causing a client-side exception. The next visit to /cms will load fresh.
   return { success: true };
 }

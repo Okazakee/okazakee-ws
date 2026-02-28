@@ -21,7 +21,7 @@ interface LayoutState {
     blurhashURL: string | null;
     resume_en: string | null;
     resume_it: string | null;
-  }) => void;
+  } | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 }

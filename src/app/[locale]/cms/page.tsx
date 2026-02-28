@@ -194,8 +194,9 @@ export default function CMS() {
   }, [setUser, setActiveSection, setHeroSection, setLoading, setError]);
 
   const needsAdminBootData = user?.role === 'admin' && !heroSection;
+  const waitingForUser = !user && !(error && canShowError);
 
-  if (loading || needsAdminBootData) {
+  if (loading || needsAdminBootData || waitingForUser) {
     if (error && canShowError) {
       return (
         <div className="min-h-screen flex items-center justify-center">
