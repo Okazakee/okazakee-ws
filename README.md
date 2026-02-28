@@ -1,6 +1,6 @@
-# Okazakee Workspace
+# Okazakee Website
 
-A modern personal portfolio and blog website built with Next.js 15, featuring an integrated CMS with role-based access control and multi-language support.
+A modern personal portfolio and blog website built with Next.js 16, featuring an integrated CMS with role-based access control and multi-language support.
 
 ## 🚀 Features
 
