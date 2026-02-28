@@ -1,7 +1,11 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { isValidUrl, requireAdmin } from '@/app/actions/cms/utils/fileHelpers';
+import {
+  getAdminClient,
+  isValidUrl,
+  requireAdmin,
+} from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
 
 type ContactOperation =
@@ -164,17 +168,17 @@ async function getContactsData(
 }
 
 async function createContact(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   contactData: CreateContactData
 ): Promise<ContactsResult> {
   try {
-    // Validate input data
     const validation = validateContactData(contactData);
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
-    const { data, error } = await supabase
+    const admin = getAdminClient();
+    const { data, error } = await admin
       .from('contacts')
       .insert(contactData)
       .select()
@@ -193,19 +197,18 @@ async function createContact(
 }
 
 async function updateContact(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   contactId: number,
   updateData: UpdateContactData
 ): Promise<ContactsResult> {
   try {
-    // Validate input data
     const validation = validateContactData(updateData);
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
-    // Check if contact exists
-    const { data: existingContact, error: fetchError } = await supabase
+    const admin = getAdminClient();
+    const { data: existingContact, error: fetchError } = await admin
       .from('contacts')
       .select('id')
       .eq('id', contactId)
@@ -215,7 +218,7 @@ async function updateContact(
       return { success: false, error: 'Contact not found' };
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from('contacts')
       .update(updateData)
       .eq('id', contactId)
@@ -234,14 +237,12 @@ async function updateContact(
 }
 
 async function deleteContact(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   contactId: number
 ): Promise<ContactsResult> {
   try {
-    const { error } = await supabase
-      .from('contacts')
-      .delete()
-      .eq('id', contactId);
+    const admin = getAdminClient();
+    const { error } = await admin.from('contacts').delete().eq('id', contactId);
 
     if (error) throw error;
 
@@ -256,13 +257,13 @@ async function deleteContact(
 }
 
 async function reorderContacts(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   contacts: { id: number; position: number }[]
 ): Promise<ContactsResult> {
   try {
-    // Update positions in batches
+    const admin = getAdminClient();
     for (const contact of contacts) {
-      const { error } = await supabase
+      const { error } = await admin
         .from('contacts')
         .update({ position: contact.position })
         .eq('id', contact.id);

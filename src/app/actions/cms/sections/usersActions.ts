@@ -318,12 +318,11 @@ async function addEmailUser(
 
     // Create the user with a random password (they'll reset it)
     const tempPassword = crypto.randomUUID();
-    const { error: createError } =
-      await adminClient.auth.admin.createUser({
-        email: normalizedEmail,
-        password: tempPassword,
-        email_confirm: true, // Auto-confirm the email
-      });
+    const { error: createError } = await adminClient.auth.admin.createUser({
+      email: normalizedEmail,
+      password: tempPassword,
+      email_confirm: true, // Auto-confirm the email
+    });
 
     if (createError) {
       console.error('Failed to create user:', createError.message, createError);

@@ -1,6 +1,7 @@
 import { createJimp } from '@jimp/core';
 import webp from '@jimp/wasm-webp';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { encode } from 'blurhash';
 import { defaultFormats, defaultPlugins } from 'jimp';
 import { createClient } from '@/utils/supabase/server';
@@ -90,6 +91,78 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
   }
 
   return { id: user.id, email: user.email || '' };
+}
+
+/** Roles that are allowed to create/update blog and portfolio posts (must match RLS if using JWT role) */
+const CMS_POST_WRITER_ROLES = ['admin', 'editor', 'mod'] as const;
+
+/**
+ * Verifies the user is in cms_allowed_users with a role that can create posts.
+ * Use this before INSERT on blog_posts/portfolio_posts when RLS expects JWT role (which we don't set).
+ */
+export async function requireAllowedPostWriter(): Promise<{
+  id: string;
+  email: string;
+  role: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+
+  let allowedUser: { role: string } | null = null;
+
+  if (user.email) {
+    const { data: emailMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('email', user.email.toLowerCase())
+      .single();
+    if (emailMatch) allowedUser = emailMatch;
+  }
+
+  const githubUsername = user.user_metadata?.user_name;
+  if (!allowedUser && githubUsername) {
+    const { data: githubMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('github_username', githubUsername)
+      .single();
+    if (githubMatch) allowedUser = githubMatch;
+  }
+
+  if (
+    !allowedUser ||
+    !CMS_POST_WRITER_ROLES.includes(
+      allowedUser.role as (typeof CMS_POST_WRITER_ROLES)[number]
+    )
+  ) {
+    throw new Error(
+      'Unauthorized: You do not have permission to create or edit posts'
+    );
+  }
+
+  return { id: user.id, email: user.email || '', role: allowedUser.role };
+}
+
+/**
+ * Service-role Supabase client. Use only in server code after validating the request (e.g. requireAllowedPostWriter).
+ * Bypasses RLS.
+ */
+export function getAdminClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Missing Supabase admin credentials');
+  }
+  return createSupabaseClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
 /**
@@ -422,6 +495,26 @@ export function validatePdfFile(file: File): {
 }
 
 /**
+ * Extracts the storage path (within the bucket) from a Supabase public object URL.
+ * Returns null if the URL is not from the given bucket or path is empty.
+ */
+export function getStoragePathFromPublicUrl(
+  fileUrl: string,
+  bucket: string
+): string | null {
+  try {
+    const url = new URL(fileUrl);
+    const pathParts = url.pathname.split('/');
+    const bucketIndex = pathParts.indexOf(bucket);
+    if (bucketIndex === -1) return null;
+    const filePath = pathParts.slice(bucketIndex + 1).join('/');
+    return filePath || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Backs up an old file before replacing it
  */
 export async function backupOldFile(
@@ -430,23 +523,13 @@ export async function backupOldFile(
   bucket: string
 ): Promise<void> {
   try {
-    // Extract file path from URL
-    const url = new URL(fileUrl);
-    const pathParts = url.pathname.split('/');
-
-    // Find the bucket index and get the file path after it
-    const bucketIndex = pathParts.indexOf(bucket);
-    if (bucketIndex === -1) {
+    const filePath = getStoragePathFromPublicUrl(fileUrl, bucket);
+    if (!filePath) {
       console.warn('Could not extract file path from URL:', fileUrl);
       return;
     }
 
-    const filePath = pathParts.slice(bucketIndex + 1).join('/');
-    if (!filePath) {
-      console.warn('Empty file path extracted from URL:', fileUrl);
-      return;
-    }
-
+    const pathParts = filePath.split('/');
     const fileName = pathParts[pathParts.length - 1];
     const backupPath = `backup/${Date.now()}_${fileName}`;
 

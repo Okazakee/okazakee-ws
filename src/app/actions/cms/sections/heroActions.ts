@@ -1,9 +1,11 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { revalidateTag } from 'next/cache';
 import {
   backupOldFile,
   generateBlurhashFromBuffer,
+  getAdminClient,
   processImage,
   requireAdmin,
   validateImageFile,
@@ -40,12 +42,14 @@ type HeroUpdateData = {
 
 type HeroFileData = {
   propic?: File;
+  mainImage?: File;
   resume_en?: File;
   resume_it?: File;
 };
 
 type HeroCurrentData = {
   propic?: string;
+  mainImage?: string;
   resume_en?: string;
   resume_it?: string;
 };
@@ -140,11 +144,12 @@ async function getHeroData(): Promise<HeroResult> {
 }
 
 async function updateHero(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   updateData: HeroUpdateData
 ): Promise<HeroResult> {
   try {
-    const { data, error } = await supabase
+    const admin = getAdminClient();
+    const { data, error } = await admin
       .from('hero_section')
       .update(updateData)
       .eq('id', 1)
@@ -152,6 +157,9 @@ async function updateHero(
       .single();
 
     if (error) throw error;
+
+    // @ts-expect-error - revalidateTag(tag: string) per Next.js; local type may expect 2 args
+    revalidateTag('hero');
 
     return { success: true, data };
   } catch (error) {
@@ -169,29 +177,24 @@ async function uploadHeroImage(
   currentImageUrl?: string
 ): Promise<HeroResult> {
   try {
-    // Validate file
     const fileValidation = validateImageFile(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
     }
 
-    // Backup old image if it exists
     if (currentImageUrl) {
       await backupOldFile(supabase, currentImageUrl, 'website');
     }
 
-    // Check if file is already WebP (pre-processed client-side)
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
 
     if (isWebP) {
-      // File is already WebP - upload directly
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
       blurhash = await generateBlurhashFromBuffer(buffer);
     } else {
-      // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
         return {
@@ -203,14 +206,12 @@ async function uploadHeroImage(
       blurhash = processed.blurhash;
     }
 
-    // Upload to Supabase Storage
-    const fileName = 'hero/profile.webp';
+    const fileName = 'avatar/avatar.webp';
+    const admin = getAdminClient();
 
-    // Delete old file if exists
-    await supabase.storage.from('website').remove([fileName]);
+    await admin.storage.from('website').remove([fileName]);
 
-    // Upload processed image
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await admin.storage
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
@@ -220,29 +221,28 @@ async function uploadHeroImage(
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = admin.storage
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update hero section with new image URL and blurhash (if available)
-    const updateData: { propic: string; blurhashURL?: string | null } = {
+    const updateData: { propic: string; blurhashURL: string | null } = {
       propic: urlData.publicUrl,
+      blurhashURL: blurhash ?? null,
     };
-    if (blurhash !== undefined) {
-      updateData.blurhashURL = blurhash || null;
-    }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await admin
       .from('hero_section')
       .update(updateData)
       .eq('id', 1);
 
     if (updateError) throw updateError;
 
+    // @ts-expect-error - revalidateTag(tag: string) per Next.js; local type may expect 2 args
+    revalidateTag('hero');
+
     return {
       success: true,
-      data: { propic: urlData.publicUrl, blurhashURL: blurhash },
+      data: { propic: urlData.publicUrl, blurhashURL: blurhash ?? '' },
     };
   } catch (error) {
     console.error('Error uploading hero image:', error);
@@ -260,42 +260,45 @@ async function uploadResume(
   currentResumeUrl?: string
 ): Promise<HeroResult> {
   try {
-    // Validate file
     const fileValidation = validatePdfFile(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
     }
 
-    // Backup old resume if it exists
     if (currentResumeUrl) {
       await backupOldFile(supabase, currentResumeUrl, 'website');
     }
 
-    // Upload to Supabase Storage
-    const fileName = `resumes/${field}_${Date.now()}.pdf`;
-    const { error: uploadError } = await supabase.storage
+    const fileName = `resumes/${field}.pdf`;
+    const admin = getAdminClient();
+
+    await admin.storage.from('website').remove([fileName]);
+
+    const { error: uploadError } = await admin.storage
       .from('website')
       .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: false,
+        contentType: 'application/pdf',
+        upsert: true,
       });
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = admin.storage
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update resume link
-    const { error: updateError } = await supabase
-      .from('resume_links')
-      .update({
-        [field]: urlData.publicUrl,
-      })
+    const { error: updateError } = await admin
+      .from('hero_section')
+      .update({ [field]: urlData.publicUrl })
       .eq('id', 1);
 
     if (updateError) throw updateError;
+
+    // @ts-expect-error - revalidateTag(tag: string) per Next.js; local type may expect 2 args
+    revalidateTag('resume');
+    // @ts-expect-error - revalidateTag(tag: string) per Next.js; local type may expect 2 args
+    revalidateTag('hero_section');
 
     return {
       success: true,
@@ -319,12 +322,14 @@ async function updateWithFiles(
     const updates: HeroUpdateData = {};
     const resumeUpdates: Record<string, string> = {};
 
-    // Handle profile picture upload
-    if (files.propic) {
+    // Handle profile picture upload (frontend sends mainImage, backend also accepts propic)
+    const propicFile = files.propic ?? files.mainImage;
+    const currentPropic = currentData?.propic ?? currentData?.mainImage;
+    if (propicFile) {
       const imageResult = await uploadHeroImage(
         supabase,
-        files.propic,
-        currentData?.propic
+        propicFile,
+        currentPropic
       );
       if (!imageResult.success) {
         return imageResult;

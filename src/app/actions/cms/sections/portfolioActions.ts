@@ -4,8 +4,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
   generateBlurhashFromBuffer,
+  getAdminClient,
+  getStoragePathFromPublicUrl,
   isValidUrl,
   processImage,
+  requireAllowedPostWriter,
   requireAuth,
   sanitizeFilename,
   validateImageFile,
@@ -18,6 +21,12 @@ type PortfolioOperation =
   | { type: 'CREATE'; data: CreatePortfolioData }
   | { type: 'UPDATE'; id: number; data: UpdatePortfolioData }
   | { type: 'DELETE'; id: number }
+  | {
+      type: 'UPLOAD_IMAGE_FOR_NEW_POST';
+      file: File;
+      titleEn: string;
+    }
+  | { type: 'ROLLBACK_CREATE'; postId: number; imagePath: string }
   | {
       type: 'UPLOAD_IMAGE';
       portfolioId: number;
@@ -177,6 +186,18 @@ export async function portfolioActions(
       case 'DELETE':
         return await deletePortfolio(supabase, operation.id);
 
+      case 'UPLOAD_IMAGE_FOR_NEW_POST':
+        return await uploadPortfolioImageForNewPost(
+          operation.file,
+          operation.titleEn
+        );
+
+      case 'ROLLBACK_CREATE':
+        return await rollbackPortfolioCreate(
+          operation.postId,
+          operation.imagePath
+        );
+
       case 'UPLOAD_IMAGE':
         return await uploadPortfolioImage(
           supabase,
@@ -247,19 +268,26 @@ async function getAuthors(supabase: SupabaseClient): Promise<PortfolioResult> {
 }
 
 async function createPortfolio(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   data: CreatePortfolioData
 ): Promise<PortfolioResult> {
   try {
-    // Validate input data
     const validation = validatePortfolioData(data);
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
-    const { data: newPortfolio, error } = await supabase
+    const { id: userId } = await requireAllowedPostWriter();
+    const insertData = {
+      ...data,
+      blurhashURL: data.blurhashURL ?? '',
+      author_id: userId,
+    };
+
+    const admin = getAdminClient();
+    const { data: newPortfolio, error } = await admin
       .from('portfolio_posts')
-      .insert(data)
+      .insert(insertData)
       .select()
       .single();
 
@@ -270,25 +298,32 @@ async function createPortfolio(
     console.error('Error creating portfolio post:', error);
     return {
       success: false,
-      error: 'Failed to create portfolio post',
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to create portfolio post',
     };
   }
 }
 
 async function updatePortfolio(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   id: number,
   data: UpdatePortfolioData
 ): Promise<PortfolioResult> {
   try {
-    // Validate input data
+    await requireAllowedPostWriter();
+  } catch {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
     const validation = validatePortfolioData(data);
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
-    // Check if portfolio post exists
-    const { data: existingPortfolio, error: fetchError } = await supabase
+    const admin = getAdminClient();
+    const { data: existingPortfolio, error: fetchError } = await admin
       .from('portfolio_posts')
       .select('id')
       .eq('id', id)
@@ -298,7 +333,7 @@ async function updatePortfolio(
       return { success: false, error: 'Portfolio post not found' };
     }
 
-    const { data: updatedPortfolio, error } = await supabase
+    const { data: updatedPortfolio, error } = await admin
       .from('portfolio_posts')
       .update(data)
       .eq('id', id)
@@ -318,14 +353,19 @@ async function updatePortfolio(
 }
 
 async function deletePortfolio(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   id: number
 ): Promise<PortfolioResult> {
   try {
-    // Check if portfolio post exists
-    const { data: existingPortfolio, error: fetchError } = await supabase
+    await requireAllowedPostWriter();
+  } catch {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const admin = getAdminClient();
+    const { data: existingPortfolio, error: fetchError } = await admin
       .from('portfolio_posts')
-      .select('id')
+      .select('id, image')
       .eq('id', id)
       .single();
 
@@ -333,10 +373,17 @@ async function deletePortfolio(
       return { success: false, error: 'Portfolio post not found' };
     }
 
-    const { error } = await supabase
-      .from('portfolio_posts')
-      .delete()
-      .eq('id', id);
+    if (existingPortfolio.image) {
+      const imagePath = getStoragePathFromPublicUrl(
+        existingPortfolio.image as string,
+        'website'
+      );
+      if (imagePath) {
+        await admin.storage.from('website').remove([imagePath]);
+      }
+    }
+
+    const { error } = await admin.from('portfolio_posts').delete().eq('id', id);
 
     if (error) throw error;
 
@@ -350,47 +397,36 @@ async function deletePortfolio(
   }
 }
 
-async function uploadPortfolioImage(
-  supabase: SupabaseClient,
-  portfolioId: number,
+/** Upload image with a deterministic path (timestamp + title slug). Returns URL and blurhash for use in INSERT. */
+async function uploadPortfolioImageForNewPost(
   file: File,
-  currentImageUrl?: string
+  titleEn: string
 ): Promise<PortfolioResult> {
   try {
-    // Validate file
+    await requireAllowedPostWriter();
+  } catch {
+    return {
+      success: false,
+      error: 'Unauthorized: You do not have permission to upload images',
+    };
+  }
+
+  try {
     const fileValidation = validateImageFile(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
     }
 
-    // Check if portfolio post exists and get title for filename
-    const { data: existingPortfolio, error: fetchError } = await supabase
-      .from('portfolio_posts')
-      .select('id, title_en')
-      .eq('id', portfolioId)
-      .single();
-
-    if (fetchError || !existingPortfolio) {
-      return { success: false, error: 'Portfolio post not found' };
-    }
-
-    // Backup old image if it exists
-    if (currentImageUrl) {
-      await backupOldFile(supabase, currentImageUrl, 'website');
-    }
-
-    // Check if file is already WebP (pre-processed client-side)
+    const admin = getAdminClient();
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
 
     if (isWebP) {
-      // File is already WebP - upload directly
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
       blurhash = await generateBlurhashFromBuffer(buffer);
     } else {
-      // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
         return {
@@ -402,17 +438,10 @@ async function uploadPortfolioImage(
       blurhash = processed.blurhash;
     }
 
-    // Generate filename: {postId}-{title_en}.webp
-    const sanitizedTitle = sanitizeFilename(
-      existingPortfolio.title_en || 'untitled'
-    );
-    const fileName = `portfolio/images/${portfolioId}-${sanitizedTitle}.webp`;
+    const sanitizedTitle = sanitizeFilename(titleEn || 'untitled');
+    const fileName = `portfolio/images/${Date.now()}-${sanitizedTitle}.webp`;
 
-    // Delete old file with same name if exists
-    await supabase.storage.from('website').remove([fileName]);
-
-    // Upload processed image to Supabase Storage
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await admin.storage
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
@@ -422,12 +451,133 @@ async function uploadPortfolioImage(
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = admin.storage
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update portfolio post with new image URL and blurhash (if available)
+    return {
+      success: true,
+      data: {
+        image: urlData.publicUrl,
+        blurhashURL: blurhash ?? '',
+        path: fileName,
+      },
+    };
+  } catch (error) {
+    console.error('Error uploading portfolio image for new post:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to upload image',
+    };
+  }
+}
+
+/** Rollback a created post and its uploaded image (e.g. on apply failure). */
+async function rollbackPortfolioCreate(
+  postId: number,
+  imagePath: string
+): Promise<PortfolioResult> {
+  try {
+    await requireAllowedPostWriter();
+  } catch {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const admin = getAdminClient();
+    await admin.storage.from('website').remove([imagePath]);
+    const { error } = await admin
+      .from('portfolio_posts')
+      .delete()
+      .eq('id', postId);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Error rolling back portfolio create:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Rollback failed',
+    };
+  }
+}
+
+async function uploadPortfolioImage(
+  _supabase: SupabaseClient,
+  portfolioId: number,
+  file: File,
+  currentImageUrl?: string
+): Promise<PortfolioResult> {
+  try {
+    await requireAllowedPostWriter();
+  } catch {
+    return {
+      success: false,
+      error: 'Unauthorized: You do not have permission to upload images',
+    };
+  }
+
+  try {
+    const fileValidation = validateImageFile(file);
+    if (!fileValidation.isValid) {
+      return { success: false, error: fileValidation.error };
+    }
+
+    const admin = getAdminClient();
+
+    const { data: existingPortfolio, error: fetchError } = await admin
+      .from('portfolio_posts')
+      .select('id, title_en')
+      .eq('id', portfolioId)
+      .single();
+
+    if (fetchError || !existingPortfolio) {
+      return { success: false, error: 'Portfolio post not found' };
+    }
+
+    if (currentImageUrl) {
+      await backupOldFile(admin, currentImageUrl, 'website');
+    }
+
+    const isWebP = file.type === 'image/webp';
+    let buffer: Buffer;
+    let blurhash: string | undefined;
+
+    if (isWebP) {
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      blurhash = await generateBlurhashFromBuffer(buffer);
+    } else {
+      const processed = await processImage(file);
+      if (!processed.success || !processed.buffer) {
+        return {
+          success: false,
+          error: processed.error || 'Failed to process image',
+        };
+      }
+      buffer = processed.buffer;
+      blurhash = processed.blurhash;
+    }
+
+    const sanitizedTitle = sanitizeFilename(
+      existingPortfolio.title_en || 'untitled'
+    );
+    const fileName = `portfolio/images/${portfolioId}-${sanitizedTitle}.webp`;
+
+    await admin.storage.from('website').remove([fileName]);
+
+    const { error: uploadError } = await admin.storage
+      .from('website')
+      .upload(fileName, buffer, {
+        cacheControl: '3600',
+        contentType: 'image/webp',
+        upsert: true,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = admin.storage
+      .from('website')
+      .getPublicUrl(fileName);
+
     const updateData: { image: string; blurhashURL?: string | null } = {
       image: urlData.publicUrl,
     };
@@ -435,7 +585,7 @@ async function uploadPortfolioImage(
       updateData.blurhashURL = blurhash || null;
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await admin
       .from('portfolio_posts')
       .update(updateData)
       .eq('id', portfolioId);

@@ -4,6 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
   generateBlurhashFromBuffer,
+  getAdminClient,
+  getStoragePathFromPublicUrl,
   isValidDate,
   isValidUrl,
   processImage,
@@ -25,7 +27,8 @@ type CareerOperation =
       careerId: number;
       file: File;
       currentLogoUrl?: string;
-    };
+    }
+  | { type: 'ROLLBACK_CREATE'; entryId: number };
 
 type CreateCareerData = {
   title: string;
@@ -180,6 +183,9 @@ export async function careerActions(
           operation.currentLogoUrl
         );
 
+      case 'ROLLBACK_CREATE':
+        return await rollbackCareerCreate(operation.entryId);
+
       default:
         return { success: false, error: 'Invalid operation' };
     }
@@ -207,17 +213,17 @@ async function getCareerData(_supabase: SupabaseClient): Promise<CareerResult> {
 }
 
 async function createCareer(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   data: CreateCareerData
 ): Promise<CareerResult> {
   try {
-    // Validate input data
     const validation = validateCareerData(data);
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
-    const { data: newCareer, error } = await supabase
+    const admin = getAdminClient();
+    const { data: newCareer, error } = await admin
       .from('career_entries')
       .insert(data)
       .select()
@@ -236,19 +242,18 @@ async function createCareer(
 }
 
 async function updateCareer(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   id: number,
   data: UpdateCareerData
 ): Promise<CareerResult> {
   try {
-    // Validate input data
     const validation = validateCareerData(data);
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
-    // Check if career entry exists
-    const { data: existingCareer, error: fetchError } = await supabase
+    const admin = getAdminClient();
+    const { data: existingCareer, error: fetchError } = await admin
       .from('career_entries')
       .select('id')
       .eq('id', id)
@@ -258,7 +263,7 @@ async function updateCareer(
       return { success: false, error: 'Career entry not found' };
     }
 
-    const { data: updatedCareer, error } = await supabase
+    const { data: updatedCareer, error } = await admin
       .from('career_entries')
       .update(data)
       .eq('id', id)
@@ -278,12 +283,12 @@ async function updateCareer(
 }
 
 async function deleteCareer(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   id: number
 ): Promise<CareerResult> {
   try {
-    // Check if career entry exists
-    const { data: existingCareer, error: fetchError } = await supabase
+    const admin = getAdminClient();
+    const { data: existingCareer, error: fetchError } = await admin
       .from('career_entries')
       .select('id')
       .eq('id', id)
@@ -293,10 +298,7 @@ async function deleteCareer(
       return { success: false, error: 'Career entry not found' };
     }
 
-    const { error } = await supabase
-      .from('career_entries')
-      .delete()
-      .eq('id', id);
+    const { error } = await admin.from('career_entries').delete().eq('id', id);
 
     if (error) throw error;
 
@@ -310,6 +312,49 @@ async function deleteCareer(
   }
 }
 
+/** Rollback a created entry and its logo (e.g. on apply failure). */
+async function rollbackCareerCreate(entryId: number): Promise<CareerResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const admin = getAdminClient();
+    const { data: entry, error: fetchError } = await admin
+      .from('career_entries')
+      .select('id, logo')
+      .eq('id', entryId)
+      .single();
+
+    if (fetchError || !entry) return { success: true };
+
+    if (entry.logo) {
+      const logoPath = getStoragePathFromPublicUrl(
+        entry.logo as string,
+        'website'
+      );
+      if (logoPath) {
+        await admin.storage.from('website').remove([logoPath]);
+      }
+    }
+
+    const { error } = await admin
+      .from('career_entries')
+      .delete()
+      .eq('id', entryId);
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error rolling back career create:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Rollback failed',
+    };
+  }
+}
+
 async function uploadCareerLogo(
   supabase: SupabaseClient,
   careerId: number,
@@ -317,14 +362,13 @@ async function uploadCareerLogo(
   currentLogoUrl?: string
 ): Promise<CareerResult> {
   try {
-    // Validate file
     const fileValidation = validateImageFile(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
     }
 
-    // Check if career entry exists and get company name for filename
-    const { data: existingCareer, error: fetchError } = await supabase
+    const admin = getAdminClient();
+    const { data: existingCareer, error: fetchError } = await admin
       .from('career_entries')
       .select('id, company')
       .eq('id', careerId)
@@ -334,23 +378,19 @@ async function uploadCareerLogo(
       return { success: false, error: 'Career entry not found' };
     }
 
-    // Backup old logo if it exists
     if (currentLogoUrl) {
       await backupOldFile(supabase, currentLogoUrl, 'website');
     }
 
-    // Check if file is already WebP (pre-processed client-side)
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
 
     if (isWebP) {
-      // File is already WebP - upload directly
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
       blurhash = await generateBlurhashFromBuffer(buffer);
     } else {
-      // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
         return {
@@ -362,17 +402,14 @@ async function uploadCareerLogo(
       blurhash = processed.blurhash;
     }
 
-    // Generate filename: {careerId}-{company}.webp
     const sanitizedCompany = sanitizeFilename(
       existingCareer.company || 'company'
     );
     const fileName = `career/logos/${careerId}-${sanitizedCompany}.webp`;
 
-    // Delete old file with same name if exists
-    await supabase.storage.from('website').remove([fileName]);
+    await admin.storage.from('website').remove([fileName]);
 
-    // Upload processed image to Supabase Storage
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await admin.storage
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
@@ -382,20 +419,16 @@ async function uploadCareerLogo(
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = admin.storage
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update career entry with new logo URL and blurhash (if available)
     const updateData: { logo: string; blurhashURL?: string | null } = {
       logo: urlData.publicUrl,
+      blurhashURL: blurhash ?? null,
     };
-    if (blurhash !== undefined) {
-      updateData.blurhashURL = blurhash || null;
-    }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await admin
       .from('career_entries')
       .update(updateData)
       .eq('id', careerId);

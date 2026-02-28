@@ -1,7 +1,10 @@
 'use server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/app/actions/cms/utils/fileHelpers';
+import {
+  getAdminClient,
+  requireAdmin,
+} from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
 
 type I18nOperation =
@@ -229,13 +232,12 @@ async function updateI18nData(
 }
 
 async function updateSectionTranslations(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   locale: string,
   sectionKey: string,
   sectionData: Record<string, unknown>
 ): Promise<I18nResult> {
   try {
-    // Validate locale
     const validLocales = ['en', 'it'];
     if (!validLocales.includes(locale)) {
       return {
@@ -244,8 +246,8 @@ async function updateSectionTranslations(
       };
     }
 
-    // Fetch current translations
-    const { data: currentData, error: fetchError } = await supabase
+    const admin = getAdminClient();
+    const { data: currentData, error: fetchError } = await admin
       .from('i18n_translations')
       .select('translations, privacy_policy')
       .eq('language', locale)
@@ -255,19 +257,16 @@ async function updateSectionTranslations(
       throw fetchError;
     }
 
-    // Get current translations or initialize empty object
     const currentTranslations =
       (currentData?.translations as Record<string, unknown>) || {};
 
-    // Merge section data into current translations
     const mergedTranslations = mergeSectionTranslations(
       currentTranslations,
       sectionKey,
       sectionData
     );
 
-    // Update with merged translations
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from('i18n_translations')
       .upsert({
         language: locale,
@@ -279,7 +278,6 @@ async function updateSectionTranslations(
 
     if (error) throw error;
 
-    // Invalidate cache
     revalidatePath('/', 'layout');
 
     return { success: true, data };

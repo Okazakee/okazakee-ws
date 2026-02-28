@@ -4,7 +4,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   backupOldFile,
   generateBlurhashFromBuffer,
+  getAdminClient,
+  getStoragePathFromPublicUrl,
   processImage,
+  requireAllowedPostWriter,
   requireAuth,
   sanitizeFilename,
   validateImageFile,
@@ -17,6 +20,12 @@ type BlogOperation =
   | { type: 'CREATE'; data: CreateBlogData }
   | { type: 'UPDATE'; id: number; data: UpdateBlogData }
   | { type: 'DELETE'; id: number }
+  | {
+      type: 'UPLOAD_IMAGE_FOR_NEW_POST';
+      file: File;
+      titleEn: string;
+    }
+  | { type: 'ROLLBACK_CREATE'; postId: number; imagePath: string }
   | {
       type: 'UPLOAD_IMAGE';
       blogId: number;
@@ -161,6 +170,15 @@ export async function blogActions(
       case 'DELETE':
         return await deleteBlog(supabase, operation.id);
 
+      case 'UPLOAD_IMAGE_FOR_NEW_POST':
+        return await uploadBlogImageForNewPost(
+          operation.file,
+          operation.titleEn
+        );
+
+      case 'ROLLBACK_CREATE':
+        return await rollbackBlogCreate(operation.postId, operation.imagePath);
+
       case 'UPLOAD_IMAGE':
         return await uploadBlogImage(
           supabase,
@@ -235,19 +253,26 @@ async function getAuthors(supabase: SupabaseClient): Promise<BlogResult> {
 }
 
 async function createBlog(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   data: CreateBlogData
 ): Promise<BlogResult> {
   try {
-    // Validate input data
     const validation = validateBlogData(data);
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
-    const { data: newBlog, error } = await supabase
+    const { id: userId } = await requireAllowedPostWriter();
+    const insertData = {
+      ...data,
+      blurhashURL: data.blurhashURL ?? '',
+      author_id: userId,
+    };
+
+    const admin = getAdminClient();
+    const { data: newBlog, error } = await admin
       .from('blog_posts')
-      .insert(data)
+      .insert(insertData)
       .select()
       .single();
 
@@ -258,25 +283,30 @@ async function createBlog(
     console.error('Error creating blog post:', error);
     return {
       success: false,
-      error: 'Failed to create blog post',
+      error:
+        error instanceof Error ? error.message : 'Failed to create blog post',
     };
   }
 }
 
 async function updateBlog(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   id: number,
   data: UpdateBlogData
 ): Promise<BlogResult> {
   try {
-    // Validate input data
+    await requireAllowedPostWriter();
+  } catch {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
     const validation = validateBlogData(data);
     if (!validation.isValid) {
       return { success: false, error: validation.error };
     }
 
-    // Check if blog post exists
-    const { data: existingBlog, error: fetchError } = await supabase
+    const admin = getAdminClient();
+    const { data: existingBlog, error: fetchError } = await admin
       .from('blog_posts')
       .select('id')
       .eq('id', id)
@@ -286,7 +316,7 @@ async function updateBlog(
       return { success: false, error: 'Blog post not found' };
     }
 
-    const { data: updatedBlog, error } = await supabase
+    const { data: updatedBlog, error } = await admin
       .from('blog_posts')
       .update(data)
       .eq('id', id)
@@ -306,14 +336,19 @@ async function updateBlog(
 }
 
 async function deleteBlog(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   id: number
 ): Promise<BlogResult> {
   try {
-    // Check if blog post exists
-    const { data: existingBlog, error: fetchError } = await supabase
+    await requireAllowedPostWriter();
+  } catch {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const admin = getAdminClient();
+    const { data: existingBlog, error: fetchError } = await admin
       .from('blog_posts')
-      .select('id')
+      .select('id, image')
       .eq('id', id)
       .single();
 
@@ -321,7 +356,17 @@ async function deleteBlog(
       return { success: false, error: 'Blog post not found' };
     }
 
-    const { error } = await supabase.from('blog_posts').delete().eq('id', id);
+    if (existingBlog.image) {
+      const imagePath = getStoragePathFromPublicUrl(
+        existingBlog.image as string,
+        'website'
+      );
+      if (imagePath) {
+        await admin.storage.from('website').remove([imagePath]);
+      }
+    }
+
+    const { error } = await admin.from('blog_posts').delete().eq('id', id);
 
     if (error) throw error;
 
@@ -335,47 +380,36 @@ async function deleteBlog(
   }
 }
 
-async function uploadBlogImage(
-  supabase: SupabaseClient,
-  blogId: number,
+/** Upload image with a deterministic path (timestamp + title slug). Returns URL and blurhash for use in INSERT. */
+async function uploadBlogImageForNewPost(
   file: File,
-  currentImageUrl?: string
+  titleEn: string
 ): Promise<BlogResult> {
   try {
-    // Validate file
+    await requireAllowedPostWriter();
+  } catch {
+    return {
+      success: false,
+      error: 'Unauthorized: You do not have permission to upload images',
+    };
+  }
+
+  try {
     const fileValidation = validateImageFile(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
     }
 
-    // Check if blog post exists and get title for filename
-    const { data: existingBlog, error: fetchError } = await supabase
-      .from('blog_posts')
-      .select('id, title_en')
-      .eq('id', blogId)
-      .single();
-
-    if (fetchError || !existingBlog) {
-      return { success: false, error: 'Blog post not found' };
-    }
-
-    // Backup old image if it exists
-    if (currentImageUrl) {
-      await backupOldFile(supabase, currentImageUrl, 'website');
-    }
-
-    // Check if file is already WebP (pre-processed client-side)
+    const admin = getAdminClient();
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
 
     if (isWebP) {
-      // File is already WebP - upload directly
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
       blurhash = await generateBlurhashFromBuffer(buffer);
     } else {
-      // Fallback: process image server-side (should be rare)
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
         return {
@@ -387,17 +421,10 @@ async function uploadBlogImage(
       blurhash = processed.blurhash;
     }
 
-    // Generate filename: {postId}-{title_en}.webp
-    const sanitizedTitle = sanitizeFilename(
-      existingBlog.title_en || 'untitled'
-    );
-    const fileName = `blog/images/${blogId}-${sanitizedTitle}.webp`;
+    const sanitizedTitle = sanitizeFilename(titleEn || 'untitled');
+    const fileName = `blog/images/${Date.now()}-${sanitizedTitle}.webp`;
 
-    // Delete old file with same name if exists (upsert doesn't work well with different content)
-    await supabase.storage.from('website').remove([fileName]);
-
-    // Upload processed image to Supabase Storage
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await admin.storage
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
@@ -407,12 +434,130 @@ async function uploadBlogImage(
 
     if (uploadError) throw uploadError;
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = admin.storage
       .from('website')
       .getPublicUrl(fileName);
 
-    // Update blog post with new image URL and blurhash (if available)
+    return {
+      success: true,
+      data: {
+        image: urlData.publicUrl,
+        blurhashURL: blurhash ?? '',
+        path: fileName,
+      },
+    };
+  } catch (error) {
+    console.error('Error uploading blog image for new post:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to upload image',
+    };
+  }
+}
+
+/** Rollback a created post and its uploaded image (e.g. on apply failure). */
+async function rollbackBlogCreate(
+  postId: number,
+  imagePath: string
+): Promise<BlogResult> {
+  try {
+    await requireAllowedPostWriter();
+  } catch {
+    return { success: false, error: 'Unauthorized' };
+  }
+  try {
+    const admin = getAdminClient();
+    await admin.storage.from('website').remove([imagePath]);
+    const { error } = await admin.from('blog_posts').delete().eq('id', postId);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Error rolling back blog create:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Rollback failed',
+    };
+  }
+}
+
+async function uploadBlogImage(
+  _supabase: SupabaseClient,
+  blogId: number,
+  file: File,
+  currentImageUrl?: string
+): Promise<BlogResult> {
+  try {
+    await requireAllowedPostWriter();
+  } catch {
+    return {
+      success: false,
+      error: 'Unauthorized: You do not have permission to upload images',
+    };
+  }
+
+  try {
+    const fileValidation = validateImageFile(file);
+    if (!fileValidation.isValid) {
+      return { success: false, error: fileValidation.error };
+    }
+
+    const admin = getAdminClient();
+
+    const { data: existingBlog, error: fetchError } = await admin
+      .from('blog_posts')
+      .select('id, title_en')
+      .eq('id', blogId)
+      .single();
+
+    if (fetchError || !existingBlog) {
+      return { success: false, error: 'Blog post not found' };
+    }
+
+    if (currentImageUrl) {
+      await backupOldFile(admin, currentImageUrl, 'website');
+    }
+
+    const isWebP = file.type === 'image/webp';
+    let buffer: Buffer;
+    let blurhash: string | undefined;
+
+    if (isWebP) {
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      blurhash = await generateBlurhashFromBuffer(buffer);
+    } else {
+      const processed = await processImage(file);
+      if (!processed.success || !processed.buffer) {
+        return {
+          success: false,
+          error: processed.error || 'Failed to process image',
+        };
+      }
+      buffer = processed.buffer;
+      blurhash = processed.blurhash;
+    }
+
+    const sanitizedTitle = sanitizeFilename(
+      existingBlog.title_en || 'untitled'
+    );
+    const fileName = `blog/images/${blogId}-${sanitizedTitle}.webp`;
+
+    await admin.storage.from('website').remove([fileName]);
+
+    const { error: uploadError } = await admin.storage
+      .from('website')
+      .upload(fileName, buffer, {
+        cacheControl: '3600',
+        contentType: 'image/webp',
+        upsert: true,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = admin.storage
+      .from('website')
+      .getPublicUrl(fileName);
+
     const updateData: { image: string; blurhashURL?: string | null } = {
       image: urlData.publicUrl,
     };
@@ -420,7 +565,7 @@ async function uploadBlogImage(
       updateData.blurhashURL = blurhash || null;
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await admin
       .from('blog_posts')
       .update(updateData)
       .eq('id', blogId);
