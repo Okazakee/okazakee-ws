@@ -36,6 +36,7 @@ export type PortfolioPost = {
   post_tags: string;
   store_link: string;
   views: number;
+  author_id?: string;
 };
 
 export type BlogPost = {
@@ -52,6 +53,7 @@ export type BlogPost = {
   blurhashURL: string;
   post_tags: string;
   views: number;
+  author_id?: string;
 };
 
 export type Contact = {

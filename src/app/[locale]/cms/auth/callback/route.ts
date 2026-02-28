@@ -7,9 +7,7 @@ export async function GET(request: Request) {
   const rawNext = searchParams.get('next') ?? '/cms';
   // Only allow relative paths within /cms to prevent open redirect
   const next =
-    rawNext.startsWith('/cms') && !rawNext.startsWith('//')
-      ? rawNext
-      : '/cms';
+    rawNext.startsWith('/cms') && !rawNext.startsWith('//') ? rawNext : '/cms';
 
   // Extract locale from the URL path
   const pathname = new URL(request.url).pathname;

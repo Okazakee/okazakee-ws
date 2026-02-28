@@ -149,8 +149,7 @@ export default function CMS() {
               break;
             }
 
-            lastError =
-              result.error || 'Failed to fetch hero section data';
+            lastError = result.error || 'Failed to fetch hero section data';
 
             // Transient right-after-login auth propagation: wait and retry
             await sleep(250);
@@ -172,7 +171,9 @@ export default function CMS() {
         setCanShowError(false);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Failed to initialize CMS');
+        setError(
+          err instanceof Error ? err.message : 'Failed to initialize CMS'
+        );
 
         // Keep showing the full-page spinner until 5s have elapsed since init started
         const elapsed = Date.now() - startedAt;

@@ -85,7 +85,11 @@ export default async function PostsPage({
         <InnerHtml
           as="h3"
           className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-lg md:text-2xl"
-          html={post_type === 'blog' ? formatLabels(t('subtitle2')) : formatLabels(t('subtitle1'))}
+          html={
+            post_type === 'blog'
+              ? formatLabels(t('subtitle2'))
+              : formatLabels(t('subtitle1'))
+          }
         />
         {posts.length > 0 ? (
           <PostList
