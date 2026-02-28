@@ -80,6 +80,7 @@ const PATH_TRAVERSAL_PATTERNS = [
   /%2e%2e/i, // URL encoded ..
   /%2f/i, // URL encoded /
   /\0/, // Null bytes
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional security check for control chars
   /[\u0000-\u001f]/, // Control characters
   /[\u007f-\u009f]/, // Extended control characters
 ];
