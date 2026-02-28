@@ -11,15 +11,12 @@ import {
   Plus,
   Save,
   Trash2,
-  Upload,
   X,
 } from 'lucide-react';
 import Image from 'next/image';
-import type React from 'react';
 import { useEffect, useState } from 'react';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { skillsActions } from '@/app/actions/cms/sections/skillsActions';
-import { processImageToWebP } from '@/utils/imageProcessor';
 import { ErrorDiv } from '../ErrorDiv';
 import { PreviewModal } from './PreviewModal';
 import { SkillsPreview } from './previews/SkillsPreview';
@@ -41,14 +38,13 @@ type SkillsCategory = {
 };
 
 type EditableSkill = Skill & {
-  icon_file?: File | null;
   isEditing?: boolean;
 };
 
 type EditableCategory = Omit<SkillsCategory, 'skills'> & {
   skills: EditableSkill[];
   isEditing?: boolean;
-  newSkill?: Partial<EditableSkill> & { icon_file?: File | null };
+  newSkill?: Partial<EditableSkill>;
 };
 
 // API response types
@@ -61,15 +57,6 @@ type SkillsApiResponse = {
 type SkillApiResponse = {
   success: boolean;
   data: Skill;
-  error?: string;
-};
-
-type UploadApiResponse = {
-  success: boolean;
-  data: {
-    icon_url: string;
-    blurhashURL: string;
-  };
   error?: string;
 };
 
@@ -113,9 +100,6 @@ export default function SkillsSection() {
   const [translationLocale, setTranslationLocale] = useState<'en' | 'it'>('en');
   const [isTranslationsExpanded, setIsTranslationsExpanded] = useState(false);
   const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
-
-  // Drag and drop states
-  const [dragStates, setDragStates] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchSkillsData();
@@ -222,38 +206,6 @@ export default function SkillsSection() {
     setModifiedSkills((prev) => new Set(prev).add(`${categoryId}-${skillId}`));
   };
 
-  const handleFileChange = async (
-    categoryId: number,
-    skillId: number,
-    file: File
-  ) => {
-    try {
-      // Store file for preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleInputChange(categoryId, skillId, 'icon', reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Store the actual File object
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === categoryId
-            ? {
-                ...cat,
-                skills: cat.skills.map((skill) =>
-                  skill.id === skillId ? { ...skill, icon_file: file } : skill
-                ),
-              }
-            : cat
-        )
-      );
-    } catch (error) {
-      console.error('Error handling file change:', error);
-      setError('Failed to process file');
-    }
-  };
-
   const handleIconUrlChange = (
     categoryId: number,
     skillId: number,
@@ -265,39 +217,13 @@ export default function SkillsSection() {
           ? {
               ...cat,
               skills: cat.skills.map((skill) =>
-                skill.id === skillId
-                  ? { ...skill, icon: url, icon_file: null }
-                  : skill
+                skill.id === skillId ? { ...skill, icon: url } : skill
               ),
             }
           : cat
       )
     );
     setModifiedSkills((prev) => new Set(prev).add(`${categoryId}-${skillId}`));
-  };
-
-  const handleDragOver = (e: React.DragEvent, skillId: string) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [skillId]: true }));
-  };
-
-  const handleDragLeave = (e: React.DragEvent, skillId: string) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [skillId]: false }));
-  };
-
-  const handleDrop = (
-    e: React.DragEvent,
-    categoryId: number,
-    skillId: number
-  ) => {
-    e.preventDefault();
-    setDragStates((prev) => ({ ...prev, [skillId]: false }));
-
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleFileChange(categoryId, skillId, files[0]);
-    }
   };
 
   const toggleEditSkill = (categoryId: number, skillId: number) => {
@@ -337,7 +263,6 @@ export default function SkillsSection() {
                     ? {
                         ...originalSkill,
                         isEditing: false,
-                        icon_file: undefined,
                       }
                     : skill
                 ),
@@ -399,9 +324,8 @@ export default function SkillsSection() {
       return;
     }
 
-    // Require either an icon URL or a file
-    if (!newSkill.icon && !newSkill.icon_file) {
-      setError('Please provide an icon (upload a file or enter a URL)');
+    if (!newSkill.icon?.trim()) {
+      setError('Please enter an icon URL');
       return;
     }
 
@@ -410,11 +334,10 @@ export default function SkillsSection() {
     const skillToAdd: EditableSkill = {
       id: tempId,
       title: newSkill.title,
-      icon: newSkill.icon || '',
+      icon: newSkill.icon.trim(),
       invert: newSkill.invert || false,
       category_id: categoryId,
       blurhashURL: newSkill.blurhashURL || '',
-      icon_file: newSkill.icon_file,
       isEditing: false,
     };
 
@@ -495,27 +418,6 @@ export default function SkillsSection() {
     setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
   };
 
-  const handleNewSkillFileChange = (categoryId: number, file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === categoryId
-            ? {
-                ...cat,
-                newSkill: {
-                  ...cat.newSkill!,
-                  icon: reader.result as string,
-                  icon_file: file,
-                },
-              }
-            : cat
-        )
-      );
-    };
-    reader.readAsDataURL(file);
-  };
-
   const deleteSkillHandler = (categoryId: number, skillId: number) => {
     if (!confirm('Are you sure you want to delete this skill?')) return;
 
@@ -551,37 +453,14 @@ export default function SkillsSection() {
   };
 
   const applyAllChanges = async () => {
+    const createdCategoryIds: number[] = [];
+    const createdSkillIds: number[] = [];
+    const tempIdToRealId: Record<number, number> = {};
     try {
       setIsUpdating(true);
       setError(null);
 
-      // 1. Delete skills
-      for (const skillId of deletedSkills) {
-        const result = (await skillsActions({
-          type: 'DELETE',
-          id: skillId,
-        })) as { success: boolean; error?: string };
-
-        if (!result.success) {
-          throw new Error(result.error || `Failed to delete skill ${skillId}`);
-        }
-      }
-
-      // 2. Delete categories
-      for (const categoryId of deletedCategories) {
-        const result = await skillsActions({
-          type: 'DELETE_CATEGORY',
-          id: categoryId,
-        });
-
-        if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete category ${categoryId}`
-          );
-        }
-      }
-
-      // 3. Create new categories (with position)
+      // 1. Create new categories first (so we can roll back on failure)
       for (const newCat of newCategories) {
         const category = categories.find((cat) => cat.id === newCat.tempId);
         const position = category
@@ -599,8 +478,10 @@ export default function SkillsSection() {
           );
         }
 
-        // Update position after creation
         const createdId = (result as { data: { id: number } }).data.id;
+        createdCategoryIds.push(createdId);
+        tempIdToRealId[newCat.tempId] = createdId;
+
         const positionResult = await skillsActions({
           type: 'UPDATE_CATEGORY',
           id: createdId,
@@ -612,18 +493,74 @@ export default function SkillsSection() {
         }
       }
 
-      // 4. Update category order if changed
+      // 2. Create new skills
+      for (const { categoryId, skill } of newSkills) {
+        const actualCategoryId =
+          tempIdToRealId[categoryId] ??
+          categories.find((cat) => cat.id === categoryId)?.id ??
+          categoryId;
+
+        const createResult = (await skillsActions({
+          type: 'CREATE',
+          data: {
+            title: skill.title,
+            icon: skill.icon,
+            invert: skill.invert || false,
+            category_id: actualCategoryId,
+            blurhashURL: skill.blurhashURL || '',
+          },
+        })) as SkillApiResponse & { data?: { id: number } };
+
+        if (!createResult.success) {
+          throw new Error(
+            createResult.error || `Failed to create skill ${skill.title}`
+          );
+        }
+        if (createResult.data?.id != null) {
+          createdSkillIds.push(createResult.data.id);
+        }
+      }
+
+      // 3. Delete skills
+      for (const skillId of deletedSkills) {
+        const result = (await skillsActions({
+          type: 'DELETE',
+          id: skillId,
+        })) as { success: boolean; error?: string };
+
+        if (!result.success) {
+          throw new Error(result.error || `Failed to delete skill ${skillId}`);
+        }
+      }
+
+      // 4. Delete categories
+      for (const categoryId of deletedCategories) {
+        const result = await skillsActions({
+          type: 'DELETE_CATEGORY',
+          id: categoryId,
+        });
+
+        if (!result.success) {
+          throw new Error(
+            result.error || `Failed to delete category ${categoryId}`
+          );
+        }
+      }
+
+      // 5. Update category order if changed
       if (categoryOrderChanged) {
         for (let i = 0; i < categories.length; i++) {
           const category = categories[i];
-          // Skip new categories (they'll be created with position)
           const isNewCategory = newCategories.some(
             (nc) => nc.tempId === category.id
           );
-          if (!isNewCategory) {
+          const categoryId = isNewCategory
+            ? tempIdToRealId[category.id]
+            : category.id;
+          if (categoryId != null) {
             const result = await skillsActions({
               type: 'UPDATE_CATEGORY',
-              id: category.id,
+              id: categoryId,
               data: { position: i },
             });
 
@@ -637,13 +574,14 @@ export default function SkillsSection() {
         }
       }
 
-      // 5. Update categories (name changes)
+      // 6. Update categories (name changes)
       for (const categoryId of modifiedCategories) {
         const category = categories.find((cat) => cat.id === categoryId);
         if (category) {
+          const realId = tempIdToRealId[categoryId] ?? categoryId;
           const result = await skillsActions({
             type: 'UPDATE_CATEGORY',
-            id: categoryId,
+            id: realId,
             data: { name: category.name },
           });
 
@@ -652,70 +590,6 @@ export default function SkillsSection() {
               result.error || `Failed to update category ${categoryId}`
             );
           }
-        }
-      }
-
-      // 6. Create new skills
-      for (const { categoryId, skill } of newSkills) {
-        // Find the actual category ID (might be temp ID)
-        const category = categories.find((cat) => cat.id === categoryId);
-        const actualCategoryId = category?.id || categoryId;
-
-        // Create skill
-        const createResult = (await skillsActions({
-          type: 'CREATE',
-          data: {
-            title: skill.title,
-            icon: skill.icon || 'pending-upload',
-            invert: skill.invert || false,
-            category_id: actualCategoryId,
-            blurhashURL: skill.blurhashURL || '',
-          },
-        })) as SkillApiResponse;
-
-        if (!createResult.success) {
-          throw new Error(
-            createResult.error || `Failed to create skill ${skill.title}`
-          );
-        }
-
-        const createdSkill = createResult.data;
-
-        // Upload icon if there's a file
-        if (skill.icon_file) {
-          // Check if file is SVG (upload as-is) or process to WebP
-          const isSvg =
-            skill.icon_file.type === 'image/svg+xml' ||
-            skill.icon_file.name.toLowerCase().endsWith('.svg');
-          let fileToUpload = skill.icon_file;
-
-          if (!isSvg) {
-            // Process raster images to WebP
-            const processed = await processImageToWebP(skill.icon_file, {
-              maxWidth: 512,
-              maxHeight: 512,
-              quality: 0.85,
-            });
-
-            if (!processed.success || !processed.file) {
-              throw new Error(processed.error || 'Failed to process icon');
-            }
-
-            fileToUpload = processed.file;
-          }
-
-          const uploadResult = (await skillsActions({
-            type: 'UPLOAD_ICON',
-            skillId: createdSkill.id,
-            file: fileToUpload,
-          })) as UploadApiResponse;
-
-          if (!uploadResult.success) {
-            throw new Error(
-              uploadResult.error || `Failed to upload icon for ${skill.title}`
-            );
-          }
-          // UPLOAD_ICON already updates `icon` and `blurhashURL` in DB
         }
       }
 
@@ -732,58 +606,14 @@ export default function SkillsSection() {
 
         if (!skill) continue;
 
-        const updateData: Partial<Skill> = {
-          title: skill.title,
-          invert: skill.invert,
-        };
-
-        // Upload icon if there's a new file, otherwise persist any URL change
-        if (skill.icon_file) {
-          // Check if file is SVG (upload as-is) or process to WebP
-          const isSvg =
-            skill.icon_file.type === 'image/svg+xml' ||
-            skill.icon_file.name.toLowerCase().endsWith('.svg');
-          let fileToUpload = skill.icon_file;
-
-          if (!isSvg) {
-            // Process raster images to WebP
-            const processed = await processImageToWebP(skill.icon_file, {
-              maxWidth: 512,
-              maxHeight: 512,
-              quality: 0.85,
-            });
-
-            if (!processed.success || !processed.file) {
-              throw new Error(processed.error || 'Failed to process icon');
-            }
-
-            fileToUpload = processed.file;
-          }
-
-          const uploadResult = (await skillsActions({
-            type: 'UPLOAD_ICON',
-            skillId: skill.id,
-            file: fileToUpload,
-            currentIconUrl: skill.icon,
-          })) as UploadApiResponse;
-
-          if (!uploadResult.success) {
-            throw new Error(
-              uploadResult.error || `Failed to upload icon for ${skill.title}`
-            );
-          }
-
-          // UPLOAD_ICON already updates `icon` and `blurhashURL` in DB
-        } else {
-          // URL was typed directly — persist it
-          updateData.icon = skill.icon;
-        }
-
-        // Update the skill
         const result = (await skillsActions({
           type: 'UPDATE',
           id: skillId,
-          data: updateData,
+          data: {
+            title: skill.title,
+            icon: skill.icon,
+            invert: skill.invert,
+          },
         })) as SkillApiResponse;
 
         if (!result.success) {
@@ -837,6 +667,15 @@ export default function SkillsSection() {
       alert('All changes applied successfully!');
     } catch (error) {
       console.error('Error applying changes:', error);
+      for (let i = createdSkillIds.length - 1; i >= 0; i--) {
+        await skillsActions({ type: 'DELETE', id: createdSkillIds[i] });
+      }
+      for (let i = createdCategoryIds.length - 1; i >= 0; i--) {
+        await skillsActions({
+          type: 'DELETE_CATEGORY',
+          id: createdCategoryIds[i],
+        });
+      }
       setError(
         error instanceof Error ? error.message : 'Failed to apply changes'
       );
@@ -1345,54 +1184,23 @@ export default function SkillsSection() {
                     </div>
                   </div>
 
-                  {/* Skill Icon */}
+                  {/* Skill Icon (URL) */}
                   <div className="mb-4 flex flex-col items-center">
-                    <div
-                      className="relative cursor-pointer flex justify-center"
-                      onDragOver={(e) => handleDragOver(e, `skill-${skill.id}`)}
-                      onDragLeave={(e) =>
-                        handleDragLeave(e, `skill-${skill.id}`)
-                      }
-                      onDrop={(e) => handleDrop(e, category.id, skill.id)}
-                    >
+                    {skill.icon && (
                       <Image
                         src={skill.icon}
                         width={80}
                         height={80}
                         className={`rounded-lg pb-2 ${skill.invert ? 'dark:invert' : ''}`}
                         alt={skill.title}
-                        {...(skill.blurhashURL ? { placeholder: 'blur' as const, blurDataURL: skill.blurhashURL } : {})}
+                        {...(skill.blurhashURL
+                          ? {
+                              placeholder: 'blur' as const,
+                              blurDataURL: skill.blurhashURL,
+                            }
+                          : {})}
                       />
-                      {dragStates[`skill-${skill.id}`] && (
-                        <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
-                          <div className="text-center text-white">
-                            <Upload className="w-8 h-8 mx-auto mb-2" />
-                            <p className="text-sm">Drop icon here</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-2 justify-center">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        id={`skill-icon-${skill.id}`}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file)
-                            handleFileChange(category.id, skill.id, file);
-                        }}
-                      />
-                      <label
-                        htmlFor={`skill-icon-${skill.id}`}
-                        className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200 cursor-pointer"
-                      >
-                        <Upload className="w-3 h-3" />
-                        Change Icon
-                      </label>
-                    </div>
+                    )}
                   </div>
 
                   {/* Skill Details */}
@@ -1413,8 +1221,8 @@ export default function SkillsSection() {
                         placeholder="Skill title"
                       />
                       <input
-                        type="text"
-                        value={skill.icon_file ? '' : skill.icon}
+                        type="url"
+                        value={skill.icon}
                         onChange={(e) =>
                           handleIconUrlChange(
                             category.id,
@@ -1423,8 +1231,7 @@ export default function SkillsSection() {
                           )
                         }
                         className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden text-xs"
-                        placeholder={skill.icon_file ? 'File selected — clear it to type a URL' : 'Icon URL (or use Change Icon above)'}
-                        disabled={!!skill.icon_file}
+                        placeholder="https://example.com/icon.svg"
                       />
                       <div className="flex items-center gap-2">
                         <input
@@ -1510,11 +1317,9 @@ export default function SkillsSection() {
                       placeholder="Skill title"
                     />
 
-                    {/* Icon */}
+                    {/* Icon URL */}
                     <div className="space-y-2">
-                      <p className="block text-sm text-lighttext2">
-                        Icon
-                      </p>
+                      <p className="block text-sm text-lighttext2">Icon URL</p>
                       <div className="flex items-start gap-3">
                         {category.newSkill.icon ? (
                           <Image
@@ -1529,76 +1334,27 @@ export default function SkillsSection() {
                             No icon
                           </div>
                         )}
-                        <div className="flex-1 space-y-2">
-                          <input
-                            type="text"
-                            value={category.newSkill.icon_file ? '' : (category.newSkill.icon || '')}
-                            onChange={(e) =>
-                              setCategories((prev) =>
-                                prev.map((cat) =>
-                                  cat.id === category.id
-                                    ? {
-                                        ...cat,
-                                        newSkill: {
-                                          ...cat.newSkill!,
-                                          icon: e.target.value,
-                                          icon_file: null,
-                                        },
-                                      }
-                                    : cat
-                                )
+                        <input
+                          type="url"
+                          value={category.newSkill.icon || ''}
+                          onChange={(e) =>
+                            setCategories((prev) =>
+                              prev.map((cat) =>
+                                cat.id === category.id
+                                  ? {
+                                      ...cat,
+                                      newSkill: {
+                                        ...cat.newSkill!,
+                                        icon: e.target.value,
+                                      },
+                                    }
+                                  : cat
                               )
-                            }
-                            className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden text-xs"
-                            placeholder={category.newSkill.icon_file ? 'File selected' : 'https://cdn.example.com/icon.svg'}
-                            disabled={!!category.newSkill.icon_file}
-                          />
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-lighttext2">or</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              id={`new-skill-icon-${category.id}`}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file)
-                                  handleNewSkillFileChange(category.id, file);
-                              }}
-                            />
-                            <label
-                              htmlFor={`new-skill-icon-${category.id}`}
-                              className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200 cursor-pointer w-fit"
-                            >
-                              <Upload className="w-3 h-3" />
-                              Upload
-                            </label>
-                            {category.newSkill.icon_file && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setCategories((prev) =>
-                                    prev.map((cat) =>
-                                      cat.id === category.id
-                                        ? {
-                                            ...cat,
-                                            newSkill: {
-                                              ...cat.newSkill!,
-                                              icon: '',
-                                              icon_file: null,
-                                            },
-                                          }
-                                        : cat
-                                    )
-                                  )
-                                }
-                                className="text-lighttext2 hover:text-red-400 transition-colors"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                            )
+                          }
+                          className="flex-1 px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden text-xs"
+                          placeholder="https://example.com/icon.svg"
+                        />
                       </div>
                     </div>
 

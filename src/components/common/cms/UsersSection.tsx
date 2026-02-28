@@ -380,7 +380,10 @@ export default function UsersSection() {
               {/* Input fields */}
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label htmlFor="new-user-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="new-user-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     {addType === 'email'
                       ? 'Email Address'
                       : addType === 'github'
@@ -403,7 +406,10 @@ export default function UsersSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="new-user-role-select" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="new-user-role-select"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Role
                   </label>
                   <select

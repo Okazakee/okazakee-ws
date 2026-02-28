@@ -118,8 +118,12 @@ export function PostPreview({
       {imagePreview && (
         <div className="w-full h-56 md:h-96 relative mx-auto mt-6 md:mt-0">
           <Image
-            placeholder="blur"
-            blurDataURL={formData.blurhashURL}
+            {...(formData.blurhashURL
+              ? {
+                  placeholder: 'blur' as const,
+                  blurDataURL: formData.blurhashURL,
+                }
+              : {})}
             src={imagePreview}
             fill
             priority

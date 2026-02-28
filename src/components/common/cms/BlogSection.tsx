@@ -26,6 +26,7 @@ import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { useLayoutStore } from '@/store/layoutStore';
 import type { BlogPost } from '@/types/fetchedData.types';
 import { processImageToWebP } from '@/utils/imageProcessor';
+import { ListPostImage } from './ListPostImage';
 import { PreviewModal } from './PreviewModal';
 import { BlogPreview } from './previews/BlogPreview';
 import { PostPreview } from './previews/PostPreview';
@@ -62,6 +63,7 @@ const emptyFormData: BlogFormData = {
 
 type EditableBlogPost = BlogPost & {
   image_file?: File | null;
+  author_id?: string;
 };
 
 export default function BlogSection() {
@@ -301,6 +303,8 @@ export default function BlogSection() {
               body_en: formData.body_en,
               body_it: formData.body_it,
               post_tags: formData.post_tags,
+              created_at: formData.created_at,
+              author_id: formData.author_id,
               image_file: formImage || post.image_file,
             }
           : post
@@ -406,28 +410,49 @@ export default function BlogSection() {
   };
 
   const applyAllChanges = async () => {
+    const createdForRollback: { postId: number; imagePath: string }[] = [];
     try {
       setIsUpdating(true);
       setError(null);
 
-      // 1. Delete posts
-      for (const postId of deletedPosts) {
-        const result = await blogActions({ type: 'DELETE', id: postId });
-
-        if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete blog post ${postId}`
-          );
-        }
-      }
-
-      // 2. Create new posts
+      // 1. Create new posts first (so we can roll back only creates on failure)
       for (const { post, imageFile } of newPosts) {
         if (!imageFile) {
           throw new Error(`Image is required for blog post ${post.title_en}`);
         }
 
-        // Create post
+        const processed = await processImageToWebP(imageFile, {
+          maxWidth: 1920,
+          maxHeight: 1080,
+          quality: 0.85,
+        });
+
+        if (!processed.success || !processed.file) {
+          throw new Error(processed.error || 'Failed to process image');
+        }
+
+        const imageResult = await blogActions({
+          type: 'UPLOAD_IMAGE_FOR_NEW_POST',
+          file: processed.file,
+          titleEn: post.title_en,
+        });
+
+        if (!imageResult.success) {
+          throw new Error(
+            imageResult.error || `Failed to upload image for ${post.title_en}`
+          );
+        }
+
+        const {
+          image: imageUrl,
+          blurhashURL: uploadedBlurhash,
+          path: imagePath,
+        } = imageResult.data as {
+          image: string;
+          blurhashURL: string;
+          path: string;
+        };
+
         const createResult = await blogActions({
           type: 'CREATE',
           data: {
@@ -440,8 +465,8 @@ export default function BlogSection() {
             post_tags: post.post_tags,
             created_at: post.created_at,
             author_id: user?.id || '',
-            image: '', // Will be set after image upload
-            blurhashURL: post.blurhashURL || '', // Include blurhashURL
+            image: imageUrl,
+            blurhashURL: uploadedBlurhash || post.blurhashURL || '',
           },
         });
 
@@ -451,34 +476,11 @@ export default function BlogSection() {
           );
         }
 
-        const createdPost = createResult.data as BlogPost;
-
-        // Process image to WebP before upload
-        const processed = await processImageToWebP(imageFile, {
-          maxWidth: 1920,
-          maxHeight: 1080,
-          quality: 0.85,
-        });
-
-        if (!processed.success || !processed.file) {
-          throw new Error(processed.error || 'Failed to process image');
-        }
-
-        // Upload processed WebP image
-        const imageResult = await blogActions({
-          type: 'UPLOAD_IMAGE',
-          blogId: createdPost.id,
-          file: processed.file,
-        });
-
-        if (!imageResult.success) {
-          throw new Error(
-            imageResult.error || `Failed to upload image for ${post.title_en}`
-          );
-        }
+        const newRow = createResult.data as { id: number };
+        createdForRollback.push({ postId: newRow.id, imagePath });
       }
 
-      // 3. Update modified posts
+      // 2. Update modified posts
       for (const postId of modifiedPosts) {
         const post = blogPosts.find((p) => p.id === postId);
         if (!post) continue;
@@ -495,6 +497,8 @@ export default function BlogSection() {
             body_en: post.body_en,
             body_it: post.body_it,
             post_tags: post.post_tags,
+            created_at: post.created_at,
+            author_id: post.author_id,
           },
         });
 
@@ -532,7 +536,18 @@ export default function BlogSection() {
         }
       }
 
-      // Save translations if changed
+      // 3. Delete posts
+      for (const postId of deletedPosts) {
+        const result = await blogActions({ type: 'DELETE', id: postId });
+
+        if (!result.success) {
+          throw new Error(
+            result.error || `Failed to delete blog post ${postId}`
+          );
+        }
+      }
+
+      // 4. Save translations if changed
       if (hasTranslationChanges()) {
         // Update English translations
         const enResult = await i18nActions({
@@ -572,6 +587,11 @@ export default function BlogSection() {
       alert('All changes applied successfully!');
     } catch (error) {
       console.error('Error applying changes:', error);
+      // Roll back created posts and their images (reverse order)
+      for (let i = createdForRollback.length - 1; i >= 0; i--) {
+        const { postId, imagePath } = createdForRollback[i];
+        await blogActions({ type: 'ROLLBACK_CREATE', postId, imagePath });
+      }
       setError(
         error instanceof Error ? error.message : 'Failed to apply changes'
       );
@@ -631,7 +651,10 @@ export default function BlogSection() {
         <div className="p-6 bg-bglight dark:bg-darkgray rounded-lg border-2 border-main">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label htmlFor="blog-title-en-input" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-title-en-input"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 English Title
               </label>
               <input
@@ -644,7 +667,10 @@ export default function BlogSection() {
               />
             </div>
             <div>
-              <label htmlFor="blog-title-it-input" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-title-it-input"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 Italian Title
               </label>
               <input
@@ -660,7 +686,10 @@ export default function BlogSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label htmlFor="blog-description-en-input" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-description-en-input"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 English Description
               </label>
               <textarea
@@ -675,7 +704,10 @@ export default function BlogSection() {
               />
             </div>
             <div>
-              <label htmlFor="blog-description-it-input" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-description-it-input"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 Italian Description
               </label>
               <textarea
@@ -693,7 +725,10 @@ export default function BlogSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label htmlFor="blog-content-en-input" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-content-en-input"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 English Content
               </label>
               <textarea
@@ -706,7 +741,10 @@ export default function BlogSection() {
               />
             </div>
             <div>
-              <label htmlFor="blog-content-it-input" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-content-it-input"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 Italian Content
               </label>
               <textarea
@@ -722,7 +760,10 @@ export default function BlogSection() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label htmlFor="blog-tags-input" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-tags-input"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 Tags
               </label>
               <input
@@ -731,11 +772,14 @@ export default function BlogSection() {
                 value={formData.post_tags}
                 onChange={(e) => handleFormChange('post_tags', e.target.value)}
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                placeholder={`Enter tags ("tag1" "tag2"...)`}
+                placeholder={`"tag1" "tag2" "tag3"`}
               />
             </div>
             <div>
-              <label htmlFor="blog-publication-date-input" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-publication-date-input"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Publication Date
               </label>
@@ -748,7 +792,10 @@ export default function BlogSection() {
               />
             </div>
             <div>
-              <label htmlFor="blog-author-select" className="block text-sm font-medium text-main mb-1">
+              <label
+                htmlFor="blog-author-select"
+                className="block text-sm font-medium text-main mb-1"
+              >
                 <User className="h-4 w-4 inline mr-1" />
                 Author
               </label>
@@ -770,10 +817,12 @@ export default function BlogSection() {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="blog-image-upload" className="block text-sm font-medium text-main mb-2">
+            <label
+              htmlFor="blog-image-upload"
+              className="block text-sm font-medium text-main mb-2"
+            >
               Image {isEditing && !formImage && '(leave empty to keep current)'}
             </label>
-            {/* biome-ignore lint/a11y/noStaticElementInteractions: Drag-and-drop zone requires div with drag handlers */}
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 dragActive
@@ -967,7 +1016,10 @@ export default function BlogSection() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="blog-translation-title-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-title-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Title (Blog)
                   </label>
                   <input
@@ -986,7 +1038,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-subtitle-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-subtitle-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Subtitle (Blog)
                   </label>
                   <textarea
@@ -1005,7 +1060,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-button-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-button-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Button Text
                   </label>
                   <input
@@ -1024,7 +1082,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-demo-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-demo-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Demo Label
                   </label>
                   <input
@@ -1043,7 +1104,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-store-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-store-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Store Label
                   </label>
                   <input
@@ -1062,7 +1126,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-source-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-source-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Source Label
                   </label>
                   <input
@@ -1081,7 +1148,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-copy-button-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-copy-button-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Copy Button Text
                   </label>
                   <input
@@ -1100,7 +1170,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-pre-copy-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-pre-copy-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Pre Copy Text
                   </label>
                   <input
@@ -1119,7 +1192,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-no-posts-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-no-posts-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     No Posts Message
                   </label>
                   <input
@@ -1138,7 +1214,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-ratelimit-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-ratelimit-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Rate Limit Message
                   </label>
                   <input
@@ -1157,7 +1236,10 @@ export default function BlogSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="blog-translation-searchbar-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="blog-translation-searchbar-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Searchbar Placeholder
                   </label>
                   <input
@@ -1208,21 +1290,12 @@ export default function BlogSection() {
             className="bg-bglight dark:bg-darkgray rounded-lg border-2 border-main overflow-hidden"
           >
             <div className="relative">
-              {post.image ? (
-                <Image
-                  src={post.image}
-                  alt={post.title_en}
-                  width={300}
-                  height={200}
-                  className="w-full h-48 object-cover"
-                  placeholder="blur"
-                  blurDataURL={post.blurhashURL}
-                />
-              ) : (
-                <div className="h-48 flex items-center justify-center bg-bglight dark:bg-darkergray">
-                  <ImageIcon className="h-8 w-8 text-main" />
-                </div>
-              )}
+              <ListPostImage
+                imageFile={post.image_file}
+                imageUrl={post.image}
+                blurhashURL={post.blurhashURL}
+                alt={post.title_en}
+              />
             </div>
 
             <div className="p-4">

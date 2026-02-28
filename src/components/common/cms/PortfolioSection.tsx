@@ -26,6 +26,7 @@ import {
 import { useLayoutStore } from '@/store/layoutStore';
 import type { PortfolioPost } from '@/types/fetchedData.types';
 import { processImageToWebP } from '@/utils/imageProcessor';
+import { ListPostImage } from './ListPostImage';
 import { PreviewModal } from './PreviewModal';
 import { PortfolioPreview } from './previews/PortfolioPreview';
 import { PostPreview } from './previews/PostPreview';
@@ -68,6 +69,7 @@ const emptyFormData: PortfolioFormData = {
 
 type EditablePortfolioPost = PortfolioPost & {
   image_file?: File | null;
+  author_id?: string;
 };
 
 export default function PortfolioSection() {
@@ -321,6 +323,8 @@ export default function PortfolioSection() {
               body_en: formData.body_en,
               body_it: formData.body_it,
               post_tags: formData.post_tags,
+              created_at: formData.created_at,
+              author_id: formData.author_id,
               image_file: formImage || post.image_file,
             }
           : post
@@ -427,22 +431,12 @@ export default function PortfolioSection() {
   };
 
   const applyAllChanges = async () => {
+    const createdForRollback: { postId: number; imagePath: string }[] = [];
     try {
       setIsUpdating(true);
       setError(null);
 
-      // 1. Delete posts
-      for (const postId of deletedPosts) {
-        const result = await portfolioActions({ type: 'DELETE', id: postId });
-
-        if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete portfolio post ${postId}`
-          );
-        }
-      }
-
-      // 2. Create new posts
+      // 1. Create new posts first (so we can roll back only creates on failure)
       for (const { post, imageFile } of newPosts) {
         if (!imageFile) {
           throw new Error(
@@ -450,7 +444,38 @@ export default function PortfolioSection() {
           );
         }
 
-        // Create post
+        const processed = await processImageToWebP(imageFile, {
+          maxWidth: 1920,
+          maxHeight: 1080,
+          quality: 0.85,
+        });
+
+        if (!processed.success || !processed.file) {
+          throw new Error(processed.error || 'Failed to process image');
+        }
+
+        const imageResult = await portfolioActions({
+          type: 'UPLOAD_IMAGE_FOR_NEW_POST',
+          file: processed.file,
+          titleEn: post.title_en,
+        });
+
+        if (!imageResult.success) {
+          throw new Error(
+            imageResult.error || `Failed to upload image for ${post.title_en}`
+          );
+        }
+
+        const {
+          image: imageUrl,
+          blurhashURL: uploadedBlurhash,
+          path: imagePath,
+        } = imageResult.data as {
+          image: string;
+          blurhashURL: string;
+          path: string;
+        };
+
         const createResult = await portfolioActions({
           type: 'CREATE',
           data: {
@@ -466,8 +491,8 @@ export default function PortfolioSection() {
             post_tags: post.post_tags,
             created_at: post.created_at,
             author_id: user?.id || '',
-            image: '', // Will be set after image upload
-            blurhashURL: post.blurhashURL || '', // Include blurhashURL
+            image: imageUrl,
+            blurhashURL: uploadedBlurhash || post.blurhashURL || '',
           },
         });
 
@@ -478,34 +503,11 @@ export default function PortfolioSection() {
           );
         }
 
-        const createdPost = createResult.data as PortfolioPost;
-
-        // Process image to WebP before upload
-        const processed = await processImageToWebP(imageFile, {
-          maxWidth: 1920,
-          maxHeight: 1080,
-          quality: 0.85,
-        });
-
-        if (!processed.success || !processed.file) {
-          throw new Error(processed.error || 'Failed to process image');
-        }
-
-        // Upload processed WebP image
-        const imageResult = await portfolioActions({
-          type: 'UPLOAD_IMAGE',
-          portfolioId: createdPost.id,
-          file: processed.file,
-        });
-
-        if (!imageResult.success) {
-          throw new Error(
-            imageResult.error || `Failed to upload image for ${post.title_en}`
-          );
-        }
+        const newRow = createResult.data as { id: number };
+        createdForRollback.push({ postId: newRow.id, imagePath });
       }
 
-      // 3. Update modified posts
+      // 2. Update modified posts
       for (const postId of modifiedPosts) {
         const post = portfolioPosts.find((p) => p.id === postId);
         if (!post) continue;
@@ -525,6 +527,8 @@ export default function PortfolioSection() {
             body_en: post.body_en,
             body_it: post.body_it,
             post_tags: post.post_tags,
+            created_at: post.created_at,
+            author_id: post.author_id,
           },
         });
 
@@ -563,7 +567,18 @@ export default function PortfolioSection() {
         }
       }
 
-      // Save translations if changed
+      // 3. Delete posts
+      for (const postId of deletedPosts) {
+        const result = await portfolioActions({ type: 'DELETE', id: postId });
+
+        if (!result.success) {
+          throw new Error(
+            result.error || `Failed to delete portfolio post ${postId}`
+          );
+        }
+      }
+
+      // 4. Save translations if changed
       if (hasTranslationChanges()) {
         // Update English translations
         const enResult = await i18nActions({
@@ -603,6 +618,11 @@ export default function PortfolioSection() {
       alert('All changes applied successfully!');
     } catch (error) {
       console.error('Error applying changes:', error);
+      // Roll back created posts and their images (reverse order)
+      for (let i = createdForRollback.length - 1; i >= 0; i--) {
+        const { postId, imagePath } = createdForRollback[i];
+        await portfolioActions({ type: 'ROLLBACK_CREATE', postId, imagePath });
+      }
       setError(
         error instanceof Error ? error.message : 'Failed to apply changes'
       );
@@ -796,7 +816,7 @@ export default function PortfolioSection() {
                 value={formData.post_tags}
                 onChange={(e) => handleFormChange('post_tags', e.target.value)}
                 className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
-                placeholder={`Enter tags ("tag1" "tag2"...)`}
+                placeholder={`"tag1" "tag2" "tag3"`}
               />
             </div>
             <div>
@@ -1263,21 +1283,12 @@ export default function PortfolioSection() {
             className="bg-bglight dark:bg-darkgray rounded-lg border-2 border-main overflow-hidden"
           >
             <div className="relative">
-              {post.image ? (
-                <Image
-                  src={post.image}
-                  alt={post.title_en}
-                  width={300}
-                  height={200}
-                  className="w-full h-48 object-cover"
-                  placeholder="blur"
-                  blurDataURL={post.blurhashURL}
-                />
-              ) : (
-                <div className="h-48 flex items-center justify-center bg-bglight dark:bg-darkergray">
-                  <ImageIcon className="h-8 w-8 text-main" />
-                </div>
-              )}
+              <ListPostImage
+                imageFile={post.image_file}
+                imageUrl={post.image}
+                blurhashURL={post.blurhashURL}
+                alt={post.title_en}
+              />
             </div>
 
             <div className="p-4">

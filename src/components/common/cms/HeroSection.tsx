@@ -18,7 +18,6 @@ import { heroActions } from '@/app/actions/cms/sections/heroActions';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { useLayoutStore } from '@/store/layoutStore';
 import { processImageToWebP } from '@/utils/imageProcessor';
-import { ErrorDiv } from '../ErrorDiv';
 import { PreviewModal } from './PreviewModal';
 import { HeroPreview } from './previews/HeroPreview';
 
@@ -609,7 +608,10 @@ export default function HeroSection() {
                       Top Section
                     </h3>
                     <div>
-                      <label htmlFor="hero-name-input" className="block text-sm font-medium text-lighttext mb-2">
+                      <label
+                        htmlFor="hero-name-input"
+                        className="block text-sm font-medium text-lighttext mb-2"
+                      >
                         Name
                       </label>
                       <input
@@ -628,7 +630,10 @@ export default function HeroSection() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="hero-role-input" className="block text-sm font-medium text-lighttext mb-2">
+                      <label
+                        htmlFor="hero-role-input"
+                        className="block text-sm font-medium text-lighttext mb-2"
+                      >
                         Role
                       </label>
                       <input
@@ -654,7 +659,10 @@ export default function HeroSection() {
                       About Me Section
                     </h3>
                     <div>
-                      <label htmlFor="hero-aboutme-title-input" className="block text-sm font-medium text-lighttext mb-2">
+                      <label
+                        htmlFor="hero-aboutme-title-input"
+                        className="block text-sm font-medium text-lighttext mb-2"
+                      >
                         Title
                       </label>
                       <input
@@ -673,7 +681,10 @@ export default function HeroSection() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="hero-aboutme-paragraph-input" className="block text-sm font-medium text-lighttext mb-2">
+                      <label
+                        htmlFor="hero-aboutme-paragraph-input"
+                        className="block text-sm font-medium text-lighttext mb-2"
+                      >
                         Paragraph
                       </label>
                       <textarea
@@ -709,7 +720,6 @@ export default function HeroSection() {
 
           <div className="space-y-4">
             <div className="flex justify-center">
-              {/* biome-ignore lint/a11y/noStaticElementInteractions: Drag-and-drop zone requires div with drag handlers */}
               <div
                 className="relative cursor-pointer"
                 onDragOver={(e) => handleDragOver(e, 'image')}
@@ -805,7 +815,6 @@ export default function HeroSection() {
               >
                 Upload Resume (Italian)
               </label>
-              {/* biome-ignore lint/a11y/noStaticElementInteractions: Drag-and-drop zone requires div with drag handlers */}
               <div
                 className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
                 onDragOver={(e) => handleDragOver(e, 'resumeIt')}
@@ -855,7 +864,6 @@ export default function HeroSection() {
               >
                 Upload Resume (English)
               </label>
-              {/* biome-ignore lint/a11y/noStaticElementInteractions: Drag-and-drop zone requires div with drag handlers */}
               <div
                 className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
                 onDragOver={(e) => handleDragOver(e, 'resumeEn')}

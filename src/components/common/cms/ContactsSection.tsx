@@ -341,25 +341,12 @@ export default function ContactsSection() {
   };
 
   const applyAllChanges = async () => {
+    const createdContactIds: number[] = [];
     try {
       setIsUpdating(true);
       setError(null);
 
-      // 1. Delete contacts
-      for (const contactId of deletedContacts) {
-        const result = await contactsActions({
-          type: 'DELETE',
-          id: contactId,
-        });
-
-        if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete contact ${contactId}`
-          );
-        }
-      }
-
-      // 2. Create new contacts
+      // 1. Create new contacts first (so we can roll back on failure)
       for (const newContact of newContacts) {
         const position = contacts.findIndex((c) => c.id === newContact.id);
 
@@ -377,6 +364,25 @@ export default function ContactsSection() {
         if (!result.success) {
           throw new Error(
             result.error || `Failed to create contact ${newContact.label}`
+          );
+        }
+
+        const created = result.data as { id: number };
+        if (created?.id != null) {
+          createdContactIds.push(created.id);
+        }
+      }
+
+      // 2. Delete contacts
+      for (const contactId of deletedContacts) {
+        const result = await contactsActions({
+          type: 'DELETE',
+          id: contactId,
+        });
+
+        if (!result.success) {
+          throw new Error(
+            result.error || `Failed to delete contact ${contactId}`
           );
         }
       }
@@ -471,6 +477,9 @@ export default function ContactsSection() {
       setOrderChanged(false);
     } catch (error) {
       console.error('Error applying changes:', error);
+      for (let i = createdContactIds.length - 1; i >= 0; i--) {
+        await contactsActions({ type: 'DELETE', id: createdContactIds[i] });
+      }
       setError(
         error instanceof Error ? error.message : 'Failed to apply changes'
       );

@@ -92,11 +92,17 @@ export function LayoutPreview({
             {/* Left Section */}
             <div className="text-sm">
               {footer.left}{' '}
-              <button type="button" className="text-main hover:underline bg-transparent border-none p-0 cursor-default">
+              <button
+                type="button"
+                className="text-main hover:underline bg-transparent border-none p-0 cursor-default"
+              >
                 Okazakee
               </button>{' '}
               |{' '}
-              <button type="button" className="text-main hover:underline bg-transparent border-none p-0 cursor-default">
+              <button
+                type="button"
+                className="text-main hover:underline bg-transparent border-none p-0 cursor-default"
+              >
                 {footer.source}
               </button>
             </div>
@@ -114,11 +120,17 @@ export function LayoutPreview({
 
             {/* Right Section */}
             <div className="text-sm flex items-center gap-3">
-              <button type="button" className="text-main hover:underline bg-transparent border-none p-0 cursor-default">
+              <button
+                type="button"
+                className="text-main hover:underline bg-transparent border-none p-0 cursor-default"
+              >
                 CMS
               </button>
               <span className="text-gray-500">|</span>
-              <button type="button" className="text-main hover:underline bg-transparent border-none p-0 cursor-default">
+              <button
+                type="button"
+                className="text-main hover:underline bg-transparent border-none p-0 cursor-default"
+              >
                 {footer.privacyPolicy}
               </button>
             </div>

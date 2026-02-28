@@ -382,7 +382,12 @@ export default function LayoutSection() {
         {isFooterExpanded && (
           <div className="space-y-4">
             <div>
-              <label htmlFor="footer-left-input" className="block text-sm font-medium mb-2">Left</label>
+              <label
+                htmlFor="footer-left-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Left
+              </label>
               <input
                 id="footer-left-input"
                 type="text"
@@ -394,7 +399,12 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="footer-right-input" className="block text-sm font-medium mb-2">Right</label>
+              <label
+                htmlFor="footer-right-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Right
+              </label>
               <input
                 id="footer-right-input"
                 type="text"
@@ -406,7 +416,12 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="footer-middle-input" className="block text-sm font-medium mb-2">Middle</label>
+              <label
+                htmlFor="footer-middle-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Middle
+              </label>
               <input
                 id="footer-middle-input"
                 type="text"
@@ -418,7 +433,12 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="footer-source-input" className="block text-sm font-medium mb-2">Source</label>
+              <label
+                htmlFor="footer-source-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Source
+              </label>
               <input
                 id="footer-source-input"
                 type="text"
@@ -430,7 +450,10 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="footer-button-title-input" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="footer-button-title-input"
+                className="block text-sm font-medium mb-2"
+              >
                 Button Title
               </label>
               <input
@@ -444,7 +467,10 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="footer-privacy-policy-input" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="footer-privacy-policy-input"
+                className="block text-sm font-medium mb-2"
+              >
                 Privacy Policy
               </label>
               <input
@@ -458,7 +484,10 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="footer-darkmode-input" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="footer-darkmode-input"
+                className="block text-sm font-medium mb-2"
+              >
                 Dark Mode
               </label>
               <input
@@ -472,7 +501,10 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="footer-lightmode-input" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="footer-lightmode-input"
+                className="block text-sm font-medium mb-2"
+              >
                 Light Mode
               </label>
               <input
@@ -510,7 +542,12 @@ export default function LayoutSection() {
         {isHeaderExpanded && (
           <div className="space-y-4">
             <div>
-              <label htmlFor="header-theme-input" className="block text-sm font-medium mb-2">Theme</label>
+              <label
+                htmlFor="header-theme-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Theme
+              </label>
               <input
                 id="header-theme-input"
                 type="text"
@@ -522,7 +559,12 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="header-language-input" className="block text-sm font-medium mb-2">Language</label>
+              <label
+                htmlFor="header-language-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Language
+              </label>
               <input
                 id="header-language-input"
                 type="text"
@@ -534,7 +576,12 @@ export default function LayoutSection() {
               />
             </div>
             <div>
-              <label htmlFor="header-settings-input" className="block text-sm font-medium mb-2">Settings</label>
+              <label
+                htmlFor="header-settings-input"
+                className="block text-sm font-medium mb-2"
+              >
+                Settings
+              </label>
               <input
                 id="header-settings-input"
                 type="text"

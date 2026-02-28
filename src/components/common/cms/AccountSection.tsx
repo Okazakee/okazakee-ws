@@ -226,7 +226,10 @@ export default function AccountSection() {
 
           {/* Display Name Section */}
           <div>
-            <label htmlFor="display-name-input" className="block text-sm font-medium text-lighttext mb-2">
+            <label
+              htmlFor="display-name-input"
+              className="block text-sm font-medium text-lighttext mb-2"
+            >
               Display Name
             </label>
             {editingName ? (

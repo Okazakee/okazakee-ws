@@ -465,24 +465,13 @@ export default function CareerSection() {
   };
 
   const applyAllChanges = async () => {
+    const createdForRollback: number[] = [];
     try {
       setIsUpdating(true);
       setError(null);
 
-      // 1. Delete entries
-      for (const entryId of deletedEntries) {
-        const result = await careerActions({ type: 'DELETE', id: entryId });
-
-        if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete career entry ${entryId}`
-          );
-        }
-      }
-
-      // 2. Create new entries
+      // 1. Create new entries first (so we can roll back on failure)
       for (const { entry, logoFile } of newEntries) {
-        // Create entry
         const createResult = await careerActions({
           type: 'CREATE',
           data: {
@@ -499,8 +488,8 @@ export default function CareerSection() {
             skills: entry.skills,
             company_description_en: entry.company_description_en,
             company_description_it: entry.company_description_it,
-            logo: '', // Will be set after logo upload
-            blurhashURL: entry.blurhashURL || '', // Include blurhashURL
+            logo: '',
+            blurhashURL: entry.blurhashURL || '',
           },
         });
 
@@ -511,10 +500,9 @@ export default function CareerSection() {
         }
 
         const createdEntry = createResult.data as CareerEntry;
+        createdForRollback.push(createdEntry.id);
 
-        // Upload logo
         if (logoFile) {
-          // Process image to WebP before upload
           const processed = await processImageToWebP(logoFile, {
             maxWidth: 512,
             maxHeight: 512,
@@ -536,6 +524,17 @@ export default function CareerSection() {
               logoResult.error || `Failed to upload logo for ${entry.title}`
             );
           }
+        }
+      }
+
+      // 2. Delete entries
+      for (const entryId of deletedEntries) {
+        const result = await careerActions({ type: 'DELETE', id: entryId });
+
+        if (!result.success) {
+          throw new Error(
+            result.error || `Failed to delete career entry ${entryId}`
+          );
         }
       }
 
@@ -639,6 +638,12 @@ export default function CareerSection() {
       alert('All changes applied successfully!');
     } catch (error) {
       console.error('Error applying changes:', error);
+      for (let i = createdForRollback.length - 1; i >= 0; i--) {
+        await careerActions({
+          type: 'ROLLBACK_CREATE',
+          entryId: createdForRollback[i],
+        });
+      }
       setError(
         error instanceof Error ? error.message : 'Failed to apply changes'
       );
@@ -793,7 +798,10 @@ export default function CareerSection() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="career-translation-title-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="career-translation-title-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Title
                   </label>
                   <input
@@ -812,7 +820,10 @@ export default function CareerSection() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="career-translation-subtitle-input" className="block text-sm font-medium text-lighttext mb-2">
+                  <label
+                    htmlFor="career-translation-subtitle-input"
+                    className="block text-sm font-medium text-lighttext mb-2"
+                  >
                     Subtitle
                   </label>
                   <textarea
@@ -832,7 +843,10 @@ export default function CareerSection() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="career-translation-present-input" className="block text-sm font-medium text-lighttext mb-2">
+                    <label
+                      htmlFor="career-translation-present-input"
+                      className="block text-sm font-medium text-lighttext mb-2"
+                    >
                       Present
                     </label>
                     <input
@@ -851,7 +865,10 @@ export default function CareerSection() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="career-translation-month-input" className="block text-sm font-medium text-lighttext mb-2">
+                    <label
+                      htmlFor="career-translation-month-input"
+                      className="block text-sm font-medium text-lighttext mb-2"
+                    >
                       Month
                     </label>
                     <input
