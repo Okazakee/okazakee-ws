@@ -9,7 +9,7 @@ export default function ThemeToggle({
 }: {
   compact?: boolean;
 }) {
-  const { mode, setThemeMode, isDark } = useThemeStore();
+  const { mode, setThemeMode } = useThemeStore();
   const [mounted, setMounted] = useState(false);
   // Initialize systemIsDark using the same check from the store
   const [systemIsDark, setSystemIsDark] = useState(false);
