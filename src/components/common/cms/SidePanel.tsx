@@ -19,8 +19,8 @@ import {
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { logout } from '@/app/actions/cms/logout';
 import { useLayoutStore } from '@/store/layoutStore';
+import { createClient } from '@/utils/supabase/client';
 
 interface SidePanelProps {
   isOpen?: boolean;
@@ -54,14 +54,11 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    const result = await logout();
-    if (result.success) {
-      setUser(null);
-      setHeroSection(null);
-      window.location.href = `/${locale}/cms/login`;
-    } else {
-      setIsLoggingOut(false);
-    }
+    setUser(null);
+    setHeroSection(null);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = `/${locale}/cms/login`;
   };
 
   const menuItems = [
