@@ -18,7 +18,7 @@ A modern personal portfolio and blog website built with Next.js 15, featuring an
 
 ## 🛠️ Tech Stack
 
-**Framework:** Next.js 15, TypeScript, React 19  
+**Framework:** Next.js 16, TypeScript, React 19  
 **Styling:** Tailwind CSS 4, Lucide React  
 **Backend:** Supabase (PostgreSQL + Auth + Storage)  
 **i18n:** next-intl (EN/IT)  
@@ -36,7 +36,7 @@ A modern personal portfolio and blog website built with Next.js 15, featuring an
 
 ### Prerequisites
 
-- Node.js 18+ and Yarn 1.22+
+- Node.js 18+ and Bun
 - Supabase account
 
 ### Installation
@@ -46,7 +46,7 @@ A modern personal portfolio and blog website built with Next.js 15, featuring an
 ```bash
 git clone <repository-url>
 cd okazakee-ws
-yarn install
+bun install
 ```
 
 2. Create `.env.local`:
@@ -74,7 +74,7 @@ NEXT_PUBLIC_DEFAULT_LOCALE=en
 4. Run dev server:
 
 ```bash
-yarn dev
+bun run dev
 ```
 
 ## 🔐 Environment Variables
@@ -92,31 +92,32 @@ yarn dev
 ## 📝 Scripts
 
 ```bash
-yarn dev      # Development server
-yarn build    # Production build
-yarn start    # Production server
-yarn lint     # Lint code
-yarn format   # Format code
+bun run dev       # Development server (Turbopack)
+bun run build     # Production build
+bun run start     # Production server
+bun run lint      # Lint code
+bun run lint-fix  # Lint and auto-fix
+bun run format    # Format code
 ```
 
 ## 🎨 Development
 
 **Structure:**
-- `components/common/` - Reusable components
-- `components/common/cms/` - CMS components
-- `app/actions/` - Server actions (`'use server'`)
-- `utils/` - Utilities and Supabase clients
+- `src/components/common/` - Reusable components
+- `src/components/common/cms/` - CMS sections and SidePanel
+- `src/app/actions/cms/` - Server actions (`'use server'`) and file helpers
+- `src/utils/` - Utilities and Supabase clients
 
 **Adding CMS Sections:**
-1. Create component in `components/common/cms/`
-2. Add actions in `app/actions/cms/sections/`
-3. Register in `app/[locale]/cms/page.tsx` and `SidePanel.tsx`
+1. Create section component in `src/components/common/cms/`
+2. Add actions in `src/app/actions/cms/sections/`
+3. Register in `src/app/[locale]/cms/page.tsx` and `src/components/common/cms/SidePanel.tsx`
 
 **i18n:** Translations in Supabase `i18n_translations` table. Use `getTranslations()` (server) or `useTranslations()` (client).
 
 ## 🚀 Deployment
 
-1. Build: `yarn build`
+1. Build: `bun run build`
 2. Set environment variables in your platform (Vercel: Project Settings → Environment Variables)
 3. Configure Supabase:
    - Set up tables, functions, RLS policies
@@ -124,7 +125,7 @@ yarn format   # Format code
    - Configure OAuth (GitHub) with production redirect URLs
 4. Deploy: Push to main branch or trigger manual deployment
 
-**Vercel:** Framework Preset: Next.js, Build Command: `yarn build`, Output: `.next`
+**Vercel:** Framework Preset: Next.js, Build Command: `bun run build`, Output: `.next`
 
 ## 📖 CMS Usage
 
@@ -152,7 +153,7 @@ yarn format   # Format code
 
 1. Fork the repository
 2. Create a feature branch
-3. Make changes and run `yarn lint && yarn format`
+3. Make changes and run `bun run lint && bun run format`
 4. Commit and push
 5. Open a Pull Request
 
