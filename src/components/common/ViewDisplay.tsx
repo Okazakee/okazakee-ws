@@ -27,6 +27,13 @@ export default function ViewDisplay({
       return;
     }
 
+    // Skip API calls for preview or non-numeric post id (e.g. CMS post preview)
+    const numericId = postId.trim() !== '' && /^\d+$/.test(postId);
+    if (!numericId) {
+      setViews(initialViews);
+      return;
+    }
+
     console.log('🚀 ViewDisplay useEffect triggered', {
       postId,
       postType,

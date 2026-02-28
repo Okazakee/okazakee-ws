@@ -6,6 +6,12 @@ interface InnerHtmlProps {
   className?: string;
 }
 
-export function InnerHtml({ html, as: Tag = 'span', className }: InnerHtmlProps) {
-  return <Tag className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+export function InnerHtml({
+  html,
+  as: Tag = 'span',
+  className,
+}: InnerHtmlProps) {
+  return (
+    <Tag className={className} dangerouslySetInnerHTML={{ __html: html }} />
+  );
 }

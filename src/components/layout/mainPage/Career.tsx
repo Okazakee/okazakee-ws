@@ -1,5 +1,5 @@
-import { ErrorDiv } from '@components/common/ErrorDiv';
 import { ClientMarkdown } from '@components/common/ClientMarkdown';
+import { ErrorDiv } from '@components/common/ErrorDiv';
 import { SkillsCarousel } from '@components/common/SkillsCarousel';
 import { Calendar, MapPin } from 'lucide-react';
 import moment, { type MomentInput } from 'moment';
@@ -161,9 +161,7 @@ export default async function Career() {
                       </span>
                     </div>
 
-                    <ClientMarkdown
-                      className="mb-4 prose dark:prose-invert max-w-none text-left"
-                    >
+                    <ClientMarkdown className="mb-4 prose dark:prose-invert max-w-none text-left">
                       {latestPosition[`description_${locale}`] ?? ''}
                     </ClientMarkdown>
 

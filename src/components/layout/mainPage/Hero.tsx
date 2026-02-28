@@ -76,10 +76,7 @@ export default async function Hero() {
               className="xl:mb-10 md:mb-12 mb-5"
               html={formatLabels(t('top.name'))}
             />
-            <InnerHtml
-              as="h2"
-              html={formatLabels(t('top.role'))}
-            />
+            <InnerHtml as="h2" html={formatLabels(t('top.role'))} />
           </div>
         </div>
         <div className="flex items-center text-center mt-10 md:mt-20">
