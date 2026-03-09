@@ -21,6 +21,14 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    // Optimize for Vercel image transformation limits:
+    // - cache transformed images for ~31 days
+    // - only generate WebP variants (uploads are already WebP via imageProcessor)
+    // - limit the set of responsive widths to reduce unique transforms
+    minimumCacheTTL: 2678400, // 31 days in seconds
+    formats: ['image/webp'],
+    deviceSizes: [640, 768, 1024, 1280],
+    imageSizes: [256, 384, 512],
   },
   // Ensure sharp is bundled correctly for serverless
   serverExternalPackages: ['sharp'],
