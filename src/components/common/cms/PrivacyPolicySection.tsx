@@ -20,8 +20,8 @@ export default function PrivacyPolicySection() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedLocale, setSelectedLocale] = useState<'en' | 'it'>('en');
-  const [editedPrivacyPolicy, setEditedPrivacyPolicy] = useState('');
-  const [originalPrivacyPolicy, setOriginalPrivacyPolicy] = useState('');
+  const [editedPolicies, setEditedPolicies] = useState<Record<string, string>>({});
+  const [originalPolicies, setOriginalPolicies] = useState<Record<string, string>>({});
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
@@ -46,12 +46,15 @@ export default function PrivacyPolicySection() {
 
       setPrivacyPolicyData(i18nData);
 
-      // Initialize with first locale's data
+      const policies: Record<string, string> = {};
+      for (const locale of i18nData) {
+        policies[locale.language] = locale.privacy_policy || '';
+      }
+      setEditedPolicies(policies);
+      setOriginalPolicies(policies);
+
       if (i18nData.length > 0) {
-        const firstLocale = i18nData[0];
-        setSelectedLocale(firstLocale.language as 'en' | 'it');
-        setEditedPrivacyPolicy(firstLocale.privacy_policy || '');
-        setOriginalPrivacyPolicy(firstLocale.privacy_policy || '');
+        setSelectedLocale(i18nData[0].language as 'en' | 'it');
       }
     } catch (error) {
       console.error('Error fetching privacy policy data:', error);
@@ -66,14 +69,7 @@ export default function PrivacyPolicySection() {
   };
 
   const handleLocaleChange = (locale: 'en' | 'it') => {
-    const localeData = privacyPolicyData.find(
-      (data) => data.language === locale
-    );
-    if (localeData) {
-      setSelectedLocale(locale);
-      setEditedPrivacyPolicy(localeData.privacy_policy || '');
-      setOriginalPrivacyPolicy(localeData.privacy_policy || '');
-    }
+    setSelectedLocale(locale);
   };
 
   const getCurrentTranslations = (
@@ -86,7 +82,9 @@ export default function PrivacyPolicySection() {
   };
 
   const hasChanges = () => {
-    return editedPrivacyPolicy !== originalPrivacyPolicy;
+    return Object.keys(editedPolicies).some(
+      (locale) => editedPolicies[locale] !== originalPolicies[locale]
+    );
   };
 
   const handleSave = async () => {
@@ -94,23 +92,26 @@ export default function PrivacyPolicySection() {
     setError(null);
 
     try {
-      // Get current translations to preserve them
-      const currentTranslations = getCurrentTranslations(selectedLocale);
+      const changedLocales = Object.keys(editedPolicies).filter(
+        (locale) => editedPolicies[locale] !== originalPolicies[locale]
+      );
 
-      const result = await i18nActions({
-        type: 'UPDATE',
-        locale: selectedLocale,
-        data: {
-          translations: currentTranslations,
-          privacy_policy: editedPrivacyPolicy,
-        },
-      });
+      for (const locale of changedLocales) {
+        const currentTranslations = getCurrentTranslations(locale as 'en' | 'it');
+        const result = await i18nActions({
+          type: 'UPDATE',
+          locale: locale as 'en' | 'it',
+          data: {
+            translations: currentTranslations,
+            privacy_policy: editedPolicies[locale],
+          },
+        });
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update privacy policy');
+        if (!result.success) {
+          throw new Error(result.error || `Failed to update privacy policy for ${locale.toUpperCase()}`);
+        }
       }
 
-      // Refresh data
       await fetchPrivacyPolicyData();
       alert('Privacy policy updated successfully!');
     } catch (error) {
@@ -133,7 +134,7 @@ export default function PrivacyPolicySection() {
     ) {
       return;
     }
-    setEditedPrivacyPolicy(originalPrivacyPolicy);
+    setEditedPolicies(originalPolicies);
   };
 
   if (isLoading) {
@@ -230,8 +231,13 @@ export default function PrivacyPolicySection() {
             <span>Markdown content for {selectedLocale.toUpperCase()}</span>
           </div>
           <textarea
-            value={editedPrivacyPolicy}
-            onChange={(e) => setEditedPrivacyPolicy(e.target.value)}
+            value={editedPolicies[selectedLocale] ?? ''}
+            onChange={(e) =>
+              setEditedPolicies((prev) => ({
+                ...prev,
+                [selectedLocale]: e.target.value,
+              }))
+            }
             className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y min-h-[500px] font-mono text-sm"
             placeholder="Enter privacy policy content in markdown format..."
           />
@@ -244,7 +250,7 @@ export default function PrivacyPolicySection() {
         title="Privacy Policy Preview"
       >
         <PrivacyPolicyPreview
-          markdown={editedPrivacyPolicy}
+          markdown={editedPolicies[selectedLocale] ?? ''}
           locale={selectedLocale}
         />
       </PreviewModal>
