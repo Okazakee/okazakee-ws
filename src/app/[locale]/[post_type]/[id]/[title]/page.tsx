@@ -99,7 +99,7 @@ export default async function Page({
           fetchPriority="high"
           loading="eager"
           decoding="sync"
-          sizes="100vw"
+          sizes="(min-width: 1024px) 1024px, 100vw"
           style={{
             objectFit: 'cover',
             objectPosition: 'center',

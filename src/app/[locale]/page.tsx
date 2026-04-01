@@ -1,10 +1,8 @@
+import Career from '@layout/mainPage/Career';
+import Contacts from '@layout/mainPage/Contacts';
 import Hero from '@layout/mainPage/Hero';
-import dynamic from 'next/dynamic';
-
-const Skills = dynamic(() => import('@layout/mainPage/Skills'));
-const Career = dynamic(() => import('@layout/mainPage/Career'));
-const PostsSection = dynamic(() => import('@layout/mainPage/PostsSections'));
-const Contacts = dynamic(() => import('@layout/mainPage/Contacts'));
+import PostsSection from '@layout/mainPage/PostsSections';
+import Skills from '@layout/mainPage/Skills';
 
 export async function generateMetadata({
   params,

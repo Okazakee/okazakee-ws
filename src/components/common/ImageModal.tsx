@@ -54,7 +54,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
           <X className="w-6 h-6" />
         </button>
         <div
-          className="w-full h-full overflow-visible"
+          className="w-full h-full overflow-hidden"
           onWheel={handleWheel}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -73,8 +73,9 @@ export const ImageModal: React.FC<ImageModalProps> = ({
               placeholder="blur"
               blurDataURL={blurDataURL}
               quality={100}
-              layout="fill"
-              objectFit="contain"
+              fill
+              sizes="100vw"
+              style={{ objectFit: 'contain' }}
               className="pointer-events-none"
             />
           </div>

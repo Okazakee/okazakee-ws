@@ -35,12 +35,11 @@ export function BlogPreview({
         />
         {visiblePosts.length > 0 ? (
           <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
-            {visiblePosts.map((post, index) => (
+            {visiblePosts.map((post) => (
               <PostCard
                 key={post.id}
                 post={post}
                 locale={locale}
-                index={index}
               />
             ))}
           </div>

@@ -7,11 +7,9 @@ import ViewDisplay from './ViewDisplay';
 export default function Postcard({
   post,
   locale,
-  index = 0,
 }: {
   post: PortfolioPost | BlogPost;
   locale: string;
-  index?: number;
 }) {
   const isPortfolioPost = (
     post: PortfolioPost | BlogPost
@@ -45,8 +43,8 @@ export default function Postcard({
           blurDataURL={post.blurhashURL}
           src={post.image}
           fill
-          loading={index < 3 ? 'eager' : 'lazy'}
-          sizes="100vw"
+          loading="lazy"
+          sizes="(min-width: 768px) 576px, 336px"
           style={{
             objectFit: 'cover',
             objectPosition: 'center',

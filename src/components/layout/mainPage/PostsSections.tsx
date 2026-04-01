@@ -43,12 +43,11 @@ export default async function PostsSection({ locale }: { locale: string }) {
                 html={formatLabels(t(isBlog ? 'subtitle2' : 'subtitle1'))}
               />
               <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
-                {postsCheck.map((post, index) => (
+                {postsCheck.map((post) => (
                   <PostCard
                     key={post.id}
                     post={post}
                     locale={locale}
-                    index={index}
                   />
                 ))}
               </div>

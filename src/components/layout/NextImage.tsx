@@ -22,6 +22,7 @@ const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
         title="Click to view"
         placeholder="blur"
         blurDataURL={blurhash}
+        sizes="(min-width: 1024px) 1024px, 100vw"
         style={{
           objectFit: 'cover',
           objectPosition: 'center',
