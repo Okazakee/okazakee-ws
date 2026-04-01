@@ -158,8 +158,7 @@ async function updateHero(
 
     if (error) throw error;
 
-    // @ts-expect-error - revalidateTag(tag: string) per Next.js; local type may expect 2 args
-    revalidateTag('hero');
+    revalidateTag('hero', {});
 
     return { success: true, data };
   } catch (error) {
@@ -237,8 +236,7 @@ async function uploadHeroImage(
 
     if (updateError) throw updateError;
 
-    // @ts-expect-error - revalidateTag(tag: string) per Next.js; local type may expect 2 args
-    revalidateTag('hero');
+    revalidateTag('hero', {});
 
     return {
       success: true,
@@ -295,10 +293,8 @@ async function uploadResume(
 
     if (updateError) throw updateError;
 
-    // @ts-expect-error - revalidateTag(tag: string) per Next.js; local type may expect 2 args
-    revalidateTag('resume');
-    // @ts-expect-error - revalidateTag(tag: string) per Next.js; local type may expect 2 args
-    revalidateTag('hero_section');
+    revalidateTag('resume', {});
+    revalidateTag('hero_section', {});
 
     return {
       success: true,

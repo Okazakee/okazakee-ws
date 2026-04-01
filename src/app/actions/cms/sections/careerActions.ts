@@ -1,6 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { revalidateTag } from 'next/cache';
 import {
   backupOldFile,
   generateBlurhashFromBuffer,
@@ -231,6 +232,7 @@ async function createCareer(
 
     if (error) throw error;
 
+    revalidateTag('career', {});
     return { success: true, data: newCareer };
   } catch (error) {
     console.error('Error creating career entry:', error);
@@ -272,6 +274,7 @@ async function updateCareer(
 
     if (error) throw error;
 
+    revalidateTag('career', {});
     return { success: true, data: updatedCareer };
   } catch (error) {
     console.error('Error updating career entry:', error);
@@ -302,6 +305,7 @@ async function deleteCareer(
 
     if (error) throw error;
 
+    revalidateTag('career', {});
     return { success: true };
   } catch (error) {
     console.error('Error deleting career entry:', error);
@@ -435,6 +439,7 @@ async function uploadCareerLogo(
 
     if (updateError) throw updateError;
 
+    revalidateTag('career', {});
     return {
       success: true,
       data: { logo: urlData.publicUrl, blurhashURL: blurhash || '' },

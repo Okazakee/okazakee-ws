@@ -1,6 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { revalidateTag } from 'next/cache';
 import {
   backupOldFile,
   generateBlurhashFromBuffer,
@@ -278,6 +279,8 @@ async function createBlog(
 
     if (error) throw error;
 
+    revalidateTag('blog', {});
+    revalidateTag('posts', {});
     return { success: true, data: newBlog };
   } catch (error) {
     console.error('Error creating blog post:', error);
@@ -325,6 +328,9 @@ async function updateBlog(
 
     if (error) throw error;
 
+    revalidateTag('blog', {});
+    revalidateTag('posts', {});
+    revalidateTag('post', {});
     return { success: true, data: updatedBlog };
   } catch (error) {
     console.error('Error updating blog post:', error);
@@ -370,6 +376,9 @@ async function deleteBlog(
 
     if (error) throw error;
 
+    revalidateTag('blog', {});
+    revalidateTag('posts', {});
+    revalidateTag('post', {});
     return { success: true };
   } catch (error) {
     console.error('Error deleting blog post:', error);

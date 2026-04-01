@@ -1,6 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { revalidateTag } from 'next/cache';
 import {
   getAdminClient,
   isValidUrl,
@@ -186,6 +187,7 @@ async function createContact(
 
     if (error) throw error;
 
+    revalidateTag('contacts', {});
     return { success: true, data };
   } catch (error) {
     console.error('Error creating contact:', error);
@@ -226,6 +228,7 @@ async function updateContact(
 
     if (error) throw error;
 
+    revalidateTag('contacts', {});
     return { success: true, data };
   } catch (error) {
     console.error('Error updating contact:', error);
@@ -246,6 +249,7 @@ async function deleteContact(
 
     if (error) throw error;
 
+    revalidateTag('contacts', {});
     return { success: true };
   } catch (error) {
     console.error('Error deleting contact:', error);
@@ -271,6 +275,7 @@ async function reorderContacts(
       if (error) throw error;
     }
 
+    revalidateTag('contacts', {});
     return { success: true };
   } catch (error) {
     console.error('Error reordering contacts:', error);

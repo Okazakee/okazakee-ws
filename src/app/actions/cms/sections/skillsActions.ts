@@ -1,6 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { revalidateTag } from 'next/cache';
 import {
   getAdminClient,
   requireAdmin,
@@ -200,6 +201,7 @@ async function createSkill(
 
     if (error) throw error;
 
+    revalidateTag('skills', {});
     return { success: true, data };
   } catch (error) {
     console.error('Error creating skill:', error);
@@ -240,6 +242,7 @@ async function updateSkill(
 
     if (error) throw error;
 
+    revalidateTag('skills', {});
     return { success: true, data };
   } catch (error) {
     console.error('Error updating skill:', error);
@@ -260,6 +263,7 @@ async function deleteSkill(
 
     if (error) throw error;
 
+    revalidateTag('skills', {});
     return { success: true };
   } catch (error) {
     console.error('Error deleting skill:', error);
@@ -295,6 +299,7 @@ async function createCategory(
 
     if (error) throw error;
 
+    revalidateTag('skills', {});
     return { success: true, data };
   } catch (error) {
     console.error('Error creating category:', error);
@@ -351,6 +356,7 @@ async function updateCategory(
 
     if (error) throw error;
 
+    revalidateTag('skills', {});
     return { success: true, data };
   } catch (error) {
     console.error('Error updating category:', error);
@@ -388,6 +394,7 @@ async function deleteCategory(
 
     if (error) throw error;
 
+    revalidateTag('skills', {});
     return { success: true };
   } catch (error) {
     console.error('Error deleting category:', error);

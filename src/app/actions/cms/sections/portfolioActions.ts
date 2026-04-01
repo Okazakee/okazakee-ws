@@ -1,6 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { revalidateTag } from 'next/cache';
 import {
   backupOldFile,
   generateBlurhashFromBuffer,
@@ -293,6 +294,8 @@ async function createPortfolio(
 
     if (error) throw error;
 
+    revalidateTag('portfolio', {});
+    revalidateTag('posts', {});
     return { success: true, data: newPortfolio };
   } catch (error) {
     console.error('Error creating portfolio post:', error);
@@ -342,6 +345,9 @@ async function updatePortfolio(
 
     if (error) throw error;
 
+    revalidateTag('portfolio', {});
+    revalidateTag('posts', {});
+    revalidateTag('post', {});
     return { success: true, data: updatedPortfolio };
   } catch (error) {
     console.error('Error updating portfolio post:', error);
@@ -387,6 +393,9 @@ async function deletePortfolio(
 
     if (error) throw error;
 
+    revalidateTag('portfolio', {});
+    revalidateTag('posts', {});
+    revalidateTag('post', {});
     return { success: true };
   } catch (error) {
     console.error('Error deleting portfolio post:', error);
@@ -592,6 +601,9 @@ async function uploadPortfolioImage(
 
     if (updateError) throw updateError;
 
+    revalidateTag('portfolio', {});
+    revalidateTag('posts', {});
+    revalidateTag('post', {});
     return {
       success: true,
       data: { image: urlData.publicUrl, blurhashURL: blurhash },
