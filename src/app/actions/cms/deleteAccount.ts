@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { revalidatePath } from 'next/cache';
+import { refresh } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
 
 export async function deleteMyAccount() {
@@ -98,7 +98,7 @@ export async function deleteMyAccount() {
       // Continue even if sign out fails
     }
 
-    revalidatePath('/cms', 'layout');
+    refresh();
 
     return { success: true };
   } catch (error) {

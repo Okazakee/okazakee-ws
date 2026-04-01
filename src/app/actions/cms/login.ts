@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { refresh } from 'next/cache';
 import { headers } from 'next/headers';
 import { checkLoginRateLimit } from '@/libs/rateLimiters';
 import { createClient } from '@/utils/supabase/server';
@@ -92,7 +92,7 @@ export async function login(email: string, password: string) {
     return { error: 'Invalid email or password' };
   }
 
-  revalidatePath('/cms');
+  refresh();
   return { success: true, redirectTo: '/cms' };
 }
 

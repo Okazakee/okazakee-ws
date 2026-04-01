@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { revalidatePath } from 'next/cache';
+import { refresh } from 'next/cache';
 import {
   processImage,
   requireAuth,
@@ -567,7 +567,7 @@ async function addDummyUser(
   }
 
   // Revalidate CMS paths to ensure fresh data
-  revalidatePath('/cms', 'layout');
+  refresh();
 
   return { success: true, data: newUser as AllowedUser };
 }
@@ -601,7 +601,7 @@ async function updateUserRole(
   if (error) throw error;
 
   // Revalidate CMS paths to ensure fresh data
-  revalidatePath('/cms', 'layout');
+  refresh();
 
   return { success: true, data: data as AllowedUser };
 }
@@ -694,7 +694,7 @@ async function removeUser(
   }
 
   // Revalidate CMS paths to ensure fresh data
-  revalidatePath('/cms', 'layout');
+  refresh();
 
   return { success: true };
 }
@@ -855,7 +855,7 @@ export async function uploadUserAvatar(
   }
 
   // Revalidate CMS paths to ensure fresh data
-  revalidatePath('/cms', 'layout');
+  refresh();
 
   return { success: true, avatarUrl };
 }
@@ -904,7 +904,7 @@ export async function updateUserDisplayName(
   }
 
   // Revalidate CMS paths to ensure fresh data
-  revalidatePath('/cms', 'layout');
+  refresh();
 
   return { success: true };
 }
@@ -1052,7 +1052,7 @@ export async function updateMyProfile(
   }
 
   // Revalidate CMS paths to ensure fresh data
-  revalidatePath('/cms', 'layout');
+  refresh();
 
   return { success: true, avatarUrl: updates.avatar_url };
 }

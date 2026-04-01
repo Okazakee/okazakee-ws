@@ -1,6 +1,6 @@
 'use server';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import {
   getAdminClient,
   requireAdmin,
@@ -219,7 +219,8 @@ async function updateI18nData(
     if (error) throw error;
 
     // Invalidate cache
-    revalidatePath('/', 'layout');
+    revalidateTag('translations', {})
+    revalidateTag('privacy-policy', {});
 
     return { success: true, data };
   } catch (error) {
@@ -278,7 +279,8 @@ async function updateSectionTranslations(
 
     if (error) throw error;
 
-    revalidatePath('/', 'layout');
+    revalidateTag('translations', {})
+    revalidateTag('privacy-policy', {});
 
     return { success: true, data };
   } catch (error) {
