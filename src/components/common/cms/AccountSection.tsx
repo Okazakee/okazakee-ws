@@ -152,7 +152,7 @@ export default function AccountSection() {
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           My Account
         </h1>
-        <p className="text-lighttext2 text-lg">Manage your profile settings</p>
+        <p className="text-gray-500 dark:text-lighttext2 text-lg">Manage your profile settings</p>
       </div>
 
       {/* Error display */}
@@ -163,7 +163,7 @@ export default function AccountSection() {
       )}
 
       {/* Profile Card */}
-      <div className="bg-darkergray rounded-xl p-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
         <h2 className="text-xl font-bold text-main mb-6 flex items-center gap-2">
           <User className="w-5 h-5" />
           Profile Information
@@ -177,7 +177,7 @@ export default function AccountSection() {
                 type="button"
                 onClick={handleAvatarClick}
                 disabled={isUploadingAvatar}
-                className="relative w-24 h-24 rounded-full overflow-hidden bg-darkgray flex-shrink-0 group cursor-pointer"
+                className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-darkgray flex-shrink-0 group cursor-pointer"
               >
                 {user.avatarUrl ? (
                   <Image
@@ -218,8 +218,8 @@ export default function AccountSection() {
               />
             </div>
             <div>
-              <p className="text-sm text-lighttext2 mb-1">Profile Picture</p>
-              <p className="text-xs text-lighttext2">
+              <p className="text-sm text-gray-500 dark:text-lighttext2 mb-1">Profile Picture</p>
+              <p className="text-xs text-gray-500 dark:text-lighttext2">
                 Click to upload a new avatar
               </p>
             </div>
@@ -229,7 +229,7 @@ export default function AccountSection() {
           <div>
             <label
               htmlFor="display-name-input"
-              className="block text-sm font-medium text-lighttext mb-2"
+              className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
               Display Name
             </label>
@@ -240,7 +240,7 @@ export default function AccountSection() {
                   type="text"
                   value={editedName}
                   onChange={(e) => setEditedName(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-darkestgray border border-main rounded-lg text-lighttext focus:outline-none"
+                  className="flex-1 px-3 py-2 bg-white dark:bg-darkestgray border border-main rounded-lg text-darktext dark:text-lighttext focus:outline-none"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSaveName();
                     if (e.key === 'Escape') handleCancelEditName();
@@ -264,13 +264,13 @@ export default function AccountSection() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="px-3 py-2 bg-darkestgray rounded-lg text-lighttext flex-1">
+                <span className="px-3 py-2 bg-white dark:bg-darkestgray rounded-lg text-darktext dark:text-lighttext flex-1">
                   {user.displayName}
                 </span>
                 <button
                   type="button"
                   onClick={handleEditNameClick}
-                  className="p-2 text-lighttext2 hover:text-main hover:bg-darkgray rounded transition-colors"
+                  className="p-2 text-gray-500 dark:text-lighttext2 hover:text-main hover:bg-gray-200 dark:hover:bg-darkgray rounded transition-colors"
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
@@ -281,14 +281,14 @@ export default function AccountSection() {
           {/* Email Section (Read-only) */}
           {user.email && (
             <div>
-              <div className="block text-sm font-medium text-lighttext mb-2">
+              <div className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                 Email Address
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-darkestgray rounded-lg text-lighttext2">
+              <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-darkestgray rounded-lg text-gray-500 dark:text-lighttext2">
                 <Mail className="w-4 h-4" />
                 <span>{user.email}</span>
               </div>
-              <p className="text-xs text-lighttext2 mt-1">
+              <p className="text-xs text-gray-500 dark:text-lighttext2 mt-1">
                 Email cannot be changed
               </p>
             </div>
@@ -297,14 +297,14 @@ export default function AccountSection() {
           {/* GitHub Username Section (Read-only) */}
           {user.githubUsername && (
             <div>
-              <div className="block text-sm font-medium text-lighttext mb-2">
+              <div className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                 GitHub Username
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-darkestgray rounded-lg text-lighttext2">
+              <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-darkestgray rounded-lg text-gray-500 dark:text-lighttext2">
                 <Github className="w-4 h-4" />
                 <span>@{user.githubUsername}</span>
               </div>
-              <p className="text-xs text-lighttext2 mt-1">
+              <p className="text-xs text-gray-500 dark:text-lighttext2 mt-1">
                 GitHub username cannot be changed
               </p>
             </div>
@@ -312,10 +312,10 @@ export default function AccountSection() {
 
           {/* Role Section (Read-only) */}
           <div>
-            <div className="block text-sm font-medium text-lighttext mb-2">
+            <div className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
               Role
             </div>
-            <div className="px-3 py-2 bg-darkestgray rounded-lg">
+            <div className="px-3 py-2 bg-white dark:bg-darkestgray rounded-lg">
               <span
                 className={`px-2 py-1 rounded text-xs ${
                   user.role === 'admin'
@@ -326,7 +326,7 @@ export default function AccountSection() {
                 {user.role || 'user'}
               </span>
             </div>
-            <p className="text-xs text-lighttext2 mt-1">
+            <p className="text-xs text-gray-500 dark:text-lighttext2 mt-1">
               Role is managed by administrators
             </p>
           </div>
@@ -339,18 +339,18 @@ export default function AccountSection() {
           <Trash2 className="w-5 h-5" />
           Danger Zone
         </h2>
-        <p className="text-lighttext2 mb-4">
+        <p className="text-gray-500 dark:text-lighttext2 mb-4">
           Once you delete your account, there is no going back. This will
           permanently delete your account and all associated data.
         </p>
 
         {showDeleteConfirm ? (
           <div className="space-y-4">
-            <div className="bg-darkestgray rounded-lg p-4 border border-red-500/50">
+            <div className="bg-gray-100 dark:bg-darkestgray rounded-lg p-4 border border-red-500/50">
               <p className="text-red-400 font-semibold mb-2">
                 Are you absolutely sure?
               </p>
-              <p className="text-lighttext2 text-sm">
+              <p className="text-gray-500 dark:text-lighttext2 text-sm">
                 This action cannot be undone. This will permanently delete your
                 account, profile, and all associated data.
               </p>
@@ -381,7 +381,7 @@ export default function AccountSection() {
                   setError(null);
                 }}
                 disabled={isDeleting}
-                className="px-4 py-2 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>

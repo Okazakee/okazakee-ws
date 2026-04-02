@@ -62,6 +62,12 @@ export default function RootLayout({
           href="https://mtvwynyikouqzmhqespl.supabase.co"
         />
         <link rel="preconnect" href="https://umami.okazakee.dev" />
+        {/* Blocking theme script — runs before paint to avoid flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var m=localStorage.getItem('themeMode');var isDark=m==='dark'||(m!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark)document.documentElement.classList.add('dark');}catch(e){}})();`,
+          }}
+        />
       </head>
       <Providers>
         <body

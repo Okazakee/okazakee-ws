@@ -547,13 +547,13 @@ export default function ContactsSection() {
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           Contacts Section
         </h1>
-        <p className="text-lighttext2 text-lg mb-4">
+        <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
           Manage your contact links and social media profiles
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
@@ -590,7 +590,7 @@ export default function ContactsSection() {
       </div>
 
       {/* Translations Section */}
-      <div className="bg-darkergray rounded-xl p-6 mb-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6 mb-6">
         <button
           type="button"
           onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
@@ -601,23 +601,23 @@ export default function ContactsSection() {
             Translations
           </h2>
           {isTranslationsExpanded ? (
-            <ChevronUp className="w-5 h-5 text-lighttext2" />
+            <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-lighttext2" />
+            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
           )}
         </button>
 
         {isTranslationsExpanded && (
           <div className="space-y-6 mt-4">
             {/* Locale Tabs */}
-            <div className="flex gap-2 border-b border-darkgray">
+            <div className="flex gap-2 border-b border-gray-200 dark:border-darkgray">
               <button
                 type="button"
                 onClick={() => setTranslationLocale('en')}
                 className={`px-4 py-2 font-medium transition-colors ${
                   translationLocale === 'en'
                     ? 'text-main border-b-2 border-main'
-                    : 'text-lighttext2 hover:text-lighttext'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
                 English
@@ -628,7 +628,7 @@ export default function ContactsSection() {
                 className={`px-4 py-2 font-medium transition-colors ${
                   translationLocale === 'it'
                     ? 'text-main border-b-2 border-main'
-                    : 'text-lighttext2 hover:text-lighttext'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
                 Italian
@@ -642,7 +642,7 @@ export default function ContactsSection() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Title
                   </label>
                   <input
@@ -655,12 +655,12 @@ export default function ContactsSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Contacts"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Subtitle
                   </label>
                   <textarea
@@ -673,7 +673,7 @@ export default function ContactsSection() {
                       )
                     }
                     rows={3}
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
                     placeholder="e.g., You can ****reach out**** to me through the following channels:"
                   />
                 </div>
@@ -684,14 +684,14 @@ export default function ContactsSection() {
       </div>
 
       {/* Create New Contact */}
-      <div className="bg-darkergray rounded-xl p-6 mb-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6 mb-6">
         <h2 className="text-2xl font-bold text-main mb-4">Add New Contact</h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label
               htmlFor="contact-label"
-              className="block text-sm font-medium text-lighttext mb-2"
+              className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
               Label *
             </label>
@@ -702,7 +702,7 @@ export default function ContactsSection() {
               onChange={(e) =>
                 setNewContact((prev) => ({ ...prev, label: e.target.value }))
               }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+              className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
               placeholder="e.g., LinkedIn"
             />
           </div>
@@ -710,7 +710,7 @@ export default function ContactsSection() {
           <div>
             <label
               htmlFor="contact-icon"
-              className="block text-sm font-medium text-lighttext mb-2"
+              className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
               Icon Name *
             </label>
@@ -722,15 +722,15 @@ export default function ContactsSection() {
                 onChange={(e) =>
                   setNewContact((prev) => ({ ...prev, icon: e.target.value }))
                 }
-                className="flex-1 px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                className="flex-1 px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                 placeholder="e.g., linkedin"
               />
               {newContact.icon && (
-                <div className="flex items-center justify-center w-10 h-10 bg-darkestgray border border-lighttext2 rounded-lg">
+                <div className="flex items-center justify-center w-10 h-10 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg">
                   <IconComponent
                     iconName={newContact.icon}
                     size={20}
-                    className="text-lighttext"
+                    className="text-darktext dark:text-lighttext"
                   />
                 </div>
               )}
@@ -740,7 +740,7 @@ export default function ContactsSection() {
           <div>
             <label
               htmlFor="contact-link"
-              className="block text-sm font-medium text-lighttext mb-2"
+              className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
               Link *
             </label>
@@ -751,7 +751,7 @@ export default function ContactsSection() {
               onChange={(e) =>
                 setNewContact((prev) => ({ ...prev, link: e.target.value }))
               }
-              className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+              className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
               placeholder="https://linkedin.com/in/..."
             />
           </div>
@@ -759,7 +759,7 @@ export default function ContactsSection() {
           <div>
             <label
               htmlFor="contact-bg-color"
-              className="block text-sm font-medium text-lighttext mb-2"
+              className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
               Background Color
             </label>
@@ -770,7 +770,7 @@ export default function ContactsSection() {
               onChange={(e) =>
                 setNewContact((prev) => ({ ...prev, bg_color: e.target.value }))
               }
-              className="w-full h-10 bg-darkestgray border border-lighttext2 rounded-lg cursor-pointer"
+              className="w-full h-10 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg cursor-pointer"
             />
           </div>
         </div>
@@ -794,11 +794,11 @@ export default function ContactsSection() {
       </div>
 
       {/* Existing Contacts */}
-      <div className="bg-darkergray rounded-xl p-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
         <h2 className="text-2xl font-bold text-main mb-4">Manage Contacts</h2>
 
         {contacts.length === 0 ? (
-          <div className="text-center py-8 text-lighttext2">
+          <div className="text-center py-8 text-gray-500 dark:text-lighttext2">
             No contacts found. Add your first contact above.
           </div>
         ) : (
@@ -806,7 +806,7 @@ export default function ContactsSection() {
             {contacts.map((contact, index) => (
               <div
                 key={contact.id}
-                className="bg-darkestgray rounded-lg p-4 border border-lighttext2"
+                className="bg-white dark:bg-darkestgray rounded-lg p-4 border border-gray-200 dark:border-lighttext2"
               >
                 {contact.isEditing ? (
                   <EditContactForm
@@ -883,7 +883,7 @@ function ContactDisplay({
               type="button"
               onClick={onMoveUp}
               disabled={isFirst}
-              className="p-1 text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1 text-gray-500 dark:text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               title="Move up"
             >
               <ArrowUp className="w-4 h-4" />
@@ -892,13 +892,13 @@ function ContactDisplay({
               type="button"
               onClick={onMoveDown}
               disabled={isLast}
-              className="p-1 text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1 text-gray-500 dark:text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               title="Move down"
             >
               <ArrowDown className="w-4 h-4" />
             </button>
           </div>
-          <span className="text-sm text-lighttext2">#{index + 1}</span>
+          <span className="text-sm text-gray-500 dark:text-lighttext2">#{index + 1}</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -910,11 +910,11 @@ function ContactDisplay({
             <IconComponent
               iconName={contact.icon}
               size={20}
-              className="text-lighttext"
+              className="text-darktext dark:text-lighttext"
             />
-            <span className="font-medium text-lighttext">{contact.label}</span>
+            <span className="font-medium text-darktext dark:text-lighttext">{contact.label}</span>
           </div>
-          <span className="text-lighttext2">({contact.icon})</span>
+          <span className="text-gray-500 dark:text-lighttext2">({contact.icon})</span>
         </div>
       </div>
 
@@ -922,14 +922,14 @@ function ContactDisplay({
         <button
           type="button"
           onClick={onEdit}
-          className="p-2 text-lighttext2 hover:text-main transition-colors"
+          className="p-2 text-gray-500 dark:text-lighttext2 hover:text-main transition-colors"
         >
           <Edit3 className="w-4 h-4" />
         </button>
         <button
           type="button"
           onClick={onDelete}
-          className="p-2 text-lighttext2 hover:text-red-500 transition-colors"
+          className="p-2 text-gray-500 dark:text-lighttext2 hover:text-red-500 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -964,7 +964,7 @@ function EditContactForm({
         <div>
           <label
             htmlFor="edit-contact-label"
-            className="block text-sm font-medium text-lighttext mb-2"
+            className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
           >
             Label
           </label>
@@ -975,14 +975,14 @@ function EditContactForm({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, label: e.target.value }))
             }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+            className="w-full px-3 py-2 bg-gray-100 dark:bg-darkergray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
           />
         </div>
 
         <div>
           <label
             htmlFor="edit-contact-icon"
-            className="block text-sm font-medium text-lighttext mb-2"
+            className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
           >
             Icon Name
           </label>
@@ -994,14 +994,14 @@ function EditContactForm({
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, icon: e.target.value }))
               }
-              className="flex-1 px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+              className="flex-1 px-3 py-2 bg-gray-100 dark:bg-darkergray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
             />
             {formData.icon && (
-              <div className="flex items-center justify-center w-10 h-10 bg-darkergray border border-lighttext2 rounded-lg">
+              <div className="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-darkergray border border-gray-300 dark:border-lighttext2 rounded-lg">
                 <IconComponent
                   iconName={formData.icon}
                   size={20}
-                  className="text-lighttext"
+                  className="text-darktext dark:text-lighttext"
                 />
               </div>
             )}
@@ -1011,7 +1011,7 @@ function EditContactForm({
         <div>
           <label
             htmlFor="edit-contact-link"
-            className="block text-sm font-medium text-lighttext mb-2"
+            className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
           >
             Link
           </label>
@@ -1022,14 +1022,14 @@ function EditContactForm({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, link: e.target.value }))
             }
-            className="w-full px-3 py-2 bg-darkergray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+            className="w-full px-3 py-2 bg-gray-100 dark:bg-darkergray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
           />
         </div>
 
         <div>
           <label
             htmlFor="edit-contact-bg-color"
-            className="block text-sm font-medium text-lighttext mb-2"
+            className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
           >
             Background Color
           </label>
@@ -1040,7 +1040,7 @@ function EditContactForm({
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, bg_color: e.target.value }))
             }
-            className="w-full h-10 bg-darkergray border border-lighttext2 rounded-lg cursor-pointer"
+            className="w-full h-10 bg-gray-100 dark:bg-darkergray border border-gray-300 dark:border-lighttext2 rounded-lg cursor-pointer"
           />
         </div>
       </div>
@@ -1057,7 +1057,7 @@ function EditContactForm({
         <button
           type="button"
           onClick={onCancel}
-          className="flex items-center gap-2 px-3 py-2 bg-darkestgray hover:bg-darkgray text-lighttext font-medium rounded-lg transition-all duration-200"
+          className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-darkestgray dark:hover:bg-darkgray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200"
         >
           <X className="w-4 h-4" />
           Cancel

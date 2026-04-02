@@ -497,13 +497,13 @@ export default function HeroSection() {
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           Hero Section
         </h1>
-        <p className="text-lighttext2 text-lg mb-4">
+        <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
           Update your hero section content and image
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
@@ -551,7 +551,7 @@ export default function HeroSection() {
 
       <div className="space-y-8">
         {/* Translations Section */}
-        <div className="bg-darkergray rounded-xl p-6">
+        <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
           <button
             type="button"
             onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
@@ -562,23 +562,23 @@ export default function HeroSection() {
               Translations
             </h2>
             {isTranslationsExpanded ? (
-              <ChevronUp className="w-5 h-5 text-lighttext2" />
+              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-lighttext2" />
+              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
             )}
           </button>
 
           {isTranslationsExpanded && (
             <div className="space-y-6 mt-4">
               {/* Locale Tabs */}
-              <div className="flex gap-2 border-b border-darkgray">
+              <div className="flex gap-2 border-b border-gray-200 dark:border-darkgray">
                 <button
                   type="button"
                   onClick={() => setTranslationLocale('en')}
                   className={`px-4 py-2 font-medium transition-colors ${
                     translationLocale === 'en'
                       ? 'text-main border-b-2 border-main'
-                      : 'text-lighttext2 hover:text-lighttext'
+                      : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                   }`}
                 >
                   English
@@ -589,7 +589,7 @@ export default function HeroSection() {
                   className={`px-4 py-2 font-medium transition-colors ${
                     translationLocale === 'it'
                       ? 'text-main border-b-2 border-main'
-                      : 'text-lighttext2 hover:text-lighttext'
+                      : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                   }`}
                 >
                   Italian
@@ -604,13 +604,13 @@ export default function HeroSection() {
                 <div className="space-y-4">
                   {/* Top Section */}
                   <div className="space-y-3">
-                    <h3 className="text-lg font-semibold text-lighttext">
+                    <h3 className="text-lg font-semibold text-darktext dark:text-lighttext">
                       Top Section
                     </h3>
                     <div>
                       <label
                         htmlFor="hero-name-input"
-                        className="block text-sm font-medium text-lighttext mb-2"
+                        className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                       >
                         Name
                       </label>
@@ -625,14 +625,14 @@ export default function HeroSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., Cristian ****Di Carlo****"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="hero-role-input"
-                        className="block text-sm font-medium text-lighttext mb-2"
+                        className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                       >
                         Role
                       </label>
@@ -647,7 +647,7 @@ export default function HeroSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., Fullstack ****Developer****"
                       />
                     </div>
@@ -655,13 +655,13 @@ export default function HeroSection() {
 
                   {/* About Me Section */}
                   <div className="space-y-3">
-                    <h3 className="text-lg font-semibold text-lighttext">
+                    <h3 className="text-lg font-semibold text-darktext dark:text-lighttext">
                       About Me Section
                     </h3>
                     <div>
                       <label
                         htmlFor="hero-aboutme-title-input"
-                        className="block text-sm font-medium text-lighttext mb-2"
+                        className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                       >
                         Title
                       </label>
@@ -676,14 +676,14 @@ export default function HeroSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., About me"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="hero-aboutme-paragraph-input"
-                        className="block text-sm font-medium text-lighttext mb-2"
+                        className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                       >
                         Paragraph
                       </label>
@@ -700,7 +700,7 @@ export default function HeroSection() {
                           )
                         }
                         rows={8}
-                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
                         placeholder="Enter about me paragraph..."
                       />
                     </div>
@@ -712,7 +712,7 @@ export default function HeroSection() {
         </div>
 
         {/* Hero Image Section */}
-        <div className="bg-darkergray rounded-xl p-6">
+        <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
             <Home className="w-5 h-5" />
             Hero Image
@@ -736,8 +736,8 @@ export default function HeroSection() {
                   alt="Hero Image Preview"
                 />
                 {!editedData.mainImage && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-darkestgray rounded-lg border-2 border-dashed border-lighttext2">
-                    <span className="text-lighttext2">No image</span>
+                  <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-darkestgray rounded-lg border-2 border-dashed border-gray-300 dark:border-lighttext2">
+                    <span className="text-gray-500 dark:text-lighttext2">No image</span>
                   </div>
                 )}
                 {/* Drag overlay */}
@@ -778,7 +778,7 @@ export default function HeroSection() {
                     onClick={() =>
                       copyToClipboard(editedData.mainImage, 'Hero Image')
                     }
-                    className="flex items-center gap-2 px-4 py-2 bg-darkestgray hover:bg-darkgray text-lighttext rounded-lg transition-all duration-200"
+                    className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 dark:bg-darkestgray dark:hover:bg-darkgray text-darktext dark:text-lighttext rounded-lg transition-all duration-200"
                   >
                     <Copy className="w-4 h-4" />
                     Copy URL
@@ -800,7 +800,7 @@ export default function HeroSection() {
         </div>
 
         {/* Resume Links Section */}
-        <div className="bg-darkergray rounded-xl p-6">
+        <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
             <FileText className="w-5 h-5" />
             Resume Links
@@ -811,12 +811,12 @@ export default function HeroSection() {
             <div className="space-y-2">
               <label
                 htmlFor="resume-it-upload"
-                className="block text-sm font-medium text-lighttext"
+                className="block text-sm font-medium text-darktext dark:text-lighttext"
               >
                 Upload Resume (Italian)
               </label>
               <div
-                className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
+                className="relative border-2 border-dashed border-gray-300 dark:border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
                 onDragOver={(e) => handleDragOver(e, 'resumeIt')}
                 onDragLeave={(e) => handleDragLeave(e, 'resumeIt')}
                 onDrop={(e) => handleDrop(e, 'resumeIt')}
@@ -830,8 +830,8 @@ export default function HeroSection() {
                   className="hidden"
                 />
                 <label htmlFor="resume-it-upload" className="cursor-pointer">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
-                  <p className="text-lighttext2 font-medium">
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-gray-500 dark:text-lighttext2" />
+                  <p className="text-gray-500 dark:text-lighttext2 font-medium">
                     Drop PDF here or click to browse
                   </p>
                 </label>
@@ -860,12 +860,12 @@ export default function HeroSection() {
             <div className="space-y-2">
               <label
                 htmlFor="resume-en-upload"
-                className="block text-sm font-medium text-lighttext"
+                className="block text-sm font-medium text-darktext dark:text-lighttext"
               >
                 Upload Resume (English)
               </label>
               <div
-                className="relative border-2 border-dashed border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
+                className="relative border-2 border-dashed border-gray-300 dark:border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
                 onDragOver={(e) => handleDragOver(e, 'resumeEn')}
                 onDragLeave={(e) => handleDragLeave(e, 'resumeEn')}
                 onDrop={(e) => handleDrop(e, 'resumeEn')}
@@ -879,8 +879,8 @@ export default function HeroSection() {
                   className="hidden"
                 />
                 <label htmlFor="resume-en-upload" className="cursor-pointer">
-                  <Upload className="w-8 h-8 mx-auto mb-2 text-lighttext2" />
-                  <p className="text-lighttext2 font-medium">
+                  <Upload className="w-8 h-8 mx-auto mb-2 text-gray-500 dark:text-lighttext2" />
+                  <p className="text-gray-500 dark:text-lighttext2 font-medium">
                     Drop PDF here or click to browse
                   </p>
                 </label>

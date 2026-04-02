@@ -706,13 +706,13 @@ export default function CareerSection() {
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           Career Section
         </h1>
-        <p className="text-lighttext2 text-lg mb-4">
+        <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
           Manage your career entries
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
@@ -746,7 +746,7 @@ export default function CareerSection() {
       </div>
 
       {/* Translations Section */}
-      <div className="bg-darkergray rounded-xl p-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
         <button
           type="button"
           onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
@@ -757,23 +757,23 @@ export default function CareerSection() {
             Translations
           </h2>
           {isTranslationsExpanded ? (
-            <ChevronUp className="w-5 h-5 text-lighttext2" />
+            <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-lighttext2" />
+            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
           )}
         </button>
 
         {isTranslationsExpanded && (
           <div className="space-y-6 mt-4">
             {/* Locale Tabs */}
-            <div className="flex gap-2 border-b border-darkgray">
+            <div className="flex gap-2 border-b border-gray-200 dark:border-darkgray">
               <button
                 type="button"
                 onClick={() => setTranslationLocale('en')}
                 className={`px-4 py-2 font-medium transition-colors ${
                   translationLocale === 'en'
                     ? 'text-main border-b-2 border-main'
-                    : 'text-lighttext2 hover:text-lighttext'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
                 English
@@ -784,7 +784,7 @@ export default function CareerSection() {
                 className={`px-4 py-2 font-medium transition-colors ${
                   translationLocale === 'it'
                     ? 'text-main border-b-2 border-main'
-                    : 'text-lighttext2 hover:text-lighttext'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
                 Italian
@@ -800,7 +800,7 @@ export default function CareerSection() {
                 <div>
                   <label
                     htmlFor="career-translation-title-input"
-                    className="block text-sm font-medium text-lighttext mb-2"
+                    className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
                     Title
                   </label>
@@ -815,14 +815,14 @@ export default function CareerSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Career History"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="career-translation-subtitle-input"
-                    className="block text-sm font-medium text-lighttext mb-2"
+                    className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
                     Subtitle
                   </label>
@@ -837,7 +837,7 @@ export default function CareerSection() {
                       )
                     }
                     rows={3}
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
                     placeholder="e.g., My professional journey and experience"
                   />
                 </div>
@@ -845,7 +845,7 @@ export default function CareerSection() {
                   <div>
                     <label
                       htmlFor="career-translation-present-input"
-                      className="block text-sm font-medium text-lighttext mb-2"
+                      className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                     >
                       Present
                     </label>
@@ -860,14 +860,14 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., Present"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="career-translation-month-input"
-                      className="block text-sm font-medium text-lighttext mb-2"
+                      className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                     >
                       Month
                     </label>
@@ -882,12 +882,12 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., month"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-lighttext mb-2">
+                    <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                       Months
                     </label>
                     <input
@@ -900,12 +900,12 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., months"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-lighttext mb-2">
+                    <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                       Year
                     </label>
                     <input
@@ -918,12 +918,12 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., year"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-lighttext mb-2">
+                    <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                       Years
                     </label>
                     <input
@@ -936,18 +936,18 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                      className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                       placeholder="e.g., years"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Remote Types
                   </label>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs text-lighttext2 mb-1">
+                      <label className="block text-xs text-gray-500 dark:text-lighttext2 mb-1">
                         Full Remote
                       </label>
                       <input
@@ -960,12 +960,12 @@ export default function CareerSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., Remote"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-lighttext2 mb-1">
+                      <label className="block text-xs text-gray-500 dark:text-lighttext2 mb-1">
                         Hybrid
                       </label>
                       <input
@@ -978,12 +978,12 @@ export default function CareerSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., Hybrid"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-lighttext2 mb-1">
+                      <label className="block text-xs text-gray-500 dark:text-lighttext2 mb-1">
                         On-site
                       </label>
                       <input
@@ -996,7 +996,7 @@ export default function CareerSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                         placeholder="e.g., On-site"
                       />
                     </div>
@@ -1042,7 +1042,7 @@ export default function CareerSection() {
                 type="text"
                 value={newCareerEntry.title}
                 onChange={(e) => handleNewEntryChange('title', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="Enter job title"
               />
             </div>
@@ -1056,7 +1056,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('company', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="Enter company name"
               />
             </div>
@@ -1072,7 +1072,7 @@ export default function CareerSection() {
               onChange={(e) =>
                 handleNewEntryChange('website_url', e.target.value)
               }
-              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+              className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
               placeholder="https://company.com"
             />
           </div>
@@ -1088,7 +1088,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('location_en', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="Enter location"
               />
             </div>
@@ -1102,7 +1102,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('location_it', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="Enter location"
               />
             </div>
@@ -1120,7 +1120,7 @@ export default function CareerSection() {
                   e.target.value as 'full' | 'hybrid' | 'onSite'
                 )
               }
-              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+              className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
             >
               <option value="full">Full Remote</option>
               <option value="hybrid">Hybrid</option>
@@ -1139,7 +1139,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('startDate', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -1152,7 +1152,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('endDate', e.target.value || null)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
               />
             </div>
           </div>
@@ -1167,7 +1167,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('description_en', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
                 placeholder="Enter job description"
               />
@@ -1181,7 +1181,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('description_it', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
                 placeholder="Enter job description"
               />
@@ -1198,7 +1198,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('company_description_en', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
                 placeholder="Enter company description"
               />
@@ -1212,7 +1212,7 @@ export default function CareerSection() {
                 onChange={(e) =>
                   handleNewEntryChange('company_description_it', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
                 placeholder="Enter company description"
               />
@@ -1227,7 +1227,7 @@ export default function CareerSection() {
               type="text"
               value={newCareerEntry.skills}
               onChange={(e) => handleNewEntryChange('skills', e.target.value)}
-              className="w-full px-3 py-2 border-2 border-main dark:border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+              className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
               placeholder='["ReactJS", "Express.js", "Angular", "CMS"]'
             />
           </div>
@@ -1294,7 +1294,7 @@ export default function CareerSection() {
             </button>
             <button
               onClick={() => setIsCreating(false)}
-              className="px-4 py-2 bg-darkgray dark:bg-darkergray text-lighttext dark:text-lighttext rounded-lg hover:bg-darkergray dark:hover:bg-darkestgray transition-colors border-2 border-darkgray dark:border-darkergray hover:border-darkergray dark:hover:border-darkestgray"
+              className="px-4 py-2 bg-gray-200 dark:bg-darkergray text-darktext dark:text-lighttext rounded-lg hover:bg-gray-300 dark:hover:bg-darkestgray transition-colors border-2 border-gray-200 dark:border-darkergray hover:border-gray-300 dark:hover:border-darkestgray"
             >
               Cancel
             </button>
@@ -1400,7 +1400,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'title', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -1413,7 +1413,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'company', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -1430,7 +1430,7 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -1447,7 +1447,7 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -1464,7 +1464,7 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -1480,7 +1480,7 @@ export default function CareerSection() {
                           e.target.value as 'full' | 'hybrid' | 'onSite'
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     >
                       <option value="full">Full Remote</option>
                       <option value="hybrid">Hybrid</option>
@@ -1497,7 +1497,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'startDate', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -1514,7 +1514,7 @@ export default function CareerSection() {
                           e.target.value || null
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     />
                   </div>
                   <div>
@@ -1527,7 +1527,7 @@ export default function CareerSection() {
                       onChange={(e) =>
                         handleInputChange(entry.id, 'skills', e.target.value)
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                       placeholder='["ReactJS", "Express.js", "Angular", "CMS"]'
                     />
                   </div>
@@ -1544,7 +1544,7 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                       rows={2}
                     />
                   </div>
@@ -1561,7 +1561,7 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                       rows={2}
                     />
                   </div>
@@ -1578,7 +1578,7 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                       rows={2}
                     />
                   </div>
@@ -1595,7 +1595,7 @@ export default function CareerSection() {
                           e.target.value
                         )
                       }
-                      className="w-full px-2 py-1 text-sm border-2 border-main dark:border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                      className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                       rows={2}
                     />
                   </div>

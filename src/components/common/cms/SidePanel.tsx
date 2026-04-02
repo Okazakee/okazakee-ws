@@ -19,6 +19,8 @@ import {
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import LanguageToggle from '@/components/layout/LanguageToggle';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import { useLayoutStore } from '@/store/layoutStore';
 import { createClient } from '@/utils/supabase/client';
 
@@ -125,7 +127,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
 
       {/* SidePanel */}
       <div
-        className={`w-72 text-lighttext flex flex-col h-full bg-bglight dark:bg-bgdark ${
+        className={`w-72 text-darktext dark:text-lighttext flex flex-col h-full bg-bglight dark:bg-bgdark ${
           onClose
             ? `fixed inset-y-0 right-0 z-50 transform transition-transform duration-300 ease-in-out lg:static lg:transform-none lg:z-auto ${
                 isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
@@ -135,19 +137,19 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
       >
         {/* Mobile Header with Close Button */}
         {onClose && (
-          <div className="p-4 border-b border-darkgray flex-shrink-0 flex items-center justify-between lg:hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0 flex items-center justify-between lg:hidden">
             <div className="flex-1">
               <h1 className="text-xl font-bold text-main mb-1">
                 CMS Dashboard
               </h1>
-              <p className="text-lighttext2 text-xs">
+              <p className="text-gray-500 dark:text-lighttext2 text-xs">
                 Manage your website content
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-lighttext2 hover:text-lighttext transition-colors"
+              className="p-2 text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext transition-colors"
               aria-label="Close menu"
             >
               <X className="w-6 h-6" />
@@ -157,9 +159,9 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
 
         {/* Desktop Header */}
         {!onClose && (
-          <div className="p-4 border-b border-darkgray flex-shrink-0 text-center">
+          <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0 text-center">
             <h1 className="text-xl font-bold text-main mb-1">CMS Dashboard</h1>
-            <p className="text-lighttext2 text-xs">
+            <p className="text-gray-500 dark:text-lighttext2 text-xs">
               Manage your website content
             </p>
           </div>
@@ -167,10 +169,10 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
 
         {/* User Profile Section */}
         {user && (
-          <div className="p-4 border-b border-darkgray flex-shrink-0">
+          <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0">
             <div className="flex items-center gap-3">
               {/* Avatar */}
-              <div className="relative w-12 h-12 rounded-full overflow-hidden bg-darkergray flex-shrink-0">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-darkergray flex-shrink-0">
                 {user.avatarUrl && user.avatarUrl.length > 0 ? (
                   <Image
                     src={user.avatarUrl}
@@ -189,14 +191,14 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
               {/* User Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-lighttext truncate">
+                  <span className="font-semibold text-darktext dark:text-lighttext truncate">
                     {user.displayName}
                   </span>
                   {isAdmin && (
                     <Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />
                   )}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-lighttext2">
+                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-lighttext2">
                   {user.authProvider === 'github' ? (
                     <>
                       <Github className="w-3 h-3" />
@@ -233,7 +235,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
                     className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-left ${
                       activeSection === item.id
                         ? 'bg-main text-white shadow-lg'
-                        : 'bg-darkergray hover:bg-darkgray text-lighttext hover:text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white'
                     }`}
                     onClick={() => handleButtonClick(item.id)}
                   >
@@ -245,14 +247,22 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
           </div>
 
           {/* Account, Home & Logout Buttons */}
-          <div className="px-4 pt-4 pb-4 border-t border-darkgray space-y-2">
+          <div className="px-4 pt-4 pb-4 border-t border-gray-200 dark:border-darkgray space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray rounded-lg p-3 transition-all duration-200">
+                <ThemeToggle compact />
+              </div>
+              <div className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray rounded-lg p-3 transition-all duration-200">
+                <LanguageToggle compact />
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => handleButtonClick('account')}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
                 activeSection === 'account'
                   ? 'bg-main text-white shadow-lg'
-                  : 'bg-darkergray hover:bg-darkgray text-lighttext hover:text-white'
+                  : 'bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white'
               }`}
             >
               <Settings className="w-5 h-5" />
@@ -260,7 +270,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
             </button>
             <a
               href={`/${locale}`}
-              className="w-full flex items-center gap-3 p-3 rounded-lg bg-darkergray hover:bg-darkgray text-lighttext hover:text-white transition-all duration-200"
+              className="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white transition-all duration-200"
             >
               <Home className="w-5 h-5" />
               <span className="font-medium">Home</span>

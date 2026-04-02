@@ -1,10 +1,13 @@
 'use client';
 
-import { Eye, FileText, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
+import '@uiw/react-md-editor/markdown-editor.css';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
-import { PreviewModal } from './PreviewModal';
-import { PrivacyPolicyPreview } from './previews/PrivacyPolicyPreview';
+import useThemeStore from '@/store/themeStore';
+
+const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 type PrivacyPolicyData = {
   language: string;
@@ -13,6 +16,7 @@ type PrivacyPolicyData = {
 };
 
 export default function PrivacyPolicySection() {
+  const { isDark } = useThemeStore();
   const [privacyPolicyData, setPrivacyPolicyData] = useState<
     PrivacyPolicyData[]
   >([]);
@@ -22,7 +26,6 @@ export default function PrivacyPolicySection() {
   const [selectedLocale, setSelectedLocale] = useState<'en' | 'it'>('en');
   const [editedPolicies, setEditedPolicies] = useState<Record<string, string>>({});
   const [originalPolicies, setOriginalPolicies] = useState<Record<string, string>>({});
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
     fetchPrivacyPolicyData();
@@ -68,10 +71,6 @@ export default function PrivacyPolicySection() {
     }
   };
 
-  const handleLocaleChange = (locale: 'en' | 'it') => {
-    setSelectedLocale(locale);
-  };
-
   const getCurrentTranslations = (
     locale: 'en' | 'it'
   ): Record<string, unknown> => {
@@ -85,6 +84,10 @@ export default function PrivacyPolicySection() {
     return Object.keys(editedPolicies).some(
       (locale) => editedPolicies[locale] !== originalPolicies[locale]
     );
+  };
+
+  const localeHasChanges = (locale: string) => {
+    return editedPolicies[locale] !== originalPolicies[locale];
   };
 
   const handleSave = async () => {
@@ -157,18 +160,10 @@ export default function PrivacyPolicySection() {
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           Privacy Policy Editor
         </h1>
-        <p className="text-lighttext2 text-lg mb-4">
+        <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
           Manage your privacy policy content
         </p>
         <div className="flex justify-center gap-3 mt-4">
-          <button
-            type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
-            onClick={() => setIsPreviewOpen(true)}
-          >
-            <Eye className="w-4 h-4" />
-            Preview
-          </button>
           <button
             type="button"
             className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -198,62 +193,48 @@ export default function PrivacyPolicySection() {
         </div>
       </div>
 
-      {/* Locale Selector */}
-      <div className="bg-darkergray rounded-xl p-6 mb-6">
-        <h2 className="text-2xl font-bold text-main mb-4">Select Language</h2>
-        <div className="flex gap-4">
-          {privacyPolicyData.map((data) => (
-            <button
-              type="button"
-              key={data.language}
-              onClick={() => handleLocaleChange(data.language as 'en' | 'it')}
-              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
-                selectedLocale === data.language
-                  ? 'bg-main text-white'
-                  : 'bg-darkestgray text-lighttext hover:bg-darkgray'
-              }`}
-            >
-              {data.language.toUpperCase()}
-            </button>
-          ))}
+      {/* Editor with integrated locale tabs */}
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl overflow-hidden">
+        {/* Tab bar */}
+        <div className="flex items-center border-b border-lighttext2/20">
+          {privacyPolicyData.map((data) => {
+            const isActive = selectedLocale === data.language;
+            const isDirty = localeHasChanges(data.language);
+            return (
+              <button
+                type="button"
+                key={data.language}
+                onClick={() => setSelectedLocale(data.language as 'en' | 'it')}
+                className={`relative flex items-center my-1 gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg mr-1 transition-all duration-200 ${
+                  isActive
+                    ? 'bg-white dark:bg-darkestgray text-main border-b-2 border-main -mb-px'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext hover:bg-gray-200/50 dark:hover:bg-darkestgray/50'
+                }`}
+              >
+                {data.language.toUpperCase()}
+                {isDirty && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-main inline-block" />
+                )}
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* Privacy Policy Editor */}
-      <div className="bg-darkergray rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-main mb-4 flex items-center gap-2">
-          <FileText className="w-5 h-5" />
-          Privacy Policy Content
-        </h2>
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-lighttext2">
-            <FileText className="w-4 h-4" />
-            <span>Markdown content for {selectedLocale.toUpperCase()}</span>
-          </div>
-          <textarea
+        {/* Editor */}
+        <div data-color-mode={isDark ? 'dark' : 'light'}>
+          <MDEditor
             value={editedPolicies[selectedLocale] ?? ''}
-            onChange={(e) =>
+            onChange={(val) =>
               setEditedPolicies((prev) => ({
                 ...prev,
-                [selectedLocale]: e.target.value,
+                [selectedLocale]: val ?? '',
               }))
             }
-            className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y min-h-[500px] font-mono text-sm"
-            placeholder="Enter privacy policy content in markdown format..."
+            height={600}
+            preview="live"
           />
         </div>
       </div>
-
-      <PreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        title="Privacy Policy Preview"
-      >
-        <PrivacyPolicyPreview
-          markdown={editedPolicies[selectedLocale] ?? ''}
-          locale={selectedLocale}
-        />
-      </PreviewModal>
     </div>
   );
 }

@@ -803,13 +803,13 @@ export default function SkillsSection() {
         <h1 className="hidden lg:block text-2xl md:text-3xl lg:text-4xl font-bold text-main mb-2 md:mb-4">
           Skills Section Editor
         </h1>
-        <p className="text-lighttext2 text-sm md:text-base lg:text-lg">
+        <p className="text-gray-500 dark:text-lighttext2 text-sm md:text-base lg:text-lg">
           Manage your skills and categories
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-3 mt-4">
           <button
             type="button"
-            className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
@@ -843,7 +843,7 @@ export default function SkillsSection() {
       </div>
 
       {/* Translations Section */}
-      <div className="bg-darkergray rounded-xl p-4 md:p-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-4 md:p-6">
         <button
           type="button"
           onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
@@ -854,23 +854,23 @@ export default function SkillsSection() {
             Translations
           </h2>
           {isTranslationsExpanded ? (
-            <ChevronUp className="w-5 h-5 text-lighttext2" />
+            <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-lighttext2" />
+            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
           )}
         </button>
 
         {isTranslationsExpanded && (
           <div className="space-y-6 mt-4">
             {/* Locale Tabs */}
-            <div className="flex gap-2 border-b border-darkgray">
+            <div className="flex gap-2 border-b border-gray-200 dark:border-darkgray">
               <button
                 type="button"
                 onClick={() => setTranslationLocale('en')}
                 className={`px-4 py-2 font-medium transition-colors ${
                   translationLocale === 'en'
                     ? 'text-main border-b-2 border-main'
-                    : 'text-lighttext2 hover:text-lighttext'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
                 English
@@ -881,7 +881,7 @@ export default function SkillsSection() {
                 className={`px-4 py-2 font-medium transition-colors ${
                   translationLocale === 'it'
                     ? 'text-main border-b-2 border-main'
-                    : 'text-lighttext2 hover:text-lighttext'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
                 Italian
@@ -895,7 +895,7 @@ export default function SkillsSection() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Title
                   </label>
                   <input
@@ -908,12 +908,12 @@ export default function SkillsSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Skills & Tech Stack"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Subtitle
                   </label>
                   <textarea
@@ -926,18 +926,18 @@ export default function SkillsSection() {
                       )
                     }
                     rows={3}
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
                     placeholder="e.g., This section outlines the ****key technologies****..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Category Names
                   </label>
                   <div className="space-y-2">
                     {categories.map((category) => (
                       <div key={category.id}>
-                        <label className="block text-xs text-lighttext2 mb-1">
+                        <label className="block text-xs text-gray-500 dark:text-lighttext2 mb-1">
                           {category.name}
                         </label>
                         <input
@@ -954,7 +954,7 @@ export default function SkillsSection() {
                               e.target.value
                             )
                           }
-                          className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                          className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                           placeholder={`Translation for ${category.name}`}
                         />
                       </div>
@@ -968,7 +968,7 @@ export default function SkillsSection() {
       </div>
 
       {/* Category Management */}
-      <div className="bg-darkergray rounded-xl p-4 md:p-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-4 md:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-lg md:text-xl font-bold text-main">
             Manage Categories
@@ -991,7 +991,7 @@ export default function SkillsSection() {
               type="text"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
-              className="flex-1 px-3 py-2 bg-darkgray text-lighttext rounded-lg border border-darkgray focus:border-main focus:outline-hidden"
+              className="flex-1 px-3 py-2 bg-white dark:bg-darkgray text-darktext dark:text-lighttext rounded-lg border border-gray-200 dark:border-darkgray focus:border-main focus:outline-hidden"
               placeholder="Category name"
             />
             <button
@@ -1021,7 +1021,7 @@ export default function SkillsSection() {
         {categories.map((category) => (
           <div
             key={category.id}
-            className="bg-darkergray rounded-xl p-4 md:p-6"
+            className="bg-gray-100 dark:bg-darkergray rounded-xl p-4 md:p-6"
           >
             <div className="flex flex-col gap-4 mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -1031,7 +1031,7 @@ export default function SkillsSection() {
                       type="text"
                       defaultValue={category.name}
                       id={`category-name-${category.id}`}
-                      className="flex-1 px-3 py-2 bg-darkgray text-lighttext rounded-lg border border-darkgray focus:border-main focus:outline-hidden text-lg md:text-xl font-bold"
+                      className="flex-1 px-3 py-2 bg-white dark:bg-darkgray text-darktext dark:text-lighttext rounded-lg border border-gray-200 dark:border-darkgray focus:border-main focus:outline-hidden text-lg md:text-xl font-bold"
                     />
                     <button
                       type="button"
@@ -1079,7 +1079,7 @@ export default function SkillsSection() {
                           );
                         }
                       }}
-                      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-lighttext transition-colors"
+                      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -1095,7 +1095,7 @@ export default function SkillsSection() {
                             (cat) => cat.id === category.id
                           ) === 0
                         }
-                        className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 dark:text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move up"
                       >
                         <ArrowUp className="w-4 h-4" />
@@ -1109,7 +1109,7 @@ export default function SkillsSection() {
                           ) ===
                           categories.length - 1
                         }
-                        className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 dark:text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Move down"
                       >
                         <ArrowDown className="w-4 h-4" />
@@ -1129,7 +1129,7 @@ export default function SkillsSection() {
                           )
                         )
                       }
-                      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-lighttext2 hover:text-main transition-colors"
+                      className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 dark:text-lighttext2 hover:text-main transition-colors"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
@@ -1158,17 +1158,17 @@ export default function SkillsSection() {
               {category.skills.map((skill) => (
                 <div
                   key={skill.id}
-                  className="bg-darkestgray rounded-lg p-4 text-center"
+                  className="bg-white dark:bg-darkestgray rounded-lg p-4 text-center"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-lighttext">
+                    <h3 className="text-lg font-semibold text-darktext dark:text-lighttext">
                       {skill.title}
                     </h3>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => toggleEditSkill(category.id, skill.id)}
-                        className="p-2 text-lighttext2 hover:text-main transition-colors"
+                        className="p-2 text-gray-500 dark:text-lighttext2 hover:text-main transition-colors"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
@@ -1217,7 +1217,7 @@ export default function SkillsSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkgray text-darktext dark:text-lighttext rounded-sm border border-gray-200 dark:border-darkgray focus:border-main focus:outline-hidden"
                         placeholder="Skill title"
                       />
                       <input
@@ -1230,7 +1230,7 @@ export default function SkillsSection() {
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden text-xs"
+                        className="w-full px-3 py-2 bg-white dark:bg-darkgray text-darktext dark:text-lighttext rounded-sm border border-gray-200 dark:border-darkgray focus:border-main focus:outline-hidden text-xs"
                         placeholder="https://example.com/icon.svg"
                       />
                       <div className="flex items-center gap-2">
@@ -1250,7 +1250,7 @@ export default function SkillsSection() {
                         />
                         <label
                           htmlFor={`invert-${skill.id}`}
-                          className="text-sm text-lighttext2"
+                          className="text-sm text-gray-500 dark:text-lighttext2"
                         >
                           Invert in dark mode
                         </label>
@@ -1277,10 +1277,10 @@ export default function SkillsSection() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-sm text-lighttext2">
+                      <p className="text-sm text-gray-500 dark:text-lighttext2">
                         Title: {skill.title}
                       </p>
-                      <p className="text-sm text-lighttext2">
+                      <p className="text-sm text-gray-500 dark:text-lighttext2">
                         Invert: {skill.invert ? 'Yes' : 'No'}
                       </p>
                     </div>
@@ -1290,7 +1290,7 @@ export default function SkillsSection() {
 
               {/* New Skill Form */}
               {category.newSkill && (
-                <div className="bg-darkestgray rounded-lg p-4 border-2 border-dashed border-main">
+                <div className="bg-gray-100 dark:bg-darkestgray rounded-lg p-4 border-2 border-dashed border-main">
                   <h3 className="text-lg font-semibold text-main mb-4">
                     New Skill
                   </h3>
@@ -1313,13 +1313,13 @@ export default function SkillsSection() {
                           )
                         )
                       }
-                      className="w-full px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden"
+                      className="w-full px-3 py-2 bg-white dark:bg-darkgray text-darktext dark:text-lighttext rounded-sm border border-gray-200 dark:border-darkgray focus:border-main focus:outline-hidden"
                       placeholder="Skill title"
                     />
 
                     {/* Icon URL */}
                     <div className="space-y-2">
-                      <p className="block text-sm text-lighttext2">Icon URL</p>
+                      <p className="block text-sm text-gray-500 dark:text-lighttext2">Icon URL</p>
                       <div className="flex items-start gap-3">
                         {category.newSkill.icon ? (
                           <Image
@@ -1330,7 +1330,7 @@ export default function SkillsSection() {
                             alt="New skill icon preview"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-darkgray rounded-lg flex items-center justify-center text-lighttext2 text-xs shrink-0">
+                          <div className="w-12 h-12 bg-gray-200 dark:bg-darkgray rounded-lg flex items-center justify-center text-gray-500 dark:text-lighttext2 text-xs shrink-0">
                             No icon
                           </div>
                         )}
@@ -1352,7 +1352,7 @@ export default function SkillsSection() {
                               )
                             )
                           }
-                          className="flex-1 px-3 py-2 bg-darkgray text-lighttext rounded-sm border border-darkgray focus:border-main focus:outline-hidden text-xs"
+                          className="flex-1 px-3 py-2 bg-white dark:bg-darkgray text-darktext dark:text-lighttext rounded-sm border border-gray-200 dark:border-darkgray focus:border-main focus:outline-hidden text-xs"
                           placeholder="https://example.com/icon.svg"
                         />
                       </div>
@@ -1382,7 +1382,7 @@ export default function SkillsSection() {
                       />
                       <label
                         htmlFor={`new-invert-${category.id}`}
-                        className="text-sm text-lighttext2"
+                        className="text-sm text-gray-500 dark:text-lighttext2"
                       >
                         Invert in dark mode
                       </label>

@@ -666,7 +666,7 @@ export default function PortfolioSection() {
           <button
             type="button"
             onClick={closeForm}
-            className="flex items-center gap-2 px-4 py-2 bg-darkgray dark:bg-darkergray text-lighttext rounded-lg hover:bg-darkergray dark:hover:bg-darkestgray transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-darkergray text-darktext dark:text-lighttext rounded-lg hover:bg-gray-300 dark:hover:bg-darkestgray transition-colors"
           >
             <X className="h-4 w-4" />
             Cancel
@@ -689,7 +689,7 @@ export default function PortfolioSection() {
                 type="text"
                 value={formData.title_en}
                 onChange={(e) => handleFormChange('title_en', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="Enter English title"
               />
             </div>
@@ -701,7 +701,7 @@ export default function PortfolioSection() {
                 type="text"
                 value={formData.title_it}
                 onChange={(e) => handleFormChange('title_it', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="Enter Italian title"
               />
             </div>
@@ -718,7 +718,7 @@ export default function PortfolioSection() {
                 onChange={(e) =>
                   handleFormChange('source_link', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="https://github.com/..."
               />
             </div>
@@ -730,7 +730,7 @@ export default function PortfolioSection() {
                 type="url"
                 value={formData.demo_link}
                 onChange={(e) => handleFormChange('demo_link', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="https://demo.example.com"
               />
             </div>
@@ -742,7 +742,7 @@ export default function PortfolioSection() {
                 type="url"
                 value={formData.store_link}
                 onChange={(e) => handleFormChange('store_link', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder="https://play.google.com/..."
               />
             </div>
@@ -758,7 +758,7 @@ export default function PortfolioSection() {
                 onChange={(e) =>
                   handleFormChange('description_en', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
                 placeholder="Enter English description"
               />
@@ -772,7 +772,7 @@ export default function PortfolioSection() {
                 onChange={(e) =>
                   handleFormChange('description_it', e.target.value)
                 }
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
                 placeholder="Enter Italian description"
               />
@@ -787,7 +787,7 @@ export default function PortfolioSection() {
               <textarea
                 value={formData.body_en}
                 onChange={(e) => handleFormChange('body_en', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={5}
                 placeholder="Enter English content"
               />
@@ -799,7 +799,7 @@ export default function PortfolioSection() {
               <textarea
                 value={formData.body_it}
                 onChange={(e) => handleFormChange('body_it', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={5}
                 placeholder="Enter Italian content"
               />
@@ -815,7 +815,7 @@ export default function PortfolioSection() {
                 type="text"
                 value={formData.post_tags}
                 onChange={(e) => handleFormChange('post_tags', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 placeholder={`"tag1" "tag2" "tag3"`}
               />
             </div>
@@ -828,7 +828,7 @@ export default function PortfolioSection() {
                 type="date"
                 value={formData.created_at}
                 onChange={(e) => handleFormChange('created_at', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -839,7 +839,7 @@ export default function PortfolioSection() {
               <select
                 value={formData.author_id}
                 onChange={(e) => handleFormChange('author_id', e.target.value)}
-                className="w-full px-3 py-2 border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary dark:bg-darkergray dark:text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 required
               >
                 <option value="">Select an author</option>
@@ -961,13 +961,13 @@ export default function PortfolioSection() {
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
           Portfolio Section
         </h1>
-        <p className="text-lighttext2 text-lg mb-4">
+        <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
           Manage your portfolio posts
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
@@ -1001,7 +1001,7 @@ export default function PortfolioSection() {
       </div>
 
       {/* Translations Section */}
-      <div className="bg-darkergray rounded-xl p-6 mb-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6 mb-6">
         <button
           type="button"
           onClick={() => setIsTranslationsExpanded(!isTranslationsExpanded)}
@@ -1012,23 +1012,23 @@ export default function PortfolioSection() {
             Translations
           </h2>
           {isTranslationsExpanded ? (
-            <ChevronUp className="w-5 h-5 text-lighttext2" />
+            <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-lighttext2" />
+            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
           )}
         </button>
 
         {isTranslationsExpanded && (
           <div className="space-y-6 mt-4">
             {/* Locale Tabs */}
-            <div className="flex gap-2 border-b border-darkgray">
+            <div className="flex gap-2 border-b border-gray-200 dark:border-darkgray">
               <button
                 type="button"
                 onClick={() => setTranslationLocale('en')}
                 className={`px-4 py-2 font-medium transition-colors ${
                   translationLocale === 'en'
                     ? 'text-main border-b-2 border-main'
-                    : 'text-lighttext2 hover:text-lighttext'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
                 English
@@ -1039,7 +1039,7 @@ export default function PortfolioSection() {
                 className={`px-4 py-2 font-medium transition-colors ${
                   translationLocale === 'it'
                     ? 'text-main border-b-2 border-main'
-                    : 'text-lighttext2 hover:text-lighttext'
+                    : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
                 Italian
@@ -1053,7 +1053,7 @@ export default function PortfolioSection() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Title (Portfolio)
                   </label>
                   <input
@@ -1066,12 +1066,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Portfolio"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Subtitle (Portfolio)
                   </label>
                   <textarea
@@ -1084,12 +1084,12 @@ export default function PortfolioSection() {
                       )
                     }
                     rows={3}
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden resize-y"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
                     placeholder="e.g., This ****selection of projects****..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Button Text
                   </label>
                   <input
@@ -1102,12 +1102,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Explore more"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Demo Label
                   </label>
                   <input
@@ -1120,12 +1120,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Live Demo"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Store Label
                   </label>
                   <input
@@ -1138,12 +1138,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Play Store"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Source Label
                   </label>
                   <input
@@ -1156,12 +1156,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Source Code"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Copy Button Text
                   </label>
                   <input
@@ -1174,12 +1174,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Copy post link"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Pre Copy Text
                   </label>
                   <input
@@ -1192,12 +1192,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Copied!"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     No Posts Message
                   </label>
                   <input
@@ -1210,12 +1210,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., There are no posts available!"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Rate Limit Message
                   </label>
                   <input
@@ -1228,12 +1228,12 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Too many requests! Please wait and retry."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-lighttext mb-2">
+                  <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
                     Searchbar Placeholder
                   </label>
                   <input
@@ -1246,7 +1246,7 @@ export default function PortfolioSection() {
                         e.target.value
                       )
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                     placeholder="e.g., Search posts by title, desc or tag..."
                   />
                 </div>

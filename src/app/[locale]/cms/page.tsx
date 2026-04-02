@@ -226,10 +226,10 @@ export default function CMS() {
   return (
     <>
       {/* Mobile Header - Sticky at top */}
-      <div className="lg:hidden sticky top-0 z-30 bg-bglight dark:bg-bgdark border-b border-darkgray px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden sticky top-0 z-30 bg-bglight dark:bg-bgdark border-b border-gray-200 dark:border-darkgray px-4 py-3 flex items-center justify-between">
         {user && (
           <div className="flex items-center gap-2">
-            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-darkergray flex-shrink-0">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-darkergray flex-shrink-0">
               {user.avatarUrl && user.avatarUrl.length > 0 ? (
                 <Image
                   src={user.avatarUrl}
@@ -255,7 +255,7 @@ export default function CMS() {
         <button
           type="button"
           onClick={() => setIsDrawerOpen(true)}
-          className="p-2 text-lighttext hover:text-main transition-colors"
+          className="p-2 text-darktext dark:text-lighttext hover:text-main transition-colors"
           aria-label="Open menu"
         >
           <Menu className="w-6 h-6" />
@@ -287,7 +287,7 @@ export default function CMS() {
                   <h2 className="text-3xl font-bold text-main mb-4">
                     Settings
                   </h2>
-                  <p className="text-lighttext2">Coming soon...</p>
+                  <p className="text-gray-500 dark:text-lighttext2">Coming soon...</p>
                 </div>
               )}
             </div>

@@ -301,7 +301,7 @@ export default function UsersSection() {
         <h1 className="hidden lg:block text-2xl md:text-3xl lg:text-4xl font-bold text-main mb-2 md:mb-4">
           Manage Users
         </h1>
-        <p className="text-lighttext2 text-sm md:text-base lg:text-lg">
+        <p className="text-gray-500 dark:text-lighttext2 text-sm md:text-base lg:text-lg">
           Control who can access the CMS
         </p>
       </div>
@@ -317,7 +317,7 @@ export default function UsersSection() {
 
       {/* Add User Section */}
       {isAdmin && (
-        <div className="bg-darkergray rounded-xl p-4 md:p-6">
+        <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-4 md:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg md:text-xl font-bold text-main flex items-center gap-2">
               <Plus className="w-5 h-5" />
@@ -345,7 +345,7 @@ export default function UsersSection() {
                   className={`flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg transition-all duration-200 ${
                     addType === 'email'
                       ? 'bg-main text-white'
-                      : 'bg-darkestgray text-lighttext2 hover:bg-darkgray'
+                      : 'bg-white dark:bg-darkestgray text-gray-500 dark:text-lighttext2 hover:bg-gray-100 dark:hover:bg-darkgray'
                   }`}
                 >
                   <Mail className="w-4 h-4" />
@@ -357,7 +357,7 @@ export default function UsersSection() {
                   className={`flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg transition-all duration-200 ${
                     addType === 'github'
                       ? 'bg-main text-white'
-                      : 'bg-darkestgray text-lighttext2 hover:bg-darkgray'
+                      : 'bg-white dark:bg-darkestgray text-gray-500 dark:text-lighttext2 hover:bg-gray-100 dark:hover:bg-darkgray'
                   }`}
                 >
                   <Github className="w-4 h-4" />
@@ -369,7 +369,7 @@ export default function UsersSection() {
                   className={`flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg transition-all duration-200 ${
                     addType === 'dummy'
                       ? 'bg-main text-white'
-                      : 'bg-darkestgray text-lighttext2 hover:bg-darkgray'
+                      : 'bg-white dark:bg-darkestgray text-gray-500 dark:text-lighttext2 hover:bg-gray-100 dark:hover:bg-darkgray'
                   }`}
                 >
                   <User className="w-4 h-4" />
@@ -382,7 +382,7 @@ export default function UsersSection() {
                 <div className="md:col-span-2">
                   <label
                     htmlFor="new-user-input"
-                    className="block text-sm font-medium text-lighttext mb-2"
+                    className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
                     {addType === 'email'
                       ? 'Email Address'
@@ -402,13 +402,13 @@ export default function UsersSection() {
                           ? '@username'
                           : 'John Doe'
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="new-user-role-select"
-                    className="block text-sm font-medium text-lighttext mb-2"
+                    className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
                     Role
                   </label>
@@ -418,7 +418,7 @@ export default function UsersSection() {
                     onChange={(e) =>
                       setNewUserRole(e.target.value as 'admin' | 'editor')
                     }
-                    className="w-full px-3 py-2 bg-darkestgray border border-lighttext2 rounded-lg text-lighttext focus:border-main focus:outline-hidden"
+                    className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                   >
                     <option value="editor">Editor</option>
                     <option value="admin">Admin</option>
@@ -427,7 +427,7 @@ export default function UsersSection() {
               </div>
 
               {/* Info text */}
-              <p className="text-sm text-lighttext2">
+              <p className="text-sm text-gray-500 dark:text-lighttext2">
                 {addType === 'email'
                   ? '📧 An invitation email will be sent automatically. The user will set their password.'
                   : addType === 'github'
@@ -453,7 +453,7 @@ export default function UsersSection() {
                     setNewUserInput('');
                     setError(null);
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-darkestgray hover:bg-darkgray text-lighttext font-medium rounded-lg transition-all duration-200"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-white hover:bg-gray-100 dark:bg-darkestgray dark:hover:bg-darkgray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200"
                 >
                   <X className="w-4 h-4" />
                   Cancel
@@ -472,14 +472,14 @@ export default function UsersSection() {
       )}
 
       {/* Users List */}
-      <div className="bg-darkergray rounded-xl p-4 md:p-6">
+      <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-4 md:p-6">
         <h2 className="text-lg md:text-xl font-bold text-main mb-4 flex items-center gap-2">
           <Users className="w-5 h-5" />
           Allowed Users ({users.length})
         </h2>
 
         {users.length === 0 ? (
-          <div className="text-center py-8 text-lighttext2">
+          <div className="text-center py-8 text-gray-500 dark:text-lighttext2">
             No users in the allowed list yet.
           </div>
         ) : (
@@ -508,7 +508,7 @@ export default function UsersSection() {
               return (
                 <div
                   key={allowedUser.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-darkestgray rounded-lg p-4"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white dark:bg-darkestgray rounded-lg p-4"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Avatar / Icon */}
@@ -520,7 +520,7 @@ export default function UsersSection() {
                             handleAvatarClick(allowedUser.profile!.id)
                           }
                           disabled={isUploadingThis}
-                          className="relative w-10 h-10 rounded-full overflow-hidden bg-darkgray flex-shrink-0 group cursor-pointer"
+                          className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-darkgray flex-shrink-0 group cursor-pointer"
                         >
                           {allowedUser.profile?.avatar_url ? (
                             <Image
@@ -575,7 +575,7 @@ export default function UsersSection() {
                         />
                       </>
                     ) : hasProfile ? (
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden bg-darkgray flex-shrink-0">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-darkgray flex-shrink-0">
                         {allowedUser.profile?.avatar_url ? (
                           <Image
                             src={allowedUser.profile.avatar_url}
@@ -625,7 +625,7 @@ export default function UsersSection() {
                               type="text"
                               value={editedName}
                               onChange={(e) => setEditedName(e.target.value)}
-                              className="w-28 px-1 py-0.5 text-sm bg-darkgray border border-main rounded text-lighttext focus:outline-none"
+                              className="w-28 px-1 py-0.5 text-sm bg-gray-100 dark:bg-darkgray border border-main rounded text-darktext dark:text-lighttext focus:outline-none"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter')
                                   handleSaveName(allowedUser.profile!.id);
@@ -654,7 +654,7 @@ export default function UsersSection() {
                           </div>
                         ) : (
                           <>
-                            <span className="font-medium text-lighttext">
+                            <span className="font-medium text-darktext dark:text-lighttext">
                               {allowedUser.profile?.display_name ||
                                 (allowedUser.email &&
                                 !allowedUser.email.startsWith('dummy-')
@@ -673,7 +673,7 @@ export default function UsersSection() {
                                     allowedUser.profile?.display_name || ''
                                   )
                                 }
-                                className="p-0.5 text-lighttext2 hover:text-main"
+                                className="p-0.5 text-gray-500 dark:text-lighttext2 hover:text-main"
                               >
                                 <Pencil className="w-3 h-3" />
                               </button>
@@ -695,7 +695,7 @@ export default function UsersSection() {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-lighttext2">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-lighttext2">
                         <span
                           className={`px-2 py-0.5 rounded text-xs ${
                             allowedUser.role === 'admin'
@@ -753,7 +753,7 @@ export default function UsersSection() {
                             ? 'Cannot demote the last admin'
                             : undefined
                         }
-                        className="px-2 py-1.5 min-h-[44px] bg-darkgray border border-lighttext2 rounded text-sm text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-2 py-1.5 min-h-[44px] bg-gray-200 dark:bg-darkgray border border-gray-300 dark:border-lighttext2 rounded text-sm text-darktext dark:text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="editor" disabled={isLastAdmin}>
                           Editor

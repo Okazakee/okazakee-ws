@@ -287,7 +287,7 @@ export default function LayoutSection() {
   if (isLoadingTranslations) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lighttext2">Loading translations...</div>
+        <div className="text-gray-500 dark:text-lighttext2">Loading translations...</div>
       </div>
     );
   }
@@ -298,7 +298,7 @@ export default function LayoutSection() {
         <h1 className="hidden lg:block text-4xl font-bold mb-4 text-center">
           Layout Translations
         </h1>
-        <p className="text-lighttext2 text-center mb-8">
+        <p className="text-gray-500 dark:text-lighttext2 text-center mb-8">
           Edit header and footer translations for English and Italian
         </p>
       </div>
@@ -310,7 +310,7 @@ export default function LayoutSection() {
         <button
           type="button"
           onClick={() => setIsPreviewOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-darkgray hover:bg-darkergray text-lighttext font-medium rounded-lg transition-all duration-200 border border-lighttext2/20"
+          className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
         >
           <Eye className="w-4 h-4" />
           Preview
@@ -343,7 +343,7 @@ export default function LayoutSection() {
           className={`px-4 py-2 rounded-lg transition-colors ${
             translationLocale === 'en'
               ? 'bg-main text-white'
-              : 'bg-darkergray text-lighttext hover:bg-darkgray'
+              : 'bg-gray-100 dark:bg-darkergray text-darktext dark:text-lighttext hover:bg-gray-200 dark:hover:bg-darkgray'
           }`}
         >
           English
@@ -354,7 +354,7 @@ export default function LayoutSection() {
           className={`px-4 py-2 rounded-lg transition-colors ${
             translationLocale === 'it'
               ? 'bg-main text-white'
-              : 'bg-darkergray text-lighttext hover:bg-darkgray'
+              : 'bg-gray-100 dark:bg-darkergray text-darktext dark:text-lighttext hover:bg-gray-200 dark:hover:bg-darkgray'
           }`}
         >
           Italiano
@@ -362,7 +362,7 @@ export default function LayoutSection() {
       </div>
 
       {/* Footer Translations */}
-      <div className="mb-6 bg-darkergray rounded-lg p-4">
+      <div className="mb-6 bg-gray-100 dark:bg-darkergray rounded-lg p-4">
         <button
           type="button"
           onClick={() => setIsFooterExpanded(!isFooterExpanded)}
@@ -395,7 +395,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateFooterTranslation('left', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -412,7 +412,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateFooterTranslation('right', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -429,7 +429,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateFooterTranslation('middle', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -446,7 +446,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateFooterTranslation('source', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -463,7 +463,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateFooterTranslation('buttonTitle', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -480,7 +480,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateFooterTranslation('privacyPolicy', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -497,7 +497,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateFooterTranslation('darkmode', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -514,7 +514,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateFooterTranslation('lightmode', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
           </div>
@@ -522,7 +522,7 @@ export default function LayoutSection() {
       </div>
 
       {/* Header Translations */}
-      <div className="mb-6 bg-darkergray rounded-lg p-4">
+      <div className="mb-6 bg-gray-100 dark:bg-darkergray rounded-lg p-4">
         <button
           type="button"
           onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
@@ -555,7 +555,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateHeaderTranslation('theme', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -572,7 +572,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateHeaderTranslation('language', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -589,7 +589,7 @@ export default function LayoutSection() {
                 onChange={(e) =>
                   updateHeaderTranslation('settings', e.target.value)
                 }
-                className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
               />
             </div>
             <div>
@@ -608,7 +608,7 @@ export default function LayoutSection() {
                         updateHeaderButton(index, e.target.value)
                       }
                       placeholder={`Button ${index + 1}`}
-                      className="w-full px-3 py-2 bg-darkgray border border-darktext rounded-lg text-lighttext"
+                      className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
                       aria-label={`Navigation button ${index + 1}`}
                     />
                   )
