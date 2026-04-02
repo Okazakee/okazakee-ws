@@ -219,7 +219,7 @@ async function updateI18nData(
     if (error) throw error;
 
     // Invalidate cache
-    revalidateTag('translations', {})
+    revalidateTag('translations', {});
     revalidateTag('privacy-policy', {});
 
     return { success: true, data };
@@ -279,8 +279,7 @@ async function updateSectionTranslations(
 
     if (error) throw error;
 
-    revalidateTag('translations', {})
-    revalidateTag('privacy-policy', {});
+    revalidateTag('translations', {});
 
     return { success: true, data };
   } catch (error) {

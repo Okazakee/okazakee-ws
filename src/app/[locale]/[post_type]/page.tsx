@@ -47,8 +47,6 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = 86400;
-
 const validPostTypes = ['portfolio', 'blog'];
 
 export async function generateStaticParams() {
@@ -67,7 +65,7 @@ export default async function PostsPage({
 }) {
   const { post_type, locale } = await params;
 
-  const t = await getTranslations('posts-section');
+  const t = await getTranslations({ locale, namespace: 'posts-section' });
 
   // Get posts based on the post_type
   const posts = (await getPosts(post_type)) as PortfolioPost[] | BlogPost[];

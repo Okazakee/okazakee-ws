@@ -27,7 +27,7 @@ export default async function Page({
 
   const post: PostWithAuthor | null = await getPost(id, post_type);
 
-  const t = await getTranslations('posts-section');
+  const t = await getTranslations({ locale, namespace: 'posts-section' });
 
   let ghStars = 0;
 
@@ -316,10 +316,6 @@ export default async function Page({
     </article>
   );
 }
-
-export const revalidate = 86400;
-
-export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const locales = ['en', 'it'];

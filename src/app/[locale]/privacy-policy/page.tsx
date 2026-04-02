@@ -1,7 +1,20 @@
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import { getPrivacyPolicy } from '@/utils/getData';
+
+export function generateStaticParams() {
+  return [{ locale: 'en' }, { locale: 'it' }];
+}
+
+const titles: Record<string, string> = {
+  en: 'Privacy Policy',
+  it: 'Informativa sulla Privacy',
+};
+
+const descriptions: Record<string, string> = {
+  en: 'Privacy Policy for the Okazakee website',
+  it: 'Informativa sulla privacy per il sito Okazakee',
+};
 
 export async function generateMetadata({
   params,
@@ -9,11 +22,12 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'privacyPolicy' });
+  const title = titles[locale] ?? titles.en;
+  const description = descriptions[locale] ?? descriptions.en;
 
   return {
-    title: `${t('title')} | Okazakee`,
-    description: t('description'),
+    title: `${title} | Okazakee`,
+    description,
   };
 }
 
@@ -23,7 +37,6 @@ export default async function PrivacyPolicyPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'privacyPolicy' });
   const privacyPolicy = await getPrivacyPolicy(locale);
 
   if (!privacyPolicy) {
@@ -33,7 +46,9 @@ export default async function PrivacyPolicyPage({
   return (
     <main className="flex flex-col items-center justify-center max-w-(--breakpoint-2xl) mx-auto px-5 py-16">
       <div className="w-full max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8 text-center">{t('title')}</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center">
+          {titles[locale] ?? titles.en}
+        </h1>
         <div className="prose dark:prose-invert max-w-none">
           <MarkdownRenderer markdown={privacyPolicy} />
         </div>

@@ -10,7 +10,7 @@ export default async function PostsSection({ locale }: { locale: string }) {
   const portfolioPosts = await getPortfolioPosts();
   const blogPosts = await getBlogPosts();
 
-  const t = await getTranslations('posts-section');
+  const t = await getTranslations({ locale, namespace: 'posts-section' });
   const sections = ['Portfolio', 'Blog'] as const;
 
   if (!portfolioPosts || !blogPosts)

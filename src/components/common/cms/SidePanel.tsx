@@ -176,6 +176,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
                     src={user.avatarUrl}
                     alt={user.displayName || 'User'}
                     fill
+                    sizes="48px"
                     className="object-cover"
                   />
                 ) : (

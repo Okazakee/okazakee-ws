@@ -5,10 +5,10 @@ import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { getSkillsCategories } from '@/utils/getData';
 
-export default async function Skills() {
+export default async function Skills({ locale }: { locale: string }) {
   const skills_categories = await getSkillsCategories();
 
-  const t = await getTranslations('skills-section');
+  const t = await getTranslations({ locale, namespace: 'skills-section' });
 
   return skills_categories ? (
     <section

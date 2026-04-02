@@ -17,7 +17,7 @@ export default async function Contacts({ locale }: { locale: string }) {
     ? [...contacts].sort((a, b) => a.position - b.position)
     : null;
 
-  const t = await getTranslations('contacts-section');
+  const t = await getTranslations({ locale, namespace: 'contacts-section' });
 
   // Get the correct resume link based on locale
   const resumeLink = resumeData

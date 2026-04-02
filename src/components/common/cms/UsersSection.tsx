@@ -527,6 +527,7 @@ export default function UsersSection() {
                               src={allowedUser.profile.avatar_url}
                               alt={allowedUser.profile.display_name || 'User'}
                               fill
+                              sizes="40px"
                               className="object-cover"
                             />
                           ) : (
@@ -580,6 +581,7 @@ export default function UsersSection() {
                             src={allowedUser.profile.avatar_url}
                             alt={allowedUser.profile.display_name || 'User'}
                             fill
+                            sizes="40px"
                             className="object-cover"
                           />
                         ) : (

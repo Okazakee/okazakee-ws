@@ -34,8 +34,6 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = 86400;
-
 export async function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'it' }];
 }
@@ -49,11 +47,11 @@ export default async function Home({
 
   return (
     <main className="mx-auto md:max-w-7xl mt-10 md:mt-0">
-      <Hero />
+      <Hero locale={locale} />
 
-      <Skills />
+      <Skills locale={locale} />
 
-      <Career />
+      <Career locale={locale} />
 
       <PostsSection locale={locale} />
 

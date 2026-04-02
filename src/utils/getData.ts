@@ -14,18 +14,18 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 
 // Initialize Supabase client
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
+const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 const production = JSON.parse(process.env.UMAMI_ENABLED || 'false');
 
-const revalTime = production ? 3600 : 60;
+const revalTime = production ? 86400 : 60;
 
 const getCurrentTime = () => new Date().toISOString();
 
 export async function getTranslationsSupabase(locale: string) {
   'use cache';
   cacheTag('translations');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const { data, error } = await supabase
     .from('i18n_translations')
@@ -48,7 +48,7 @@ export async function getTranslationsSupabase(locale: string) {
 export async function getPrivacyPolicy(locale: string): Promise<string | null> {
   'use cache';
   cacheTag('privacy-policy');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const { data, error } = await supabase
     .from('i18n_translations')
@@ -71,7 +71,7 @@ export async function getPrivacyPolicy(locale: string): Promise<string | null> {
 export async function getHeroSection(): Promise<HeroSection | null> {
   'use cache';
   cacheTag('hero');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const { data, error } = await supabase
     .from('hero_section')
@@ -93,7 +93,7 @@ export async function getHeroSection(): Promise<HeroSection | null> {
 export async function getSkillsCategories(): Promise<SkillsCategory[] | null> {
   'use cache';
   cacheTag('skills');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const { data, error } = await supabase
     .from('skills_categories')
@@ -123,7 +123,7 @@ export async function getSkillsCategories(): Promise<SkillsCategory[] | null> {
 export async function getPortfolioPosts(): Promise<PortfolioPost[] | null> {
   'use cache';
   cacheTag('portfolio');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   let query = supabase.from('portfolio_posts').select('*').limit(3);
 
@@ -144,7 +144,7 @@ export async function getPortfolioPosts(): Promise<PortfolioPost[] | null> {
 export async function getBlogPosts(): Promise<BlogPost[] | null> {
   'use cache';
   cacheTag('blog');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   let query = supabase.from('blog_posts').select('*').limit(3);
 
@@ -165,7 +165,7 @@ export async function getBlogPosts(): Promise<BlogPost[] | null> {
 export async function getContacts(): Promise<Contact[] | null> {
   'use cache';
   cacheTag('contacts');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const { data, error } = await supabase.from('contacts').select('*');
 
@@ -185,7 +185,7 @@ export async function getPosts(
 ): Promise<BlogPost[] | PortfolioPost[] | null> {
   'use cache';
   cacheTag('posts');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
 
@@ -234,7 +234,7 @@ export async function getPost(
 ): Promise<PostWithAuthor | null> {
   'use cache';
   cacheTag('post');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 
@@ -277,7 +277,7 @@ export async function getResumeLink(
   'use cache';
   cacheTag('resume');
   cacheTag('hero_section');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const { data, error } = await supabase
     .from('hero_section')
@@ -303,7 +303,7 @@ export async function getResumeLink(
 export async function getCareerEntries(): Promise<CareerEntry[] | null> {
   'use cache';
   cacheTag('career');
-  cacheLife({ revalidate: revalTime });
+  cacheLife({ expire: revalTime });
 
   const { data, error } = await supabase
     .from('career_entries')

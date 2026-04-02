@@ -19,10 +19,10 @@ const PebbleClipPath = () => (
   </svg>
 );
 
-export default async function Hero() {
+export default async function Hero({ locale }: { locale: string }) {
   const heroSection = await getHeroSection();
 
-  const t = await getTranslations('hero-section');
+  const t = await getTranslations({ locale, namespace: 'hero-section' });
 
   if (!heroSection) return <ErrorDiv>Error loading Hero data</ErrorDiv>;
 

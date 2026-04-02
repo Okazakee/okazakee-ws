@@ -1,3 +1,4 @@
+'use client';
 import Markdown from 'markdown-to-jsx';
 import NextImage from '@/components/layout/NextImage';
 import PreCustom, { type PreChild } from './PreCustom';

@@ -184,6 +184,7 @@ export default function AccountSection() {
                     src={user.avatarUrl}
                     alt={user.displayName || 'User'}
                     fill
+                    sizes="96px"
                     className="object-cover"
                   />
                 ) : (

@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
 
+export function generateStaticParams() {
+  return [{ locale: 'en' }, { locale: 'it' }];
+}
+
 export const metadata: Metadata = {
   title: 'CMS - Dashboard',
   description: 'Content Management System Dashboard',

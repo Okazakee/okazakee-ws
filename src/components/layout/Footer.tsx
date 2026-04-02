@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import CopyLinkButton from '../common/CopyButton';
 
 export default async function Footer({ locale }: { locale: string }) {
-  const t = await getTranslations('footer');
+  const t = await getTranslations({ locale, namespace: 'footer' });
 
   return (
     <footer className="border-t border-darktext dark:border-lighttext">

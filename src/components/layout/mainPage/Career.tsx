@@ -26,9 +26,9 @@ interface CareerEntry {
   [key: `company_description_${string}`]: string;
 }
 
-export default async function Career() {
+export default async function Career({ locale }: { locale: string }) {
   const careerEntries = (await getCareerEntries()) as unknown as CareerEntry[];
-  const t = await getTranslations('career-section');
+  const t = await getTranslations({ locale, namespace: 'career-section' });
 
   const formatDate = (dateString: MomentInput) => {
     if (!dateString) return t('present');
@@ -109,7 +109,6 @@ export default async function Career() {
           {groupedEntries.map((companyGroup, index) => {
             const isEven = index % 2 === 0;
             const _isLast = index === groupedEntries.length - 1;
-            const locale = t('locale');
             const latestPosition = companyGroup.positions[0]; // Most recent position
             const olderPositions = companyGroup.positions.slice(1);
 
