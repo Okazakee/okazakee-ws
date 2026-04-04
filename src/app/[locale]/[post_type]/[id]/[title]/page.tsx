@@ -1,10 +1,10 @@
 import { getPost, getPosts, type PostWithAuthor } from '@utils/getData';
 import { CirclePlay, Clock, ExternalLink, Github, Star } from 'lucide-react';
-import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import FormattedDate from '@/components/common/FormattedDate';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
@@ -65,8 +65,6 @@ export default async function Page({
   const localeKey = `body_${locale}` as keyof typeof post;
 
   const postDescription = `description_${locale}` as keyof typeof post;
-
-  const formattedDate = moment(post?.created_at).format('DD/MM/YYYY');
 
   const postURL = `${process.env.DOMAIN_URL}/${locale}/${post_type}/${id}/${slugifiedTitle}`;
 
@@ -188,7 +186,9 @@ export default async function Page({
 
         <div className="flex items-center text-darktext dark:text-lighttext">
           <Clock size={20} className="mr-2" />
-          <span className="mt-0.5">{formattedDate}</span>
+          <span className="mt-0.5">
+            <FormattedDate date={post?.created_at} />
+          </span>
         </div>
 
         {post_type === 'portfolio' && (
