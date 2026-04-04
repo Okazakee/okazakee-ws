@@ -264,15 +264,15 @@ export default function CMS() {
       </div>
 
       {/* CMS Content Area */}
-      <div className="bg-bglight dark:bg-bgdark flex-1 min-h-0 overflow-hidden md:mb-20">
+      <div className="bg-bglight dark:bg-bgdark flex-1 min-h-0 overflow-hidden">
         {/* Mobile: Natural flow, Desktop: Fixed sidebar layout */}
         <div className="flex flex-col lg:flex-row max-w-(--breakpoint-2xl) mx-auto h-full">
           <SidePanel
             isOpen={isDrawerOpen}
             onClose={() => setIsDrawerOpen(false)}
           />
-          <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 lg:p-8 pt-8 md:pt-6 lg:pt-8 pb-28">
-            <div className="max-w-4xl mx-auto">
+          <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 lg:p-8 pt-8 md:pt-6 lg:pt-8">
+            <div className="max-w-4xl mx-auto md:mb-20">
               {activeSection === 'hero' && <HeroSection />}
               {activeSection === 'skills' && <SkillsSection />}
               {activeSection === 'career' && <CareerSection />}
