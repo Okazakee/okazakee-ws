@@ -16,9 +16,9 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import LanguageToggle from '@/components/layout/LanguageToggle';
 import ThemeToggle from '@/components/layout/ThemeToggle';
@@ -156,8 +156,8 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
       <div
         className={`w-72 text-darktext dark:text-lighttext flex flex-col h-full bg-bglight dark:bg-bgdark ${
           onClose
-            ? `fixed inset-y-0 right-0 z-50 transform transition-transform duration-300 ease-in-out lg:static lg:transform-none lg:z-auto ${
-                isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
+            ? `fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:static lg:transform-none lg:z-auto ${
+                isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
               }`
             : 'relative'
         }`}
@@ -278,12 +278,8 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
           {/* Account, Home & Logout Buttons */}
           <div className="px-4 pt-4 pb-4 border-t border-gray-200 dark:border-darkgray space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray rounded-lg p-3 transition-all duration-200">
-                <ThemeToggle compact />
-              </div>
-              <div className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray rounded-lg p-3 transition-all duration-200">
-                <LanguageToggle compact />
-              </div>
+              <ThemeToggle sidebar />
+              <LanguageToggle sidebar />
             </div>
             <button
               type="button"

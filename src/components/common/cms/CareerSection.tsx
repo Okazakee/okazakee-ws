@@ -14,8 +14,8 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { careerActions } from '@/app/actions/cms/sections/careerActions';
@@ -700,17 +700,17 @@ export default function CareerSection() {
 
   return (
     <div className="space-y-6 mb-8 md:mb-0 lg:mt-0">
-      <div className="text-center mb-8">
-        <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="hidden lg:block text-2xl md:text-3xl lg:text-4xl font-bold text-main mb-2 md:mb-4">
           {t('career.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
           {t('career.subtitle')}
         </p>
-        <div className="flex justify-center gap-3 mt-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 mt-4">
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
+            className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
@@ -718,7 +718,7 @@ export default function CareerSection() {
           </button>
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!hasChanges() || isUpdating}
             onClick={cancelAllChanges}
           >
@@ -727,7 +727,7 @@ export default function CareerSection() {
           </button>
           <button
             type="button"
-            className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!hasChanges() || isUpdating}
             onClick={applyAllChanges}
           >

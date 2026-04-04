@@ -6,8 +6,10 @@ import useThemeStore, { type ThemeMode } from '@/store/themeStore';
 
 export default function ThemeToggle({
   compact = false,
+  sidebar = false,
 }: {
   compact?: boolean;
+  sidebar?: boolean;
 }) {
   const { mode, setThemeMode } = useThemeStore();
   const [mounted, setMounted] = useState(false);
@@ -60,6 +62,26 @@ export default function ThemeToggle({
     const nextIndex = (currentIndex + 1) % modes.length;
     setThemeMode(modes[nextIndex]);
   };
+
+  if (sidebar) {
+    const SidebarIcon =
+      mode === 'light' ? Sun : mode === 'dark' ? Moon : Smartphone;
+    return (
+      <button
+        type="button"
+        onClick={cycleThemeMode}
+        className="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white transition-all duration-200"
+        data-umami-event="Theme toggle"
+      >
+        <SidebarIcon className="w-4 h-4 flex-shrink-0" />
+        <span className="font-medium text-sm truncate">
+          {mode === 'auto' && 'Auto'}
+          {mode === 'light' && 'Light'}
+          {mode === 'dark' && 'Dark'}
+        </span>
+      </button>
+    );
+  }
 
   if (compact) {
     return (

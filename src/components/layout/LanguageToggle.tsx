@@ -1,12 +1,15 @@
 'use client';
 
+import { Languages } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function LanguageToggle({
   compact = false,
+  sidebar = false,
 }: {
   compact?: boolean;
+  sidebar?: boolean;
 }) {
   const pathname = usePathname();
   const _router = useRouter();
@@ -28,6 +31,22 @@ export default function LanguageToggle({
   }, [pathname, isItalian]);
 
   if (!mounted) return null;
+
+  if (sidebar) {
+    return (
+      <button
+        type="button"
+        onClick={switchLanguage}
+        className="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white transition-all duration-200"
+        data-umami-event="Language toggle"
+      >
+        <Languages className="w-4 h-4 flex-shrink-0" />
+        <span className="font-medium text-sm truncate">
+          {isItalian ? 'Italiano' : 'English'}
+        </span>
+      </button>
+    );
+  }
 
   // Use compact styling when in desktop header
   const buttonClass = compact

@@ -298,11 +298,11 @@ export default function LayoutSection() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 mb-8 md:mb-0 lg:mt-0">
-      <div className="mb-8">
-        <h1 className="hidden lg:block text-4xl font-bold mb-4 text-center">
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="hidden lg:block text-2xl md:text-3xl lg:text-4xl font-bold text-main mb-2 md:mb-4">
           {t('layout.title')}
         </h1>
-        <p className="text-gray-500 dark:text-lighttext2 text-center mb-8">
+        <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
           {t('layout.subtitle')}
         </p>
       </div>
@@ -310,11 +310,11 @@ export default function LayoutSection() {
       {error && <ErrorDiv>{error}</ErrorDiv>}
 
       {/* Action Buttons */}
-      <div className="flex justify-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row justify-center gap-3 mb-6">
         <button
           type="button"
           onClick={() => setIsPreviewOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
+          className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
         >
           <Eye className="w-4 h-4" />
           {t('common.preview')}
@@ -323,7 +323,7 @@ export default function LayoutSection() {
           type="button"
           onClick={handleCancel}
           disabled={!hasChanges() || isUpdating}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="w-4 h-4" />
           {t('common.cancel')}
@@ -332,7 +332,7 @@ export default function LayoutSection() {
           type="button"
           onClick={handleApply}
           disabled={!hasChanges() || isUpdating}
-          className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="w-4 h-4" />
           {isUpdating ? t('common.applying') : t('common.applyChanges')}
@@ -606,21 +606,16 @@ export default function LayoutSection() {
               </div>
               <div className="space-y-2">
                 {headerTranslations[translationLocale].buttons.map(
-                  (button, index) => (
+                  (button, idx) => (
                     <input
-                      key={index}
-                      id={`header-button-${index}-input`}
+                      key={idx}
+                      id={`header-button-${idx}-input`}
                       type="text"
                       value={button}
-                      onChange={(e) =>
-                        updateHeaderButton(index, e.target.value)
-                      }
-                      placeholder={t('layout.headerButtonPlaceholder').replace(
-                        '{index}',
-                        String(index + 1)
-                      )}
+                      onChange={(e) => updateHeaderButton(idx, e.target.value)}
+                      placeholder={`Navigation button ${idx + 1}`}
                       className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
-                      aria-label={`Navigation button ${index + 1}`}
+                      aria-label={`Navigation button ${idx + 1}`}
                     />
                   )
                 )}

@@ -1,8 +1,8 @@
 'use client';
 
 import { Menu } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { getUser } from '@/app/actions/cms/getUser';
 import { heroActions } from '@/app/actions/cms/sections/heroActions';
@@ -225,9 +225,9 @@ export default function CMS() {
   }
 
   return (
-    <>
+    <div className="h-screen flex flex-col">
       {/* Mobile Header - Sticky at top */}
-      <div className="lg:hidden sticky top-0 z-30 bg-bglight dark:bg-bgdark border-b border-gray-200 dark:border-darkgray px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden flex-shrink-0 z-30 bg-bglight dark:bg-bgdark border-b border-gray-200 dark:border-darkgray px-4 py-3 flex items-center justify-between">
         {user && (
           <div className="flex items-center gap-2">
             <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-darkergray flex-shrink-0">
@@ -264,14 +264,14 @@ export default function CMS() {
       </div>
 
       {/* CMS Content Area */}
-      <div className="bg-bglight dark:bg-bgdark">
+      <div className="bg-bglight dark:bg-bgdark flex-1 min-h-0 overflow-hidden md:mb-20">
         {/* Mobile: Natural flow, Desktop: Fixed sidebar layout */}
-        <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-80px)] max-w-(--breakpoint-2xl) mx-auto">
+        <div className="flex flex-col lg:flex-row max-w-(--breakpoint-2xl) mx-auto h-full">
           <SidePanel
             isOpen={isDrawerOpen}
             onClose={() => setIsDrawerOpen(false)}
           />
-          <main className="flex-1 lg:overflow-y-auto p-4 md:p-6 lg:p-8 pt-8 md:pt-6 lg:pt-8 pb-20 md:pb-12 lg:pb-8">
+          <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 lg:p-8 pt-8 md:pt-6 lg:pt-8 pb-28">
             <div className="max-w-4xl mx-auto">
               {activeSection === 'hero' && <HeroSection />}
               {activeSection === 'skills' && <SkillsSection />}
@@ -297,6 +297,6 @@ export default function CMS() {
           </main>
         </div>
       </div>
-    </>
+    </div>
   );
 }
