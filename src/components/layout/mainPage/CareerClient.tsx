@@ -6,6 +6,7 @@ import { Calendar, MapPin } from 'lucide-react';
 import moment, { type MomentInput } from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 
@@ -28,14 +29,13 @@ interface CareerEntry {
 interface CareerClientProps {
   careerEntries: CareerEntry[];
   locale: string;
-  t: (key: string) => string;
 }
 
 export function CareerClient({
   careerEntries,
   locale,
-  t,
 }: CareerClientProps) {
+  const t = useTranslations('career-section');
   const formatDate = (dateString: MomentInput) => {
     if (!dateString) return t('present');
     return moment(dateString).format('MMM YYYY');

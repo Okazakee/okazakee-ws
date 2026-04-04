@@ -21,11 +21,10 @@ interface CareerEntry {
 
 export default async function Career({ locale }: { locale: string }) {
   const careerEntries = (await getCareerEntries()) as unknown as CareerEntry[];
-  const t = await getTranslations({ locale, namespace: 'career-section' });
 
   if (!careerEntries) {
     return <ErrorDiv>Error loading Career data</ErrorDiv>;
   }
 
-  return <CareerClient careerEntries={careerEntries} locale={locale} t={t} />;
+  return <CareerClient careerEntries={careerEntries} locale={locale} />;
 }
