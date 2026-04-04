@@ -1,6 +1,7 @@
 'use client';
 
 import { Menu } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { getUser } from '@/app/actions/cms/getUser';
@@ -19,25 +20,27 @@ import UsersSection from '@/components/common/cms/UsersSection';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useLayoutStore } from '@/store/layoutStore';
 
-const sectionLabels: Record<string, string> = {
-  hero: 'Hero Section',
-  skills: 'Skills',
-  career: 'Career',
-  portfolio: 'Portfolio',
-  blog: 'Blog',
-  contacts: 'Contacts',
-  layout: 'Layout',
-  'privacy-policy': 'Privacy Policy',
-  users: 'Manage Users',
-  account: 'My Account',
-  settings: 'Settings',
-};
+// sectionLabels is built inside the component using t()
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
 export default function CMS() {
+  const t = useTranslations('cms');
+  const sectionLabels: Record<string, string> = {
+    hero: t('page.sectionLabels.hero'),
+    skills: t('page.sectionLabels.skills'),
+    career: t('page.sectionLabels.career'),
+    portfolio: t('page.sectionLabels.portfolio'),
+    blog: t('page.sectionLabels.blog'),
+    contacts: t('page.sectionLabels.contacts'),
+    layout: t('page.sectionLabels.layout'),
+    'privacy-policy': t('page.sectionLabels.privacy-policy'),
+    users: t('page.sectionLabels.users'),
+    account: t('page.sectionLabels.account'),
+    settings: t('page.sectionLabels.settings'),
+  };
   const {
     setUser,
     activeSection,
@@ -83,7 +86,7 @@ export default function CMS() {
         }
 
         if (!fetchedUser) {
-          throw new Error('Authentication not ready yet. Please try again.');
+          throw new Error(t('page.authError'));
         }
         setUser(fetchedUser);
 
@@ -171,9 +174,7 @@ export default function CMS() {
         setCanShowError(false);
       } catch (err) {
         if (cancelled) return;
-        setError(
-          err instanceof Error ? err.message : 'Failed to initialize CMS'
-        );
+        setError(err instanceof Error ? err.message : t('page.initError'));
 
         // Keep showing the full-page spinner until 5s have elapsed since init started
         const elapsed = Date.now() - startedAt;
@@ -249,7 +250,7 @@ export default function CMS() {
           <h1 className="text-lg font-bold text-main">
             {activeSection
               ? sectionLabels[activeSection] || 'CMS Dashboard'
-              : 'CMS Dashboard'}
+              : t('page.cmsDashboard')}
           </h1>
         </div>
         <button
@@ -285,9 +286,11 @@ export default function CMS() {
               {activeSection === 'settings' && (
                 <div className="text-center py-12">
                   <h2 className="text-3xl font-bold text-main mb-4">
-                    Settings
+                    {t('page.settingsTitle')}
                   </h2>
-                  <p className="text-gray-500 dark:text-lighttext2">Coming soon...</p>
+                  <p className="text-gray-500 dark:text-lighttext2">
+                    {t('page.settingsComingSoon')}
+                  </p>
                 </div>
               )}
             </div>

@@ -14,6 +14,7 @@ import {
   User,
   X,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import type React from 'react';
@@ -67,6 +68,7 @@ type EditableBlogPost = BlogPost & {
 };
 
 export default function BlogSection() {
+  const t = useTranslations('cms');
   const [blogPosts, setBlogPosts] = useState<EditableBlogPost[]>([]);
   const [originalPosts, setOriginalPosts] = useState<EditableBlogPost[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -256,7 +258,7 @@ export default function BlogSection() {
 
   const handleCreateBlog = () => {
     if (!formImage) {
-      setError('Please select an image for the blog post');
+      setError(t('blog.selectImage'));
       return;
     }
 
@@ -319,7 +321,7 @@ export default function BlogSection() {
   };
 
   const handleDeleteBlog = (postId: number) => {
-    if (!confirm('Are you sure you want to delete this blog post?')) return;
+    if (!confirm(t('common.confirmDelete'))) return;
 
     // Check if it's a new post (temp ID)
     const isNewPost = newPosts.some((np) => np.post.id === postId);
@@ -390,11 +392,7 @@ export default function BlogSection() {
   };
 
   const cancelAllChanges = () => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
-      )
-    ) {
+    if (!confirm(t('common.confirmCancel'))) {
       return;
     }
 
@@ -584,7 +582,7 @@ export default function BlogSection() {
       setNewPosts([]);
       setDeletedPosts(new Set());
 
-      alert('All changes applied successfully!');
+      alert(`${t('common.applyChanges')}!`);
     } catch (error) {
       console.error('Error applying changes:', error);
       // Roll back created posts and their images (reverse order)
@@ -592,9 +590,7 @@ export default function BlogSection() {
         const { postId, imagePath } = createdForRollback[i];
         await blogActions({ type: 'ROLLBACK_CREATE', postId, imagePath });
       }
-      setError(
-        error instanceof Error ? error.message : 'Failed to apply changes'
-      );
+      setError(error instanceof Error ? error.message : t('common.apply'));
     } finally {
       setIsUpdating(false);
     }
@@ -630,7 +626,7 @@ export default function BlogSection() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
-            {isEditing ? 'Edit Blog Post' : 'Create New Blog Post'}
+            {isEditing ? t('blog.editPost') : t('blog.createNewPost')}
           </h2>
           <button
             type="button"
@@ -638,7 +634,7 @@ export default function BlogSection() {
             className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-darkergray text-darktext dark:text-lighttext rounded-lg hover:bg-gray-300 dark:hover:bg-darkestgray transition-colors"
           >
             <X className="h-4 w-4" />
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
 
@@ -655,7 +651,7 @@ export default function BlogSection() {
                 htmlFor="blog-title-en-input"
                 className="block text-sm font-medium text-main mb-1"
               >
-                English Title
+                {t('blog.titleEnLabel')}
               </label>
               <input
                 id="blog-title-en-input"
@@ -663,7 +659,7 @@ export default function BlogSection() {
                 value={formData.title_en}
                 onChange={(e) => handleFormChange('title_en', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="Enter English title"
+                placeholder={t('blog.titleEnPlaceholder')}
               />
             </div>
             <div>
@@ -671,7 +667,7 @@ export default function BlogSection() {
                 htmlFor="blog-title-it-input"
                 className="block text-sm font-medium text-main mb-1"
               >
-                Italian Title
+                {t('blog.titleItLabel')}
               </label>
               <input
                 id="blog-title-it-input"
@@ -679,7 +675,7 @@ export default function BlogSection() {
                 value={formData.title_it}
                 onChange={(e) => handleFormChange('title_it', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="Enter Italian title"
+                placeholder={t('blog.titleItPlaceholder')}
               />
             </div>
           </div>
@@ -690,7 +686,7 @@ export default function BlogSection() {
                 htmlFor="blog-description-en-input"
                 className="block text-sm font-medium text-main mb-1"
               >
-                English Description
+                {t('blog.descriptionEnLabel')}
               </label>
               <textarea
                 id="blog-description-en-input"
@@ -700,7 +696,7 @@ export default function BlogSection() {
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
-                placeholder="Enter English description"
+                placeholder={t('blog.descriptionEnPlaceholder')}
               />
             </div>
             <div>
@@ -708,7 +704,7 @@ export default function BlogSection() {
                 htmlFor="blog-description-it-input"
                 className="block text-sm font-medium text-main mb-1"
               >
-                Italian Description
+                {t('blog.descriptionItLabel')}
               </label>
               <textarea
                 id="blog-description-it-input"
@@ -718,7 +714,7 @@ export default function BlogSection() {
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
-                placeholder="Enter Italian description"
+                placeholder={t('blog.descriptionItPlaceholder')}
               />
             </div>
           </div>
@@ -729,7 +725,7 @@ export default function BlogSection() {
                 htmlFor="blog-content-en-input"
                 className="block text-sm font-medium text-main mb-1"
               >
-                English Content
+                {t('blog.bodyEnLabel')}
               </label>
               <textarea
                 id="blog-content-en-input"
@@ -737,7 +733,7 @@ export default function BlogSection() {
                 onChange={(e) => handleFormChange('body_en', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={5}
-                placeholder="Enter English content"
+                placeholder={t('blog.bodyEnPlaceholder')}
               />
             </div>
             <div>
@@ -745,7 +741,7 @@ export default function BlogSection() {
                 htmlFor="blog-content-it-input"
                 className="block text-sm font-medium text-main mb-1"
               >
-                Italian Content
+                {t('blog.bodyItLabel')}
               </label>
               <textarea
                 id="blog-content-it-input"
@@ -753,7 +749,7 @@ export default function BlogSection() {
                 onChange={(e) => handleFormChange('body_it', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={5}
-                placeholder="Enter Italian content"
+                placeholder={t('blog.bodyItPlaceholder')}
               />
             </div>
           </div>
@@ -843,7 +839,7 @@ export default function BlogSection() {
                     className="mx-auto rounded-lg object-cover"
                   />
                   <p className="text-sm text-darktext dark:text-lighttext2">
-                    {formImage ? formImage.name : 'Current image'}
+                    {formImage ? formImage.name : t('blog.changeImage')}
                   </p>
                 </div>
               ) : (
@@ -865,7 +861,7 @@ export default function BlogSection() {
                 htmlFor="blog-image-upload"
                 className="mt-2 inline-block px-4 py-2 bg-secondary text-white rounded-lg cursor-pointer hover:bg-tertiary transition-colors border-2 border-secondary hover:border-tertiary"
               >
-                {currentImage ? 'Change Image' : 'Select Image'}
+                {currentImage ? t('blog.changeImage') : t('blog.selectImage')}
               </label>
             </div>
           </div>
@@ -877,7 +873,7 @@ export default function BlogSection() {
               className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
             >
               <X className="h-4 w-4" />
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -885,14 +881,14 @@ export default function BlogSection() {
               className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-tertiary text-white rounded-lg transition-colors"
             >
               <Eye className="h-4 w-4" />
-              Preview Post
+              {t('blog.previewPost')}
             </button>
             <button
               type="button"
               onClick={isEditing ? handleUpdateBlog : handleCreateBlog}
               className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white rounded-lg transition-colors"
             >
-              Done
+              {t('common.done')}
             </button>
           </div>
         </div>
@@ -900,7 +896,7 @@ export default function BlogSection() {
         <PreviewModal
           isOpen={isPostPreviewOpen}
           onClose={() => setIsPostPreviewOpen(false)}
-          title="Post Preview"
+          title={t('blog.postPreviewTitle')}
         >
           <PostPreview
             formData={formData}
@@ -924,9 +920,11 @@ export default function BlogSection() {
     <div className="space-y-6 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-8">
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
-          Blog Section
+          {t('blog.title')}
         </h1>
-        <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">Manage your blog posts</p>
+        <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
+          {t('blog.subtitle')}
+        </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
             type="button"
@@ -934,7 +932,7 @@ export default function BlogSection() {
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
-            Preview
+            {t('common.preview')}
           </button>
           <button
             type="button"
@@ -943,7 +941,7 @@ export default function BlogSection() {
             onClick={cancelAllChanges}
           >
             <X className="w-4 h-4" />
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -954,10 +952,10 @@ export default function BlogSection() {
             {isUpdating ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Applying Changes...
+                {t('common.applying')}
               </>
             ) : (
-              'Apply Changes'
+              t('common.applyChanges')
             )}
           </button>
         </div>
@@ -972,7 +970,7 @@ export default function BlogSection() {
         >
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            Translations
+            {t('common.translations')}
           </h2>
           {isTranslationsExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
@@ -994,7 +992,7 @@ export default function BlogSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                English
+                {t('common.english')}
               </button>
               <button
                 type="button"
@@ -1005,7 +1003,7 @@ export default function BlogSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                Italian
+                {t('common.italian')}
               </button>
             </div>
 
@@ -1020,7 +1018,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-title-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Title (Blog)
+                    {t('blog.translationTitleLabel')}
                   </label>
                   <input
                     id="blog-translation-title-input"
@@ -1042,7 +1040,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-subtitle-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Subtitle (Blog)
+                    {t('blog.translationSubtitleLabel')}
                   </label>
                   <textarea
                     id="blog-translation-subtitle-input"
@@ -1064,7 +1062,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-button-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Button Text
+                    {t('blog.buttonTextLabel')}
                   </label>
                   <input
                     id="blog-translation-button-input"
@@ -1078,7 +1076,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Explore more"
+                    placeholder={t('blog.exploreMorePlaceholder')}
                   />
                 </div>
                 <div>
@@ -1086,7 +1084,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-demo-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Demo Label
+                    {t('blog.demoLabelLabel')}
                   </label>
                   <input
                     id="blog-translation-demo-input"
@@ -1100,7 +1098,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Live Demo"
+                    placeholder={t('blog.liveDemoPlaceholder')}
                   />
                 </div>
                 <div>
@@ -1108,7 +1106,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-store-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Store Label
+                    {t('blog.storeLabelLabel')}
                   </label>
                   <input
                     id="blog-translation-store-input"
@@ -1122,7 +1120,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Play Store"
+                    placeholder={t('blog.playStorePlaceholder')}
                   />
                 </div>
                 <div>
@@ -1130,7 +1128,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-source-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Source Label
+                    {t('blog.sourceLabelLabel')}
                   </label>
                   <input
                     id="blog-translation-source-input"
@@ -1144,7 +1142,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Source Code"
+                    placeholder={t('blog.sourceCodePlaceholder')}
                   />
                 </div>
                 <div>
@@ -1152,7 +1150,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-copy-button-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Copy Button Text
+                    {t('blog.copyButtonTextLabel')}
                   </label>
                   <input
                     id="blog-translation-copy-button-input"
@@ -1166,7 +1164,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Copy post link"
+                    placeholder={t('blog.copyLinkPlaceholder')}
                   />
                 </div>
                 <div>
@@ -1174,7 +1172,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-pre-copy-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Pre Copy Text
+                    {t('blog.preCopyTextLabel')}
                   </label>
                   <input
                     id="blog-translation-pre-copy-input"
@@ -1188,7 +1186,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Copied!"
+                    placeholder={t('blog.copiedPlaceholder')}
                   />
                 </div>
                 <div>
@@ -1196,7 +1194,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-no-posts-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    No Posts Message
+                    {t('blog.noPostsMessageLabel')}
                   </label>
                   <input
                     id="blog-translation-no-posts-input"
@@ -1210,7 +1208,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., There are no posts available!"
+                    placeholder={t('blog.noPostsPlaceholder')}
                   />
                 </div>
                 <div>
@@ -1218,7 +1216,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-ratelimit-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Rate Limit Message
+                    {t('blog.rateLimitMessageLabel')}
                   </label>
                   <input
                     id="blog-translation-ratelimit-input"
@@ -1232,7 +1230,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Too many requests! Please wait and retry."
+                    placeholder={t('blog.rateLimitPlaceholder')}
                   />
                 </div>
                 <div>
@@ -1240,7 +1238,7 @@ export default function BlogSection() {
                     htmlFor="blog-translation-searchbar-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Searchbar Placeholder
+                    {t('blog.searchbarPlaceholderLabel')}
                   </label>
                   <input
                     id="blog-translation-searchbar-input"
@@ -1254,7 +1252,7 @@ export default function BlogSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Search posts by title, desc or tag..."
+                    placeholder={t('blog.searchPlaceholder')}
                   />
                 </div>
               </div>
@@ -1265,7 +1263,7 @@ export default function BlogSection() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
-          Blog Posts
+          {t('blog.postsTitle')}
         </h2>
         <button
           type="button"
@@ -1273,7 +1271,7 @@ export default function BlogSection() {
           className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary transition-colors border-2 border-main hover:border-secondary"
         >
           <Plus className="h-4 w-4" />
-          Add Blog Post
+          {t('blog.addBlogPost')}
         </button>
       </div>
 
@@ -1340,7 +1338,7 @@ export default function BlogSection() {
         <div className="text-center py-8">
           <FileText className="h-12 w-12 mx-auto text-main mb-4" />
           <p className="text-darktext dark:text-lighttext2">
-            No blog posts found. Create your first blog post!
+            {t('blog.noBlogPosts')}
           </p>
         </div>
       )}
@@ -1348,7 +1346,7 @@ export default function BlogSection() {
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        title="Blog Section Preview"
+        title={t('blog.previewTitle')}
       >
         <BlogPreview posts={blogPosts} deletedPostIds={deletedPosts} />
       </PreviewModal>

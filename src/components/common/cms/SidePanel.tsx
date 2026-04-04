@@ -16,6 +16,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -30,6 +31,7 @@ interface SidePanelProps {
 }
 
 const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
+  const t = useTranslations('cms');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const locale = pathname.split('/')[1] || 'en';
@@ -64,20 +66,45 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
   };
 
   const menuItems = [
-    { id: 'hero', label: 'Hero Section', icon: Home, adminOnly: true },
-    { id: 'skills', label: 'Skills', icon: Zap, adminOnly: true },
-    { id: 'career', label: 'Career', icon: User2, adminOnly: true },
-    { id: 'portfolio', label: 'Portfolio', icon: Briefcase },
-    { id: 'blog', label: 'Blog', icon: NotebookPen },
-    { id: 'contacts', label: 'Contacts', icon: Contact, adminOnly: true },
-    { id: 'layout', label: 'Layout', icon: LayoutGrid, adminOnly: true },
+    { id: 'hero', label: t('sidebar.nav.hero'), icon: Home, adminOnly: true },
+    {
+      id: 'skills',
+      label: t('sidebar.nav.skills'),
+      icon: Zap,
+      adminOnly: true,
+    },
+    {
+      id: 'career',
+      label: t('sidebar.nav.career'),
+      icon: User2,
+      adminOnly: true,
+    },
+    { id: 'portfolio', label: t('sidebar.nav.portfolio'), icon: Briefcase },
+    { id: 'blog', label: t('sidebar.nav.blog'), icon: NotebookPen },
+    {
+      id: 'contacts',
+      label: t('sidebar.nav.contacts'),
+      icon: Contact,
+      adminOnly: true,
+    },
+    {
+      id: 'layout',
+      label: t('sidebar.nav.layout'),
+      icon: LayoutGrid,
+      adminOnly: true,
+    },
     {
       id: 'privacy-policy',
-      label: 'Privacy Policy',
+      label: t('sidebar.nav.privacy-policy'),
       icon: FileText,
       adminOnly: true,
     },
-    { id: 'users', label: 'Manage Users', icon: Users, adminOnly: true },
+    {
+      id: 'users',
+      label: t('sidebar.nav.users'),
+      icon: Users,
+      adminOnly: true,
+    },
   ];
 
   // Set default section for editors only once after user loads
@@ -140,10 +167,10 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
           <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0 flex items-center justify-between lg:hidden">
             <div className="flex-1">
               <h1 className="text-xl font-bold text-main mb-1">
-                CMS Dashboard
+                {t('sidebar.title')}
               </h1>
               <p className="text-gray-500 dark:text-lighttext2 text-xs">
-                Manage your website content
+                {t('sidebar.subtitle')}
               </p>
             </div>
             <button
@@ -160,9 +187,11 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
         {/* Desktop Header */}
         {!onClose && (
           <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0 text-center">
-            <h1 className="text-xl font-bold text-main mb-1">CMS Dashboard</h1>
+            <h1 className="text-xl font-bold text-main mb-1">
+              {t('sidebar.title')}
+            </h1>
             <p className="text-gray-500 dark:text-lighttext2 text-xs">
-              Manage your website content
+              {t('sidebar.subtitle')}
             </p>
           </div>
         )}
@@ -266,14 +295,14 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
               }`}
             >
               <Settings className="w-5 h-5" />
-              <span className="font-medium">My Account</span>
+              <span className="font-medium">{t('sidebar.myAccount')}</span>
             </button>
             <a
               href={`/${locale}`}
               className="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white transition-all duration-200"
             >
               <Home className="w-5 h-5" />
-              <span className="font-medium">Home</span>
+              <span className="font-medium">{t('sidebar.home')}</span>
             </a>
             <button
               type="button"
@@ -283,7 +312,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">
-                {isLoggingOut ? 'Logging out...' : 'Logout'}
+                {isLoggingOut ? t('sidebar.loggingOut') : t('sidebar.logout')}
               </span>
             </button>
           </div>

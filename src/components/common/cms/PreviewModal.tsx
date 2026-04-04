@@ -44,7 +44,9 @@ export function PreviewModal({
       <div className="relative w-full h-full max-w-7xl mx-auto bg-bglight dark:bg-bgdark overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-bglight dark:bg-bgdark border-b border-lighttext2/20 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-darktext dark:text-lighttext">{title}</h2>
+          <h2 className="text-xl font-bold text-darktext dark:text-lighttext">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}

@@ -7,6 +7,8 @@ import { Suspense } from 'react';
 import ConditionalHeader from '@/components/layout/ConditionalHeader';
 import Footer from '@/components/layout/Footer';
 import ScrollTop from '@/components/layout/ScrollTop';
+import cmsEn from '@/i18n/messages/cms.en.json';
+import cmsIt from '@/i18n/messages/cms.it.json';
 import { getTranslationsSupabase } from '@/utils/getData';
 import { Providers } from '../providers';
 
@@ -24,7 +26,9 @@ async function LocaleShell({
   children: React.ReactNode;
 }) {
   const { locale } = await params;
-  const messages = await getTranslationsSupabase(locale);
+  const supabaseMessages = await getTranslationsSupabase(locale);
+  const cmsMessages = locale === 'it' ? cmsIt : cmsEn;
+  const messages = { ...supabaseMessages, cms: cmsMessages };
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>

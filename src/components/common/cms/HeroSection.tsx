@@ -11,6 +11,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -29,6 +30,7 @@ type HeroUpdateData = {
 };
 
 export default function HeroSection() {
+  const t = useTranslations('cms');
   const { heroSection } = useLayoutStore();
 
   // Add refs for file inputs
@@ -229,7 +231,7 @@ export default function HeroSection() {
 
       handleInputChange('blurhashURL', blurhash);
     } catch (error) {
-      setError('Failed to generate blurhash');
+      setError(t('hero.errorGenerateBlurhash'));
       console.error(error);
     }
   };
@@ -251,7 +253,7 @@ export default function HeroSection() {
       setModifiedFields((prev) => new Set(prev).add(field));
     } catch (error) {
       console.error('Error handling file change:', error);
-      setError('Failed to process file');
+      setError(t('hero.errorProcessFile'));
     }
   };
 
@@ -310,7 +312,7 @@ export default function HeroSection() {
       })
       .catch((err) => {
         console.error('Failed to copy URL:', err);
-        setError('Failed to copy URL');
+        setError(t('hero.errorCopyUrl'));
       });
   };
 
@@ -330,7 +332,7 @@ export default function HeroSection() {
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       console.error('Failed to download image:', error);
-      setError('Failed to download image');
+      setError(t('hero.errorDownloadImage'));
     }
   };
 
@@ -353,7 +355,7 @@ export default function HeroSection() {
         });
 
         if (!processed.success || !processed.file) {
-          throw new Error(processed.error || 'Failed to process image');
+          throw new Error(processed.error || t('hero.errorProcessFile'));
         }
 
         filesToUpload.mainImage = processed.file;
@@ -377,7 +379,7 @@ export default function HeroSection() {
         });
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to update hero section');
+          throw new Error(result.error || t('hero.errorUpdateHero'));
         }
 
         // Update local state to reflect changes
@@ -419,7 +421,7 @@ export default function HeroSection() {
             data: updateData,
           });
           if (!result.success) {
-            throw new Error(result.error || 'Failed to update hero section');
+            throw new Error(result.error || t('hero.errorUpdateHero'));
           }
         }
       }
@@ -456,11 +458,11 @@ export default function HeroSection() {
       }
 
       setModifiedFields(new Set());
-      alert('Hero section updated successfully!');
+      alert(t('hero.successUpdate'));
     } catch (error) {
       console.error('Error updating hero section:', error);
       setError(
-        error instanceof Error ? error.message : 'Failed to update hero section'
+        error instanceof Error ? error.message : t('hero.errorUpdateHero')
       );
     } finally {
       setIsUpdating(false);
@@ -468,11 +470,7 @@ export default function HeroSection() {
   };
 
   const cancelAllChanges = () => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
-      )
-    ) {
+    if (!confirm(t('common.confirmCancel'))) {
       return;
     }
 
@@ -495,10 +493,10 @@ export default function HeroSection() {
     <div className="space-y-8 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-8">
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
-          Hero Section
+          {t('hero.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
-          Update your hero section content and image
+          {t('hero.subtitle')}
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
@@ -507,7 +505,7 @@ export default function HeroSection() {
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
-            Preview
+            {t('common.preview')}
           </button>
           <button
             type="button"
@@ -519,7 +517,7 @@ export default function HeroSection() {
             onClick={cancelAllChanges}
           >
             <X className="w-4 h-4" />
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -533,10 +531,10 @@ export default function HeroSection() {
             {isUpdating ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Applying Changes...
+                {t('common.applying')}
               </>
             ) : (
-              'Apply Changes'
+              t('common.applyChanges')
             )}
           </button>
         </div>
@@ -559,7 +557,7 @@ export default function HeroSection() {
           >
             <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
               <Globe className="w-5 h-5" />
-              Translations
+              {t('hero.translationsSection')}
             </h2>
             {isTranslationsExpanded ? (
               <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
@@ -581,7 +579,7 @@ export default function HeroSection() {
                       : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                   }`}
                 >
-                  English
+                  {t('common.english')}
                 </button>
                 <button
                   type="button"
@@ -592,7 +590,7 @@ export default function HeroSection() {
                       : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                   }`}
                 >
-                  Italian
+                  {t('common.italian')}
                 </button>
               </div>
 
@@ -605,14 +603,14 @@ export default function HeroSection() {
                   {/* Top Section */}
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-darktext dark:text-lighttext">
-                      Top Section
+                      {t('hero.topSection')}
                     </h3>
                     <div>
                       <label
                         htmlFor="hero-name-input"
                         className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                       >
-                        Name
+                        {t('hero.nameLabel')}
                       </label>
                       <input
                         id="hero-name-input"
@@ -626,7 +624,7 @@ export default function HeroSection() {
                           )
                         }
                         className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                        placeholder="e.g., Cristian ****Di Carlo****"
+                        placeholder={t('hero.namePlaceholder')}
                       />
                     </div>
                     <div>
@@ -634,7 +632,7 @@ export default function HeroSection() {
                         htmlFor="hero-role-input"
                         className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                       >
-                        Role
+                        {t('hero.roleLabel')}
                       </label>
                       <input
                         id="hero-role-input"
@@ -648,7 +646,7 @@ export default function HeroSection() {
                           )
                         }
                         className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                        placeholder="e.g., Fullstack ****Developer****"
+                        placeholder={t('hero.rolePlaceholder')}
                       />
                     </div>
                   </div>
@@ -656,14 +654,14 @@ export default function HeroSection() {
                   {/* About Me Section */}
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-darktext dark:text-lighttext">
-                      About Me Section
+                      {t('hero.aboutMeSection')}
                     </h3>
                     <div>
                       <label
                         htmlFor="hero-aboutme-title-input"
                         className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                       >
-                        Title
+                        {t('hero.aboutMeTitleLabel')}
                       </label>
                       <input
                         id="hero-aboutme-title-input"
@@ -677,7 +675,7 @@ export default function HeroSection() {
                           )
                         }
                         className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                        placeholder="e.g., About me"
+                        placeholder={t('hero.aboutMeTitlePlaceholder')}
                       />
                     </div>
                     <div>
@@ -685,7 +683,7 @@ export default function HeroSection() {
                         htmlFor="hero-aboutme-paragraph-input"
                         className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                       >
-                        Paragraph
+                        {t('hero.aboutMeParagraphLabel')}
                       </label>
                       <textarea
                         id="hero-aboutme-paragraph-input"
@@ -701,7 +699,7 @@ export default function HeroSection() {
                         }
                         rows={8}
                         className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
-                        placeholder="Enter about me paragraph..."
+                        placeholder={t('hero.aboutMeParagraphPlaceholder')}
                       />
                     </div>
                   </div>
@@ -715,7 +713,7 @@ export default function HeroSection() {
         <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
             <Home className="w-5 h-5" />
-            Hero Image
+            {t('hero.heroImageTitle')}
           </h2>
 
           <div className="space-y-4">
@@ -737,7 +735,9 @@ export default function HeroSection() {
                 />
                 {!editedData.mainImage && (
                   <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-darkestgray rounded-lg border-2 border-dashed border-gray-300 dark:border-lighttext2">
-                    <span className="text-gray-500 dark:text-lighttext2">No image</span>
+                    <span className="text-gray-500 dark:text-lighttext2">
+                      {t('hero.noImage')}
+                    </span>
                   </div>
                 )}
                 {/* Drag overlay */}
@@ -745,7 +745,7 @@ export default function HeroSection() {
                   <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
                     <div className="text-center text-white">
                       <Upload className="w-12 h-12 mx-auto mb-2" />
-                      <p className="font-medium">Drop image here</p>
+                      <p className="font-medium">{t('hero.dropImageHere')}</p>
                     </div>
                   </div>
                 )}
@@ -769,7 +769,7 @@ export default function HeroSection() {
                 className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white font-medium rounded-lg cursor-pointer transition-all duration-200"
               >
                 <Upload className="w-4 h-4" />
-                Choose Image
+                {t('hero.chooseImage')}
               </label>
               {editedData.mainImage && (
                 <>
@@ -781,7 +781,7 @@ export default function HeroSection() {
                     className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 dark:bg-darkestgray dark:hover:bg-darkgray text-darktext dark:text-lighttext rounded-lg transition-all duration-200"
                   >
                     <Copy className="w-4 h-4" />
-                    Copy URL
+                    {t('hero.copyUrl')}
                   </button>
                   <button
                     type="button"
@@ -791,7 +791,7 @@ export default function HeroSection() {
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200"
                   >
                     <Download className="w-4 h-4" />
-                    Download
+                    {t('hero.download')}
                   </button>
                 </>
               )}
@@ -803,7 +803,7 @@ export default function HeroSection() {
         <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
             <FileText className="w-5 h-5" />
-            Resume Links
+            {t('hero.resumeLinksTitle')}
           </h2>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -813,7 +813,7 @@ export default function HeroSection() {
                 htmlFor="resume-it-upload"
                 className="block text-sm font-medium text-darktext dark:text-lighttext"
               >
-                Upload Resume (Italian)
+                {t('hero.uploadResumeItalian')}
               </label>
               <div
                 className="relative border-2 border-dashed border-gray-300 dark:border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
@@ -832,7 +832,7 @@ export default function HeroSection() {
                 <label htmlFor="resume-it-upload" className="cursor-pointer">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-gray-500 dark:text-lighttext2" />
                   <p className="text-gray-500 dark:text-lighttext2 font-medium">
-                    Drop PDF here or click to browse
+                    {t('hero.dropPdfHere')}
                   </p>
                 </label>
                 {/* Drag overlay */}
@@ -840,7 +840,7 @@ export default function HeroSection() {
                   <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
                     <div className="text-center text-white">
                       <Upload className="w-12 h-12 mx-auto mb-2" />
-                      <p className="font-medium">Drop PDF here</p>
+                      <p className="font-medium">{t('hero.dropPdf')}</p>
                     </div>
                   </div>
                 )}
@@ -862,7 +862,7 @@ export default function HeroSection() {
                 htmlFor="resume-en-upload"
                 className="block text-sm font-medium text-darktext dark:text-lighttext"
               >
-                Upload Resume (English)
+                {t('hero.uploadResumeEnglish')}
               </label>
               <div
                 className="relative border-2 border-dashed border-gray-300 dark:border-lighttext2 rounded-lg p-8 text-center cursor-pointer transition-all duration-200 hover:border-main"
@@ -881,7 +881,7 @@ export default function HeroSection() {
                 <label htmlFor="resume-en-upload" className="cursor-pointer">
                   <Upload className="w-8 h-8 mx-auto mb-2 text-gray-500 dark:text-lighttext2" />
                   <p className="text-gray-500 dark:text-lighttext2 font-medium">
-                    Drop PDF here or click to browse
+                    {t('hero.dropPdfHere')}
                   </p>
                 </label>
                 {/* Drag overlay */}
@@ -889,7 +889,7 @@ export default function HeroSection() {
                   <div className="absolute inset-0 bg-main/80 flex items-center justify-center rounded-lg border-2 border-dashed border-white">
                     <div className="text-center text-white">
                       <Upload className="w-12 h-12 mx-auto mb-2" />
-                      <p className="font-medium">Drop PDF here</p>
+                      <p className="font-medium">{t('hero.dropPdf')}</p>
                     </div>
                   </div>
                 )}
@@ -911,7 +911,7 @@ export default function HeroSection() {
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        title="Hero Section Preview"
+        title={t('hero.previewTitle')}
       >
         <HeroPreview
           mainImage={editedData.mainImage || heroSection?.mainImage || ''}

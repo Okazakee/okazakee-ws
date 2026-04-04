@@ -1,6 +1,7 @@
 'use client';
 
 import { Save } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import '@uiw/react-md-editor/markdown-editor.css';
@@ -16,6 +17,7 @@ type PrivacyPolicyData = {
 };
 
 export default function PrivacyPolicySection() {
+  const t = useTranslations('cms');
   const { isDark } = useThemeStore();
   const [privacyPolicyData, setPrivacyPolicyData] = useState<
     PrivacyPolicyData[]
@@ -24,8 +26,12 @@ export default function PrivacyPolicySection() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedLocale, setSelectedLocale] = useState<'en' | 'it'>('en');
-  const [editedPolicies, setEditedPolicies] = useState<Record<string, string>>({});
-  const [originalPolicies, setOriginalPolicies] = useState<Record<string, string>>({});
+  const [editedPolicies, setEditedPolicies] = useState<Record<string, string>>(
+    {}
+  );
+  const [originalPolicies, setOriginalPolicies] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     fetchPrivacyPolicyData();
@@ -38,7 +44,7 @@ export default function PrivacyPolicySection() {
     try {
       const result = await i18nActions({ type: 'GET' });
       if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch privacy policy data');
+        throw new Error(result.error || t('privacy.errorFetch'));
       }
 
       const i18nData = result.data as Array<{
@@ -62,9 +68,7 @@ export default function PrivacyPolicySection() {
     } catch (error) {
       console.error('Error fetching privacy policy data:', error);
       setError(
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch privacy policy data'
+        error instanceof Error ? error.message : t('privacy.errorFetch')
       );
     } finally {
       setIsLoading(false);
@@ -100,7 +104,9 @@ export default function PrivacyPolicySection() {
       );
 
       for (const locale of changedLocales) {
-        const currentTranslations = getCurrentTranslations(locale as 'en' | 'it');
+        const currentTranslations = getCurrentTranslations(
+          locale as 'en' | 'it'
+        );
         const result = await i18nActions({
           type: 'UPDATE',
           locale: locale as 'en' | 'it',
@@ -111,30 +117,25 @@ export default function PrivacyPolicySection() {
         });
 
         if (!result.success) {
-          throw new Error(result.error || `Failed to update privacy policy for ${locale.toUpperCase()}`);
+          throw new Error(
+            result.error ||
+              `Failed to update privacy policy for ${locale.toUpperCase()}`
+          );
         }
       }
 
       await fetchPrivacyPolicyData();
-      alert('Privacy policy updated successfully!');
+      alert(t('privacy.successSave'));
     } catch (error) {
       console.error('Error updating privacy policy:', error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'Failed to update privacy policy'
-      );
+      setError(error instanceof Error ? error.message : t('privacy.errorSave'));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel? All unsaved changes will be lost.'
-      )
-    ) {
+    if (!confirm(t('privacy.confirmCancel'))) {
       return;
     }
     setEditedPolicies(originalPolicies);
@@ -158,10 +159,10 @@ export default function PrivacyPolicySection() {
 
       <div className="text-center mb-8">
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
-          Privacy Policy Editor
+          {t('privacy.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
-          Manage your privacy policy content
+          {t('privacy.subtitle')}
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
@@ -170,7 +171,7 @@ export default function PrivacyPolicySection() {
             disabled={!hasChanges() || isSaving}
             onClick={handleCancel}
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -181,12 +182,12 @@ export default function PrivacyPolicySection() {
             {isSaving ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Saving...
+                {t('common.saving')}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Save Changes
+                {t('privacy.saveChanges')}
               </>
             )}
           </button>

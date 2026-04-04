@@ -15,6 +15,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -40,6 +41,7 @@ type AllowedUser = {
 };
 
 export default function UsersSection() {
+  const t = useTranslations('cms');
   const { user, setUser } = useLayoutStore();
   const [users, setUsers] = useState<AllowedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,12 +86,12 @@ export default function UsersSection() {
 
   const handleAddUser = async () => {
     if (!newUserInput.trim() && addType !== 'dummy') {
-      setError('Please enter an email or GitHub username');
+      setError(t('users.errorEnterEmailOrGithub'));
       return;
     }
 
     if (addType === 'dummy' && !newUserInput.trim()) {
-      setError('Please enter a display name');
+      setError(t('users.errorEnterDisplayName'));
       return;
     }
 
@@ -166,18 +168,14 @@ export default function UsersSection() {
       }
     } catch (err) {
       console.error('Error updating role:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update role');
+      setError(err instanceof Error ? err.message : t('users.errorUpdateRole'));
     } finally {
       setUpdatingRoleFor(null);
     }
   };
 
   const handleRemoveUser = async (id: number) => {
-    if (
-      !confirm(
-        'Are you sure you want to remove this user from the allowed list?'
-      )
-    ) {
+    if (!confirm(t('users.confirmRemoveUser'))) {
       return;
     }
 
@@ -191,7 +189,7 @@ export default function UsersSection() {
       await fetchUsers();
     } catch (err) {
       console.error('Error removing user:', err);
-      setError(err instanceof Error ? err.message : 'Failed to remove user');
+      setError(err instanceof Error ? err.message : t('users.errorRemoveUser'));
     }
   };
 
@@ -229,7 +227,9 @@ export default function UsersSection() {
       await fetchUsers();
     } catch (err) {
       console.error('Error uploading avatar:', err);
-      setError(err instanceof Error ? err.message : 'Failed to upload avatar');
+      setError(
+        err instanceof Error ? err.message : t('users.errorUploadAvatar')
+      );
     } finally {
       setUploadingAvatarFor(null);
     }
@@ -272,9 +272,7 @@ export default function UsersSection() {
       }
     } catch (err) {
       console.error('Error updating display name:', err);
-      setError(
-        err instanceof Error ? err.message : 'Failed to update display name'
-      );
+      setError(err instanceof Error ? err.message : t('users.errorUpdateName'));
       // Refresh to revert any changes
       await fetchUsers();
     } finally {
@@ -299,19 +297,17 @@ export default function UsersSection() {
     <div className="space-y-6 md:space-y-8 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-6 md:mb-8">
         <h1 className="hidden lg:block text-2xl md:text-3xl lg:text-4xl font-bold text-main mb-2 md:mb-4">
-          Manage Users
+          {t('users.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-sm md:text-base lg:text-lg">
-          Control who can access the CMS
+          {t('users.subtitle')}
         </p>
       </div>
 
       {!isAdmin && (
         <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-4 text-center">
           <Shield className="w-6 h-6 mx-auto mb-2 text-yellow-500" />
-          <p className="text-yellow-500">
-            You need admin privileges to manage users. Contact an administrator.
-          </p>
+          <p className="text-yellow-500">{t('users.adminRequired')}</p>
         </div>
       )}
 
@@ -321,7 +317,7 @@ export default function UsersSection() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h2 className="text-lg md:text-xl font-bold text-main flex items-center gap-2">
               <Plus className="w-5 h-5" />
-              Add New User
+              {t('users.addNewUserTitle')}
             </h2>
             {!isAdding && (
               <button
@@ -330,7 +326,7 @@ export default function UsersSection() {
                 className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
               >
                 <Plus className="w-4 h-4" />
-                Add User
+                {t('users.addUser')}
               </button>
             )}
           </div>
@@ -349,7 +345,7 @@ export default function UsersSection() {
                   }`}
                 >
                   <Mail className="w-4 h-4" />
-                  Email Invite
+                  {t('users.emailInvite')}
                 </button>
                 <button
                   type="button"
@@ -361,7 +357,7 @@ export default function UsersSection() {
                   }`}
                 >
                   <Github className="w-4 h-4" />
-                  GitHub Username
+                  {t('users.githubUsername')}
                 </button>
                 <button
                   type="button"
@@ -373,7 +369,7 @@ export default function UsersSection() {
                   }`}
                 >
                   <User className="w-4 h-4" />
-                  Dummy User
+                  {t('users.dummyUser')}
                 </button>
               </div>
 
@@ -385,10 +381,10 @@ export default function UsersSection() {
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
                     {addType === 'email'
-                      ? 'Email Address'
+                      ? t('users.emailAddressLabel')
                       : addType === 'github'
-                        ? 'GitHub Username'
-                        : 'Display Name'}
+                        ? t('users.githubUsernameLabel')
+                        : t('users.displayNameLabel')}
                   </label>
                   <input
                     id="new-user-input"
@@ -397,10 +393,10 @@ export default function UsersSection() {
                     onChange={(e) => setNewUserInput(e.target.value)}
                     placeholder={
                       addType === 'email'
-                        ? 'user@example.com'
+                        ? t('users.emailPlaceholder')
                         : addType === 'github'
-                          ? '@username'
-                          : 'John Doe'
+                          ? t('users.githubPlaceholder')
+                          : t('users.displayNamePlaceholder')
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                   />
@@ -410,7 +406,7 @@ export default function UsersSection() {
                     htmlFor="new-user-role-select"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Role
+                    {t('users.roleLabel')}
                   </label>
                   <select
                     id="new-user-role-select"
@@ -420,8 +416,8 @@ export default function UsersSection() {
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
                   >
-                    <option value="editor">Editor</option>
-                    <option value="admin">Admin</option>
+                    <option value="editor">{t('users.roleEditor')}</option>
+                    <option value="admin">{t('users.roleAdmin')}</option>
                   </select>
                 </div>
               </div>
@@ -429,10 +425,10 @@ export default function UsersSection() {
               {/* Info text */}
               <p className="text-sm text-gray-500 dark:text-lighttext2">
                 {addType === 'email'
-                  ? '📧 An invitation email will be sent automatically. The user will set their password.'
+                  ? t('users.emailInviteInfo')
                   : addType === 'github'
-                    ? '🔗 The user can log in immediately using GitHub OAuth (no invite needed).'
-                    : '👤 Creates a dummy user profile that can be assigned to articles. No authentication required.'}
+                    ? t('users.githubInviteInfo')
+                    : t('users.dummyUserInfo')}
               </p>
 
               {/* Action buttons */}
@@ -444,7 +440,7 @@ export default function UsersSection() {
                   className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50"
                 >
                   <UserCheck className="w-4 h-4" />
-                  {isSubmitting ? 'Adding...' : 'Add User'}
+                  {isSubmitting ? t('users.adding') : t('users.addUser')}
                 </button>
                 <button
                   type="button"
@@ -456,7 +452,7 @@ export default function UsersSection() {
                   className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-white hover:bg-gray-100 dark:bg-darkestgray dark:hover:bg-darkgray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200"
                 >
                   <X className="w-4 h-4" />
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>
@@ -475,12 +471,12 @@ export default function UsersSection() {
       <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-4 md:p-6">
         <h2 className="text-lg md:text-xl font-bold text-main mb-4 flex items-center gap-2">
           <Users className="w-5 h-5" />
-          Allowed Users ({users.length})
+          {t('users.allowedUsersTitle')} ({users.length})
         </h2>
 
         {users.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-lighttext2">
-            No users in the allowed list yet.
+            {t('users.noUsersYet')}
           </div>
         ) : (
           <div className="space-y-3">
@@ -686,7 +682,7 @@ export default function UsersSection() {
                           )}
                         {isCurrentUser && (
                           <span className="px-2 py-0.5 rounded text-xs bg-green-500/20 text-green-400">
-                            You
+                            {t('users.you')}
                           </span>
                         )}
                         {isDummyUser && (
@@ -707,17 +703,17 @@ export default function UsersSection() {
                         </span>
                         {isLastAdmin && !isCurrentUser && (
                           <span className="text-yellow-500 text-xs">
-                            (Last admin - cannot demote)
+                            {t('users.lastAdminWarning')}
                           </span>
                         )}
                         {!hasProfile && !isDummyUser && (
                           <span className="text-yellow-500 text-xs">
-                            Not logged in yet
+                            {t('users.notLoggedInYet')}
                           </span>
                         )}
                         {allowedUser.invited_at && !hasProfile && (
                           <span>
-                            Invited{' '}
+                            {t('users.invited')}{' '}
                             {new Date(
                               allowedUser.invited_at
                             ).toLocaleDateString()}
@@ -742,7 +738,7 @@ export default function UsersSection() {
                           const newRole = e.target.value as 'admin' | 'editor';
                           // Prevent demoting last admin
                           if (isLastAdmin && newRole === 'editor') {
-                            setError('Cannot demote the last admin');
+                            setError(t('users.cannotDemoteLastAdmin'));
                             return;
                           }
                           handleUpdateRole(allowedUser.id, newRole);
@@ -750,21 +746,21 @@ export default function UsersSection() {
                         disabled={updatingRoleFor === allowedUser.id}
                         title={
                           isLastAdmin
-                            ? 'Cannot demote the last admin'
+                            ? t('users.cannotDemoteLastAdmin')
                             : undefined
                         }
                         className="px-2 py-1.5 min-h-[44px] bg-gray-200 dark:bg-darkgray border border-gray-300 dark:border-lighttext2 rounded text-sm text-darktext dark:text-lighttext focus:border-main focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="editor" disabled={isLastAdmin}>
-                          Editor
+                          {t('users.roleEditor')}
                         </option>
-                        <option value="admin">Admin</option>
+                        <option value="admin">{t('users.roleAdmin')}</option>
                       </select>
                       <button
                         type="button"
                         onClick={() => handleRemoveUser(allowedUser.id)}
                         className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-                        title="Remove user"
+                        title={t('users.removeUser')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

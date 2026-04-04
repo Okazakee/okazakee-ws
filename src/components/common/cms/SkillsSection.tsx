@@ -13,6 +13,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
@@ -61,6 +62,7 @@ type SkillApiResponse = {
 };
 
 export default function SkillsSection() {
+  const t = useTranslations('cms');
   const [categories, setCategories] = useState<EditableCategory[]>([]);
   const [originalCategories, setOriginalCategories] = useState<
     EditableCategory[]
@@ -320,12 +322,12 @@ export default function SkillsSection() {
     const newSkill = category?.newSkill;
 
     if (!newSkill || !newSkill.title) {
-      setError('Please fill in all required fields');
+      setError(t('skills.errorRequiredFields'));
       return;
     }
 
     if (!newSkill.icon?.trim()) {
-      setError('Please enter an icon URL');
+      setError(t('skills.errorIconUrl'));
       return;
     }
 
@@ -364,7 +366,7 @@ export default function SkillsSection() {
 
   const createCategory = () => {
     if (!newCategoryName.trim()) {
-      setError('Category name is required');
+      setError(t('skills.errorCategoryName'));
       return;
     }
 
@@ -396,11 +398,7 @@ export default function SkillsSection() {
   };
 
   const deleteCategory = (categoryId: number) => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this category? All skills in this category must be removed first.'
-      )
-    ) {
+    if (!confirm(t('skills.confirmDeleteCategory'))) {
       return;
     }
 
@@ -419,7 +417,7 @@ export default function SkillsSection() {
   };
 
   const deleteSkillHandler = (categoryId: number, skillId: number) => {
-    if (!confirm('Are you sure you want to delete this skill?')) return;
+    if (!confirm(t('common.confirmDelete'))) return;
 
     // Check if it's a new skill (temp ID)
     const isNewSkill = newSkills.some((ns) => ns.skill.id === skillId);
@@ -664,7 +662,7 @@ export default function SkillsSection() {
       setDeletedCategories(new Set());
       setCategoryOrderChanged(false);
 
-      alert('All changes applied successfully!');
+      alert(`${t('common.applyChanges')}!`);
     } catch (error) {
       console.error('Error applying changes:', error);
       for (let i = createdSkillIds.length - 1; i >= 0; i--) {
@@ -711,11 +709,7 @@ export default function SkillsSection() {
   };
 
   const cancelAllChanges = () => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
-      )
-    ) {
+    if (!confirm(t('common.confirmCancel'))) {
       return;
     }
 
@@ -801,10 +795,10 @@ export default function SkillsSection() {
     <div className="space-y-6 md:space-y-8 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-6 md:mb-8">
         <h1 className="hidden lg:block text-2xl md:text-3xl lg:text-4xl font-bold text-main mb-2 md:mb-4">
-          Skills Section Editor
+          {t('skills.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-sm md:text-base lg:text-lg">
-          Manage your skills and categories
+          {t('skills.subtitle')}
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-3 mt-4">
           <button
@@ -813,7 +807,7 @@ export default function SkillsSection() {
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
-            Preview
+            {t('common.preview')}
           </button>
           <button
             type="button"
@@ -822,7 +816,7 @@ export default function SkillsSection() {
             onClick={cancelAllChanges}
           >
             <X className="w-4 h-4" />
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -833,10 +827,10 @@ export default function SkillsSection() {
             {isUpdating ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Applying Changes...
+                {t('common.applying')}
               </>
             ) : (
-              'Apply Changes'
+              t('common.applyChanges')
             )}
           </button>
         </div>
@@ -851,7 +845,7 @@ export default function SkillsSection() {
         >
           <h2 className="text-lg md:text-xl font-bold text-main mb-4 flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            Translations
+            {t('common.translations')}
           </h2>
           {isTranslationsExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
@@ -873,7 +867,7 @@ export default function SkillsSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                English
+                {t('common.english')}
               </button>
               <button
                 type="button"
@@ -884,7 +878,7 @@ export default function SkillsSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                Italian
+                {t('common.italian')}
               </button>
             </div>
 
@@ -896,7 +890,7 @@ export default function SkillsSection() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Title
+                    {t('skills.translationTitleLabel')}
                   </label>
                   <input
                     type="text"
@@ -909,12 +903,12 @@ export default function SkillsSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Skills & Tech Stack"
+                    placeholder={t('skills.translationTitlePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Subtitle
+                    {t('skills.translationSubtitleLabel')}
                   </label>
                   <textarea
                     value={translations[translationLocale].subtitle}
@@ -927,12 +921,12 @@ export default function SkillsSection() {
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
-                    placeholder="e.g., This section outlines the ****key technologies****..."
+                    placeholder={t('skills.translationSubtitlePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Category Names
+                    {t('skills.categoryNamesLabel')}
                   </label>
                   <div className="space-y-2">
                     {categories.map((category) => (
@@ -955,7 +949,9 @@ export default function SkillsSection() {
                             )
                           }
                           className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                          placeholder={`Translation for ${category.name}`}
+                          placeholder={t(
+                            'skills.categoryTranslationPlaceholder'
+                          ).replace('{category}', category.name)}
                         />
                       </div>
                     ))}
@@ -971,7 +967,7 @@ export default function SkillsSection() {
       <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-4 md:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-lg md:text-xl font-bold text-main">
-            Manage Categories
+            {t('skills.manageCategoriesTitle')}
           </h2>
           {!isCreatingCategory && (
             <button
@@ -980,7 +976,7 @@ export default function SkillsSection() {
               className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
             >
               <Plus className="w-4 h-4" />
-              Add Category
+              {t('skills.addCategory')}
             </button>
           )}
         </div>
@@ -992,7 +988,7 @@ export default function SkillsSection() {
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
               className="flex-1 px-3 py-2 bg-white dark:bg-darkgray text-darktext dark:text-lighttext rounded-lg border border-gray-200 dark:border-darkgray focus:border-main focus:outline-hidden"
-              placeholder="Category name"
+              placeholder={t('skills.categoryNamePlaceholder')}
             />
             <button
               type="button"
@@ -1001,7 +997,7 @@ export default function SkillsSection() {
               className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200"
             >
               <Save className="w-4 h-4" />
-              Save
+              {t('common.save')}
             </button>
             <button
               type="button"
@@ -1043,7 +1039,7 @@ export default function SkillsSection() {
                       }}
                       className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-blue-500 hover:text-blue-400 transition-colors"
                     >
-                      Done
+                      {t('common.done')}
                     </button>
                     <button
                       type="button"
@@ -1096,7 +1092,7 @@ export default function SkillsSection() {
                           ) === 0
                         }
                         className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 dark:text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Move up"
+                        title={t('common.moveUp')}
                       >
                         <ArrowUp className="w-4 h-4" />
                       </button>
@@ -1110,7 +1106,7 @@ export default function SkillsSection() {
                           categories.length - 1
                         }
                         className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 dark:text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Move down"
+                        title={t('common.moveDown')}
                       >
                         <ArrowDown className="w-4 h-4" />
                       </button>
@@ -1148,7 +1144,7 @@ export default function SkillsSection() {
                   className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-200"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Skill
+                  {t('skills.addSkill')}
                 </button>
               </div>
             </div>
@@ -1218,7 +1214,7 @@ export default function SkillsSection() {
                           )
                         }
                         className="w-full px-3 py-2 bg-white dark:bg-darkgray text-darktext dark:text-lighttext rounded-sm border border-gray-200 dark:border-darkgray focus:border-main focus:outline-hidden"
-                        placeholder="Skill title"
+                        placeholder={t('skills.skillTitlePlaceholder')}
                       />
                       <input
                         type="url"
@@ -1252,7 +1248,7 @@ export default function SkillsSection() {
                           htmlFor={`invert-${skill.id}`}
                           className="text-sm text-gray-500 dark:text-lighttext2"
                         >
-                          Invert in dark mode
+                          {t('skills.invertLabel')}
                         </label>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1262,7 +1258,7 @@ export default function SkillsSection() {
                           className="flex items-center gap-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-sm transition-all duration-200"
                         >
                           <X className="w-3 h-3" />
-                          Cancel
+                          {t('common.cancel')}
                         </button>
                         <button
                           type="button"
@@ -1271,7 +1267,7 @@ export default function SkillsSection() {
                           }
                           className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200"
                         >
-                          Done
+                          {t('common.done')}
                         </button>
                       </div>
                     </div>
@@ -1292,7 +1288,7 @@ export default function SkillsSection() {
               {category.newSkill && (
                 <div className="bg-gray-100 dark:bg-darkestgray rounded-lg p-4 border-2 border-dashed border-main">
                   <h3 className="text-lg font-semibold text-main mb-4">
-                    New Skill
+                    {t('skills.newSkill')}
                   </h3>
                   <div className="space-y-3">
                     <input
@@ -1319,7 +1315,9 @@ export default function SkillsSection() {
 
                     {/* Icon URL */}
                     <div className="space-y-2">
-                      <p className="block text-sm text-gray-500 dark:text-lighttext2">Icon URL</p>
+                      <p className="block text-sm text-gray-500 dark:text-lighttext2">
+                        {t('skills.iconUrlLabel')}
+                      </p>
                       <div className="flex items-start gap-3">
                         {category.newSkill.icon ? (
                           <Image
@@ -1384,7 +1382,7 @@ export default function SkillsSection() {
                         htmlFor={`new-invert-${category.id}`}
                         className="text-sm text-gray-500 dark:text-lighttext2"
                       >
-                        Invert in dark mode
+                        {t('skills.invertLabel')}
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1393,7 +1391,7 @@ export default function SkillsSection() {
                         onClick={() => saveNewSkill(category.id)}
                         className="flex items-center gap-2 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-all duration-200"
                       >
-                        Add
+                        {t('common.add')}
                       </button>
                       <button
                         type="button"
@@ -1409,7 +1407,7 @@ export default function SkillsSection() {
                         className="flex items-center gap-2 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-sm transition-all duration-200"
                       >
                         <X className="w-3 h-3" />
-                        Cancel
+                        {t('common.cancel')}
                       </button>
                     </div>
                   </div>
@@ -1429,7 +1427,7 @@ export default function SkillsSection() {
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        title="Skills Section Preview"
+        title={t('skills.previewTitle')}
       >
         <SkillsPreview categories={previewCategories} />
       </PreviewModal>

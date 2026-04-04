@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronDown, ChevronUp, Eye, Globe, Save, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { ErrorDiv } from '../ErrorDiv';
@@ -26,6 +27,7 @@ type HeaderTranslations = {
 };
 
 export default function LayoutSection() {
+  const t = useTranslations('cms');
   const [footerTranslations, setFooterTranslations] = useState<{
     en: FooterTranslations;
     it: FooterTranslations;
@@ -287,7 +289,9 @@ export default function LayoutSection() {
   if (isLoadingTranslations) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500 dark:text-lighttext2">Loading translations...</div>
+        <div className="text-gray-500 dark:text-lighttext2">
+          {t('common.loading')}
+        </div>
       </div>
     );
   }
@@ -296,10 +300,10 @@ export default function LayoutSection() {
     <div className="max-w-4xl mx-auto p-6 mb-8 md:mb-0 lg:mt-0">
       <div className="mb-8">
         <h1 className="hidden lg:block text-4xl font-bold mb-4 text-center">
-          Layout Translations
+          {t('layout.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-center mb-8">
-          Edit header and footer translations for English and Italian
+          {t('layout.subtitle')}
         </p>
       </div>
 
@@ -313,7 +317,7 @@ export default function LayoutSection() {
           className="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200 border border-gray-200 dark:border-lighttext2/20"
         >
           <Eye className="w-4 h-4" />
-          Preview
+          {t('common.preview')}
         </button>
         <button
           type="button"
@@ -322,7 +326,7 @@ export default function LayoutSection() {
           className="flex items-center gap-2 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <X className="w-4 h-4" />
-          Cancel
+          {t('common.cancel')}
         </button>
         <button
           type="button"
@@ -331,7 +335,7 @@ export default function LayoutSection() {
           className="flex items-center gap-2 px-6 py-3 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="w-4 h-4" />
-          {isUpdating ? 'Applying...' : 'Apply Changes'}
+          {isUpdating ? t('common.applying') : t('common.applyChanges')}
         </button>
       </div>
 
@@ -346,7 +350,7 @@ export default function LayoutSection() {
               : 'bg-gray-100 dark:bg-darkergray text-darktext dark:text-lighttext hover:bg-gray-200 dark:hover:bg-darkgray'
           }`}
         >
-          English
+          {t('common.english')}
         </button>
         <button
           type="button"
@@ -357,7 +361,7 @@ export default function LayoutSection() {
               : 'bg-gray-100 dark:bg-darkergray text-darktext dark:text-lighttext hover:bg-gray-200 dark:hover:bg-darkgray'
           }`}
         >
-          Italiano
+          {t('common.italian')}
         </button>
       </div>
 
@@ -370,7 +374,9 @@ export default function LayoutSection() {
         >
           <div className="flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            <h2 className="text-xl font-semibold">Footer Translations</h2>
+            <h2 className="text-xl font-semibold">
+              {t('layout.footerTranslationsTitle')}
+            </h2>
           </div>
           {isFooterExpanded ? (
             <ChevronUp className="w-5 h-5" />
@@ -386,7 +392,7 @@ export default function LayoutSection() {
                 htmlFor="footer-left-input"
                 className="block text-sm font-medium mb-2"
               >
-                Left
+                {t('layout.footerLeftLabel')}
               </label>
               <input
                 id="footer-left-input"
@@ -403,7 +409,7 @@ export default function LayoutSection() {
                 htmlFor="footer-right-input"
                 className="block text-sm font-medium mb-2"
               >
-                Right
+                {t('layout.footerRightLabel')}
               </label>
               <input
                 id="footer-right-input"
@@ -420,7 +426,7 @@ export default function LayoutSection() {
                 htmlFor="footer-middle-input"
                 className="block text-sm font-medium mb-2"
               >
-                Middle
+                {t('layout.footerMiddleLabel')}
               </label>
               <input
                 id="footer-middle-input"
@@ -437,7 +443,7 @@ export default function LayoutSection() {
                 htmlFor="footer-source-input"
                 className="block text-sm font-medium mb-2"
               >
-                Source
+                {t('layout.footerSourceLabel')}
               </label>
               <input
                 id="footer-source-input"
@@ -454,7 +460,7 @@ export default function LayoutSection() {
                 htmlFor="footer-button-title-input"
                 className="block text-sm font-medium mb-2"
               >
-                Button Title
+                {t('layout.footerButtonTitleLabel')}
               </label>
               <input
                 id="footer-button-title-input"
@@ -471,7 +477,7 @@ export default function LayoutSection() {
                 htmlFor="footer-privacy-policy-input"
                 className="block text-sm font-medium mb-2"
               >
-                Privacy Policy
+                {t('layout.footerPrivacyPolicyLabel')}
               </label>
               <input
                 id="footer-privacy-policy-input"
@@ -488,7 +494,7 @@ export default function LayoutSection() {
                 htmlFor="footer-darkmode-input"
                 className="block text-sm font-medium mb-2"
               >
-                Dark Mode
+                {t('layout.footerDarkModeLabel')}
               </label>
               <input
                 id="footer-darkmode-input"
@@ -505,7 +511,7 @@ export default function LayoutSection() {
                 htmlFor="footer-lightmode-input"
                 className="block text-sm font-medium mb-2"
               >
-                Light Mode
+                {t('layout.footerLightModeLabel')}
               </label>
               <input
                 id="footer-lightmode-input"
@@ -530,7 +536,9 @@ export default function LayoutSection() {
         >
           <div className="flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            <h2 className="text-xl font-semibold">Header Translations</h2>
+            <h2 className="text-xl font-semibold">
+              {t('layout.headerTranslationsTitle')}
+            </h2>
           </div>
           {isHeaderExpanded ? (
             <ChevronUp className="w-5 h-5" />
@@ -546,7 +554,7 @@ export default function LayoutSection() {
                 htmlFor="header-theme-input"
                 className="block text-sm font-medium mb-2"
               >
-                Theme
+                {t('layout.headerThemeLabel')}
               </label>
               <input
                 id="header-theme-input"
@@ -563,7 +571,7 @@ export default function LayoutSection() {
                 htmlFor="header-language-input"
                 className="block text-sm font-medium mb-2"
               >
-                Language
+                {t('layout.headerLanguageLabel')}
               </label>
               <input
                 id="header-language-input"
@@ -580,7 +588,7 @@ export default function LayoutSection() {
                 htmlFor="header-settings-input"
                 className="block text-sm font-medium mb-2"
               >
-                Settings
+                {t('layout.headerSettingsLabel')}
               </label>
               <input
                 id="header-settings-input"
@@ -594,7 +602,7 @@ export default function LayoutSection() {
             </div>
             <div>
               <div className="block text-sm font-medium mb-2">
-                Navigation Buttons
+                {t('layout.headerNavButtonsLabel')}
               </div>
               <div className="space-y-2">
                 {headerTranslations[translationLocale].buttons.map(
@@ -607,7 +615,10 @@ export default function LayoutSection() {
                       onChange={(e) =>
                         updateHeaderButton(index, e.target.value)
                       }
-                      placeholder={`Button ${index + 1}`}
+                      placeholder={t('layout.headerButtonPlaceholder').replace(
+                        '{index}',
+                        String(index + 1)
+                      )}
                       className="w-full px-3 py-2 bg-white dark:bg-darkgray border border-gray-200 dark:border-darktext rounded-lg text-darktext dark:text-lighttext"
                       aria-label={`Navigation button ${index + 1}`}
                     />
@@ -624,7 +635,7 @@ export default function LayoutSection() {
         <PreviewModal
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
-          title="Layout Preview"
+          title={t('layout.previewTitle')}
         >
           <LayoutPreview
             footerTranslations={footerTranslations}

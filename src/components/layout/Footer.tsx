@@ -10,10 +10,7 @@ export default async function Footer({ locale }: { locale: string }) {
       <div className="py-4 lg:flex-row flex-col-reverse flex items-center lg:justify-between justify-center relative mx-auto max-w-(--breakpoint-2xl)">
         <div className="text-xs xs:text-base sm:text-base md:my-0 w-fit lg:ml-5">
           {t('left')}{' '}
-          <Link
-            href="https://github.com/Okazakee"
-            className="text-main"
-          >
+          <Link href="https://github.com/Okazakee" className="text-main">
             Okazakee
           </Link>{' '}
           |{' '}

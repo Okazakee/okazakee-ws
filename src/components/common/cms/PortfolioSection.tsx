@@ -14,6 +14,7 @@ import {
   User,
   X,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import type React from 'react';
@@ -73,6 +74,7 @@ type EditablePortfolioPost = PortfolioPost & {
 };
 
 export default function PortfolioSection() {
+  const t = useTranslations('cms');
   const [portfolioPosts, setPortfolioPosts] = useState<EditablePortfolioPost[]>(
     []
   );
@@ -271,7 +273,7 @@ export default function PortfolioSection() {
 
   const handleCreatePortfolio = () => {
     if (!formImage) {
-      setError('Please select an image for the portfolio post');
+      setError(t('portfolio.selectImage'));
       return;
     }
 
@@ -339,8 +341,7 @@ export default function PortfolioSection() {
   };
 
   const handleDeletePortfolio = (postId: number) => {
-    if (!confirm('Are you sure you want to delete this portfolio post?'))
-      return;
+    if (!confirm(t('common.confirmDelete'))) return;
 
     // Check if it's a new post (temp ID)
     const isNewPost = newPosts.some((np) => np.post.id === postId);
@@ -411,11 +412,7 @@ export default function PortfolioSection() {
   };
 
   const cancelAllChanges = () => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
-      )
-    ) {
+    if (!confirm(t('common.confirmCancel'))) {
       return;
     }
 
@@ -615,7 +612,7 @@ export default function PortfolioSection() {
       setNewPosts([]);
       setDeletedPosts(new Set());
 
-      alert('All changes applied successfully!');
+      alert(`${t('common.applyChanges')}!`);
     } catch (error) {
       console.error('Error applying changes:', error);
       // Roll back created posts and their images (reverse order)
@@ -661,7 +658,7 @@ export default function PortfolioSection() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
-            {isEditing ? 'Edit Portfolio Post' : 'Create New Portfolio Post'}
+            {isEditing ? t('portfolio.editPost') : t('portfolio.createNewPost')}
           </h2>
           <button
             type="button"
@@ -669,7 +666,7 @@ export default function PortfolioSection() {
             className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-darkergray text-darktext dark:text-lighttext rounded-lg hover:bg-gray-300 dark:hover:bg-darkestgray transition-colors"
           >
             <X className="h-4 w-4" />
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
 
@@ -683,26 +680,26 @@ export default function PortfolioSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                English Title
+                {t('portfolio.titleEnLabel')}
               </label>
               <input
                 type="text"
                 value={formData.title_en}
                 onChange={(e) => handleFormChange('title_en', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="Enter English title"
+                placeholder={t('portfolio.titleEnPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                Italian Title
+                {t('portfolio.titleItLabel')}
               </label>
               <input
                 type="text"
                 value={formData.title_it}
                 onChange={(e) => handleFormChange('title_it', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="Enter Italian title"
+                placeholder={t('portfolio.titleItPlaceholder')}
               />
             </div>
           </div>
@@ -710,7 +707,7 @@ export default function PortfolioSection() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                Source Code Link
+                {t('portfolio.sourceLinkLabel')}
               </label>
               <input
                 type="url"
@@ -719,31 +716,31 @@ export default function PortfolioSection() {
                   handleFormChange('source_link', e.target.value)
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="https://github.com/..."
+                placeholder={t('portfolio.sourceLinkPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                Demo Link
+                {t('portfolio.demoLinkLabel')}
               </label>
               <input
                 type="url"
                 value={formData.demo_link}
                 onChange={(e) => handleFormChange('demo_link', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="https://demo.example.com"
+                placeholder={t('portfolio.demoLinkPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                Store Link
+                {t('portfolio.storeLinkLabel')}
               </label>
               <input
                 type="url"
                 value={formData.store_link}
                 onChange={(e) => handleFormChange('store_link', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="https://play.google.com/..."
+                placeholder={t('portfolio.storeLinkPlaceholder')}
               />
             </div>
           </div>
@@ -751,7 +748,7 @@ export default function PortfolioSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                English Description
+                {t('portfolio.descriptionEnLabel')}
               </label>
               <textarea
                 value={formData.description_en}
@@ -760,12 +757,12 @@ export default function PortfolioSection() {
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
-                placeholder="Enter English description"
+                placeholder={t('portfolio.descriptionEnPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                Italian Description
+                {t('portfolio.descriptionItLabel')}
               </label>
               <textarea
                 value={formData.description_it}
@@ -774,7 +771,7 @@ export default function PortfolioSection() {
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
-                placeholder="Enter Italian description"
+                placeholder={t('portfolio.descriptionItPlaceholder')}
               />
             </div>
           </div>
@@ -782,26 +779,26 @@ export default function PortfolioSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                English Content
+                {t('portfolio.bodyEnLabel')}
               </label>
               <textarea
                 value={formData.body_en}
                 onChange={(e) => handleFormChange('body_en', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={5}
-                placeholder="Enter English content"
+                placeholder={t('portfolio.bodyEnPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main mb-1">
-                Italian Content
+                {t('portfolio.bodyItLabel')}
               </label>
               <textarea
                 value={formData.body_it}
                 onChange={(e) => handleFormChange('body_it', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={5}
-                placeholder="Enter Italian content"
+                placeholder={t('portfolio.bodyItPlaceholder')}
               />
             </div>
           </div>
@@ -876,7 +873,7 @@ export default function PortfolioSection() {
                     className="mx-auto rounded-lg object-cover"
                   />
                   <p className="text-sm text-darktext dark:text-lighttext2">
-                    {formImage ? formImage.name : 'Current image'}
+                    {formImage ? formImage.name : t('portfolio.changeImage')}
                   </p>
                 </div>
               ) : (
@@ -898,7 +895,9 @@ export default function PortfolioSection() {
                 htmlFor="form-image"
                 className="mt-2 inline-block px-4 py-2 bg-secondary text-white rounded-lg cursor-pointer hover:bg-tertiary transition-colors border-2 border-secondary hover:border-tertiary"
               >
-                {currentImage ? 'Change Image' : 'Select Image'}
+                {currentImage
+                  ? t('portfolio.changeImage')
+                  : t('portfolio.selectImage')}
               </label>
             </div>
           </div>
@@ -910,7 +909,7 @@ export default function PortfolioSection() {
               className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
             >
               <X className="h-4 w-4" />
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="button"
@@ -918,7 +917,7 @@ export default function PortfolioSection() {
               className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-tertiary text-white rounded-lg transition-colors"
             >
               <Eye className="h-4 w-4" />
-              Preview Post
+              {t('portfolio.previewPost')}
             </button>
             <button
               type="button"
@@ -927,7 +926,7 @@ export default function PortfolioSection() {
               }
               className="flex items-center gap-2 px-4 py-2 bg-main hover:bg-secondary text-white rounded-lg transition-colors"
             >
-              Done
+              {t('common.done')}
             </button>
           </div>
         </div>
@@ -935,7 +934,7 @@ export default function PortfolioSection() {
         <PreviewModal
           isOpen={isPostPreviewOpen}
           onClose={() => setIsPostPreviewOpen(false)}
-          title="Post Preview"
+          title={t('portfolio.postPreviewTitle')}
         >
           <PostPreview
             formData={formData}
@@ -959,10 +958,10 @@ export default function PortfolioSection() {
     <div className="space-y-6 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-8">
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
-          Portfolio Section
+          {t('portfolio.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
-          Manage your portfolio posts
+          {t('portfolio.subtitle')}
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
@@ -971,7 +970,7 @@ export default function PortfolioSection() {
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
-            Preview
+            {t('common.preview')}
           </button>
           <button
             type="button"
@@ -980,7 +979,7 @@ export default function PortfolioSection() {
             onClick={cancelAllChanges}
           >
             <X className="w-4 h-4" />
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -991,10 +990,10 @@ export default function PortfolioSection() {
             {isUpdating ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Applying Changes...
+                {t('common.applying')}
               </>
             ) : (
-              'Apply Changes'
+              t('common.applyChanges')
             )}
           </button>
         </div>
@@ -1009,7 +1008,7 @@ export default function PortfolioSection() {
         >
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            Translations
+            {t('common.translations')}
           </h2>
           {isTranslationsExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
@@ -1031,7 +1030,7 @@ export default function PortfolioSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                English
+                {t('common.english')}
               </button>
               <button
                 type="button"
@@ -1042,7 +1041,7 @@ export default function PortfolioSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                Italian
+                {t('common.italian')}
               </button>
             </div>
 
@@ -1054,7 +1053,7 @@ export default function PortfolioSection() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Title (Portfolio)
+                    {t('portfolio.translationTitleLabel')}
                   </label>
                   <input
                     type="text"
@@ -1067,12 +1066,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Portfolio"
+                    placeholder={t('portfolio.translationTitlePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Subtitle (Portfolio)
+                    {t('portfolio.translationSubtitleLabel')}
                   </label>
                   <textarea
                     value={translations[translationLocale].subtitle1 || ''}
@@ -1085,12 +1084,12 @@ export default function PortfolioSection() {
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
-                    placeholder="e.g., This ****selection of projects****..."
+                    placeholder={t('portfolio.translationSubtitlePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Button Text
+                    {t('portfolio.buttonTextLabel')}
                   </label>
                   <input
                     type="text"
@@ -1103,12 +1102,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Explore more"
+                    placeholder={t('portfolio.exploreMorePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Demo Label
+                    {t('portfolio.demoLabelLabel')}
                   </label>
                   <input
                     type="text"
@@ -1121,12 +1120,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Live Demo"
+                    placeholder={t('portfolio.liveDemoPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Store Label
+                    {t('portfolio.storeLabelLabel')}
                   </label>
                   <input
                     type="text"
@@ -1139,12 +1138,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Play Store"
+                    placeholder={t('portfolio.playStorePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Source Label
+                    {t('portfolio.sourceLabelLabel')}
                   </label>
                   <input
                     type="text"
@@ -1157,12 +1156,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Source Code"
+                    placeholder={t('portfolio.sourceCodePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Copy Button Text
+                    {t('portfolio.copyButtonTextLabel')}
                   </label>
                   <input
                     type="text"
@@ -1175,12 +1174,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Copy post link"
+                    placeholder={t('portfolio.copyLinkPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Pre Copy Text
+                    {t('portfolio.preCopyTextLabel')}
                   </label>
                   <input
                     type="text"
@@ -1193,12 +1192,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Copied!"
+                    placeholder={t('portfolio.copiedPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    No Posts Message
+                    {t('portfolio.noPostsMessageLabel')}
                   </label>
                   <input
                     type="text"
@@ -1211,12 +1210,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., There are no posts available!"
+                    placeholder={t('portfolio.noPostsPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Rate Limit Message
+                    {t('portfolio.rateLimitMessageLabel')}
                   </label>
                   <input
                     type="text"
@@ -1229,12 +1228,12 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Too many requests! Please wait and retry."
+                    placeholder={t('portfolio.rateLimitPlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Searchbar Placeholder
+                    {t('portfolio.searchbarPlaceholderLabel')}
                   </label>
                   <input
                     type="text"
@@ -1247,7 +1246,7 @@ export default function PortfolioSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Search posts by title, desc or tag..."
+                    placeholder={t('portfolio.searchPlaceholder')}
                   />
                 </div>
               </div>
@@ -1258,7 +1257,7 @@ export default function PortfolioSection() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
-          Portfolio Posts
+          {t('portfolio.postsTitle')}
         </h2>
         <button
           type="button"
@@ -1266,7 +1265,7 @@ export default function PortfolioSection() {
           className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary transition-colors border-2 border-main hover:border-secondary"
         >
           <Plus className="h-4 w-4" />
-          Add Portfolio Post
+          {t('portfolio.addPortfolioPost')}
         </button>
       </div>
 
@@ -1333,7 +1332,7 @@ export default function PortfolioSection() {
         <div className="text-center py-8">
           <FileText className="h-12 w-12 mx-auto text-main mb-4" />
           <p className="text-darktext dark:text-lighttext2">
-            No portfolio posts found. Create your first portfolio post!
+            {t('portfolio.noPortfolioPosts')}
           </p>
         </div>
       )}
@@ -1341,7 +1340,7 @@ export default function PortfolioSection() {
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        title="Portfolio Section Preview"
+        title={t('portfolio.previewTitle')}
       >
         <PortfolioPreview
           posts={portfolioPosts}

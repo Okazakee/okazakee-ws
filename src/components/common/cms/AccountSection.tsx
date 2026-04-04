@@ -10,6 +10,7 @@ import {
   User,
   X,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ import { useLayoutStore } from '@/store/layoutStore';
 import { processImageToWebP } from '@/utils/imageProcessor';
 
 export default function AccountSection() {
+  const t = useTranslations('cms');
   const { user, setUser } = useLayoutStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -73,7 +75,9 @@ export default function AccountSection() {
       }
     } catch (err) {
       console.error('Error uploading avatar:', err);
-      setError(err instanceof Error ? err.message : 'Failed to upload avatar');
+      setError(
+        err instanceof Error ? err.message : t('account.errorUploadAvatar')
+      );
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -107,7 +111,7 @@ export default function AccountSection() {
     } catch (err) {
       console.error('Error updating display name:', err);
       setError(
-        err instanceof Error ? err.message : 'Failed to update display name'
+        err instanceof Error ? err.message : t('account.errorUpdateName')
       );
     } finally {
       setSavingName(false);
@@ -132,7 +136,9 @@ export default function AccountSection() {
       router.push(`/${locale}/cms/login`);
     } catch (err) {
       console.error('Error deleting account:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete account');
+      setError(
+        err instanceof Error ? err.message : t('account.errorDeleteAccount')
+      );
       setIsDeleting(false);
       setShowDeleteConfirm(false);
     }
@@ -150,9 +156,11 @@ export default function AccountSection() {
     <div className="space-y-8 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-8">
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
-          My Account
+          {t('account.title')}
         </h1>
-        <p className="text-gray-500 dark:text-lighttext2 text-lg">Manage your profile settings</p>
+        <p className="text-gray-500 dark:text-lighttext2 text-lg">
+          {t('account.subtitle')}
+        </p>
       </div>
 
       {/* Error display */}
@@ -166,7 +174,7 @@ export default function AccountSection() {
       <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6">
         <h2 className="text-xl font-bold text-main mb-6 flex items-center gap-2">
           <User className="w-5 h-5" />
-          Profile Information
+          {t('account.profileInfoTitle')}
         </h2>
 
         <div className="space-y-6">
@@ -218,9 +226,11 @@ export default function AccountSection() {
               />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-lighttext2 mb-1">Profile Picture</p>
+              <p className="text-sm text-gray-500 dark:text-lighttext2 mb-1">
+                {t('account.profilePictureLabel')}
+              </p>
               <p className="text-xs text-gray-500 dark:text-lighttext2">
-                Click to upload a new avatar
+                {t('account.clickToUpload')}
               </p>
             </div>
           </div>
@@ -231,7 +241,7 @@ export default function AccountSection() {
               htmlFor="display-name-input"
               className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
-              Display Name
+              {t('account.displayNameLabel')}
             </label>
             {editingName ? (
               <div className="flex items-center gap-2">
@@ -282,14 +292,14 @@ export default function AccountSection() {
           {user.email && (
             <div>
               <div className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                Email Address
+                {t('account.emailLabel')}
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-darkestgray rounded-lg text-gray-500 dark:text-lighttext2">
                 <Mail className="w-4 h-4" />
                 <span>{user.email}</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-lighttext2 mt-1">
-                Email cannot be changed
+                {t('account.emailReadOnly')}
               </p>
             </div>
           )}
@@ -298,14 +308,14 @@ export default function AccountSection() {
           {user.githubUsername && (
             <div>
               <div className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                GitHub Username
+                {t('account.githubUsernameLabel')}
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-darkestgray rounded-lg text-gray-500 dark:text-lighttext2">
                 <Github className="w-4 h-4" />
                 <span>@{user.githubUsername}</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-lighttext2 mt-1">
-                GitHub username cannot be changed
+                {t('account.githubReadOnly')}
               </p>
             </div>
           )}
@@ -313,7 +323,7 @@ export default function AccountSection() {
           {/* Role Section (Read-only) */}
           <div>
             <div className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-              Role
+              {t('account.roleLabel')}
             </div>
             <div className="px-3 py-2 bg-white dark:bg-darkestgray rounded-lg">
               <span
@@ -327,7 +337,7 @@ export default function AccountSection() {
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-lighttext2 mt-1">
-              Role is managed by administrators
+              {t('account.roleReadOnly')}
             </p>
           </div>
         </div>
@@ -337,22 +347,20 @@ export default function AccountSection() {
       <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-6">
         <h2 className="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
           <Trash2 className="w-5 h-5" />
-          Danger Zone
+          {t('account.dangerZoneTitle')}
         </h2>
         <p className="text-gray-500 dark:text-lighttext2 mb-4">
-          Once you delete your account, there is no going back. This will
-          permanently delete your account and all associated data.
+          {t('account.dangerZoneDesc')}
         </p>
 
         {showDeleteConfirm ? (
           <div className="space-y-4">
             <div className="bg-gray-100 dark:bg-darkestgray rounded-lg p-4 border border-red-500/50">
               <p className="text-red-400 font-semibold mb-2">
-                Are you absolutely sure?
+                {t('account.confirmDeleteTitle')}
               </p>
               <p className="text-gray-500 dark:text-lighttext2 text-sm">
-                This action cannot be undone. This will permanently delete your
-                account, profile, and all associated data.
+                {t('account.confirmDeleteDesc')}
               </p>
             </div>
             <div className="flex gap-3">
@@ -365,12 +373,12 @@ export default function AccountSection() {
                 {isDeleting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Deleting...
+                    {t('account.deleting')}
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4" />
-                    Yes, delete my account
+                    {t('account.confirmDeleteButton')}
                   </>
                 )}
               </button>
@@ -383,7 +391,7 @@ export default function AccountSection() {
                 disabled={isDeleting}
                 className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-darkgray dark:hover:bg-darkergray text-darktext dark:text-lighttext font-medium rounded-lg transition-colors disabled:opacity-50"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -394,7 +402,7 @@ export default function AccountSection() {
             className="flex items-center gap-2 px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 font-medium rounded-lg transition-colors border border-red-500/50"
           >
             <Trash2 className="w-4 h-4" />
-            Delete Account
+            {t('account.deleteAccount')}
           </button>
         )}
       </div>

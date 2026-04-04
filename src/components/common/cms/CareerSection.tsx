@@ -14,6 +14,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -51,6 +52,7 @@ type EditableCareerEntry = CareerEntryWithEditing & {
 };
 
 export default function CareerSection() {
+  const t = useTranslations('cms');
   const [careerEntries, setCareerEntries] = useState<EditableCareerEntry[]>([]);
   const [originalEntries, setOriginalEntries] = useState<EditableCareerEntry[]>(
     []
@@ -315,7 +317,7 @@ export default function CareerSection() {
 
   const handleCreateCareer = () => {
     if (!newEntryLogo) {
-      setError('Please select a logo for the career entry');
+      setError(t('career.errorNoLogo'));
       return;
     }
 
@@ -403,7 +405,7 @@ export default function CareerSection() {
   };
 
   const handleDeleteCareer = (entryId: number | string) => {
-    if (!confirm('Are you sure you want to delete this career entry?')) return;
+    if (!confirm(t('common.confirmDelete'))) return;
 
     const id = typeof entryId === 'string' ? parseInt(entryId, 10) : entryId;
 
@@ -444,11 +446,7 @@ export default function CareerSection() {
   };
 
   const cancelAllChanges = () => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel all changes? All unsaved edits will be lost.'
-      )
-    ) {
+    if (!confirm(t('common.confirmCancel'))) {
       return;
     }
 
@@ -635,7 +633,7 @@ export default function CareerSection() {
       setNewEntries([]);
       setDeletedEntries(new Set());
 
-      alert('All changes applied successfully!');
+      alert(`${t('common.applyChanges')}!`);
     } catch (error) {
       console.error('Error applying changes:', error);
       for (let i = createdForRollback.length - 1; i >= 0; i--) {
@@ -704,10 +702,10 @@ export default function CareerSection() {
     <div className="space-y-6 mb-8 md:mb-0 lg:mt-0">
       <div className="text-center mb-8">
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
-          Career Section
+          {t('career.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
-          Manage your career entries
+          {t('career.subtitle')}
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
@@ -716,7 +714,7 @@ export default function CareerSection() {
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
-            Preview
+            {t('common.preview')}
           </button>
           <button
             type="button"
@@ -725,7 +723,7 @@ export default function CareerSection() {
             onClick={cancelAllChanges}
           >
             <X className="w-4 h-4" />
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -736,10 +734,10 @@ export default function CareerSection() {
             {isUpdating ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Applying Changes...
+                {t('common.applying')}
               </>
             ) : (
-              'Apply Changes'
+              t('common.applyChanges')
             )}
           </button>
         </div>
@@ -754,7 +752,7 @@ export default function CareerSection() {
         >
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            Translations
+            {t('common.translations')}
           </h2>
           {isTranslationsExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
@@ -776,7 +774,7 @@ export default function CareerSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                English
+                {t('common.english')}
               </button>
               <button
                 type="button"
@@ -787,7 +785,7 @@ export default function CareerSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                Italian
+                {t('common.italian')}
               </button>
             </div>
 
@@ -802,7 +800,7 @@ export default function CareerSection() {
                     htmlFor="career-translation-title-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Title
+                    {t('career.translationTitleLabel')}
                   </label>
                   <input
                     id="career-translation-title-input"
@@ -816,7 +814,7 @@ export default function CareerSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Career History"
+                    placeholder={t('career.translationTitlePlaceholder')}
                   />
                 </div>
                 <div>
@@ -824,7 +822,7 @@ export default function CareerSection() {
                     htmlFor="career-translation-subtitle-input"
                     className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                   >
-                    Subtitle
+                    {t('career.translationSubtitleLabel')}
                   </label>
                   <textarea
                     id="career-translation-subtitle-input"
@@ -838,7 +836,7 @@ export default function CareerSection() {
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
-                    placeholder="e.g., My professional journey and experience"
+                    placeholder={t('career.translationSubtitlePlaceholder')}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -847,7 +845,7 @@ export default function CareerSection() {
                       htmlFor="career-translation-present-input"
                       className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                     >
-                      Present
+                      {t('career.presentLabel')}
                     </label>
                     <input
                       id="career-translation-present-input"
@@ -861,7 +859,7 @@ export default function CareerSection() {
                         )
                       }
                       className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                      placeholder="e.g., Present"
+                      placeholder={t('career.presentPlaceholder')}
                     />
                   </div>
                   <div>
@@ -869,7 +867,7 @@ export default function CareerSection() {
                       htmlFor="career-translation-month-input"
                       className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
                     >
-                      Month
+                      {t('career.monthLabel')}
                     </label>
                     <input
                       id="career-translation-month-input"
@@ -883,12 +881,12 @@ export default function CareerSection() {
                         )
                       }
                       className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                      placeholder="e.g., month"
+                      placeholder={t('career.monthPlaceholder')}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                      Months
+                      {t('career.monthsLabel')}
                     </label>
                     <input
                       type="text"
@@ -901,12 +899,12 @@ export default function CareerSection() {
                         )
                       }
                       className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                      placeholder="e.g., months"
+                      placeholder={t('career.monthsPlaceholder')}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                      Year
+                      {t('career.yearLabel')}
                     </label>
                     <input
                       type="text"
@@ -919,12 +917,12 @@ export default function CareerSection() {
                         )
                       }
                       className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                      placeholder="e.g., year"
+                      placeholder={t('career.yearPlaceholder')}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                      Years
+                      {t('career.yearsLabel')}
                     </label>
                     <input
                       type="text"
@@ -937,7 +935,7 @@ export default function CareerSection() {
                         )
                       }
                       className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                      placeholder="e.g., years"
+                      placeholder={t('career.yearsPlaceholder')}
                     />
                   </div>
                 </div>
@@ -948,7 +946,7 @@ export default function CareerSection() {
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs text-gray-500 dark:text-lighttext2 mb-1">
-                        Full Remote
+                        {t('career.remoteFullLabel')}
                       </label>
                       <input
                         type="text"
@@ -961,12 +959,12 @@ export default function CareerSection() {
                           )
                         }
                         className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                        placeholder="e.g., Remote"
+                        placeholder={t('career.remoteFullPlaceholder')}
                       />
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500 dark:text-lighttext2 mb-1">
-                        Hybrid
+                        {t('career.remoteHybridLabel')}
                       </label>
                       <input
                         type="text"
@@ -979,12 +977,12 @@ export default function CareerSection() {
                           )
                         }
                         className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                        placeholder="e.g., Hybrid"
+                        placeholder={t('career.remoteHybridPlaceholder')}
                       />
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500 dark:text-lighttext2 mb-1">
-                        On-site
+                        {t('career.remoteOnSiteLabel')}
                       </label>
                       <input
                         type="text"
@@ -997,7 +995,7 @@ export default function CareerSection() {
                           )
                         }
                         className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                        placeholder="e.g., On-site"
+                        placeholder={t('career.remoteOnSitePlaceholder')}
                       />
                     </div>
                   </div>
@@ -1010,14 +1008,14 @@ export default function CareerSection() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-darktext dark:text-lighttext">
-          Career Entries
+          {t('career.careerEntriesTitle')}
         </h2>
         <button
           onClick={() => setIsCreating(!isCreating)}
           className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary transition-colors border-2 border-main hover:border-secondary"
         >
           <Plus className="h-4 w-4" />
-          Add Career Entry
+          {t('career.addCareerEntry')}
         </button>
       </div>
 
@@ -1030,25 +1028,25 @@ export default function CareerSection() {
       {isCreating && (
         <div className="p-6 bg-bglight dark:bg-darkgray rounded-lg border-2 border-main dark:border-main">
           <h3 className="text-lg font-semibold mb-4 text-darktext dark:text-lighttext">
-            Create New Career Entry
+            {t('career.createNewEntry')}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Job Title
+                {t('career.jobTitleLabel')}
               </label>
               <input
                 type="text"
                 value={newCareerEntry.title}
                 onChange={(e) => handleNewEntryChange('title', e.target.value)}
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="Enter job title"
+                placeholder={t('career.jobTitlePlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Company
+                {t('career.companyLabel')}
               </label>
               <input
                 type="text"
@@ -1057,14 +1055,14 @@ export default function CareerSection() {
                   handleNewEntryChange('company', e.target.value)
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="Enter company name"
+                placeholder={t('career.companyPlaceholder')}
               />
             </div>
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-main dark:text-main mb-1">
-              Website URL
+              {t('career.websiteUrlLabel')}
             </label>
             <input
               type="url"
@@ -1073,14 +1071,14 @@ export default function CareerSection() {
                 handleNewEntryChange('website_url', e.target.value)
               }
               className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-              placeholder="https://company.com"
+              placeholder={t('career.websiteUrlPlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                English Location
+                {t('career.locationEnLabel')}
               </label>
               <input
                 type="text"
@@ -1089,12 +1087,12 @@ export default function CareerSection() {
                   handleNewEntryChange('location_en', e.target.value)
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="Enter location"
+                placeholder={t('career.locationPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Italian Location
+                {t('career.locationItLabel')}
               </label>
               <input
                 type="text"
@@ -1103,14 +1101,14 @@ export default function CareerSection() {
                   handleNewEntryChange('location_it', e.target.value)
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                placeholder="Enter location"
+                placeholder={t('career.locationPlaceholder')}
               />
             </div>
           </div>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-main dark:text-main mb-1">
-              Remote Type
+              {t('career.remoteTypeLabel')}
             </label>
             <select
               value={newCareerEntry.remote}
@@ -1122,9 +1120,9 @@ export default function CareerSection() {
               }
               className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
             >
-              <option value="full">Full Remote</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="onSite">On Site</option>
+              <option value="full">{t('career.remoteFullOption')}</option>
+              <option value="hybrid">{t('career.remoteHybridOption')}</option>
+              <option value="onSite">{t('career.remoteOnSiteOption')}</option>
             </select>
           </div>
 
@@ -1160,7 +1158,7 @@ export default function CareerSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                English Description
+                {t('career.descriptionEnLabel')}
               </label>
               <textarea
                 value={newCareerEntry.description_en}
@@ -1169,12 +1167,12 @@ export default function CareerSection() {
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
-                placeholder="Enter job description"
+                placeholder={t('career.descriptionPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Italian Description
+                {t('career.descriptionItLabel')}
               </label>
               <textarea
                 value={newCareerEntry.description_it}
@@ -1183,7 +1181,7 @@ export default function CareerSection() {
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
-                placeholder="Enter job description"
+                placeholder={t('career.descriptionPlaceholder')}
               />
             </div>
           </div>
@@ -1191,7 +1189,7 @@ export default function CareerSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                English Company Description
+                {t('career.companyDescEnLabel')}
               </label>
               <textarea
                 value={newCareerEntry.company_description_en}
@@ -1200,12 +1198,12 @@ export default function CareerSection() {
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
-                placeholder="Enter company description"
+                placeholder={t('career.companyDescPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-main dark:text-main mb-1">
-                Italian Company Description
+                {t('career.companyDescItLabel')}
               </label>
               <textarea
                 value={newCareerEntry.company_description_it}
@@ -1214,7 +1212,7 @@ export default function CareerSection() {
                 }
                 className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                 rows={3}
-                placeholder="Enter company description"
+                placeholder={t('career.companyDescPlaceholder')}
               />
             </div>
           </div>
@@ -1228,7 +1226,7 @@ export default function CareerSection() {
               value={newCareerEntry.skills}
               onChange={(e) => handleNewEntryChange('skills', e.target.value)}
               className="w-full px-3 py-2 bg-white dark:bg-darkergray border-2 border-main rounded-lg focus:ring-2 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-              placeholder='["ReactJS", "Express.js", "Angular", "CMS"]'
+              placeholder={t('career.skillsPlaceholder')}
             />
           </div>
 
@@ -1278,7 +1276,7 @@ export default function CareerSection() {
                 htmlFor="new-entry-logo"
                 className="mt-2 inline-block px-4 py-2 bg-secondary text-white rounded-lg cursor-pointer hover:bg-tertiary transition-colors border-2 border-secondary hover:border-tertiary"
               >
-                Select Logo
+                {t('career.selectLogo')}
               </label>
             </div>
           </div>
@@ -1290,13 +1288,13 @@ export default function CareerSection() {
               className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary disabled:opacity-50 transition-colors border-2 border-main hover:border-secondary"
             >
               <Save className="h-4 w-4" />
-              {isCreating ? 'Creating...' : 'Create Career Entry'}
+              {isCreating ? t('career.creating') : t('career.createNewEntry')}
             </button>
             <button
               onClick={() => setIsCreating(false)}
               className="px-4 py-2 bg-gray-200 dark:bg-darkergray text-darktext dark:text-lighttext rounded-lg hover:bg-gray-300 dark:hover:bg-darkestgray transition-colors border-2 border-gray-200 dark:border-darkergray hover:border-gray-300 dark:hover:border-darkestgray"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
         </div>
@@ -1346,7 +1344,7 @@ export default function CareerSection() {
                   className="mt-2 inline-block px-3 py-1 bg-secondary text-white rounded-sm text-sm cursor-pointer hover:bg-tertiary transition-colors border border-secondary hover:border-tertiary"
                 >
                   <Upload className="h-3 w-3 inline mr-1" />
-                  Change Logo
+                  {t('career.changeLogo')}
                 </label>
               </div>
             </div>
@@ -1384,7 +1382,7 @@ export default function CareerSection() {
                   {new Date(entry.startDate).toLocaleDateString()} -{' '}
                   {entry.endDate
                     ? new Date(entry.endDate).toLocaleDateString()
-                    : 'Present'}
+                    : t('career.presentLabel')}
                 </span>
               </div>
 
@@ -1392,7 +1390,7 @@ export default function CareerSection() {
                 <div className="mt-4 space-y-3">
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Job Title
+                      {t('career.jobTitleLabel')}
                     </label>
                     <input
                       type="text"
@@ -1405,7 +1403,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Company
+                      {t('career.companyLabel')}
                     </label>
                     <input
                       type="text"
@@ -1418,7 +1416,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Website URL
+                      {t('career.websiteUrlLabel')}
                     </label>
                     <input
                       type="url"
@@ -1435,7 +1433,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      English Location
+                      {t('career.locationEnLabel')}
                     </label>
                     <input
                       type="text"
@@ -1452,7 +1450,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Italian Location
+                      {t('career.locationItLabel')}
                     </label>
                     <input
                       type="text"
@@ -1469,7 +1467,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Remote Type
+                      {t('career.remoteTypeLabel')}
                     </label>
                     <select
                       value={entry.remote}
@@ -1482,14 +1480,20 @@ export default function CareerSection() {
                       }
                       className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
                     >
-                      <option value="full">Full Remote</option>
-                      <option value="hybrid">Hybrid</option>
-                      <option value="onSite">On Site</option>
+                      <option value="full">
+                        {t('career.remoteFullOption')}
+                      </option>
+                      <option value="hybrid">
+                        {t('career.remoteHybridOption')}
+                      </option>
+                      <option value="onSite">
+                        {t('career.remoteOnSiteOption')}
+                      </option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Start Date
+                      {t('career.startDateLabel')}
                     </label>
                     <input
                       type="date"
@@ -1502,7 +1506,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      End Date
+                      {t('career.endDateLabel')}
                     </label>
                     <input
                       type="date"
@@ -1528,12 +1532,12 @@ export default function CareerSection() {
                         handleInputChange(entry.id, 'skills', e.target.value)
                       }
                       className="w-full px-2 py-1 text-sm bg-white dark:bg-darkergray border-2 border-main rounded-sm focus:ring-1 focus:ring-main focus:border-secondary text-darktext dark:text-lighttext"
-                      placeholder='["ReactJS", "Express.js", "Angular", "CMS"]'
+                      placeholder={t('career.skillsPlaceholder')}
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      English Description
+                      {t('career.descriptionEnLabel')}
                     </label>
                     <textarea
                       value={entry.description_en}
@@ -1550,7 +1554,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Italian Description
+                      {t('career.descriptionItLabel')}
                     </label>
                     <textarea
                       value={entry.description_it}
@@ -1567,7 +1571,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      English Company Description
+                      {t('career.companyDescEnLabel')}
                     </label>
                     <textarea
                       value={entry.company_description_en}
@@ -1584,7 +1588,7 @@ export default function CareerSection() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-main dark:text-main mb-1">
-                      Italian Company Description
+                      {t('career.companyDescItLabel')}
                     </label>
                     <textarea
                       value={entry.company_description_it}
@@ -1605,13 +1609,13 @@ export default function CareerSection() {
                       className="flex items-center gap-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-sm transition-colors"
                     >
                       <X className="h-3 w-3" />
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                     <button
                       onClick={() => handleUpdateCareer(entry.id)}
                       className="flex items-center gap-1 px-3 py-1 bg-main hover:bg-secondary text-white text-sm rounded-sm transition-colors"
                     >
-                      Done
+                      {t('common.done')}
                     </button>
                   </div>
                 </div>
@@ -1625,7 +1629,7 @@ export default function CareerSection() {
         <div className="text-center py-8">
           <Briefcase className="h-12 w-12 mx-auto text-main dark:text-main mb-4" />
           <p className="text-darktext dark:text-lighttext2">
-            No career entries found. Create your first career entry!
+            {t('career.noCareerEntries')}
           </p>
         </div>
       )}
@@ -1633,7 +1637,7 @@ export default function CareerSection() {
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        title="Career Section Preview"
+        title={t('career.previewTitle')}
       >
         <CareerPreview
           entries={careerEntries.map((entry) => ({

@@ -14,6 +14,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { contactsActions } from '@/app/actions/cms/sections/contactsActions';
@@ -91,6 +92,7 @@ function IconComponent({
 }
 
 export default function ContactsSection() {
+  const t = useTranslations('cms');
   const { heroSection } = useLayoutStore();
   const [contacts, setContacts] = useState<EditableContact[]>([]);
   const [originalContacts, setOriginalContacts] = useState<EditableContact[]>(
@@ -545,10 +547,10 @@ export default function ContactsSection() {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="hidden lg:block text-4xl font-bold text-main mb-4">
-          Contacts Section
+          {t('contacts.title')}
         </h1>
         <p className="text-gray-500 dark:text-lighttext2 text-lg mb-4">
-          Manage your contact links and social media profiles
+          {t('contacts.subtitle')}
         </p>
         <div className="flex justify-center gap-3 mt-4">
           <button
@@ -557,7 +559,7 @@ export default function ContactsSection() {
             onClick={() => setIsPreviewOpen(true)}
           >
             <Eye className="w-4 h-4" />
-            Preview
+            {t('common.preview')}
           </button>
           <button
             type="button"
@@ -566,7 +568,7 @@ export default function ContactsSection() {
             onClick={cancelAllChanges}
           >
             <X className="w-4 h-4" />
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -577,12 +579,12 @@ export default function ContactsSection() {
             {isUpdating ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                Applying...
+                {t('common.applying')}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Apply Changes
+                {t('common.applyChanges')}
               </>
             )}
           </button>
@@ -598,7 +600,7 @@ export default function ContactsSection() {
         >
           <h2 className="text-xl font-bold text-main mb-4 flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            Translations
+            {t('common.translations')}
           </h2>
           {isTranslationsExpanded ? (
             <ChevronUp className="w-5 h-5 text-gray-500 dark:text-lighttext2" />
@@ -620,7 +622,7 @@ export default function ContactsSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                English
+                {t('common.english')}
               </button>
               <button
                 type="button"
@@ -631,7 +633,7 @@ export default function ContactsSection() {
                     : 'text-gray-500 dark:text-lighttext2 hover:text-darktext dark:hover:text-lighttext'
                 }`}
               >
-                Italian
+                {t('common.italian')}
               </button>
             </div>
 
@@ -643,7 +645,7 @@ export default function ContactsSection() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Title
+                    {t('contacts.translationTitleLabel')}
                   </label>
                   <input
                     type="text"
@@ -656,12 +658,12 @@ export default function ContactsSection() {
                       )
                     }
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                    placeholder="e.g., Contacts"
+                    placeholder={t('contacts.translationTitlePlaceholder')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-darktext dark:text-lighttext mb-2">
-                    Subtitle
+                    {t('contacts.translationSubtitleLabel')}
                   </label>
                   <textarea
                     value={translations[translationLocale].subtitle}
@@ -674,7 +676,7 @@ export default function ContactsSection() {
                     }
                     rows={3}
                     className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden resize-y"
-                    placeholder="e.g., You can ****reach out**** to me through the following channels:"
+                    placeholder={t('contacts.translationSubtitlePlaceholder')}
                   />
                 </div>
               </div>
@@ -685,7 +687,9 @@ export default function ContactsSection() {
 
       {/* Create New Contact */}
       <div className="bg-gray-100 dark:bg-darkergray rounded-xl p-6 mb-6">
-        <h2 className="text-2xl font-bold text-main mb-4">Add New Contact</h2>
+        <h2 className="text-2xl font-bold text-main mb-4">
+          {t('contacts.addNewContact')}
+        </h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
@@ -693,7 +697,7 @@ export default function ContactsSection() {
               htmlFor="contact-label"
               className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
-              Label *
+              {t('contacts.labelFieldLabel')}
             </label>
             <input
               id="contact-label"
@@ -703,7 +707,7 @@ export default function ContactsSection() {
                 setNewContact((prev) => ({ ...prev, label: e.target.value }))
               }
               className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-              placeholder="e.g., LinkedIn"
+              placeholder={t('contacts.labelPlaceholder')}
             />
           </div>
 
@@ -712,7 +716,7 @@ export default function ContactsSection() {
               htmlFor="contact-icon"
               className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
-              Icon Name *
+              {t('contacts.iconNameLabel')}
             </label>
             <div className="flex gap-2">
               <input
@@ -723,7 +727,7 @@ export default function ContactsSection() {
                   setNewContact((prev) => ({ ...prev, icon: e.target.value }))
                 }
                 className="flex-1 px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-                placeholder="e.g., linkedin"
+                placeholder={t('contacts.iconNamePlaceholder')}
               />
               {newContact.icon && (
                 <div className="flex items-center justify-center w-10 h-10 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg">
@@ -742,7 +746,7 @@ export default function ContactsSection() {
               htmlFor="contact-link"
               className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
             >
-              Link *
+              {t('contacts.linkLabel')}
             </label>
             <input
               id="contact-link"
@@ -752,7 +756,7 @@ export default function ContactsSection() {
                 setNewContact((prev) => ({ ...prev, link: e.target.value }))
               }
               className="w-full px-3 py-2 bg-white dark:bg-darkestgray border border-gray-300 dark:border-lighttext2 rounded-lg text-darktext dark:text-lighttext focus:border-main focus:outline-hidden"
-              placeholder="https://linkedin.com/in/..."
+              placeholder={t('contacts.linkPlaceholder')}
             />
           </div>
 
@@ -837,7 +841,7 @@ export default function ContactsSection() {
       <PreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        title="Contacts Section Preview"
+        title={t('contacts.previewTitle')}
       >
         <ContactsPreview
           contacts={contacts.filter((c) => !deletedContacts.has(c.id))}
@@ -874,6 +878,7 @@ function ContactDisplay({
   isFirst: boolean;
   isLast: boolean;
 }) {
+  const t = useTranslations('cms');
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -884,7 +889,7 @@ function ContactDisplay({
               onClick={onMoveUp}
               disabled={isFirst}
               className="p-1 text-gray-500 dark:text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Move up"
+              title={t('common.moveUp')}
             >
               <ArrowUp className="w-4 h-4" />
             </button>
@@ -893,12 +898,14 @@ function ContactDisplay({
               onClick={onMoveDown}
               disabled={isLast}
               className="p-1 text-gray-500 dark:text-lighttext2 hover:text-main transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Move down"
+              title={t('common.moveDown')}
             >
               <ArrowDown className="w-4 h-4" />
             </button>
           </div>
-          <span className="text-sm text-gray-500 dark:text-lighttext2">#{index + 1}</span>
+          <span className="text-sm text-gray-500 dark:text-lighttext2">
+            #{index + 1}
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -912,9 +919,13 @@ function ContactDisplay({
               size={20}
               className="text-darktext dark:text-lighttext"
             />
-            <span className="font-medium text-darktext dark:text-lighttext">{contact.label}</span>
+            <span className="font-medium text-darktext dark:text-lighttext">
+              {contact.label}
+            </span>
           </div>
-          <span className="text-gray-500 dark:text-lighttext2">({contact.icon})</span>
+          <span className="text-gray-500 dark:text-lighttext2">
+            ({contact.icon})
+          </span>
         </div>
       </div>
 
@@ -947,6 +958,7 @@ function EditContactForm({
   onSave: (data: Partial<Contact>) => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations('cms');
   const [formData, setFormData] = useState({
     label: contact.label,
     icon: contact.icon,
@@ -966,7 +978,7 @@ function EditContactForm({
             htmlFor="edit-contact-label"
             className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
           >
-            Label
+            {t('contacts.labelFieldLabel')}
           </label>
           <input
             id="edit-contact-label"
@@ -984,7 +996,7 @@ function EditContactForm({
             htmlFor="edit-contact-icon"
             className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
           >
-            Icon Name
+            {t('contacts.iconNameLabel')}
           </label>
           <div className="flex gap-2">
             <input
@@ -1013,7 +1025,7 @@ function EditContactForm({
             htmlFor="edit-contact-link"
             className="block text-sm font-medium text-darktext dark:text-lighttext mb-2"
           >
-            Link
+            {t('contacts.linkLabel')}
           </label>
           <input
             id="edit-contact-link"
@@ -1052,7 +1064,7 @@ function EditContactForm({
           className="flex items-center gap-2 px-3 py-2 bg-main hover:bg-secondary text-white font-medium rounded-lg transition-all duration-200"
         >
           <Save className="w-4 h-4" />
-          Done
+          {t('common.done')}
         </button>
         <button
           type="button"
@@ -1060,7 +1072,7 @@ function EditContactForm({
           className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-darkestgray dark:hover:bg-darkgray text-darktext dark:text-lighttext font-medium rounded-lg transition-all duration-200"
         >
           <X className="w-4 h-4" />
-          Cancel
+          {t('common.cancel')}
         </button>
       </div>
     </div>

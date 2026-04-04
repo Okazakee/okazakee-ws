@@ -16,12 +16,14 @@ interface LayoutState {
   setUser: (user: CMSUser | null) => void;
   setSidePanelSections: (sections: string[]) => void;
   setActiveSection: (section: string) => void;
-  setHeroSection: (heroSection: {
-    mainImage: string | null;
-    blurhashURL: string | null;
-    resume_en: string | null;
-    resume_it: string | null;
-  } | null) => void;
+  setHeroSection: (
+    heroSection: {
+      mainImage: string | null;
+      blurhashURL: string | null;
+      resume_en: string | null;
+      resume_it: string | null;
+    } | null
+  ) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 }
