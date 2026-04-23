@@ -282,7 +282,7 @@ async function createPortfolio(
     const insertData = {
       ...data,
       blurhashURL: data.blurhashURL ?? '',
-      author_id: userId,
+      author_id: data.author_id || userId,
     };
 
     const admin = getAdminClient();
@@ -430,6 +430,7 @@ async function uploadPortfolioImageForNewPost(
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
+    let format: 'webp' | 'png' = 'webp';
 
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
@@ -445,6 +446,7 @@ async function uploadPortfolioImageForNewPost(
       }
       buffer = processed.buffer;
       blurhash = processed.blurhash;
+      format = processed.format ?? 'webp';
     }
 
     const sanitizedTitle = sanitizeFilename(titleEn || 'untitled');
@@ -454,7 +456,7 @@ async function uploadPortfolioImageForNewPost(
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
-        contentType: 'image/webp',
+        contentType: format === 'png' ? 'image/png' : 'image/webp',
         upsert: true,
       });
 
@@ -549,6 +551,7 @@ async function uploadPortfolioImage(
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
+    let format: 'webp' | 'png' = 'webp';
 
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
@@ -564,6 +567,7 @@ async function uploadPortfolioImage(
       }
       buffer = processed.buffer;
       blurhash = processed.blurhash;
+      format = processed.format ?? 'webp';
     }
 
     const sanitizedTitle = sanitizeFilename(
@@ -577,7 +581,7 @@ async function uploadPortfolioImage(
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
-        contentType: 'image/webp',
+        contentType: format === 'png' ? 'image/png' : 'image/webp',
         upsert: true,
       });
 

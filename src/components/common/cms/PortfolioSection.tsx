@@ -294,6 +294,7 @@ export default function PortfolioSection() {
       post_tags: formData.post_tags,
       store_link: formData.store_link,
       created_at: formData.created_at,
+      author_id: formData.author_id,
       views: 0,
       image_file: formImage,
     };
@@ -428,27 +429,26 @@ export default function PortfolioSection() {
   };
 
   const applyAllChanges = async () => {
-    const createdForRollback: { postId: number; imagePath: string }[] = [];
-    try {
-      setIsUpdating(true);
-      setError(null);
+    const errors: string[] = [];
+    setIsUpdating(true);
+    setError(null);
 
-      // 1. Create new posts first (so we can roll back only creates on failure)
-      for (const { post, imageFile } of newPosts) {
-        if (!imageFile) {
-          throw new Error(
-            `Image is required for portfolio post ${post.title_en}`
-          );
-        }
-
+    // 1. Create new posts
+    for (const { post, imageFile } of newPosts) {
+      if (!imageFile) {
+        errors.push(`"${post.title_en}": image required`);
+        continue;
+      }
+      let uploadedImagePath: string | null = null;
+      try {
         const processed = await processImageToWebP(imageFile, {
           maxWidth: 1920,
           maxHeight: 1080,
           quality: 0.85,
         });
-
         if (!processed.success || !processed.file) {
-          throw new Error(processed.error || 'Failed to process image');
+          errors.push(`"${post.title_en}": ${processed.error || 'failed to process image'}`);
+          continue;
         }
 
         const imageResult = await portfolioActions({
@@ -456,22 +456,14 @@ export default function PortfolioSection() {
           file: processed.file,
           titleEn: post.title_en,
         });
-
         if (!imageResult.success) {
-          throw new Error(
-            imageResult.error || `Failed to upload image for ${post.title_en}`
-          );
+          errors.push(`"${post.title_en}": ${imageResult.error || 'failed to upload image'}`);
+          continue;
         }
 
-        const {
-          image: imageUrl,
-          blurhashURL: uploadedBlurhash,
-          path: imagePath,
-        } = imageResult.data as {
-          image: string;
-          blurhashURL: string;
-          path: string;
-        };
+        const { image: imageUrl, blurhashURL: uploadedBlurhash, path: imagePath } =
+          imageResult.data as { image: string; blurhashURL: string; path: string };
+        uploadedImagePath = imagePath;
 
         const createResult = await portfolioActions({
           type: 'CREATE',
@@ -487,29 +479,28 @@ export default function PortfolioSection() {
             body_it: post.body_it,
             post_tags: post.post_tags,
             created_at: post.created_at,
-            author_id: user?.id || '',
+            author_id: post.author_id || user?.id || '',
             image: imageUrl,
             blurhashURL: uploadedBlurhash || post.blurhashURL || '',
           },
         });
-
         if (!createResult.success) {
-          throw new Error(
-            createResult.error ||
-              `Failed to create portfolio post ${post.title_en}`
-          );
+          await portfolioActions({ type: 'ROLLBACK_CREATE', postId: 0, imagePath }).catch(() => {});
+          errors.push(`"${post.title_en}": ${createResult.error || 'failed to create post'}`);
         }
-
-        const newRow = createResult.data as { id: number };
-        createdForRollback.push({ postId: newRow.id, imagePath });
+      } catch (e) {
+        if (uploadedImagePath) {
+          await portfolioActions({ type: 'ROLLBACK_CREATE', postId: 0, imagePath: uploadedImagePath }).catch(() => {});
+        }
+        errors.push(`"${post.title_en}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 2. Update modified posts
-      for (const postId of modifiedPosts) {
-        const post = portfolioPosts.find((p) => p.id === postId);
-        if (!post) continue;
-
-        // Update post data
+    // 2. Update modified posts
+    for (const postId of modifiedPosts) {
+      const post = portfolioPosts.find((p) => p.id === postId);
+      if (!post) continue;
+      try {
         const updateResult = await portfolioActions({
           type: 'UPDATE',
           id: postId,
@@ -528,103 +519,82 @@ export default function PortfolioSection() {
             author_id: post.author_id,
           },
         });
-
         if (!updateResult.success) {
-          throw new Error(
-            updateResult.error ||
-              `Failed to update portfolio post ${post.title_en}`
-          );
+          errors.push(`"${post.title_en}": ${updateResult.error || 'failed to update'}`);
+          continue;
         }
 
-        // Upload image if there's a new file
         if (post.image_file) {
-          // Process image to WebP before upload
           const processed = await processImageToWebP(post.image_file, {
             maxWidth: 1920,
             maxHeight: 1080,
             quality: 0.85,
           });
-
           if (!processed.success || !processed.file) {
-            throw new Error(processed.error || 'Failed to process image');
+            errors.push(`"${post.title_en}" image: ${processed.error || 'failed to process image'}`);
+            continue;
           }
-
           const imageResult = await portfolioActions({
             type: 'UPLOAD_IMAGE',
             portfolioId: postId,
             file: processed.file,
             currentImageUrl: post.image,
           });
-
           if (!imageResult.success) {
-            throw new Error(
-              imageResult.error || `Failed to upload image for ${post.title_en}`
-            );
+            errors.push(`"${post.title_en}" image: ${imageResult.error || 'failed to upload image'}`);
           }
         }
+      } catch (e) {
+        errors.push(`"${post.title_en}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 3. Delete posts
-      for (const postId of deletedPosts) {
+    // 3. Delete posts
+    for (const postId of deletedPosts) {
+      try {
         const result = await portfolioActions({ type: 'DELETE', id: postId });
-
         if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete portfolio post ${postId}`
-          );
+          errors.push(`Delete post ${postId}: ${result.error || 'failed'}`);
         }
+      } catch (e) {
+        errors.push(`Delete post ${postId}: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 4. Save translations if changed
-      if (hasTranslationChanges()) {
-        // Update English translations
+    // 4. Save translations if changed
+    if (hasTranslationChanges()) {
+      try {
         const enResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: 'en',
           sectionKey: 'posts-section',
           sectionData: translations.en,
         });
-        if (!enResult.success) {
-          throw new Error(
-            enResult.error || 'Failed to update English translations'
-          );
-        }
-
-        // Update Italian translations
         const itResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: 'it',
           sectionKey: 'posts-section',
           sectionData: translations.it,
         });
-        if (!itResult.success) {
-          throw new Error(
-            itResult.error || 'Failed to update Italian translations'
-          );
+        if (!enResult.success) errors.push(`EN translations: ${enResult.error || 'failed'}`);
+        if (!itResult.success) errors.push(`IT translations: ${itResult.error || 'failed'}`);
+        if (enResult.success && itResult.success) {
+          setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
         }
-
-        setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
+      } catch (e) {
+        errors.push(`Translations: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // Refresh data and reset all tracking
-      await fetchPortfolioData();
-      setModifiedPosts(new Set());
-      setNewPosts([]);
-      setDeletedPosts(new Set());
+    // Always refresh and reset state
+    await fetchPortfolioData().catch(() => {});
+    setModifiedPosts(new Set());
+    setNewPosts([]);
+    setDeletedPosts(new Set());
+    setIsUpdating(false);
 
-      alert(`${t('common.applyChanges')}!`);
-    } catch (error) {
-      console.error('Error applying changes:', error);
-      // Roll back created posts and their images (reverse order)
-      for (let i = createdForRollback.length - 1; i >= 0; i--) {
-        const { postId, imagePath } = createdForRollback[i];
-        await portfolioActions({ type: 'ROLLBACK_CREATE', postId, imagePath });
-      }
-      setError(
-        error instanceof Error ? error.message : 'Failed to apply changes'
-      );
-    } finally {
-      setIsUpdating(false);
+    if (errors.length > 0) {
+      setError(errors.join('\n'));
     }
   };
 

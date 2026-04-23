@@ -343,15 +343,14 @@ export default function ContactsSection() {
   };
 
   const applyAllChanges = async () => {
-    const createdContactIds: number[] = [];
-    try {
-      setIsUpdating(true);
-      setError(null);
+    const errors: string[] = [];
+    setIsUpdating(true);
+    setError(null);
 
-      // 1. Create new contacts first (so we can roll back on failure)
-      for (const newContact of newContacts) {
+    // 1. Create new contacts
+    for (const newContact of newContacts) {
+      try {
         const position = contacts.findIndex((c) => c.id === newContact.id);
-
         const result = await contactsActions({
           type: 'CREATE',
           data: {
@@ -362,63 +361,49 @@ export default function ContactsSection() {
             position: position >= 0 ? position : contacts.length,
           },
         });
-
         if (!result.success) {
-          throw new Error(
-            result.error || `Failed to create contact ${newContact.label}`
-          );
+          errors.push(`"${newContact.label}": ${result.error || 'failed to create'}`);
         }
-
-        const created = result.data as { id: number };
-        if (created?.id != null) {
-          createdContactIds.push(created.id);
-        }
+      } catch (e) {
+        errors.push(`"${newContact.label}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 2. Delete contacts
-      for (const contactId of deletedContacts) {
-        const result = await contactsActions({
-          type: 'DELETE',
-          id: contactId,
-        });
-
+    // 2. Delete contacts
+    for (const contactId of deletedContacts) {
+      try {
+        const result = await contactsActions({ type: 'DELETE', id: contactId });
         if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete contact ${contactId}`
-          );
+          errors.push(`Delete contact ${contactId}: ${result.error || 'failed'}`);
         }
+      } catch (e) {
+        errors.push(`Delete contact ${contactId}: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 3. Update contact order if changed
-      if (orderChanged) {
-        const positionUpdates = contacts.map((contact, index) => ({
-          id: contact.id,
-          position: index,
-        }));
-
-        // Only update positions for existing contacts (not new ones)
-        const existingUpdates = positionUpdates.filter(
-          (update) =>
-            update.id > 0 && !newContacts.some((nc) => nc.id === update.id)
-        );
+    // 3. Update contact order if changed
+    if (orderChanged) {
+      try {
+        const existingUpdates = contacts
+          .map((contact, index) => ({ id: contact.id, position: index }))
+          .filter((update) => update.id > 0 && !newContacts.some((nc) => nc.id === update.id));
 
         if (existingUpdates.length > 0) {
-          const result = await contactsActions({
-            type: 'REORDER',
-            contacts: existingUpdates,
-          });
-
+          const result = await contactsActions({ type: 'REORDER', contacts: existingUpdates });
           if (!result.success) {
-            throw new Error(result.error || 'Failed to reorder contacts');
+            errors.push(`Reorder: ${result.error || 'failed'}`);
           }
         }
+      } catch (e) {
+        errors.push(`Reorder: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 4. Update modified contacts
-      for (const contactId of modifiedContacts) {
-        const contact = contacts.find((c) => c.id === contactId);
-        if (!contact) continue;
-
+    // 4. Update modified contacts
+    for (const contactId of modifiedContacts) {
+      const contact = contacts.find((c) => c.id === contactId);
+      if (!contact) continue;
+      try {
         const result = await contactsActions({
           type: 'UPDATE',
           id: contactId,
@@ -430,63 +415,49 @@ export default function ContactsSection() {
             position: contact.position,
           },
         });
-
         if (!result.success) {
-          throw new Error(
-            result.error || `Failed to update contact ${contactId}`
-          );
+          errors.push(`"${contact.label}": ${result.error || 'failed to update'}`);
         }
+      } catch (e) {
+        errors.push(`"${contact.label}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // Save translations if changed
-      if (hasTranslationChanges()) {
-        // Update English translations
+    // Save translations if changed
+    if (hasTranslationChanges()) {
+      try {
         const enResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: 'en',
           sectionKey: 'contacts-section',
           sectionData: translations.en,
         });
-        if (!enResult.success) {
-          throw new Error(
-            enResult.error || 'Failed to update English translations'
-          );
-        }
-
-        // Update Italian translations
         const itResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: 'it',
           sectionKey: 'contacts-section',
           sectionData: translations.it,
         });
-        if (!itResult.success) {
-          throw new Error(
-            itResult.error || 'Failed to update Italian translations'
-          );
+        if (!enResult.success) errors.push(`EN translations: ${enResult.error || 'failed'}`);
+        if (!itResult.success) errors.push(`IT translations: ${itResult.error || 'failed'}`);
+        if (enResult.success && itResult.success) {
+          setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
         }
-
-        setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
+      } catch (e) {
+        errors.push(`Translations: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // Refresh data
-      await fetchContacts();
+    // Always refresh and reset state
+    await fetchContacts().catch(() => {});
+    setModifiedContacts(new Set());
+    setNewContacts([]);
+    setDeletedContacts(new Set());
+    setOrderChanged(false);
+    setIsUpdating(false);
 
-      // Reset tracking
-      setModifiedContacts(new Set());
-      setNewContacts([]);
-      setDeletedContacts(new Set());
-      setOrderChanged(false);
-    } catch (error) {
-      console.error('Error applying changes:', error);
-      for (let i = createdContactIds.length - 1; i >= 0; i--) {
-        await contactsActions({ type: 'DELETE', id: createdContactIds[i] });
-      }
-      setError(
-        error instanceof Error ? error.message : 'Failed to apply changes'
-      );
-    } finally {
-      setIsUpdating(false);
+    if (errors.length > 0) {
+      setError(errors.join('\n'));
     }
   };
 

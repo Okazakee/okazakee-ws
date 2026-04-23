@@ -451,48 +451,38 @@ export default function SkillsSection() {
   };
 
   const applyAllChanges = async () => {
-    const createdCategoryIds: number[] = [];
-    const createdSkillIds: number[] = [];
+    const errors: string[] = [];
     const tempIdToRealId: Record<number, number> = {};
-    try {
-      setIsUpdating(true);
-      setError(null);
+    setIsUpdating(true);
+    setError(null);
 
-      // 1. Create new categories first (so we can roll back on failure)
-      for (const newCat of newCategories) {
+    // 1. Create new categories
+    for (const newCat of newCategories) {
+      try {
         const category = categories.find((cat) => cat.id === newCat.tempId);
-        const position = category
-          ? categories.indexOf(category)
-          : categories.length;
+        const position = category ? categories.indexOf(category) : categories.length;
 
         const result = await skillsActions({
           type: 'CREATE_CATEGORY',
           data: { name: newCat.name },
         });
-
         if (!result.success) {
-          throw new Error(
-            result.error || `Failed to create category ${newCat.name}`
-          );
+          errors.push(`Category "${newCat.name}": ${result.error || 'failed to create'}`);
+          continue;
         }
 
         const createdId = (result as { data: { id: number } }).data.id;
-        createdCategoryIds.push(createdId);
         tempIdToRealId[newCat.tempId] = createdId;
 
-        const positionResult = await skillsActions({
-          type: 'UPDATE_CATEGORY',
-          id: createdId,
-          data: { position },
-        });
-
-        if (!positionResult.success) {
-          console.warn(`Failed to set position for category ${newCat.name}`);
-        }
+        await skillsActions({ type: 'UPDATE_CATEGORY', id: createdId, data: { position } });
+      } catch (e) {
+        errors.push(`Category "${newCat.name}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 2. Create new skills
-      for (const { categoryId, skill } of newSkills) {
+    // 2. Create new skills (skip if their category failed to create)
+    for (const { categoryId, skill } of newSkills) {
+      try {
         const actualCategoryId =
           tempIdToRealId[categoryId] ??
           categories.find((cat) => cat.id === categoryId)?.id ??
@@ -510,175 +500,139 @@ export default function SkillsSection() {
         })) as SkillApiResponse & { data?: { id: number } };
 
         if (!createResult.success) {
-          throw new Error(
-            createResult.error || `Failed to create skill ${skill.title}`
-          );
+          errors.push(`Skill "${skill.title}": ${createResult.error || 'failed to create'}`);
         }
-        if (createResult.data?.id != null) {
-          createdSkillIds.push(createResult.data.id);
-        }
+      } catch (e) {
+        errors.push(`Skill "${skill.title}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 3. Delete skills
-      for (const skillId of deletedSkills) {
-        const result = (await skillsActions({
-          type: 'DELETE',
-          id: skillId,
-        })) as { success: boolean; error?: string };
-
+    // 3. Delete skills
+    for (const skillId of deletedSkills) {
+      try {
+        const result = (await skillsActions({ type: 'DELETE', id: skillId })) as { success: boolean; error?: string };
         if (!result.success) {
-          throw new Error(result.error || `Failed to delete skill ${skillId}`);
+          errors.push(`Delete skill ${skillId}: ${result.error || 'failed'}`);
         }
+      } catch (e) {
+        errors.push(`Delete skill ${skillId}: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 4. Delete categories
-      for (const categoryId of deletedCategories) {
-        const result = await skillsActions({
-          type: 'DELETE_CATEGORY',
-          id: categoryId,
-        });
-
+    // 4. Delete categories
+    for (const categoryId of deletedCategories) {
+      try {
+        const result = await skillsActions({ type: 'DELETE_CATEGORY', id: categoryId });
         if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete category ${categoryId}`
-          );
+          errors.push(`Delete category ${categoryId}: ${result.error || 'failed'}`);
         }
+      } catch (e) {
+        errors.push(`Delete category ${categoryId}: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 5. Update category order if changed
-      if (categoryOrderChanged) {
-        for (let i = 0; i < categories.length; i++) {
-          const category = categories[i];
-          const isNewCategory = newCategories.some(
-            (nc) => nc.tempId === category.id
-          );
-          const categoryId = isNewCategory
-            ? tempIdToRealId[category.id]
-            : category.id;
+    // 5. Update category order if changed
+    if (categoryOrderChanged) {
+      for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        try {
+          const isNewCategory = newCategories.some((nc) => nc.tempId === category.id);
+          const categoryId = isNewCategory ? tempIdToRealId[category.id] : category.id;
           if (categoryId != null) {
             const result = await skillsActions({
               type: 'UPDATE_CATEGORY',
               id: categoryId,
               data: { position: i },
             });
-
             if (!result.success) {
-              throw new Error(
-                result.error ||
-                  `Failed to update category order for ${category.name}`
-              );
+              errors.push(`Reorder "${category.name}": ${result.error || 'failed'}`);
             }
           }
+        } catch (e) {
+          errors.push(`Reorder "${category.name}": ${e instanceof Error ? e.message : 'unexpected error'}`);
         }
       }
+    }
 
-      // 6. Update categories (name changes)
-      for (const categoryId of modifiedCategories) {
-        const category = categories.find((cat) => cat.id === categoryId);
-        if (category) {
-          const realId = tempIdToRealId[categoryId] ?? categoryId;
-          const result = await skillsActions({
-            type: 'UPDATE_CATEGORY',
-            id: realId,
-            data: { name: category.name },
-          });
-
-          if (!result.success) {
-            throw new Error(
-              result.error || `Failed to update category ${categoryId}`
-            );
-          }
+    // 6. Update categories (name changes)
+    for (const categoryId of modifiedCategories) {
+      const category = categories.find((cat) => cat.id === categoryId);
+      if (!category) continue;
+      try {
+        const realId = tempIdToRealId[categoryId] ?? categoryId;
+        const result = await skillsActions({
+          type: 'UPDATE_CATEGORY',
+          id: realId,
+          data: { name: category.name },
+        });
+        if (!result.success) {
+          errors.push(`Category "${category.name}": ${result.error || 'failed to update'}`);
         }
+      } catch (e) {
+        errors.push(`Category "${category.name}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 7. Update modified skills
-      for (const modifiedKey of modifiedSkills) {
-        const [categoryIdStr, skillIdStr] = modifiedKey.split('-');
-        const categoryId = parseInt(categoryIdStr, 10);
-        const skillId = parseInt(skillIdStr, 10);
-
-        const category = categories.find((cat) => cat.id === categoryId);
-        const skill = category?.skills.find((s) => s.id === skillId) as
-          | EditableSkill
-          | undefined;
-
-        if (!skill) continue;
-
+    // 7. Update modified skills
+    for (const modifiedKey of modifiedSkills) {
+      const [categoryIdStr, skillIdStr] = modifiedKey.split('-');
+      const categoryId = parseInt(categoryIdStr, 10);
+      const skillId = parseInt(skillIdStr, 10);
+      const category = categories.find((cat) => cat.id === categoryId);
+      const skill = category?.skills.find((s) => s.id === skillId) as EditableSkill | undefined;
+      if (!skill) continue;
+      try {
         const result = (await skillsActions({
           type: 'UPDATE',
           id: skillId,
-          data: {
-            title: skill.title,
-            icon: skill.icon,
-            invert: skill.invert,
-          },
+          data: { title: skill.title, icon: skill.icon, invert: skill.invert },
         })) as SkillApiResponse;
-
         if (!result.success) {
-          throw new Error(
-            result.error || `Failed to update skill ${skill.title}`
-          );
+          errors.push(`Skill "${skill.title}": ${result.error || 'failed to update'}`);
         }
+      } catch (e) {
+        errors.push(`Skill "${skill.title}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // Save translations if changed
-      if (hasTranslationChanges()) {
-        // Update English translations
+    // Save translations if changed
+    if (hasTranslationChanges()) {
+      try {
         const enResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: 'en',
           sectionKey: 'skills-section',
           sectionData: translations.en,
         });
-        if (!enResult.success) {
-          throw new Error(
-            enResult.error || 'Failed to update English translations'
-          );
-        }
-
-        // Update Italian translations
         const itResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: 'it',
           sectionKey: 'skills-section',
           sectionData: translations.it,
         });
-        if (!itResult.success) {
-          throw new Error(
-            itResult.error || 'Failed to update Italian translations'
-          );
+        if (!enResult.success) errors.push(`EN translations: ${enResult.error || 'failed'}`);
+        if (!itResult.success) errors.push(`IT translations: ${itResult.error || 'failed'}`);
+        if (enResult.success && itResult.success) {
+          setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
         }
-
-        setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
+      } catch (e) {
+        errors.push(`Translations: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // Refresh data and reset all tracking
-      await fetchSkillsData();
-      setModifiedSkills(new Set());
-      setNewSkills([]);
-      setDeletedSkills(new Set());
-      setModifiedCategories(new Set());
-      setNewCategories([]);
-      setDeletedCategories(new Set());
-      setCategoryOrderChanged(false);
+    // Always refresh and reset state
+    await fetchSkillsData().catch(() => {});
+    setModifiedSkills(new Set());
+    setNewSkills([]);
+    setDeletedSkills(new Set());
+    setModifiedCategories(new Set());
+    setNewCategories([]);
+    setDeletedCategories(new Set());
+    setCategoryOrderChanged(false);
+    setIsUpdating(false);
 
-      alert(`${t('common.applyChanges')}!`);
-    } catch (error) {
-      console.error('Error applying changes:', error);
-      for (let i = createdSkillIds.length - 1; i >= 0; i--) {
-        await skillsActions({ type: 'DELETE', id: createdSkillIds[i] });
-      }
-      for (let i = createdCategoryIds.length - 1; i >= 0; i--) {
-        await skillsActions({
-          type: 'DELETE_CATEGORY',
-          id: createdCategoryIds[i],
-        });
-      }
-      setError(
-        error instanceof Error ? error.message : 'Failed to apply changes'
-      );
-    } finally {
-      setIsUpdating(false);
+    if (errors.length > 0) {
+      setError(errors.join('\n'));
     }
   };
 

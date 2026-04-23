@@ -293,12 +293,22 @@ async function deleteCareer(
     const admin = getAdminClient();
     const { data: existingCareer, error: fetchError } = await admin
       .from('career_entries')
-      .select('id')
+      .select('id, logo')
       .eq('id', id)
       .single();
 
     if (fetchError || !existingCareer) {
       return { success: false, error: 'Career entry not found' };
+    }
+
+    if (existingCareer.logo) {
+      const logoPath = getStoragePathFromPublicUrl(
+        existingCareer.logo as string,
+        'website'
+      );
+      if (logoPath) {
+        await admin.storage.from('website').remove([logoPath]);
+      }
     }
 
     const { error } = await admin.from('career_entries').delete().eq('id', id);
@@ -389,6 +399,7 @@ async function uploadCareerLogo(
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
+    let format: 'webp' | 'png' = 'webp';
 
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
@@ -404,6 +415,7 @@ async function uploadCareerLogo(
       }
       buffer = processed.buffer;
       blurhash = processed.blurhash;
+      format = processed.format ?? 'webp';
     }
 
     const sanitizedCompany = sanitizeFilename(
@@ -417,7 +429,7 @@ async function uploadCareerLogo(
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
-        contentType: 'image/webp',
+        contentType: format === 'png' ? 'image/png' : 'image/webp',
         upsert: true,
       });
 

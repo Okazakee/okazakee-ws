@@ -171,7 +171,7 @@ async function updateHero(
 }
 
 async function uploadHeroImage(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   file: File,
   currentImageUrl?: string
 ): Promise<HeroResult> {
@@ -182,12 +182,13 @@ async function uploadHeroImage(
     }
 
     if (currentImageUrl) {
-      await backupOldFile(supabase, currentImageUrl, 'website');
+      await backupOldFile(getAdminClient(), currentImageUrl, 'website');
     }
 
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
+    let format: 'webp' | 'png' = 'webp';
 
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
@@ -203,6 +204,7 @@ async function uploadHeroImage(
       }
       buffer = processed.buffer;
       blurhash = processed.blurhash;
+      format = processed.format ?? 'webp';
     }
 
     const fileName = 'avatar/avatar.webp';
@@ -214,7 +216,7 @@ async function uploadHeroImage(
       .from('website')
       .upload(fileName, buffer, {
         cacheControl: '3600',
-        contentType: 'image/webp',
+        contentType: format === 'png' ? 'image/png' : 'image/webp',
         upsert: true,
       });
 

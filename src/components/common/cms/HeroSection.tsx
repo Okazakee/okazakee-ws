@@ -458,7 +458,6 @@ export default function HeroSection() {
       }
 
       setModifiedFields(new Set());
-      alert(t('hero.successUpdate'));
     } catch (error) {
       console.error('Error updating hero section:', error);
       setError(

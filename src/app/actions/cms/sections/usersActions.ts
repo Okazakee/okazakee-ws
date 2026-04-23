@@ -700,7 +700,7 @@ async function removeUser(
 }
 
 async function updateUserProfile(
-  supabase: ReturnType<typeof createClient> extends Promise<infer T>
+  _supabase: ReturnType<typeof createClient> extends Promise<infer T>
     ? T
     : never,
   profileId: string,
@@ -716,7 +716,7 @@ async function updateUserProfile(
     return { success: false, error: 'No changes to save' };
   }
 
-  const { error } = await supabase
+  const { error } = await getAdminClient()
     .from('user_profiles')
     .update(updates)
     .eq('id', profileId);

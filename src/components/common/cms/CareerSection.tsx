@@ -463,13 +463,14 @@ export default function CareerSection() {
   };
 
   const applyAllChanges = async () => {
-    const createdForRollback: number[] = [];
-    try {
-      setIsUpdating(true);
-      setError(null);
+    const errors: string[] = [];
+    setIsUpdating(true);
+    setError(null);
 
-      // 1. Create new entries first (so we can roll back on failure)
-      for (const { entry, logoFile } of newEntries) {
+    // 1. Create new entries
+    for (const { entry, logoFile } of newEntries) {
+      let createdEntryId: number | null = null;
+      try {
         const createResult = await careerActions({
           type: 'CREATE',
           data: {
@@ -490,15 +491,13 @@ export default function CareerSection() {
             blurhashURL: entry.blurhashURL || '',
           },
         });
-
         if (!createResult.success) {
-          throw new Error(
-            createResult.error || `Failed to create career entry ${entry.title}`
-          );
+          errors.push(`"${entry.title}": ${createResult.error || 'failed to create'}`);
+          continue;
         }
 
         const createdEntry = createResult.data as CareerEntry;
-        createdForRollback.push(createdEntry.id);
+        createdEntryId = createdEntry.id;
 
         if (logoFile) {
           const processed = await processImageToWebP(logoFile, {
@@ -506,42 +505,44 @@ export default function CareerSection() {
             maxHeight: 512,
             quality: 0.85,
           });
-
           if (!processed.success || !processed.file) {
-            throw new Error(processed.error || 'Failed to process logo');
+            errors.push(`"${entry.title}" logo: ${processed.error || 'failed to process logo'}`);
+            continue;
           }
-
           const logoResult = await careerActions({
             type: 'UPLOAD_LOGO',
             careerId: createdEntry.id,
             file: processed.file,
           });
-
           if (!logoResult.success) {
-            throw new Error(
-              logoResult.error || `Failed to upload logo for ${entry.title}`
-            );
+            errors.push(`"${entry.title}" logo: ${logoResult.error || 'failed to upload logo'}`);
           }
         }
-      }
-
-      // 2. Delete entries
-      for (const entryId of deletedEntries) {
-        const result = await careerActions({ type: 'DELETE', id: entryId });
-
-        if (!result.success) {
-          throw new Error(
-            result.error || `Failed to delete career entry ${entryId}`
-          );
+      } catch (e) {
+        if (createdEntryId !== null) {
+          await careerActions({ type: 'ROLLBACK_CREATE', entryId: createdEntryId }).catch(() => {});
         }
+        errors.push(`"${entry.title}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // 3. Update modified entries
-      for (const entryId of modifiedEntries) {
-        const entry = careerEntries.find((e) => e.id === entryId);
-        if (!entry) continue;
+    // 2. Delete entries
+    for (const entryId of deletedEntries) {
+      try {
+        const result = await careerActions({ type: 'DELETE', id: entryId });
+        if (!result.success) {
+          errors.push(`Delete entry ${entryId}: ${result.error || 'failed'}`);
+        }
+      } catch (e) {
+        errors.push(`Delete entry ${entryId}: ${e instanceof Error ? e.message : 'unexpected error'}`);
+      }
+    }
 
-        // Update entry data
+    // 3. Update modified entries
+    for (const entryId of modifiedEntries) {
+      const entry = careerEntries.find((e) => e.id === entryId);
+      if (!entry) continue;
+      try {
         const updateResult = await careerActions({
           type: 'UPDATE',
           id: entryId,
@@ -561,92 +562,70 @@ export default function CareerSection() {
             company_description_it: entry.company_description_it,
           },
         });
-
         if (!updateResult.success) {
-          throw new Error(
-            updateResult.error || `Failed to update career entry ${entry.title}`
-          );
+          errors.push(`"${entry.title}": ${updateResult.error || 'failed to update'}`);
+          continue;
         }
 
-        // Upload logo if there's a new file
         if (entry.logo_file) {
-          // Process image to WebP before upload
           const processed = await processImageToWebP(entry.logo_file, {
             maxWidth: 512,
             maxHeight: 512,
             quality: 0.85,
           });
-
           if (!processed.success || !processed.file) {
-            throw new Error(processed.error || 'Failed to process logo');
+            errors.push(`"${entry.title}" logo: ${processed.error || 'failed to process logo'}`);
+            continue;
           }
-
           const logoResult = await careerActions({
             type: 'UPLOAD_LOGO',
             careerId: entryId,
             file: processed.file,
             currentLogoUrl: entry.logo,
           });
-
           if (!logoResult.success) {
-            throw new Error(
-              logoResult.error || `Failed to upload logo for ${entry.title}`
-            );
+            errors.push(`"${entry.title}" logo: ${logoResult.error || 'failed to upload logo'}`);
           }
         }
+      } catch (e) {
+        errors.push(`"${entry.title}": ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // Save translations if changed
-      if (hasTranslationChanges()) {
-        // Update English translations
+    // Save translations if changed
+    if (hasTranslationChanges()) {
+      try {
         const enResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: 'en',
           sectionKey: 'career-section',
           sectionData: translations.en,
         });
-        if (!enResult.success) {
-          throw new Error(
-            enResult.error || 'Failed to update English translations'
-          );
-        }
-
-        // Update Italian translations
         const itResult = await i18nActions({
           type: 'UPDATE_SECTION',
           locale: 'it',
           sectionKey: 'career-section',
           sectionData: translations.it,
         });
-        if (!itResult.success) {
-          throw new Error(
-            itResult.error || 'Failed to update Italian translations'
-          );
+        if (!enResult.success) errors.push(`EN translations: ${enResult.error || 'failed'}`);
+        if (!itResult.success) errors.push(`IT translations: ${itResult.error || 'failed'}`);
+        if (enResult.success && itResult.success) {
+          setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
         }
-
-        setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
+      } catch (e) {
+        errors.push(`Translations: ${e instanceof Error ? e.message : 'unexpected error'}`);
       }
+    }
 
-      // Refresh data and reset all tracking
-      await fetchCareerData();
-      setModifiedEntries(new Set());
-      setNewEntries([]);
-      setDeletedEntries(new Set());
+    // Always refresh and reset state
+    await fetchCareerData().catch(() => {});
+    setModifiedEntries(new Set());
+    setNewEntries([]);
+    setDeletedEntries(new Set());
+    setIsUpdating(false);
 
-      alert(`${t('common.applyChanges')}!`);
-    } catch (error) {
-      console.error('Error applying changes:', error);
-      for (let i = createdForRollback.length - 1; i >= 0; i--) {
-        await careerActions({
-          type: 'ROLLBACK_CREATE',
-          entryId: createdForRollback[i],
-        });
-      }
-      setError(
-        error instanceof Error ? error.message : 'Failed to apply changes'
-      );
-    } finally {
-      setIsUpdating(false);
+    if (errors.length > 0) {
+      setError(errors.join('\n'));
     }
   };
 
