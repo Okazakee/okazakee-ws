@@ -61,6 +61,7 @@ export default function CareerSection() {
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingEntry, setIsCreatingEntry] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [newCareerEntry, setNewCareerEntry] = useState<NewCareerEntry>({
     title: '',
@@ -315,63 +316,68 @@ export default function CareerSection() {
     );
   };
 
-  const handleCreateCareer = () => {
+  const handleCreateCareer = async () => {
     if (!newEntryLogo) {
       setError(t('career.errorNoLogo'));
       return;
     }
 
-    // Generate temporary ID (negative to avoid conflicts)
-    const tempId = -Date.now();
-    const newEntry: EditableCareerEntry = {
-      id: tempId,
-      title: newCareerEntry.title,
-      company: newCareerEntry.company,
-      website_url: newCareerEntry.website_url,
-      logo: '',
-      blurhashURL: '',
-      location_en: newCareerEntry.location_en,
-      location_it: newCareerEntry.location_it,
-      remote: newCareerEntry.remote,
-      startDate: newCareerEntry.startDate,
-      endDate: newCareerEntry.endDate,
-      description_en: newCareerEntry.description_en,
-      description_it: newCareerEntry.description_it,
-      skills: newCareerEntry.skills,
-      company_description_en: newCareerEntry.company_description_en,
-      company_description_it: newCareerEntry.company_description_it,
-      created_at: new Date().toISOString(), // Add created_at for new entries
-      isEditing: false,
-      logo_file: newEntryLogo,
-    };
+    setIsCreatingEntry(true);
+    try {
+      // Generate temporary ID (negative to avoid conflicts)
+      const tempId = -Date.now();
+      const newEntry: EditableCareerEntry = {
+        id: tempId,
+        title: newCareerEntry.title,
+        company: newCareerEntry.company,
+        website_url: newCareerEntry.website_url,
+        logo: '',
+        blurhashURL: '',
+        location_en: newCareerEntry.location_en,
+        location_it: newCareerEntry.location_it,
+        remote: newCareerEntry.remote,
+        startDate: newCareerEntry.startDate,
+        endDate: newCareerEntry.endDate,
+        description_en: newCareerEntry.description_en,
+        description_it: newCareerEntry.description_it,
+        skills: newCareerEntry.skills,
+        company_description_en: newCareerEntry.company_description_en,
+        company_description_it: newCareerEntry.company_description_it,
+        created_at: new Date().toISOString(), // Add created_at for new entries
+        isEditing: false,
+        logo_file: newEntryLogo,
+      };
 
-    // Add to local state
-    setCareerEntries((prev) => [...prev, newEntry]);
-    setNewEntries((prev) => [
-      ...prev,
-      { entry: newEntry, logoFile: newEntryLogo },
-    ]);
+      // Add to local state
+      setCareerEntries((prev) => [...prev, newEntry]);
+      setNewEntries((prev) => [
+        ...prev,
+        { entry: newEntry, logoFile: newEntryLogo },
+      ]);
 
-    // Reset form
-    setNewCareerEntry({
-      title: '',
-      company: '',
-      website_url: '',
-      logo: '',
-      blurhashURL: '',
-      location_en: '',
-      location_it: '',
-      remote: 'onSite',
-      startDate: '',
-      endDate: null,
-      description_en: '',
-      description_it: '',
-      skills: '',
-      company_description_en: '',
-      company_description_it: '',
-    });
-    setNewEntryLogo(null);
-    setIsCreating(false);
+      // Reset form
+      setNewCareerEntry({
+        title: '',
+        company: '',
+        website_url: '',
+        logo: '',
+        blurhashURL: '',
+        location_en: '',
+        location_it: '',
+        remote: 'onSite',
+        startDate: '',
+        endDate: null,
+        description_en: '',
+        description_it: '',
+        skills: '',
+        company_description_en: '',
+        company_description_it: '',
+      });
+      setNewEntryLogo(null);
+      setIsCreating(false);
+    } finally {
+      setIsCreatingEntry(false);
+    }
   };
 
   const handleUpdateCareer = (entryId: number | string) => {
@@ -492,7 +498,9 @@ export default function CareerSection() {
           },
         });
         if (!createResult.success) {
-          errors.push(`"${entry.title}": ${createResult.error || 'failed to create'}`);
+          errors.push(
+            `"${entry.title}": ${createResult.error || 'failed to create'}`
+          );
           continue;
         }
 
@@ -506,7 +514,9 @@ export default function CareerSection() {
             quality: 0.85,
           });
           if (!processed.success || !processed.file) {
-            errors.push(`"${entry.title}" logo: ${processed.error || 'failed to process logo'}`);
+            errors.push(
+              `"${entry.title}" logo: ${processed.error || 'failed to process logo'}`
+            );
             continue;
           }
           const logoResult = await careerActions({
@@ -515,14 +525,21 @@ export default function CareerSection() {
             file: processed.file,
           });
           if (!logoResult.success) {
-            errors.push(`"${entry.title}" logo: ${logoResult.error || 'failed to upload logo'}`);
+            errors.push(
+              `"${entry.title}" logo: ${logoResult.error || 'failed to upload logo'}`
+            );
           }
         }
       } catch (e) {
         if (createdEntryId !== null) {
-          await careerActions({ type: 'ROLLBACK_CREATE', entryId: createdEntryId }).catch(() => {});
+          await careerActions({
+            type: 'ROLLBACK_CREATE',
+            entryId: createdEntryId,
+          }).catch(() => {});
         }
-        errors.push(`"${entry.title}": ${e instanceof Error ? e.message : 'unexpected error'}`);
+        errors.push(
+          `"${entry.title}": ${e instanceof Error ? e.message : 'unexpected error'}`
+        );
       }
     }
 
@@ -534,7 +551,9 @@ export default function CareerSection() {
           errors.push(`Delete entry ${entryId}: ${result.error || 'failed'}`);
         }
       } catch (e) {
-        errors.push(`Delete entry ${entryId}: ${e instanceof Error ? e.message : 'unexpected error'}`);
+        errors.push(
+          `Delete entry ${entryId}: ${e instanceof Error ? e.message : 'unexpected error'}`
+        );
       }
     }
 
@@ -563,7 +582,9 @@ export default function CareerSection() {
           },
         });
         if (!updateResult.success) {
-          errors.push(`"${entry.title}": ${updateResult.error || 'failed to update'}`);
+          errors.push(
+            `"${entry.title}": ${updateResult.error || 'failed to update'}`
+          );
           continue;
         }
 
@@ -574,7 +595,9 @@ export default function CareerSection() {
             quality: 0.85,
           });
           if (!processed.success || !processed.file) {
-            errors.push(`"${entry.title}" logo: ${processed.error || 'failed to process logo'}`);
+            errors.push(
+              `"${entry.title}" logo: ${processed.error || 'failed to process logo'}`
+            );
             continue;
           }
           const logoResult = await careerActions({
@@ -584,11 +607,15 @@ export default function CareerSection() {
             currentLogoUrl: entry.logo,
           });
           if (!logoResult.success) {
-            errors.push(`"${entry.title}" logo: ${logoResult.error || 'failed to upload logo'}`);
+            errors.push(
+              `"${entry.title}" logo: ${logoResult.error || 'failed to upload logo'}`
+            );
           }
         }
       } catch (e) {
-        errors.push(`"${entry.title}": ${e instanceof Error ? e.message : 'unexpected error'}`);
+        errors.push(
+          `"${entry.title}": ${e instanceof Error ? e.message : 'unexpected error'}`
+        );
       }
     }
 
@@ -607,13 +634,17 @@ export default function CareerSection() {
           sectionKey: 'career-section',
           sectionData: translations.it,
         });
-        if (!enResult.success) errors.push(`EN translations: ${enResult.error || 'failed'}`);
-        if (!itResult.success) errors.push(`IT translations: ${itResult.error || 'failed'}`);
+        if (!enResult.success)
+          errors.push(`EN translations: ${enResult.error || 'failed'}`);
+        if (!itResult.success)
+          errors.push(`IT translations: ${itResult.error || 'failed'}`);
         if (enResult.success && itResult.success) {
           setOriginalTranslations(JSON.parse(JSON.stringify(translations)));
         }
       } catch (e) {
-        errors.push(`Translations: ${e instanceof Error ? e.message : 'unexpected error'}`);
+        errors.push(
+          `Translations: ${e instanceof Error ? e.message : 'unexpected error'}`
+        );
       }
     }
 
@@ -1263,11 +1294,13 @@ export default function CareerSection() {
           <div className="flex gap-2">
             <button
               onClick={handleCreateCareer}
-              disabled={isCreating}
+              disabled={isCreatingEntry}
               className="flex items-center gap-2 px-4 py-2 bg-main text-white rounded-lg hover:bg-secondary disabled:opacity-50 transition-colors border-2 border-main hover:border-secondary"
             >
               <Save className="h-4 w-4" />
-              {isCreating ? t('career.creating') : t('career.createNewEntry')}
+              {isCreatingEntry
+                ? t('career.creating')
+                : t('career.createNewEntry')}
             </button>
             <button
               onClick={() => setIsCreating(false)}
