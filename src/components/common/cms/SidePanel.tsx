@@ -2,6 +2,7 @@
 
 import {
   Briefcase,
+  ChevronLeft,
   Contact,
   Crown,
   FileText,
@@ -30,30 +31,66 @@ interface SidePanelProps {
   onClose?: () => void;
 }
 
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  adminOnly: boolean;
+}
+
+const CONTENT_ITEMS: MenuItem[] = [
+  { id: 'hero', label: '', icon: Home, adminOnly: true },
+  { id: 'skills', label: '', icon: Zap, adminOnly: true },
+  { id: 'career', label: '', icon: User2, adminOnly: true },
+  { id: 'portfolio', label: '', icon: Briefcase, adminOnly: false },
+  { id: 'blog', label: '', icon: NotebookPen, adminOnly: false },
+  { id: 'contacts', label: '', icon: Contact, adminOnly: true },
+];
+
+const CONFIG_ITEMS: MenuItem[] = [
+  { id: 'layout', label: '', icon: LayoutGrid, adminOnly: true },
+  { id: 'privacy-policy', label: '', icon: FileText, adminOnly: true },
+  { id: 'users', label: '', icon: Users, adminOnly: true },
+];
+
 const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
   const t = useTranslations('cms');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const locale = pathname.split('/')[1] || 'en';
 
-  // Zustand store
-  const { activeSection, setActiveSection, user, setUser, setHeroSection } =
-    useLayoutStore();
+  const {
+    activeSection,
+    setActiveSection,
+    user,
+    setUser,
+    setHeroSection,
+    publishQueue,
+    sidebarCollapsed,
+    toggleSidebar,
+  } = useLayoutStore();
 
   const isAdmin = user?.role === 'admin';
-  // Default section: admin gets 'hero', editor gets 'blog'
-  const defaultSection = isAdmin ? 'hero' : 'blog';
 
-  const handleButtonClick = (section: string) => {
+  const sectionLabelMap: Record<string, string> = {
+    hero: t('sidebar.nav.hero'),
+    skills: t('sidebar.nav.skills'),
+    career: t('sidebar.nav.career'),
+    portfolio: t('sidebar.nav.portfolio'),
+    blog: t('sidebar.nav.blog'),
+    contacts: t('sidebar.nav.contacts'),
+    layout: t('sidebar.nav.layout'),
+    'privacy-policy': t('sidebar.nav.privacy-policy'),
+    users: t('sidebar.nav.users'),
+    account: t('sidebar.myAccount'),
+  };
+
+  const handleSelectSection = (section: string) => {
     setActiveSection(section);
-    // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('cms_active_section', section);
     }
-    // Close drawer on mobile when a section is selected
-    if (onClose) {
-      onClose();
-    }
+    onClose?.();
   };
 
   const handleLogout = async () => {
@@ -65,83 +102,74 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
     window.location.href = `/${locale}/cms/login`;
   };
 
-  const menuItems = [
-    { id: 'hero', label: t('sidebar.nav.hero'), icon: Home, adminOnly: true },
-    {
-      id: 'skills',
-      label: t('sidebar.nav.skills'),
-      icon: Zap,
-      adminOnly: true,
-    },
-    {
-      id: 'career',
-      label: t('sidebar.nav.career'),
-      icon: User2,
-      adminOnly: true,
-    },
-    { id: 'portfolio', label: t('sidebar.nav.portfolio'), icon: Briefcase },
-    { id: 'blog', label: t('sidebar.nav.blog'), icon: NotebookPen },
-    {
-      id: 'contacts',
-      label: t('sidebar.nav.contacts'),
-      icon: Contact,
-      adminOnly: true,
-    },
-    {
-      id: 'layout',
-      label: t('sidebar.nav.layout'),
-      icon: LayoutGrid,
-      adminOnly: true,
-    },
-    {
-      id: 'privacy-policy',
-      label: t('sidebar.nav.privacy-policy'),
-      icon: FileText,
-      adminOnly: true,
-    },
-    {
-      id: 'users',
-      label: t('sidebar.nav.users'),
-      icon: Users,
-      adminOnly: true,
-    },
-  ];
+  const pendingCount = Object.values(publishQueue).reduce(
+    (sum, state) => sum + (state.isDirty ? state.changeCount : 0),
+    0
+  );
 
-  // Set default section for editors only once after user loads
-  // This ensures editors don't stay on admin-only sections
+  const hasDraft = (sectionId: string) =>
+    publishQueue[sectionId]?.isDirty ?? false;
+
+  const getFilteredItems = (items: MenuItem[]) =>
+    items.filter((item) => !item.adminOnly || isAdmin);
+
   useEffect(() => {
-    // Don't run if user is not loaded yet or if user is admin
     if (!user || isAdmin) return;
-
-    // Only run once after user is loaded
-    if (typeof window !== 'undefined' && activeSection) {
+    if (
+      typeof window !== 'undefined' &&
+      activeSection
+    ) {
       const savedSection = localStorage.getItem('cms_active_section');
       const adminOnlySections = [
-        'hero',
-        'skills',
-        'career',
-        'contacts',
-        'layout',
-        'privacy-policy',
-        'users',
+        'hero', 'skills', 'career', 'contacts', 'layout',
+        'privacy-policy', 'users',
       ];
-
-      // Only redirect if:
-      // 1. Current section is admin-only AND
-      // 2. There's no saved section OR saved section is also admin-only
       if (
         adminOnlySections.includes(activeSection) &&
         (!savedSection || adminOnlySections.includes(savedSection))
       ) {
-        setActiveSection(defaultSection);
-        localStorage.setItem('cms_active_section', defaultSection);
+        handleSelectSection('blog');
       }
     }
-  }, [user]); // Only run when user loads (once)
+  });
+
+  const renderNavItem = (item: MenuItem) => (
+    <button
+      type="button"
+      key={item.id}
+      onClick={() => handleSelectSection(item.id)}
+      className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-left ${
+        activeSection === item.id
+          ? 'bg-main text-white shadow-lg'
+          : 'bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white'
+      } ${sidebarCollapsed ? 'justify-center' : ''}`}
+      title={
+        sidebarCollapsed
+          ? `${sectionLabelMap[item.id] || item.label}${hasDraft(item.id) ? ' · unsaved' : ''}`
+          : undefined
+      }
+    >
+      <div className="relative">
+        <item.icon className="w-5 h-5" />
+        {hasDraft(item.id) && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />
+        )}
+      </div>
+      {!sidebarCollapsed && (
+        <>
+          <span className="font-medium flex-1">
+            {sectionLabelMap[item.id] || item.label}
+          </span>
+          {hasDraft(item.id) && (
+            <span className="w-2 h-2 bg-amber-400 rounded-full flex-shrink-0" />
+          )}
+        </>
+      )}
+    </button>
+  );
 
   return (
     <>
-      {/* Backdrop overlay for mobile */}
       {onClose && (
         <div
           className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${
@@ -152,9 +180,10 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
         />
       )}
 
-      {/* SidePanel */}
       <div
-        className={`w-72 text-darktext dark:text-lighttext flex flex-col h-full bg-bglight dark:bg-bgdark ${
+        className={`text-darktext dark:text-lighttext flex flex-col h-full bg-bglight dark:bg-bgdark transition-all duration-300 ${
+          sidebarCollapsed ? 'w-16' : 'w-72'
+        } ${
           onClose
             ? `fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:static lg:transform-none lg:z-auto ${
                 isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -162,7 +191,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
             : 'relative'
         }`}
       >
-        {/* Mobile Header with Close Button */}
+        {/* Mobile Header */}
         {onClose && (
           <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0 flex items-center justify-between lg:hidden">
             <div className="flex-1">
@@ -185,22 +214,47 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
         )}
 
         {/* Desktop Header */}
-        {!onClose && (
-          <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0 text-center">
-            <h1 className="text-xl font-bold text-main mb-1">
-              {t('sidebar.title')}
-            </h1>
-            <p className="text-gray-500 dark:text-lighttext2 text-xs">
-              {t('sidebar.subtitle')}
-            </p>
+        {!onClose && !sidebarCollapsed && (
+          <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="text-left">
+                <h1 className="text-xl font-bold text-main mb-1">
+                  {t('sidebar.title')}
+                </h1>
+                <p className="text-gray-500 dark:text-lighttext2 text-xs">
+                  {t('sidebar.subtitle')}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="p-2 text-gray-500 dark:text-lighttext2 hover:text-main transition-colors rounded-lg"
+                title={t('common.collapseSidebar')}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
-        {/* User Profile Section */}
-        {user && (
+        {/* Collapsed Desktop Header */}
+        {!onClose && sidebarCollapsed && (
+          <div className="p-2 border-b border-gray-200 dark:border-darkgray flex-shrink-0 flex justify-center">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="p-2 text-gray-500 dark:text-lighttext2 hover:text-main transition-colors rounded-lg"
+              title={t('common.expandSidebar')}
+            >
+              <ChevronLeft className="w-4 h-4 rotate-180" />
+            </button>
+          </div>
+        )}
+
+        {/* User Profile */}
+        {user && !sidebarCollapsed && (
           <div className="p-4 border-b border-gray-200 dark:border-darkgray flex-shrink-0">
             <div className="flex items-center gap-3">
-              {/* Avatar */}
               <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-darkergray flex-shrink-0">
                 {user.avatarUrl && user.avatarUrl.length > 0 ? (
                   <Image
@@ -216,8 +270,6 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
                   </div>
                 )}
               </div>
-
-              {/* User Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-darktext dark:text-lighttext truncate">
@@ -251,65 +303,138 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
           </div>
         )}
 
-        {/* Navigation and Account Actions */}
+        {/* Collapsed user avatar */}
+        {user && sidebarCollapsed && (
+          <div className="p-2 border-b border-gray-200 dark:border-darkgray flex-shrink-0 flex justify-center">
+            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-darkergray">
+              {user.avatarUrl && user.avatarUrl.length > 0 ? (
+                <Image
+                  src={user.avatarUrl}
+                  alt={user.displayName || 'User'}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-main text-white font-bold">
+                  {(user.displayName || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Publish Status */}
+        {!sidebarCollapsed && pendingCount > 0 && (
+          <div className="mx-4 mb-1 p-2 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/10">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="w-2 h-2 bg-amber-400 rounded-full flex-shrink-0" />
+              <span className="text-xs text-amber-700 dark:text-amber-300 font-medium flex-1">
+                {pendingCount} {pendingCount === 1 ? 'change' : 'changes'} across{' '}
+                {Object.values(publishQueue).filter((s) => s.isDirty).length} section(s)
+              </span>
+            </div>
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => useLayoutStore.getState().sectionRevertCallback?.()}
+                className="flex-1 px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors min-h-[28px]"
+              >
+                {t('common.revert')}
+              </button>
+              <button
+                type="button"
+                onClick={() => useLayoutStore.getState().sectionPublishCallback?.()}
+                className="flex-1 px-2 py-1 text-xs bg-main hover:bg-secondary text-white rounded transition-colors min-h-[28px]"
+              >
+                {t('common.publish')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
         <div className="flex-1 overflow-y-auto flex flex-col">
-          <div className="p-4 pb-4">
-            <nav className="space-y-2">
-              {menuItems
-                .filter((item) => !item.adminOnly || isAdmin)
-                .map((item) => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 text-left ${
-                      activeSection === item.id
-                        ? 'bg-main text-white shadow-lg'
-                        : 'bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white'
-                    }`}
-                    onClick={() => handleButtonClick(item.id)}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
-                ))}
+          <div className="p-4 pb-2">
+            {!sidebarCollapsed && (
+              <p className="text-xs font-semibold text-gray-400 dark:text-lighttext2 uppercase tracking-wider mb-2">
+                {t('common.content')}
+              </p>
+            )}
+            <nav className="space-y-1">
+              {getFilteredItems(CONTENT_ITEMS).map(renderNavItem)}
+            </nav>
+
+            {!sidebarCollapsed && (
+              <p className="text-xs font-semibold text-gray-400 dark:text-lighttext2 uppercase tracking-wider mt-4 mb-2">
+                {t('common.configuration')}
+              </p>
+            )}
+            <nav className="space-y-1">
+              {getFilteredItems(CONFIG_ITEMS).map(renderNavItem)}
             </nav>
           </div>
 
-          {/* Account, Home & Logout Buttons */}
-          <div className="px-4 pt-4 pb-4 border-t border-gray-200 dark:border-darkgray space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <ThemeToggle sidebar />
-              <LanguageToggle sidebar />
-            </div>
+          {/* Account, Home & Logout */}
+          <div className="px-4 pt-4 pb-4 border-t border-gray-200 dark:border-darkgray space-y-1">
+            {!sidebarCollapsed && (
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <ThemeToggle sidebar />
+                <LanguageToggle sidebar />
+              </div>
+            )}
+
             <button
               type="button"
-              onClick={() => handleButtonClick('account')}
+              onClick={() => handleSelectSection('account')}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
                 activeSection === 'account'
                   ? 'bg-main text-white shadow-lg'
                   : 'bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white'
-              }`}
+              } ${sidebarCollapsed ? 'justify-center' : ''}`}
+              title={sidebarCollapsed ? t('sidebar.myAccount') : undefined}
             >
               <Settings className="w-5 h-5" />
-              <span className="font-medium">{t('sidebar.myAccount')}</span>
+              {!sidebarCollapsed && (
+                <span className="font-medium">{t('sidebar.myAccount')}</span>
+              )}
             </button>
-            <a
-              href={`/${locale}`}
-              className="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white transition-all duration-200"
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-medium">{t('sidebar.home')}</span>
-            </a>
+
+            {!sidebarCollapsed && (
+              <a
+                href={`/${locale}`}
+                className="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white transition-all duration-200"
+              >
+                <Home className="w-5 h-5" />
+                <span className="font-medium">{t('sidebar.home')}</span>
+              </a>
+            )}
+
+            {sidebarCollapsed && (
+              <a
+                href={`/${locale}`}
+                className="w-full flex items-center justify-center p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext transition-all duration-200"
+                title={t('sidebar.home')}
+              >
+                <Home className="w-5 h-5" />
+              </a>
+            )}
+
             <button
               type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="w-full flex items-center gap-3 p-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 disabled:opacity-50"
+              className={`w-full flex items-center gap-3 p-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 disabled:opacity-50 ${
+                sidebarCollapsed ? 'justify-center' : ''
+              }`}
+              title={sidebarCollapsed ? t('sidebar.logout') : undefined}
             >
               <LogOut className="w-5 h-5" />
-              <span className="font-medium">
-                {isLoggingOut ? t('sidebar.loggingOut') : t('sidebar.logout')}
-              </span>
+              {!sidebarCollapsed && (
+                <span className="font-medium">
+                  {isLoggingOut ? t('sidebar.loggingOut') : t('sidebar.logout')}
+                </span>
+              )}
             </button>
           </div>
         </div>

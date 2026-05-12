@@ -54,6 +54,9 @@ type CreatePortfolioData = {
   blurhashURL: string;
   post_tags: string;
   store_link: string;
+  fdroid_link?: string | null;
+  website?: string | null;
+  ios_store_link?: string | null;
   created_at?: string;
   author_id: string;
 };
@@ -153,6 +156,18 @@ function validatePortfolioData(
 
   if (data.store_link?.trim() && !isValidUrl(data.store_link)) {
     return { isValid: false, error: 'Store link must be a valid URL' };
+  }
+
+  if (data.fdroid_link?.trim() && !isValidUrl(data.fdroid_link)) {
+    return { isValid: false, error: 'F-Droid link must be a valid URL' };
+  }
+
+  if (data.website?.trim() && !isValidUrl(data.website)) {
+    return { isValid: false, error: 'Website link must be a valid URL' };
+  }
+
+  if (data.ios_store_link?.trim() && !isValidUrl(data.ios_store_link)) {
+    return { isValid: false, error: 'iOS Store link must be a valid URL' };
   }
 
   return { isValid: true };

@@ -1,5 +1,5 @@
 import { getPost, getPosts, type PostWithAuthor } from '@utils/getData';
-import { CirclePlay, Clock, ExternalLink, Github, Star } from 'lucide-react';
+import { Apple, CirclePlay, Clock, ExternalLink, Github, Globe, Smartphone, Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -114,6 +114,21 @@ export default async function Page({
         >
           {post_type === 'portfolio' &&
             post &&
+            'website' in post &&
+            post.website &&
+            post.website !== null && (
+              <Link
+                target="_blank"
+                href={post.website}
+                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                data-umami-event="Website button"
+                data-umami-event-post={title}
+              >
+                <Globe size={18} />
+              </Link>
+            )}
+          {post_type === 'portfolio' &&
+            post &&
             'source_link' in post &&
             post.source_link &&
             post.source_link !== null && (
@@ -161,10 +176,42 @@ export default async function Page({
                 <div className="mt-0.5 md:mt-0">{t('store')}</div>
               </Link>
             )}
+          {post_type === 'portfolio' &&
+            post &&
+            'fdroid_link' in post &&
+            post.fdroid_link &&
+            post.fdroid_link !== null && (
+              <Link
+                target="_blank"
+                href={post.fdroid_link}
+                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                data-umami-event="F-Droid button"
+                data-umami-event-post={title}
+              >
+                <Smartphone size={18} />
+                <div className="mt-0.5 md:mt-0">{t('fdroid')}</div>
+              </Link>
+            )}
+          {post_type === 'portfolio' &&
+            post &&
+            'ios_store_link' in post &&
+            post.ios_store_link &&
+            post.ios_store_link !== null && (
+              <Link
+                target="_blank"
+                href={post.ios_store_link}
+                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                data-umami-event="iOS Store button"
+                data-umami-event-post={title}
+              >
+                <Apple size={18} />
+                <div className="mt-0.5 md:mt-0">{t('ios')}</div>
+              </Link>
+            )}
         </div>
 
         {/* Author - desktop only */}
-        {post.author && (
+        {post_type !== 'portfolio' && post.author && (
           <div className="hidden md:flex items-center gap-3 text-darktext dark:text-lighttext">
             <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700">
               {post.author.avatar_url ? (
@@ -213,7 +260,7 @@ export default async function Page({
       </div>
 
       {/* Author - mobile only */}
-      {post.author && (
+      {post_type !== 'portfolio' && post.author && (
         <div className="flex md:hidden items-center gap-3 text-darktext dark:text-lighttext mb-6">
           <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700">
             {post.author.avatar_url ? (
@@ -235,39 +282,40 @@ export default async function Page({
 
       {/* mobile btns */}
       <div
-        className={`text-lighttext ${
-          post_type === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'
-        }  ${
-          post_type === 'portfolio' &&
-          post &&
-          'source_link' in post &&
-          'demo_link' in post
-            ? 'justify-center'
-            : 'justify-start'
+        className={`${
+          post_type === 'portfolio' ? 'flex flex-col gap-2 mb-8 md:hidden' : 'hidden'
         }`}
       >
-        {post_type === 'portfolio' &&
-          post &&
-          'source_link' in post &&
-          post.source_link &&
-          post.source_link !== null && (
-            <Link
-              target="_blank"
-              href={post.source_link || ''}
-              className={`flex ${
-                (post.source_link && post.demo_link) ||
-                (post.source_link && post.store_link)
-                  ? 'w-full mr-5'
-                  : 'w-full'
-              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
-              data-umami-event="View Source Code button"
-              data-umami-event-post={title}
-            >
-              <Github size={18} />
-              <div className="mt-0.5 md:mt-0">{t('source')}</div>
-            </Link>
-          )}
+        {/* Row 1: source + website side by side */}
+        {post_type === 'portfolio' && post && (
+          <div className="flex gap-2">
+            {'source_link' in post && post.source_link && post.source_link !== null && (
+              <Link
+                target="_blank"
+                href={post.source_link || ''}
+                className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                data-umami-event="View Source Code button"
+                data-umami-event-post={title}
+              >
+                <Github size={18} />
+                <div className="mt-0.5 md:mt-0">{t('source')}</div>
+              </Link>
+            )}
+            {'website' in post && post.website && post.website !== null && (
+              <Link
+                target="_blank"
+                href={post.website}
+                className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                data-umami-event="Website button"
+                data-umami-event-post={title}
+              >
+                <Globe size={18} />
+              </Link>
+            )}
+          </div>
+        )}
 
+        {/* Demo (full width) */}
         {post_type === 'portfolio' &&
           post &&
           'demo_link' in post &&
@@ -276,9 +324,7 @@ export default async function Page({
             <Link
               target="_blank"
               href={post.demo_link}
-              className={`flex ${
-                post.source_link && post.demo_link ? 'w-full' : 'w-full'
-              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+              className="flex w-full text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
               data-umami-event="View Demo button"
               data-umami-event-post={title}
             >
@@ -286,24 +332,45 @@ export default async function Page({
               <div className="mt-0.5 md:mt-0">{t('demo')}</div>
             </Link>
           )}
-        {post_type === 'portfolio' &&
-          post &&
-          'store_link' in post &&
-          post.store_link &&
-          post.store_link !== null && (
-            <Link
-              target="_blank"
-              href={post.store_link}
-              className={`flex ${
-                post.store_link && post.store_link ? 'w-full' : 'w-full'
-              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
-              data-umami-event="Play Store button"
-              data-umami-event-post={title}
-            >
-              <CirclePlay size={18} />
-              <div className="mt-0.5 md:mt-0">{t('store')}</div>
-            </Link>
-          )}
+
+        {/* Stores: adaptive layout */}
+        {post_type === 'portfolio' && post && (() => {
+          const stores: Array<{ key: string; label: string; icon: React.ReactNode; href: string; event: string }> = [];
+          if ('store_link' in post && post.store_link && post.store_link !== null) stores.push({ key: 'store', label: t('store'), icon: <CirclePlay size={18} />, href: post.store_link, event: 'Play Store button' });
+          if ('fdroid_link' in post && post.fdroid_link && post.fdroid_link !== null) stores.push({ key: 'fdroid', label: t('fdroid'), icon: <Smartphone size={18} />, href: post.fdroid_link, event: 'F-Droid button' });
+          if ('ios_store_link' in post && post.ios_store_link && post.ios_store_link !== null) stores.push({ key: 'ios', label: t('ios'), icon: <Apple size={18} />, href: post.ios_store_link, event: 'iOS Store button' });
+          if (stores.length === 0) return null;
+          if (stores.length === 3) {
+            const topRow = stores.filter((s) => s.key !== 'fdroid');
+            const bottomRow = stores.filter((s) => s.key === 'fdroid');
+            return (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  {topRow.map((s) => (
+                    <Link key={s.key} target="_blank" href={s.href} className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary" data-umami-event={s.event} data-umami-event-post={title}>
+                      {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
+                    </Link>
+                  ))}
+                </div>
+                {bottomRow.map((s) => (
+                  <Link key={s.key} target="_blank" href={s.href} className="flex w-full text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary" data-umami-event={s.event} data-umami-event-post={title}>
+                    {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
+                  </Link>
+                ))}
+              </>
+            );
+          }
+          const gridCols = stores.length === 1 ? '' : 'grid-cols-2';
+          return (
+            <div className={`grid ${gridCols} gap-2`}>
+              {stores.map((s) => (
+                <Link key={s.key} target="_blank" href={s.href} className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary" data-umami-event={s.event} data-umami-event-post={title}>
+                  {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
+                </Link>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Project Description */}

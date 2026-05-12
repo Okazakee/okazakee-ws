@@ -47,6 +47,9 @@ type PortfolioFormData = {
   blurhashURL: string;
   post_tags: string;
   store_link: string;
+  fdroid_link: string;
+  website: string;
+  ios_store_link: string;
   created_at: string;
   author_id: string;
 };
@@ -64,6 +67,9 @@ const emptyFormData: PortfolioFormData = {
   blurhashURL: '',
   post_tags: '',
   store_link: '',
+  fdroid_link: '',
+  website: '',
+  ios_store_link: '',
   created_at: new Date().toISOString().split('T')[0],
   author_id: '',
 };
@@ -231,6 +237,9 @@ export default function PortfolioSection() {
       blurhashURL: post.blurhashURL ?? '',
       post_tags: post.post_tags ?? '',
       store_link: post.store_link ?? '',
+      fdroid_link: post.fdroid_link ?? '',
+      website: post.website ?? '',
+      ios_store_link: post.ios_store_link ?? '',
       created_at:
         post.created_at?.split('T')[0] ??
         new Date().toISOString().split('T')[0],
@@ -293,6 +302,9 @@ export default function PortfolioSection() {
       blurhashURL: formData.blurhashURL,
       post_tags: formData.post_tags,
       store_link: formData.store_link,
+      fdroid_link: formData.fdroid_link,
+      website: formData.website,
+      ios_store_link: formData.ios_store_link,
       created_at: formData.created_at,
       author_id: formData.author_id,
       views: 0,
@@ -321,6 +333,9 @@ export default function PortfolioSection() {
               source_link: formData.source_link,
               demo_link: formData.demo_link,
               store_link: formData.store_link,
+              fdroid_link: formData.fdroid_link,
+              website: formData.website,
+              ios_store_link: formData.ios_store_link,
               description_en: formData.description_en,
               description_it: formData.description_it,
               body_en: formData.body_en,
@@ -473,6 +488,9 @@ export default function PortfolioSection() {
             source_link: post.source_link,
             demo_link: post.demo_link,
             store_link: post.store_link,
+            fdroid_link: post.fdroid_link,
+            website: post.website,
+            ios_store_link: post.ios_store_link,
             description_en: post.description_en,
             description_it: post.description_it,
             body_en: post.body_en,
@@ -510,6 +528,9 @@ export default function PortfolioSection() {
             source_link: post.source_link,
             demo_link: post.demo_link,
             store_link: post.store_link,
+            fdroid_link: post.fdroid_link,
+            website: post.website,
+            ios_store_link: post.ios_store_link,
             description_en: post.description_en,
             description_it: post.description_it,
             body_en: post.body_en,

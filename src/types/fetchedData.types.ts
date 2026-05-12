@@ -35,6 +35,9 @@ export type PortfolioPost = {
   blurhashURL: string;
   post_tags: string;
   store_link: string;
+  fdroid_link: string | null;
+  website: string | null;
+  ios_store_link: string | null;
   views: number;
   author_id?: string;
 };

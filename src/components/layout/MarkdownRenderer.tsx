@@ -3,6 +3,9 @@ import Markdown from 'markdown-to-jsx';
 import NextImage from '@/components/layout/NextImage';
 import PreCustom, { type PreChild } from './PreCustom';
 
+// TODO: Consolidate image parsing and `****highlight****` parsing into a unified
+// custom formatter shared with CMS previews and formatLabels.ts.
+// Markdown images: `![alt-blurhash](url)` where the first "-" splits alt from blurhash.
 const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
   /*
     Alt prop in img is taken from markdown, an example image is like this:

@@ -1,6 +1,6 @@
 'use client';
 
-import { CirclePlay, Clock, ExternalLink, Github } from 'lucide-react';
+import { Apple, CirclePlay, Clock, ExternalLink, Github, Globe, Smartphone } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -40,6 +40,9 @@ type PortfolioFormData = {
   source_link: string;
   demo_link: string;
   store_link: string;
+  fdroid_link?: string | null;
+  website?: string | null;
+  ios_store_link?: string | null;
 };
 
 type PostPreviewProps = {
@@ -148,6 +151,19 @@ export function PostPreview({
         >
           {postType === 'portfolio' &&
             portfolioData &&
+            portfolioData.website &&
+            portfolioData.website !== null && (
+              <a
+                target="_blank"
+                href={portfolioData.website}
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+              >
+                <Globe size={18} />
+              </a>
+            )}
+          {postType === 'portfolio' &&
+            portfolioData &&
             portfolioData.source_link &&
             portfolioData.source_link !== null && (
               <a
@@ -189,10 +205,38 @@ export function PostPreview({
                 <div className="mt-0.5 md:mt-0">{t('store')}</div>
               </a>
             )}
+          {postType === 'portfolio' &&
+            portfolioData &&
+            portfolioData.fdroid_link &&
+            portfolioData.fdroid_link !== null && (
+              <a
+                target="_blank"
+                href={portfolioData.fdroid_link}
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+              >
+                <Smartphone size={18} />
+                <div className="mt-0.5 md:mt-0">{t('fdroid')}</div>
+              </a>
+            )}
+          {postType === 'portfolio' &&
+            portfolioData &&
+            portfolioData.ios_store_link &&
+            portfolioData.ios_store_link !== null && (
+              <a
+                target="_blank"
+                href={portfolioData.ios_store_link}
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+              >
+                <Apple size={18} />
+                <div className="mt-0.5 md:mt-0">{t('ios')}</div>
+              </a>
+            )}
         </div>
 
         {/* Author - desktop only */}
-        {author && (
+        {postType !== 'portfolio' && author && (
           <div className="hidden md:flex items-center gap-3 text-darktext dark:text-lighttext">
             <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700">
               {author.avatar_url ? (
@@ -232,7 +276,7 @@ export function PostPreview({
       </div>
 
       {/* Author - mobile only */}
-      {author && (
+      {postType !== 'portfolio' && author && (
         <div className="flex md:hidden items-center gap-3 text-darktext dark:text-lighttext mb-6">
           <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700">
             {author.avatar_url ? (
@@ -254,37 +298,38 @@ export function PostPreview({
 
       {/* mobile btns */}
       <div
-        className={`text-lighttext ${
-          postType === 'portfolio' ? 'flex mb-8 md:hidden' : 'hidden'
-        } ${
-          postType === 'portfolio' &&
-          portfolioData &&
-          portfolioData.source_link &&
-          portfolioData.demo_link
-            ? 'justify-center'
-            : 'justify-start'
+        className={`${
+          postType === 'portfolio' ? 'flex flex-col gap-2 mb-8 md:hidden' : 'hidden'
         }`}
       >
-        {postType === 'portfolio' &&
-          portfolioData &&
-          portfolioData.source_link &&
-          portfolioData.source_link !== null && (
-            <a
-              target="_blank"
-              href={portfolioData.source_link}
-              rel="noopener noreferrer"
-              className={`flex ${
-                (portfolioData.source_link && portfolioData.demo_link) ||
-                (portfolioData.source_link && portfolioData.store_link)
-                  ? 'w-full mr-5'
-                  : 'w-full'
-              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
-            >
-              <Github size={18} />
-              <div className="mt-0.5 md:mt-0">{t('source')}</div>
-            </a>
-          )}
+        {/* Row 1: source + website side by side */}
+        {postType === 'portfolio' && portfolioData && (
+          <div className="flex gap-2">
+            {portfolioData.source_link && portfolioData.source_link !== null && (
+              <a
+                target="_blank"
+                href={portfolioData.source_link}
+                rel="noopener noreferrer"
+                className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+              >
+                <Github size={18} />
+                <div className="mt-0.5 md:mt-0">{t('source')}</div>
+              </a>
+            )}
+            {portfolioData.website && portfolioData.website !== null && (
+              <a
+                target="_blank"
+                href={portfolioData.website}
+                rel="noopener noreferrer"
+                className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+              >
+                <Globe size={18} />
+              </a>
+            )}
+          </div>
+        )}
 
+        {/* Demo (full width) */}
         {postType === 'portfolio' &&
           portfolioData &&
           portfolioData.demo_link &&
@@ -293,34 +338,51 @@ export function PostPreview({
               target="_blank"
               href={portfolioData.demo_link}
               rel="noopener noreferrer"
-              className={`flex ${
-                portfolioData.source_link && portfolioData.demo_link
-                  ? 'w-full'
-                  : 'w-full'
-              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
+              className="flex w-full text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
             >
               <ExternalLink size={18} />
               <div className="mt-0.5 md:mt-0">{t('demo')}</div>
             </a>
           )}
-        {postType === 'portfolio' &&
-          portfolioData &&
-          portfolioData.store_link &&
-          portfolioData.store_link !== null && (
-            <a
-              target="_blank"
-              href={portfolioData.store_link}
-              rel="noopener noreferrer"
-              className={`flex ${
-                portfolioData.store_link && portfolioData.store_link
-                  ? 'w-full'
-                  : 'w-full'
-              } text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary`}
-            >
-              <CirclePlay size={18} />
-              <div className="mt-0.5 md:mt-0">{t('store')}</div>
-            </a>
-          )}
+
+        {/* Stores: adaptive layout */}
+        {postType === 'portfolio' && portfolioData && (() => {
+          const stores: Array<{ key: string; label: string; icon: React.ReactNode; href: string }> = [];
+          if (portfolioData.store_link && portfolioData.store_link !== null) stores.push({ key: 'store', label: t('store'), icon: <CirclePlay size={18} />, href: portfolioData.store_link });
+          if (portfolioData.fdroid_link && portfolioData.fdroid_link !== null) stores.push({ key: 'fdroid', label: t('fdroid'), icon: <Smartphone size={18} />, href: portfolioData.fdroid_link });
+          if (portfolioData.ios_store_link && portfolioData.ios_store_link !== null) stores.push({ key: 'ios', label: t('ios'), icon: <Apple size={18} />, href: portfolioData.ios_store_link });
+          if (stores.length === 0) return null;
+          if (stores.length === 3) {
+            const topRow = stores.filter((s) => s.key !== 'fdroid');
+            const bottomRow = stores.filter((s) => s.key === 'fdroid');
+            return (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  {topRow.map((s) => (
+                    <a key={s.key} target="_blank" href={s.href} rel="noopener noreferrer" className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary">
+                      {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
+                    </a>
+                  ))}
+                </div>
+                {bottomRow.map((s) => (
+                  <a key={s.key} target="_blank" href={s.href} rel="noopener noreferrer" className="flex w-full text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary">
+                    {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
+                  </a>
+                ))}
+              </>
+            );
+          }
+          const gridCols = stores.length === 1 ? '' : 'grid-cols-2';
+          return (
+            <div className={`grid ${gridCols} gap-2`}>
+              {stores.map((s) => (
+                <a key={s.key} target="_blank" href={s.href} rel="noopener noreferrer" className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary">
+                  {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
+                </a>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Project Description */}
