@@ -11,15 +11,13 @@ interface IconPickerProps {
 }
 
 const POPULAR_ICONS = [
-  'Github',
-  'Linkedin',
+  'Link',
   'Mail',
-  'Twitter',
+  'MessageCircle',
   'Globe',
   'FileText',
   'Phone',
   'MapPin',
-  'MessageCircle',
   'ExternalLink',
   'Calendar',
   'Camera',

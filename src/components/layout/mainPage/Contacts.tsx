@@ -3,6 +3,7 @@ import type { LucideProps } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import React from 'react';
+import { GithubIcon, LinkedinIcon, AppleIcon } from '@/components/common/BrandIcons';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import ResumeButton from '@/components/common/ResumeButton';
 import type { ResumeData } from '@/types/fetchedData.types';
@@ -24,20 +25,21 @@ export default async function Contacts({ locale }: { locale: string }) {
     ? resumeData[`resume_${locale}` as keyof ResumeData]
     : null;
 
+  const brandIcons: Record<string, React.ComponentType<LucideProps>> = {
+    Github: GithubIcon,
+    Linkedin: LinkedinIcon,
+    Apple: AppleIcon,
+  };
+
   const getIconComponent = (iconName: string) => {
-    // Dynamic import of the icon, explicitly cast to React.ComponentType
+    const capitalized = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+    const BrandIcon = brandIcons[capitalized];
+    if (BrandIcon) return BrandIcon;
+
     return React.lazy(() =>
       import('lucide-react').then((module) => {
-        // Access the icon by name dynamically
-        const Icon = module[
-          iconName.charAt(0).toUpperCase() + iconName.slice(1)
-        ] as React.ComponentType<LucideProps>;
-
-        if (!Icon) {
-          throw new Error(`Icon "${iconName}" not found`);
-        }
-
-        return { default: Icon };
+        const Icon = module[capitalized] as React.ComponentType<LucideProps>;
+        return { default: Icon ?? (() => null) };
       })
     );
   };
