@@ -6,7 +6,6 @@ import {
   Contact,
   Crown,
   FileText,
-  Github,
   Home,
   LayoutGrid,
   LogOut,
@@ -17,6 +16,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { GithubIcon } from '@/components/common/BrandIcons';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -282,7 +282,7 @@ const SidePanel = ({ isOpen = true, onClose }: SidePanelProps) => {
                 <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-lighttext2">
                   {user.authProvider === 'github' ? (
                     <>
-                      <Github className="w-3 h-3" />
+                      <GithubIcon className="w-3 h-3" />
                       <span>@{user.githubUsername}</span>
                     </>
                   ) : (

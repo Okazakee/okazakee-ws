@@ -4,7 +4,6 @@ import {
   Camera,
   Check,
   Crown,
-  Github,
   Mail,
   Pencil,
   Plus,
@@ -15,6 +14,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { GithubIcon } from '@/components/common/BrandIcons';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
@@ -164,7 +164,7 @@ export default function UsersSection() {
                 {(['email', 'github', 'dummy'] as const).map((type) => (
                   <button key={type} type="button" onClick={() => setAddType(type)} className={`px-4 py-2 rounded-lg transition-colors ${addType === type ? 'bg-main text-white' : 'bg-white dark:bg-darkestgray text-gray-500 dark:text-lighttext2 hover:bg-gray-100'}`}>
                     {type === 'email' && <><Mail className="w-4 h-4 inline mr-1" />{t('users.emailInvite')}</>}
-                    {type === 'github' && <><Github className="w-4 h-4 inline mr-1" />{t('users.githubUsername')}</>}
+                    {type === 'github' && <><GithubIcon className="w-4 h-4 inline mr-1" />{t('users.githubUsername')}</>}
                     {type === 'dummy' && <><User className="w-4 h-4 inline mr-1" />{t('users.dummyUser')}</>}
                   </button>
                 ))}
@@ -227,7 +227,7 @@ export default function UsersSection() {
                       </div>
                     ) : (
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${au.github_username ? 'bg-gray-700' : 'bg-blue-600/20'}`}>
-                        {au.github_username ? <Github className="w-5 h-5 text-white" /> : <Mail className="w-5 h-5 text-blue-400" />}
+                        {au.github_username ? <GithubIcon className="w-5 h-5 text-white" /> : <Mail className="w-5 h-5 text-blue-400" />}
                       </div>
                     )}
                     <div className="min-w-0">
@@ -252,7 +252,7 @@ export default function UsersSection() {
                         <span className={`px-2 py-0.5 rounded ${au.role === 'admin' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-blue-500/20 text-blue-400'}`}>{au.role}</span>
                         {isLastAdmin && !isCurrentUser && <span className="text-yellow-500">{t('users.lastAdminWarning')}</span>}
                         {!hasProfile && !isDummy && <span className="text-yellow-500">{t('users.notLoggedInYet')}</span>}
-                        {au.github_username && <span><Github className="w-3 h-3 inline mr-1" />@{au.github_username}</span>}
+                        {au.github_username && <span><GithubIcon className="w-3 h-3 inline mr-1" />@{au.github_username}</span>}
                       </div>
                     </div>
                   </div>

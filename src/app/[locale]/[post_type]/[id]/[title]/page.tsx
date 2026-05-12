@@ -1,5 +1,6 @@
 import { getPost, getPosts, type PostWithAuthor } from '@utils/getData';
-import { Apple, CirclePlay, Clock, ExternalLink, Github, Globe, Smartphone, Star } from 'lucide-react';
+import { CirclePlay, Clock, ExternalLink, Globe, Smartphone, Star } from 'lucide-react';
+import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -139,7 +140,7 @@ export default async function Page({
                 data-umami-event="View Source Code button"
                 data-umami-event-post={title}
               >
-                <Github size={18} />
+                <GithubIcon size={18} />
                 <div className="mt-0.5 md:mt-0">{t('source')}</div>
               </Link>
             )}
@@ -204,7 +205,7 @@ export default async function Page({
                 data-umami-event="iOS Store button"
                 data-umami-event-post={title}
               >
-                <Apple size={18} />
+                <AppleIcon size={18} />
                 <div className="mt-0.5 md:mt-0">{t('ios')}</div>
               </Link>
             )}
@@ -297,7 +298,7 @@ export default async function Page({
                 data-umami-event="View Source Code button"
                 data-umami-event-post={title}
               >
-                <Github size={18} />
+                <GithubIcon size={18} />
                 <div className="mt-0.5 md:mt-0">{t('source')}</div>
               </Link>
             )}
@@ -338,7 +339,7 @@ export default async function Page({
           const stores: Array<{ key: string; label: string; icon: React.ReactNode; href: string; event: string }> = [];
           if ('store_link' in post && post.store_link && post.store_link !== null) stores.push({ key: 'store', label: t('store'), icon: <CirclePlay size={18} />, href: post.store_link, event: 'Play Store button' });
           if ('fdroid_link' in post && post.fdroid_link && post.fdroid_link !== null) stores.push({ key: 'fdroid', label: t('fdroid'), icon: <Smartphone size={18} />, href: post.fdroid_link, event: 'F-Droid button' });
-          if ('ios_store_link' in post && post.ios_store_link && post.ios_store_link !== null) stores.push({ key: 'ios', label: t('ios'), icon: <Apple size={18} />, href: post.ios_store_link, event: 'iOS Store button' });
+          if ('ios_store_link' in post && post.ios_store_link && post.ios_store_link !== null) stores.push({ key: 'ios', label: t('ios'), icon: <AppleIcon size={18} />, href: post.ios_store_link, event: 'iOS Store button' });
           if (stores.length === 0) return null;
           if (stores.length === 3) {
             const topRow = stores.filter((s) => s.key !== 'fdroid');

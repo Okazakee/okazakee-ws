@@ -4,7 +4,6 @@ import {
   Camera,
   Check,
   Crown,
-  Github,
   Mail,
   Pencil,
   Plus,
@@ -15,6 +14,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { GithubIcon } from '@/components/common/BrandIcons';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
@@ -356,7 +356,7 @@ export default function UsersSection() {
                       : 'bg-white dark:bg-darkestgray text-gray-500 dark:text-lighttext2 hover:bg-gray-100 dark:hover:bg-darkgray'
                   }`}
                 >
-                  <Github className="w-4 h-4" />
+                  <GithubIcon className="w-4 h-4" />
                   {t('users.githubUsername')}
                 </button>
                 <button
@@ -602,7 +602,7 @@ export default function UsersSection() {
                         }`}
                       >
                         {allowedUser.github_username ? (
-                          <Github className="w-5 h-5 text-white" />
+                          <GithubIcon className="w-5 h-5 text-white" />
                         ) : (
                           <Mail className="w-5 h-5 text-blue-400" />
                         )}
@@ -721,7 +721,7 @@ export default function UsersSection() {
                         )}
                         {allowedUser.github_username && (
                           <span className="flex items-center gap-1">
-                            <Github className="w-3 h-3" />@
+                            <GithubIcon className="w-3 h-3" />@
                             {allowedUser.github_username}
                           </span>
                         )}

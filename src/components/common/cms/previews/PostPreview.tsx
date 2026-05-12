@@ -1,6 +1,7 @@
 'use client';
 
-import { Apple, CirclePlay, Clock, ExternalLink, Github, Globe, Smartphone } from 'lucide-react';
+import { CirclePlay, Clock, ExternalLink, Globe, Smartphone } from 'lucide-react';
+import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
 import moment from 'moment';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -172,7 +173,7 @@ export function PostPreview({
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
               >
-                <Github size={18} />
+                <GithubIcon size={18} />
                 <div className="mt-0.5 md:mt-0">{t('source')}</div>
               </a>
             )}
@@ -229,7 +230,7 @@ export function PostPreview({
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
               >
-                <Apple size={18} />
+                <AppleIcon size={18} />
                 <div className="mt-0.5 md:mt-0">{t('ios')}</div>
               </a>
             )}
@@ -312,7 +313,7 @@ export function PostPreview({
                 rel="noopener noreferrer"
                 className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
               >
-                <Github size={18} />
+                <GithubIcon size={18} />
                 <div className="mt-0.5 md:mt-0">{t('source')}</div>
               </a>
             )}
@@ -350,7 +351,7 @@ export function PostPreview({
           const stores: Array<{ key: string; label: string; icon: React.ReactNode; href: string }> = [];
           if (portfolioData.store_link && portfolioData.store_link !== null) stores.push({ key: 'store', label: t('store'), icon: <CirclePlay size={18} />, href: portfolioData.store_link });
           if (portfolioData.fdroid_link && portfolioData.fdroid_link !== null) stores.push({ key: 'fdroid', label: t('fdroid'), icon: <Smartphone size={18} />, href: portfolioData.fdroid_link });
-          if (portfolioData.ios_store_link && portfolioData.ios_store_link !== null) stores.push({ key: 'ios', label: t('ios'), icon: <Apple size={18} />, href: portfolioData.ios_store_link });
+          if (portfolioData.ios_store_link && portfolioData.ios_store_link !== null) stores.push({ key: 'ios', label: t('ios'), icon: <AppleIcon size={18} />, href: portfolioData.ios_store_link });
           if (stores.length === 0) return null;
           if (stores.length === 3) {
             const topRow = stores.filter((s) => s.key !== 'fdroid');

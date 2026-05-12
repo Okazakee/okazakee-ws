@@ -1,6 +1,7 @@
 'use client';
 
-import { CircleUserRound, Github, Loader2 } from 'lucide-react';
+import { CircleUserRound, Loader2 } from 'lucide-react';
+import { GithubIcon } from '@/components/common/BrandIcons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { getGitHubOAuthUrl, login } from '@/app/actions/cms/login';
@@ -82,7 +83,7 @@ function LoginFormContent({
         {isGitHubLoading ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
-          <Github className="w-5 h-5" />
+          <GithubIcon className="w-5 h-5" />
         )}
         Continue with GitHub
       </button>

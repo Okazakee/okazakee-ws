@@ -3,13 +3,13 @@
 import {
   Camera,
   Check,
-  Github,
   Mail,
   Pencil,
   Trash2,
   User,
   X,
 } from 'lucide-react';
+import { GithubIcon } from '@/components/common/BrandIcons';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -311,7 +311,7 @@ export default function AccountSection() {
                 {t('account.githubUsernameLabel')}
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-darkestgray rounded-lg text-gray-500 dark:text-lighttext2">
-                <Github className="w-4 h-4" />
+                <GithubIcon className="w-4 h-4" />
                 <span>@{user.githubUsername}</span>
               </div>
               <p className="text-xs text-gray-500 dark:text-lighttext2 mt-1">
