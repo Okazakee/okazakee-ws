@@ -80,11 +80,20 @@ export function useFileUpload({
         .split(',')
         .map((t) => t.trim());
       const matchesType = acceptedTypes.some((t) => {
-        if (t.endsWith('/*')) {
-          const prefix = t.slice(0, -2);
-          return f.type.startsWith(prefix);
+        const normalizedType = t.toLowerCase();
+        const fileName = f.name.toLowerCase();
+        const fileType = f.type.toLowerCase();
+
+        if (normalizedType.startsWith('.')) {
+          return fileName.endsWith(normalizedType);
         }
-        return f.type === t || t === '*';
+
+        if (t.endsWith('/*')) {
+          const prefix = normalizedType.slice(0, -2);
+          return fileType.startsWith(prefix);
+        }
+
+        return fileType === normalizedType || normalizedType === '*';
       });
 
       if (!matchesType && accept !== '*') {

@@ -56,7 +56,10 @@ export function FileDropzone({
   const t = useTranslations('cms');
   const displayUrl = previewUrl ?? currentUrl ?? null;
   const displayBlur = previewUrl ? blurhash : currentUrl ? blurhash : null;
-  const isPdf = displayUrl?.endsWith('.pdf') || fileInputProps.accept === '.pdf';
+  const normalizedDisplayUrl = displayUrl?.split('?')[0].toLowerCase() ?? null;
+  const isPdf =
+    normalizedDisplayUrl?.endsWith('.pdf') ||
+    fileInputProps.accept.includes('.pdf');
 
   return (
     <div>
@@ -109,11 +112,18 @@ export function FileDropzone({
                 />
               </div>
             ) : (
-              <div className="flex items-center justify-center py-4">
-                <FileText className="w-8 h-8 text-gray-400" />
-                <span className="ml-2 text-sm text-gray-500 dark:text-lighttext2">
-                  PDF Document
-                </span>
+              <div className="space-y-3">
+                <div className="relative overflow-hidden rounded-lg border border-gray-200 dark:border-lighttext2/20 bg-white dark:bg-darkestgray">
+                  <iframe
+                    src={displayUrl}
+                    title="PDF preview"
+                    className={`w-full ${compact ? 'h-56' : 'h-80 md:h-96'}`}
+                  />
+                </div>
+                <div className="flex items-center justify-center text-sm text-gray-500 dark:text-lighttext2">
+                  <FileText className="w-4 h-4 mr-2" />
+                  <span>PDF Document</span>
+                </div>
               </div>
             )}
             {showUrl && (

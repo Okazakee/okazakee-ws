@@ -505,7 +505,12 @@ export function validatePdfFile(file: File): {
   error?: string;
 } {
   // File type validation
-  if (file.type !== 'application/pdf') {
+  const fileType = file.type.toLowerCase();
+  const hasPdfExtension = file.name.toLowerCase().endsWith('.pdf');
+  const hasPdfMimeType = fileType === 'application/pdf';
+  const hasGenericMimeType = fileType === '' || fileType === 'application/octet-stream';
+
+  if (!hasPdfMimeType && !(hasPdfExtension && hasGenericMimeType)) {
     return { isValid: false, error: 'Please select a valid PDF file' };
   }
 
