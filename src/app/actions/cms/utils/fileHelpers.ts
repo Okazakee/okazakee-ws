@@ -1,34 +1,9 @@
-import { createJimp } from '@jimp/core';
-import webp from '@jimp/wasm-webp';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { encode } from 'blurhash';
-import { defaultFormats, defaultPlugins } from 'jimp';
+import { encode as blurkitEncode } from 'blurkit/node';
+import sharp from 'sharp';
 import { createClient } from '@/utils/supabase/server';
-
-// Create Jimp instance with WebP support
-// Initialize lazily to handle WASM loading issues
-// biome-ignore lint/suspicious/noExplicitAny: Jimp type compatibility issue
-let JimpInstance: any = null;
-
-function getJimp() {
-  if (!JimpInstance) {
-    try {
-      JimpInstance = createJimp({
-        formats: [...defaultFormats, webp],
-        plugins: defaultPlugins,
-      });
-    } catch (error) {
-      console.error('Error initializing Jimp with WebP support:', error);
-      // Fallback to Jimp without WebP if WASM fails
-      JimpInstance = createJimp({
-        formats: defaultFormats,
-        plugins: defaultPlugins,
-      });
-    }
-  }
-  return JimpInstance;
-}
+import { FALLBACK_BLURHASH } from '@/utils/blurhashUtils';
 
 /**
  * Verifies the user is authenticated before allowing CMS operations
@@ -194,7 +169,6 @@ type ProcessImageResult = {
 /**
  * Processes an image: resize to max dimensions, convert to WebP
  * Returns the processed buffer and metadata
- * Uses Jimp (pure JS, works on Vercel serverless)
  */
 export async function processImage(
   file: File,
@@ -208,67 +182,35 @@ export async function processImage(
     const arrayBuffer = await file.arrayBuffer();
     const inputBuffer = Buffer.from(arrayBuffer);
 
-    // Get Jimp instance (with lazy initialization)
-    const Jimp = getJimp();
-
-    // Read image with Jimp
-    const image = await Jimp.read(inputBuffer);
-    const originalWidth = image.width;
-    const originalHeight = image.height;
-
-    // Calculate new dimensions
-    let newWidth = originalWidth;
-    let newHeight = originalHeight;
+    let pipeline = sharp(inputBuffer);
 
     if (maxWidth && maxHeight) {
-      // Resize to fit within both dimensions (for avatars - cover mode)
-      if (originalWidth > maxWidth || originalHeight > maxHeight) {
-        const widthRatio = maxWidth / originalWidth;
-        const heightRatio = maxHeight / originalHeight;
-        // Use larger ratio for cover effect, then crop
-        const ratio = Math.max(widthRatio, heightRatio);
-        newWidth = Math.round(originalWidth * ratio);
-        newHeight = Math.round(originalHeight * ratio);
-        image.resize({ w: newWidth, h: newHeight });
-        // Crop to exact dimensions
-        image.crop({
-          x: (newWidth - maxWidth) / 2,
-          y: (newHeight - maxHeight) / 2,
-          w: maxWidth,
-          h: maxHeight,
-        });
-        newWidth = maxWidth;
-        newHeight = maxHeight;
+      pipeline = pipeline.resize(maxWidth, maxHeight, { fit: 'cover', position: 'center' });
+    } else {
+      const metadata = await sharp(inputBuffer).metadata();
+      if ((metadata.height || 0) > maxHeight) {
+        pipeline = pipeline.resize(undefined, maxHeight, { fit: 'inside', withoutEnlargement: true });
       }
-    } else if (originalHeight > maxHeight) {
-      // Only resize if height exceeds max (maintain aspect ratio)
-      const ratio = maxHeight / originalHeight;
-      newWidth = Math.round(originalWidth * ratio);
-      newHeight = maxHeight;
-      image.resize({ w: newWidth, h: newHeight });
     }
 
-    // Convert to WebP buffer with quality setting using WASM encoder
-    // Fallback to PNG if WebP encoding fails (WASM loading issues)
     let processedBuffer: Buffer;
     let format: 'webp' | 'png' = 'webp';
     try {
-      processedBuffer = await image.getBuffer('image/webp', { quality });
-    } catch (webpError) {
-      console.warn('WebP encoding failed, falling back to PNG:', webpError);
-      // Fallback to PNG if WebP fails
-      processedBuffer = await image.getBuffer('image/png');
+      processedBuffer = await pipeline.webp({ quality }).toBuffer();
+    } catch {
+      processedBuffer = await pipeline.png().toBuffer();
       format = 'png';
     }
 
-    // Generate blurhash
-    const blurhash = await generateBlurhash(image);
+    const { hash: blurhash } = await blurkitEncode(inputBuffer.buffer as ArrayBuffer, { size: 32 });
+
+    const outMeta = await sharp(processedBuffer).metadata();
 
     return {
       success: true,
       buffer: processedBuffer,
-      width: newWidth,
-      height: newHeight,
+      width: outMeta.width,
+      height: outMeta.height,
       blurhash,
       format,
     };
@@ -282,52 +224,16 @@ export async function processImage(
 }
 
 /**
- * Generates a real blurhash from Jimp image
- */
-// biome-ignore lint/suspicious/noExplicitAny: Jimp type compatibility issue
-async function generateBlurhash(image: any): Promise<string> {
-  try {
-    // Clone and resize for blurhash (32x32)
-    const smallImage = image.clone().resize({ w: 32, h: 32 });
-    const width = smallImage.width;
-    const height = smallImage.height;
-
-    // Get raw RGBA pixel data
-    const pixels = new Uint8ClampedArray(width * height * 4);
-    let idx = 0;
-
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const color = smallImage.getPixelColor(x, y);
-        // Jimp stores colors as 32-bit integers (RGBA)
-        pixels[idx++] = (color >> 24) & 0xff; // R
-        pixels[idx++] = (color >> 16) & 0xff; // G
-        pixels[idx++] = (color >> 8) & 0xff; // B
-        pixels[idx++] = color & 0xff; // A
-      }
-    }
-
-    const blurhash = encode(pixels, width, height, 4, 4);
-    return blurhash;
-  } catch (error) {
-    console.error('Failed to generate blurhash:', error);
-    return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
-  }
-}
-
-/**
  * Generates a blurhash from a raw image Buffer (e.g. a pre-processed WebP).
- * Used server-side when a client-uploaded WebP skips the processImage path.
  */
 export async function generateBlurhashFromBuffer(
   buffer: Buffer
 ): Promise<string> {
   try {
-    const Jimp = getJimp();
-    const image = await Jimp.read(buffer);
-    return generateBlurhash(image);
+    const { hash } = await blurkitEncode(buffer.buffer as ArrayBuffer, { size: 32 });
+    return hash;
   } catch {
-    return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
+    return FALLBACK_BLURHASH;
   }
 }
 

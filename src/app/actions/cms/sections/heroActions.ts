@@ -13,11 +13,12 @@ import {
 } from '@/app/actions/cms/utils/fileHelpers';
 import { getHeroSection, getResumeLink } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
+import { isValidBlurhash } from '@/utils/blurhashUtils';
 
 type HeroOperation =
   | { type: 'GET' }
   | { type: 'UPDATE'; data: HeroUpdateData }
-  | { type: 'UPLOAD_IMAGE'; file: File; currentImageUrl?: string }
+  | { type: 'UPLOAD_IMAGE'; file: File; currentImageUrl?: string; blurhashURL?: string }
   | {
       type: 'UPLOAD_RESUME';
       file: File;
@@ -28,6 +29,7 @@ type HeroOperation =
       type: 'UPDATE_WITH_FILES';
       files: HeroFileData;
       currentData?: HeroCurrentData;
+      blurhashURL?: string;
     };
 
 type HeroUpdateData = {
@@ -84,7 +86,8 @@ export async function heroActions(
         return await uploadHeroImage(
           supabase,
           operation.file,
-          operation.currentImageUrl
+          operation.currentImageUrl,
+          operation.blurhashURL
         );
 
       case 'UPLOAD_RESUME':
@@ -99,7 +102,8 @@ export async function heroActions(
         return await updateWithFiles(
           supabase,
           operation.files,
-          operation.currentData
+          operation.currentData,
+          operation.blurhashURL
         );
 
       default:
@@ -173,7 +177,8 @@ async function updateHero(
 async function uploadHeroImage(
   _supabase: SupabaseClient,
   file: File,
-  currentImageUrl?: string
+  currentImageUrl?: string,
+  blurhashURL?: string
 ): Promise<HeroResult> {
   try {
     const fileValidation = validateImageFile(file);
@@ -193,7 +198,9 @@ async function uploadHeroImage(
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
-      blurhash = await generateBlurhashFromBuffer(buffer);
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : await generateBlurhashFromBuffer(buffer);
     } else {
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
@@ -203,7 +210,9 @@ async function uploadHeroImage(
         };
       }
       buffer = processed.buffer;
-      blurhash = processed.blurhash;
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : processed.blurhash;
       format = processed.format ?? 'webp';
     }
 
@@ -314,7 +323,8 @@ async function uploadResume(
 async function updateWithFiles(
   supabase: SupabaseClient,
   files: HeroFileData,
-  currentData?: HeroCurrentData
+  currentData?: HeroCurrentData,
+  blurhashURL?: string
 ): Promise<HeroResult> {
   try {
     const updates: HeroUpdateData = {};
@@ -327,7 +337,8 @@ async function updateWithFiles(
       const imageResult = await uploadHeroImage(
         supabase,
         propicFile,
-        currentPropic
+        currentPropic,
+        blurhashURL
       );
       if (!imageResult.success) {
         return imageResult;

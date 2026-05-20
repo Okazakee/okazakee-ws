@@ -12,16 +12,13 @@
     "format": "biome format . --write"
   },
   "dependencies": {
-    "@jimp/core": "^1.6.1",
-    "@jimp/wasm-webp": "^1.6.1",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "@types/lodash": "^4.17.24",
     "@types/validator": "^13.15.10",
     "@uiw/react-md-editor": "^4.1.0",
     "@vercel/speed-insights": "^2.0.0",
-    "blurhash": "^2.0.5",
-    "jimp": "^1.6.1",
+    "blurkit": "^0.1.7",
     "lodash": "^4.18.1",
     "lucide-react": "^1.14.0",
     "markdown-to-jsx": "^9.8.0",
@@ -30,6 +27,7 @@
     "next-intl": "^4.11.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "sharp": "^0.34.5",
     "validator": "^13.15.35",
     "zustand": "^5.0.13"
   },

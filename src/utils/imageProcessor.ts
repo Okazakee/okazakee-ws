@@ -2,7 +2,8 @@
  * Client-side image processing utility
  * Converts images to WebP format using browser Canvas API and generates blurhash
  */
-import { encode } from 'blurhash';
+import { encode as blurkitEncode } from 'blurkit/browser';
+import { FALLBACK_BLURHASH } from '@/utils/blurhashUtils';
 
 type ProcessImageOptions = {
   maxWidth?: number;
@@ -177,18 +178,13 @@ export async function processImageToWebP(
  */
 async function generateBlurhash(canvas: HTMLCanvasElement): Promise<string> {
   try {
-    const smallCanvas = document.createElement('canvas');
-    smallCanvas.width = 32;
-    smallCanvas.height = 32;
-    const smallCtx = smallCanvas.getContext('2d');
-
-    if (!smallCtx) return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
-
-    smallCtx.drawImage(canvas, 0, 0, 32, 32);
-    const imageData = smallCtx.getImageData(0, 0, 32, 32);
-    return encode(imageData.data, 32, 32, 4, 4);
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
+    });
+    const { hash } = await blurkitEncode(blob, { size: 32 });
+    return hash;
   } catch {
-    return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
+    return FALLBACK_BLURHASH;
   }
 }
 
@@ -200,30 +196,10 @@ export async function generateBlurhashFromImage(
   source: File | string
 ): Promise<string> {
   try {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-
-    const objectUrl =
-      typeof source === 'string' ? null : URL.createObjectURL(source);
-
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = objectUrl ?? (source as string);
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width || 32;
-    canvas.height = img.height || 32;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
-
-    ctx.drawImage(img, 0, 0);
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
-
-    return generateBlurhash(canvas);
+    const input = typeof source === 'string' ? new URL(source) : source;
+    const { hash } = await blurkitEncode(input, { size: 32 });
+    return hash;
   } catch {
-    return 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
+    return FALLBACK_BLURHASH;
   }
 }

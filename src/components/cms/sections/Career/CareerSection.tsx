@@ -4,6 +4,7 @@ import { Calendar, Globe, MapPin, Plus, X } from 'lucide-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
+import { encode as encodeBlurhash } from 'blurkit/browser';
 import { careerActions } from '@/app/actions/cms/sections/careerActions';
 import { SectionHeader } from '@/components/cms/shared/SectionHeader';
 import { TranslationField } from '@/components/cms/shared/TranslationField';
@@ -158,7 +159,8 @@ export default function CareerSection() {
         tempToReal[entry.id] = createdId;
 
         if (entry.imageFile) {
-          const imgResult = await careerActions({ type: 'UPLOAD_LOGO', careerId: createdId, file: entry.imageFile });
+          const bh = (await encodeBlurhash(entry.imageFile, { size: 32 }).catch(() => null))?.hash;
+          const imgResult = await careerActions({ type: 'UPLOAD_LOGO', careerId: createdId, file: entry.imageFile, blurhashURL: bh });
           if (!imgResult.success) { errors.push(`Logo for "${entry.title}": ${imgResult.error}`); }
           else {
             const d = imgResult.data as { logo: string; blurhashURL: string };
@@ -180,7 +182,7 @@ export default function CareerSection() {
         let r = await careerActions({ type: 'UPDATE', id, data: { ...entry } });
         if (!r.success) { errors.push(`"${entry.title}": ${r.error}`); continue; }
         if (logoUpload.file) {
-          const imgR = await careerActions({ type: 'UPLOAD_LOGO', careerId: id, file: logoUpload.file });
+          const imgR = await careerActions({ type: 'UPLOAD_LOGO', careerId: id, file: logoUpload.file, blurhashURL: logoUpload.blurhash ?? undefined });
           if (!imgR.success) errors.push(`Logo for "${entry.title}": ${imgR.error}`);
         }
       } catch (e) { errors.push(`"${entry.title}": ${e instanceof Error ? e.message : 'error'}`); }

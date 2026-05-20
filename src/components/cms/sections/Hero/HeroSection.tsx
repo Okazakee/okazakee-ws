@@ -107,6 +107,7 @@ export default function HeroSection() {
             resume_en: heroSection?.resume_en || '',
             resume_it: heroSection?.resume_it || '',
           },
+          blurhashURL: imgUpload.blurhash ?? undefined,
         });
 
         if (!result.success) {

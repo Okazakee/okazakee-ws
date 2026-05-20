@@ -14,6 +14,7 @@ import {
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
+import { isValidBlurhash } from '@/utils/blurhashUtils';
 
 type BlogOperation =
   | { type: 'GET' }
@@ -25,6 +26,7 @@ type BlogOperation =
       type: 'UPLOAD_IMAGE_FOR_NEW_POST';
       file: File;
       titleEn: string;
+      blurhashURL?: string;
     }
   | { type: 'ROLLBACK_CREATE'; postId: number; imagePath: string }
   | {
@@ -32,6 +34,7 @@ type BlogOperation =
       blogId: number;
       file: File;
       currentImageUrl?: string;
+      blurhashURL?: string;
     };
 
 export type Author = {
@@ -174,7 +177,8 @@ export async function blogActions(
       case 'UPLOAD_IMAGE_FOR_NEW_POST':
         return await uploadBlogImageForNewPost(
           operation.file,
-          operation.titleEn
+          operation.titleEn,
+          operation.blurhashURL
         );
 
       case 'ROLLBACK_CREATE':
@@ -185,7 +189,8 @@ export async function blogActions(
           supabase,
           operation.blogId,
           operation.file,
-          operation.currentImageUrl
+          operation.currentImageUrl,
+          operation.blurhashURL
         );
 
       default:
@@ -392,7 +397,8 @@ async function deleteBlog(
 /** Upload image with a deterministic path (timestamp + title slug). Returns URL and blurhash for use in INSERT. */
 async function uploadBlogImageForNewPost(
   file: File,
-  titleEn: string
+  titleEn: string,
+  blurhashURL?: string
 ): Promise<BlogResult> {
   try {
     await requireAllowedPostWriter();
@@ -418,7 +424,9 @@ async function uploadBlogImageForNewPost(
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
-      blurhash = await generateBlurhashFromBuffer(buffer);
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : await generateBlurhashFromBuffer(buffer);
     } else {
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
@@ -428,7 +436,9 @@ async function uploadBlogImageForNewPost(
         };
       }
       buffer = processed.buffer;
-      blurhash = processed.blurhash;
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : processed.blurhash;
       format = processed.format ?? 'webp';
     }
 
@@ -495,7 +505,8 @@ async function uploadBlogImage(
   _supabase: SupabaseClient,
   blogId: number,
   file: File,
-  currentImageUrl?: string
+  currentImageUrl?: string,
+  blurhashURL?: string
 ): Promise<BlogResult> {
   try {
     await requireAllowedPostWriter();
@@ -536,7 +547,9 @@ async function uploadBlogImage(
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
-      blurhash = await generateBlurhashFromBuffer(buffer);
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : await generateBlurhashFromBuffer(buffer);
     } else {
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
@@ -546,7 +559,9 @@ async function uploadBlogImage(
         };
       }
       buffer = processed.buffer;
-      blurhash = processed.blurhash;
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : processed.blurhash;
       format = processed.format ?? 'webp';
     }
 

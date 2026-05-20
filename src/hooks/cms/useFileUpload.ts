@@ -1,7 +1,8 @@
 'use client';
 
-import { encode } from 'blurhash';
 import { useCallback, useRef, useState } from 'react';
+import { encode as encodeBlurhash } from 'blurkit/browser';
+import { FALLBACK_BLURHASH } from '@/utils/blurhashUtils';
 import { processImageToWebP } from '@/utils/imageProcessor';
 
 interface ImageProcessingOptions {
@@ -56,33 +57,12 @@ export function useFileUpload({
   const dragCounter = useRef(0);
 
   const generateBlurhashFromFile = useCallback(
-    async (f: File): Promise<string | null> => {
+    async (f: File): Promise<string> => {
       try {
-        const img = document.createElement('img');
-        img.classList.add('hidden');
-        document.body.appendChild(img);
-        const url = URL.createObjectURL(f);
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error('Failed to load image'));
-          img.src = url;
-        });
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          document.body.removeChild(img);
-          URL.revokeObjectURL(url);
-          return null;
-        }
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-        document.body.removeChild(img);
-        URL.revokeObjectURL(url);
-        return encode(imageData.data, imageData.width, imageData.height, 4, 4);
+        const { hash } = await encodeBlurhash(f, { size: 32 });
+        return hash;
       } catch {
-        return null;
+        return FALLBACK_BLURHASH;
       }
     },
     []

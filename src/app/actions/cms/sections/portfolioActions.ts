@@ -15,6 +15,7 @@ import {
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
+import { isValidBlurhash } from '@/utils/blurhashUtils';
 
 type PortfolioOperation =
   | { type: 'GET' }
@@ -26,6 +27,7 @@ type PortfolioOperation =
       type: 'UPLOAD_IMAGE_FOR_NEW_POST';
       file: File;
       titleEn: string;
+      blurhashURL?: string;
     }
   | { type: 'ROLLBACK_CREATE'; postId: number; imagePath: string }
   | {
@@ -33,6 +35,7 @@ type PortfolioOperation =
       portfolioId: number;
       file: File;
       currentImageUrl?: string;
+      blurhashURL?: string;
     };
 
 export type Author = {
@@ -205,7 +208,8 @@ export async function portfolioActions(
       case 'UPLOAD_IMAGE_FOR_NEW_POST':
         return await uploadPortfolioImageForNewPost(
           operation.file,
-          operation.titleEn
+          operation.titleEn,
+          operation.blurhashURL
         );
 
       case 'ROLLBACK_CREATE':
@@ -219,7 +223,8 @@ export async function portfolioActions(
           supabase,
           operation.portfolioId,
           operation.file,
-          operation.currentImageUrl
+          operation.currentImageUrl,
+          operation.blurhashURL
         );
 
       default:
@@ -424,7 +429,8 @@ async function deletePortfolio(
 /** Upload image with a deterministic path (timestamp + title slug). Returns URL and blurhash for use in INSERT. */
 async function uploadPortfolioImageForNewPost(
   file: File,
-  titleEn: string
+  titleEn: string,
+  blurhashURL?: string
 ): Promise<PortfolioResult> {
   try {
     await requireAllowedPostWriter();
@@ -450,7 +456,9 @@ async function uploadPortfolioImageForNewPost(
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
-      blurhash = await generateBlurhashFromBuffer(buffer);
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : await generateBlurhashFromBuffer(buffer);
     } else {
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
@@ -460,7 +468,9 @@ async function uploadPortfolioImageForNewPost(
         };
       }
       buffer = processed.buffer;
-      blurhash = processed.blurhash;
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : processed.blurhash;
       format = processed.format ?? 'webp';
     }
 
@@ -530,7 +540,8 @@ async function uploadPortfolioImage(
   _supabase: SupabaseClient,
   portfolioId: number,
   file: File,
-  currentImageUrl?: string
+  currentImageUrl?: string,
+  blurhashURL?: string
 ): Promise<PortfolioResult> {
   try {
     await requireAllowedPostWriter();
@@ -571,7 +582,9 @@ async function uploadPortfolioImage(
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
-      blurhash = await generateBlurhashFromBuffer(buffer);
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : await generateBlurhashFromBuffer(buffer);
     } else {
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
@@ -581,7 +594,9 @@ async function uploadPortfolioImage(
         };
       }
       buffer = processed.buffer;
-      blurhash = processed.blurhash;
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : processed.blurhash;
       format = processed.format ?? 'webp';
     }
 

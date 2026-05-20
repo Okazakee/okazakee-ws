@@ -17,6 +17,7 @@ import {
 import type { CareerEntry } from '@/types/fetchedData.types';
 import { getCareerEntries } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
+import { isValidBlurhash } from '@/utils/blurhashUtils';
 
 type CareerOperation =
   | { type: 'GET' }
@@ -28,6 +29,7 @@ type CareerOperation =
       careerId: number;
       file: File;
       currentLogoUrl?: string;
+      blurhashURL?: string;
     }
   | { type: 'ROLLBACK_CREATE'; entryId: number };
 
@@ -181,7 +183,8 @@ export async function careerActions(
           supabase,
           operation.careerId,
           operation.file,
-          operation.currentLogoUrl
+          operation.currentLogoUrl,
+          operation.blurhashURL
         );
 
       case 'ROLLBACK_CREATE':
@@ -373,7 +376,8 @@ async function uploadCareerLogo(
   supabase: SupabaseClient,
   careerId: number,
   file: File,
-  currentLogoUrl?: string
+  currentLogoUrl?: string,
+  blurhashURL?: string
 ): Promise<CareerResult> {
   try {
     const fileValidation = validateImageFile(file);
@@ -404,7 +408,9 @@ async function uploadCareerLogo(
     if (isWebP) {
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
-      blurhash = await generateBlurhashFromBuffer(buffer);
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : await generateBlurhashFromBuffer(buffer);
     } else {
       const processed = await processImage(file);
       if (!processed.success || !processed.buffer) {
@@ -414,7 +420,9 @@ async function uploadCareerLogo(
         };
       }
       buffer = processed.buffer;
-      blurhash = processed.blurhash;
+      blurhash = isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : processed.blurhash;
       format = processed.format ?? 'webp';
     }
 

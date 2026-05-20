@@ -3,6 +3,7 @@
 import { Calendar, Eye, FileText, Image as ImageIcon, Plus, Trash2, Edit3, Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
+import { encode as encodeBlurhash } from 'blurkit/browser';
 import { blogActions, type Author } from '@/app/actions/cms/sections/blogActions';
 import { SectionHeader } from '@/components/cms/shared/SectionHeader';
 import { TranslationField } from '@/components/cms/shared/TranslationField';
@@ -114,7 +115,7 @@ export default function BlogSection() {
       try {
         const processed = await processImageToWebP(imageFile, { maxWidth: 1920, maxHeight: 1080, quality: 0.85 });
         if (!processed.success || !processed.file) { errors.push(`"${post.title_en}": image processing failed`); continue; }
-        const imgR = await blogActions({ type: 'UPLOAD_IMAGE_FOR_NEW_POST', file: processed.file, titleEn: post.title_en });
+        const imgR = await blogActions({ type: 'UPLOAD_IMAGE_FOR_NEW_POST', file: processed.file, titleEn: post.title_en, blurhashURL: (await encodeBlurhash(processed.file, { size: 32 }).catch(() => null))?.hash });
         if (!imgR.success) { errors.push(`"${post.title_en}": ${imgR.error}`); continue; }
         const { image: imgUrl, blurhashURL: bh, path: imgPath } = imgR.data as { image: string; blurhashURL: string; path: string };
         const cr = await blogActions({ type: 'CREATE', data: { ...post, author_id: post.author_id || user?.id || '', image: imgUrl, blurhashURL: bh || post.blurhashURL || '' } });
@@ -130,7 +131,7 @@ export default function BlogSection() {
         if (post.image_file) {
           const processed = await processImageToWebP(post.image_file, { maxWidth: 1920, maxHeight: 1080, quality: 0.85 });
           if (processed.success && processed.file) {
-            const ir = await blogActions({ type: 'UPLOAD_IMAGE', blogId: id, file: processed.file, currentImageUrl: post.image });
+            const ir = await blogActions({ type: 'UPLOAD_IMAGE', blogId: id, file: processed.file, currentImageUrl: post.image, blurhashURL: (await encodeBlurhash(processed.file, { size: 32 }).catch(() => null))?.hash });
             if (!ir.success) errors.push(`"${post.title_en}" image: ${ir.error}`);
           }
         }
