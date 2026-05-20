@@ -4,8 +4,7 @@ import { CircleUserRound, Loader2 } from 'lucide-react';
 import { GithubIcon } from '@/components/common/BrandIcons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
-import { getGitHubOAuthUrl, login } from '@/app/actions/cms/login';
-import { createClient } from '@/utils/supabase/client';
+import { login } from '@/app/actions/cms/login';
 
 // Component that reads search params - must be wrapped in Suspense
 function LoginFormContent({
@@ -41,28 +40,14 @@ function LoginFormContent({
       setIsLoading(false);
     } else if (result?.success) {
       // Redirect on client side
-      window.location.href = `/${locale}/cms`;
+      window.location.href = `/${locale}${result.redirectTo}`;
     }
   };
 
   const handleGitHubLogin = async () => {
     setIsGitHubLoading(true);
     setError(null);
-
-    // Sign out any existing session first (client-side to clear localStorage)
-    const supabase = createClient();
-    await supabase.auth.signOut();
-
-    const result = await getGitHubOAuthUrl(locale);
-    if (result.error) {
-      setError(result.error);
-      setIsGitHubLoading(false);
-    } else if (result.url) {
-      window.location.href = result.url;
-    } else {
-      setError('Failed to get OAuth URL');
-      setIsGitHubLoading(false);
-    }
+    window.location.href = `/${locale}/cms/auth/github/start`;
   };
 
   return (

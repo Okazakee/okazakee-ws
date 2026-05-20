@@ -2,6 +2,7 @@
 
 import { Menu } from 'lucide-react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { getCmsBootData } from '@/app/actions/cms/getUser';
@@ -21,6 +22,8 @@ import { useLayoutStore } from '@/store/layoutStore';
 
 export default function CMS() {
   const t = useTranslations('cms');
+  const pathname = usePathname();
+  const locale = pathname.split('/')[1] || 'en';
   const sectionLabels: Record<string, string> = {
     hero: t('page.sectionLabels.hero'),
     skills: t('page.sectionLabels.skills'),
@@ -39,7 +42,6 @@ export default function CMS() {
     activeSection,
     setActiveSection,
     setHeroSection,
-    heroSection,
     setLoading,
     setError,
     loading,
@@ -48,6 +50,7 @@ export default function CMS() {
   } = useLayoutStore();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [canShowError, setCanShowError] = useState(false);
+  const [bootComplete, setBootComplete] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +59,7 @@ export default function CMS() {
       setLoading(true);
       setError(null);
       setCanShowError(false);
+      setBootComplete(false);
 
       try {
         // Load saved section FIRST, before fetching user (to avoid race conditions)
@@ -66,9 +70,27 @@ export default function CMS() {
 
         const bootData = await getCmsBootData();
 
-        if (!bootData?.user) {
-          throw new Error(t('page.authError'));
+        if (bootData.status === 'unauthenticated') {
+          window.location.href = `/${locale}/cms/login`;
+          return;
         }
+
+        if (bootData.status === 'unauthorized') {
+          const errorMessage = encodeURIComponent(
+            'Access denied. Please contact the administrator.'
+          );
+          window.location.href = `/${locale}/cms/login?error=${errorMessage}`;
+          return;
+        }
+
+        if (bootData.status === 'error') {
+          setError(bootData.error || t('page.initError'));
+          setCanShowError(true);
+          setLoading(false);
+          setBootComplete(true);
+          return;
+        }
+
         const fetchedUser = bootData.user;
         setUser(fetchedUser);
 
@@ -119,8 +141,11 @@ export default function CMS() {
 
         if (fetchedUser.role === 'admin') {
           setHeroSection(bootData.heroSection);
+        } else {
+          setHeroSection(null);
         }
         if (cancelled) return;
+        setBootComplete(true);
         setLoading(false);
         setCanShowError(false);
       } catch (err) {
@@ -129,6 +154,7 @@ export default function CMS() {
 
         if (cancelled) return;
         setCanShowError(true);
+        setBootComplete(true);
         setLoading(false);
       }
 
@@ -138,9 +164,16 @@ export default function CMS() {
     return () => {
       cancelled = true;
     };
-  }, [setUser, setActiveSection, setHeroSection, setLoading, setError]);
+  }, [
+    locale,
+    setUser,
+    setActiveSection,
+    setHeroSection,
+    setLoading,
+    setError,
+  ]);
 
-  const needsAdminBootData = user?.role === 'admin' && !heroSection;
+  const needsAdminBootData = user?.role === 'admin' && !bootComplete;
   const waitingForUser = !user && !(error && canShowError);
 
   if (loading || needsAdminBootData || waitingForUser) {

@@ -7,6 +7,10 @@ import {
   requireAuth,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
+import {
+  findAllowedCmsUser,
+  getUserGithubUsername,
+} from '@/app/actions/cms/utils/auth';
 import { createClient } from '@/utils/supabase/server';
 
 type UserOperation =
@@ -56,29 +60,11 @@ async function isAdmin(
   } = await supabase.auth.getUser();
   if (!user) return false;
 
-  let allowedUser: { role: string } | null = null;
-
-  // Try by email first
-  if (user.email) {
-    const { data: emailMatch } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('email', user.email.toLowerCase())
-      .single();
-    if (emailMatch) allowedUser = emailMatch;
-  }
-
-  // Try by GitHub username if no email match
-  const githubUsername = user.user_metadata?.user_name;
-  if (!allowedUser && githubUsername) {
-    const { data: githubMatch } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('github_username', githubUsername)
-      .single();
-    if (githubMatch) allowedUser = githubMatch;
-  }
-
+  const allowedUser = await findAllowedCmsUser(
+    supabase,
+    user.email,
+    getUserGithubUsername(user)
+  );
   return allowedUser?.role === 'admin';
 }
 

@@ -1,5 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
+import {
+  findAllowedCmsUser,
+  getUserGithubUsername,
+  logCmsAuth,
+} from '@/app/actions/cms/utils/auth';
 
 /* PLEASE REFER TO https://supabase.com/docs/guides/auth/server-side/nextjs?queryGroups=router&router=app */
 
@@ -18,7 +23,12 @@ function clearSupabaseAuthCookies(
 
 // Secure path matching for CMS routes
 // Note: /cms/register is disabled - only login and auth callback are public
-const CMS_PUBLIC_PATHS = ['/cms/login', '/cms/auth/callback'] as const;
+const CMS_PUBLIC_PATHS = [
+  '/cms/login',
+  '/cms/auth/callback',
+  '/cms/auth/github/start',
+  '/cms/auth/ready',
+] as const;
 
 function isPublicCMSPath(pathname: string, locale: string): boolean {
   const normalizedPath = pathname.replace(new RegExp(`^/${locale}`), '');
@@ -62,7 +72,8 @@ export async function updateSession(request: NextRequest, locale: string) {
   const isPublic = isPublicCMSPath(pathname, locale);
   const isAuthPage = isAuthCMSPath(pathname);
 
-  let user: unknown = null;
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user'] =
+    null;
   let shouldClearAuthCookies = false;
 
   // Avoid hitting auth endpoints unless we plausibly have a Supabase session cookie.
@@ -107,6 +118,41 @@ export async function updateSession(request: NextRequest, locale: string) {
     return shouldClearAuthCookies
       ? clearSupabaseAuthCookies(redirectResponse, request)
       : redirectResponse;
+  }
+
+  if (user && !isPublic) {
+    const allowlistMatch = await findAllowedCmsUser(
+      supabase,
+      user.email,
+      getUserGithubUsername(user)
+    );
+
+    if (!allowlistMatch) {
+      logCmsAuth('middleware-unauthorized', {
+        pathname,
+        userId: user.id,
+        hasEmail: Boolean(user.email),
+        hasGithubUsername: Boolean(getUserGithubUsername(user)),
+      });
+      await supabase.auth.signOut();
+      const redirectUrl = new URL(`/${locale}/cms/login`, request.url);
+      redirectUrl.searchParams.set(
+        'error',
+        'Access denied. Please contact the administrator.'
+      );
+      const redirectResponse = clearSupabaseAuthCookies(
+        NextResponse.redirect(redirectUrl),
+        request
+      );
+      return redirectResponse;
+    }
+
+    logCmsAuth('middleware-authorized', {
+      pathname,
+      userId: user.id,
+      role: allowlistMatch.role,
+      matchSource: allowlistMatch.matchSource,
+    });
   }
 
   // Redirect authenticated users away from auth pages

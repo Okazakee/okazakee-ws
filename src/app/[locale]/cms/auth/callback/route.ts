@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server';
+import {
+  findAllowedCmsUser,
+  getRequestOrigin,
+  getSafeCmsNext,
+  getUserGithubUsername,
+  logCmsAuth,
+} from '@/app/actions/cms/utils/auth';
+import { syncCmsUserProfile } from '@/app/actions/cms/utils/profileSync';
 import { createClient } from '@/utils/supabase/server';
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const requestUrl = new URL(request.url);
+  const { searchParams } = requestUrl;
   const code = searchParams.get('code');
-  const rawNext = searchParams.get('next') ?? '/cms';
-  // Only allow relative paths within /cms to prevent open redirect
-  const next =
-    rawNext.startsWith('/cms') && !rawNext.startsWith('//') ? rawNext : '/cms';
+  const next = getSafeCmsNext(searchParams.get('next'));
+  const origin = getRequestOrigin(request);
 
   // Extract locale from the URL path
-  const pathname = new URL(request.url).pathname;
+  const pathname = requestUrl.pathname;
   const localeMatch = pathname.match(/^\/([a-z]{2})\//);
   const locale = localeMatch ? localeMatch[1] : 'en';
 
@@ -26,38 +33,29 @@ export async function GET(request: Request) {
         const user = data.session.user;
 
         if (!user) {
+          logCmsAuth('callback-missing-user', { locale });
           const errorUrl = new URL(`/${locale}/cms/login`, origin);
           errorUrl.searchParams.set('error', 'Authentication failed');
           return NextResponse.redirect(errorUrl);
         }
 
         // Check allowlist by email or GitHub username
-        const githubUsername = user.user_metadata?.user_name;
-        const email = user.email;
+        const githubUsername = getUserGithubUsername(user);
+        const allowlistMatch = await findAllowedCmsUser(
+          supabase,
+          user.email,
+          githubUsername
+        );
 
-        let isAllowed = false;
+        logCmsAuth('callback-exchanged', {
+          locale,
+          userId: user.id,
+          allowed: Boolean(allowlistMatch),
+          matchSource: allowlistMatch?.matchSource || null,
+          role: allowlistMatch?.role || null,
+        });
 
-        // Check by email
-        if (email) {
-          const { data: emailData } = await supabase
-            .from('cms_allowed_users')
-            .select('role')
-            .eq('email', email.toLowerCase())
-            .single();
-          if (emailData) isAllowed = true;
-        }
-
-        // Check by GitHub username
-        if (!isAllowed && githubUsername) {
-          const { data: githubData } = await supabase
-            .from('cms_allowed_users')
-            .select('role')
-            .eq('github_username', githubUsername)
-            .single();
-          if (githubData) isAllowed = true;
-        }
-
-        if (!isAllowed) {
+        if (!allowlistMatch) {
           await supabase.auth.signOut();
           const errorUrl = new URL(`/${locale}/cms/login`, origin);
           errorUrl.searchParams.set(
@@ -67,22 +65,22 @@ export async function GET(request: Request) {
           return NextResponse.redirect(errorUrl);
         }
 
-        // User is allowed, redirect to CMS
-        const forwardedHost = request.headers.get('x-forwarded-host');
-        const isLocalEnv = process.env.NODE_ENV === 'development';
+        await syncCmsUserProfile(user);
 
-        if (isLocalEnv) {
-          return NextResponse.redirect(`${origin}/${locale}${next}`);
-        } else if (forwardedHost) {
-          return NextResponse.redirect(
-            `https://${forwardedHost}/${locale}${next}`
-          );
-        } else {
-          return NextResponse.redirect(`${origin}/${locale}${next}`);
-        }
+        const readyUrl = new URL(`/${locale}/cms/auth/ready`, origin);
+        readyUrl.searchParams.set('next', next);
+        return NextResponse.redirect(readyUrl);
       }
+
+      logCmsAuth('callback-exchange-failed', {
+        locale,
+        error: error?.message || 'Missing session',
+      });
     } catch (err) {
-      console.error('OAuth callback error:', err);
+      logCmsAuth('callback-error', {
+        locale,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
     }
   }
 

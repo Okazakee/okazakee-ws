@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { encode as blurkitEncode } from 'blurkit/node';
 import sharp from 'sharp';
+import { findAllowedCmsUser, getUserGithubUsername } from './auth';
 import { createClient } from '@/utils/supabase/server';
 import { FALLBACK_BLURHASH, isValidBlurhash } from '@/utils/blurhashUtils';
 
@@ -14,32 +15,6 @@ export type CmsActionContext = {
   user: { id: string; email: string; githubUsername: string | null };
   role: string | null;
 };
-
-async function findAllowedUserRole(
-  supabase: ServerSupabaseClient,
-  email: string | undefined,
-  githubUsername: string | null | undefined
-): Promise<string | null> {
-  if (email) {
-    const { data: emailMatch } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('email', email.toLowerCase())
-      .single();
-    if (emailMatch?.role) return emailMatch.role as string;
-  }
-
-  if (githubUsername) {
-    const { data: githubMatch } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('github_username', githubUsername)
-      .single();
-    if (githubMatch?.role) return githubMatch.role as string;
-  }
-
-  return null;
-}
 
 export async function getCmsActionContext(
   requiredRole: CmsActionRole = 'authenticated'
@@ -54,14 +29,12 @@ export async function getCmsActionContext(
     throw new Error('Unauthorized: Authentication required');
   }
 
-  const githubUsername =
-    typeof user.user_metadata?.user_name === 'string'
-      ? user.user_metadata.user_name
-      : null;
+  const githubUsername = getUserGithubUsername(user);
   const role =
     requiredRole === 'authenticated'
       ? null
-      : await findAllowedUserRole(supabase, user.email, githubUsername);
+      : (await findAllowedCmsUser(supabase, user.email, githubUsername))?.role ||
+        null;
 
   if (requiredRole === 'admin' && role !== 'admin') {
     throw new Error('Unauthorized: Admin access required');
@@ -123,27 +96,11 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
   }
 
   // Check if user is admin - try by email first, then GitHub username
-  let allowedUser: { role: string } | null = null;
-
-  if (user.email) {
-    const { data: emailMatch } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('email', user.email.toLowerCase())
-      .single();
-    if (emailMatch) allowedUser = emailMatch;
-  }
-
-  // Try by GitHub username if no email match
-  const githubUsername = user.user_metadata?.user_name;
-  if (!allowedUser && githubUsername) {
-    const { data: githubMatch } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('github_username', githubUsername)
-      .single();
-    if (githubMatch) allowedUser = githubMatch;
-  }
+  const allowedUser = await findAllowedCmsUser(
+    supabase,
+    user.email,
+    getUserGithubUsername(user)
+  );
 
   if (allowedUser?.role !== 'admin') {
     throw new Error('Unauthorized: Admin access required');
@@ -174,26 +131,11 @@ export async function requireAllowedPostWriter(): Promise<{
     throw new Error('Unauthorized: Authentication required');
   }
 
-  let allowedUser: { role: string } | null = null;
-
-  if (user.email) {
-    const { data: emailMatch } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('email', user.email.toLowerCase())
-      .single();
-    if (emailMatch) allowedUser = emailMatch;
-  }
-
-  const githubUsername = user.user_metadata?.user_name;
-  if (!allowedUser && githubUsername) {
-    const { data: githubMatch } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('github_username', githubUsername)
-      .single();
-    if (githubMatch) allowedUser = githubMatch;
-  }
+  const allowedUser = await findAllowedCmsUser(
+    supabase,
+    user.email,
+    getUserGithubUsername(user)
+  );
 
   if (
     !allowedUser ||

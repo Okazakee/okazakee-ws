@@ -2,48 +2,12 @@
 
 import { refresh } from 'next/cache';
 import { headers } from 'next/headers';
+import { findAllowedCmsUser, getUserGithubUsername } from './utils/auth';
 import { checkLoginRateLimit } from '@/libs/rateLimiters';
 import { createClient } from '@/utils/supabase/server';
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/**
- * Check if user is in the allowlist
- */
-async function checkAllowlist(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  email?: string,
-  githubUsername?: string
-): Promise<{ allowed: boolean; role?: string }> {
-  // Check by email first
-  if (email) {
-    const { data: emailData } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('email', email.toLowerCase())
-      .single();
-
-    if (emailData) {
-      return { allowed: true, role: emailData.role };
-    }
-  }
-
-  // If not found by email, check by GitHub username
-  if (githubUsername) {
-    const { data: githubData } = await supabase
-      .from('cms_allowed_users')
-      .select('role')
-      .eq('github_username', githubUsername)
-      .single();
-
-    if (githubData) {
-      return { allowed: true, role: githubData.role };
-    }
-  }
-
-  return { allowed: false };
-}
 
 /**
  * Email + Password login
@@ -78,8 +42,8 @@ export async function login(email: string, password: string) {
   const supabase = await createClient();
 
   // Check allowlist BEFORE attempting login
-  const allowlistCheck = await checkAllowlist(supabase, email);
-  if (!allowlistCheck.allowed) {
+  const allowlistCheck = await findAllowedCmsUser(supabase, email);
+  if (!allowlistCheck) {
     return { error: 'Access denied. Please contact the administrator.' };
   }
 
@@ -92,39 +56,20 @@ export async function login(email: string, password: string) {
     return { error: 'Invalid email or password' };
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const postLoginAllowlist = await findAllowedCmsUser(
+    supabase,
+    user?.email,
+    user ? getUserGithubUsername(user) : null
+  );
+
+  if (!user || !postLoginAllowlist) {
+    await supabase.auth.signOut();
+    return { error: 'Access denied. Please contact the administrator.' };
+  }
+
   refresh();
-  return { success: true, redirectTo: '/cms' };
-}
-
-/**
- * Get GitHub OAuth URL for login
- */
-export async function getGitHubOAuthUrl(locale: string = 'en') {
-  const supabase = await createClient();
-
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${locale}/cms/auth/callback`;
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log('=== GitHub OAuth ===');
-    console.log('NEXT_PUBLIC_SITE_URL:', process.env.NEXT_PUBLIC_SITE_URL);
-    console.log('Redirect URL:', redirectTo);
-  }
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'github',
-    options: {
-      redirectTo,
-    },
-  });
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log('OAuth URL:', data?.url);
-    console.log('OAuth Error:', error);
-  }
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  return { url: data.url };
+  return { success: true, redirectTo: '/cms/auth/ready?next=/cms' };
 }
