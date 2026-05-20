@@ -153,7 +153,7 @@ export async function requireAdmin(): Promise<{ id: string; email: string }> {
 }
 
 /** Roles that are allowed to create/update blog and portfolio posts (must match RLS if using JWT role) */
-const CMS_POST_WRITER_ROLES = ['admin', 'editor', 'mod'] as const;
+const CMS_POST_WRITER_ROLES = ['admin', 'editor'] as const;
 
 /**
  * Verifies the user is in cms_allowed_users with a role that can create posts.
@@ -596,7 +596,9 @@ export function getStoragePathFromPublicUrl(
     const pathParts = url.pathname.split('/');
     const bucketIndex = pathParts.indexOf(bucket);
     if (bucketIndex === -1) return null;
-    const filePath = pathParts.slice(bucketIndex + 1).join('/');
+    const filePath = decodeURIComponent(
+      pathParts.slice(bucketIndex + 1).join('/')
+    );
     return filePath || null;
   } catch {
     return null;

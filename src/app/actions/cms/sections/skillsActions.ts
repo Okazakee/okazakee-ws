@@ -32,22 +32,14 @@ type CreateSkillData = {
   title: string;
   icon: string;
   invert: boolean;
-  name?: string;
-  description?: string;
   category_id?: number;
-  position?: number;
-  icon_url?: string;
   blurhashURL?: string;
 };
 
 type UpdateSkillData = {
   title?: string;
-  name?: string;
-  description?: string;
   category_id?: number;
-  position?: number;
   icon?: string;
-  icon_url?: string;
   blurhashURL?: string;
   invert?: boolean;
 };
@@ -83,33 +75,6 @@ function validateSkillData(data: CreateSkillData | UpdateSkillData): {
         error: 'Skill title must be less than 100 characters',
       };
     }
-  }
-
-  // Name validation
-  if (data.name !== undefined && data.name.trim().length === 0) {
-    return { isValid: false, error: 'Skill name cannot be empty' };
-  }
-  if (data.name && data.name.length > 100) {
-    return {
-      isValid: false,
-      error: 'Skill name must be less than 100 characters',
-    };
-  }
-
-  // Description validation
-  if (data.description && data.description.length > 500) {
-    return {
-      isValid: false,
-      error: 'Description must be less than 500 characters',
-    };
-  }
-
-  // Position validation
-  if (
-    data.position !== undefined &&
-    (data.position < 0 || !Number.isInteger(data.position))
-  ) {
-    return { isValid: false, error: 'Position must be a non-negative integer' };
   }
 
   // Category ID validation

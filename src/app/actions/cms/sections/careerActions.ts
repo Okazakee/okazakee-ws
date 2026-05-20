@@ -83,6 +83,23 @@ type CareerResult = {
   error?: string;
 };
 
+function toCareerDbData(
+  data: CreateCareerData | UpdateCareerData
+): Record<string, unknown> {
+  const { blurhashURL, ...rest } = data;
+  return blurhashURL === undefined
+    ? rest
+    : { ...rest, blurhashurl: blurhashURL };
+}
+
+function normalizeCareerEntry(row: unknown): CareerEntry {
+  const record = row as Record<string, unknown>;
+  return {
+    ...record,
+    blurhashURL: (record.blurhashURL ?? record.blurhashurl ?? '') as string,
+  } as CareerEntry;
+}
+
 // Validation functions
 function validateCareerData(data: CreateCareerData | UpdateCareerData): {
   isValid: boolean;
@@ -259,7 +276,7 @@ async function batchPublishCareer(
         uploaded = await uploadPreparedImage(
           admin,
           'website',
-          `career/logos/${Date.now()}-${sanitizeFilename(item.data.company || 'company')}`,
+          `Website Assets/career/${Date.now()}-${sanitizeFilename(item.data.company || 'company')}`,
           prepared.image
         );
         insertData.logo = uploaded.publicUrl;
@@ -268,7 +285,7 @@ async function batchPublishCareer(
 
       const { data, error } = await admin
         .from('career_entries')
-        .insert(insertData)
+        .insert(toCareerDbData(insertData))
         .select()
         .single();
 
@@ -278,7 +295,7 @@ async function batchPublishCareer(
         continue;
       }
 
-      changed.push(data as CareerEntry);
+      changed.push(normalizeCareerEntry(data));
     }
 
     for (const item of operation.updates) {
@@ -304,7 +321,7 @@ async function batchPublishCareer(
         uploaded = await uploadPreparedImage(
           admin,
           'website',
-          `career/logos/${item.id}-${sanitizeFilename(item.data.company || `company-${item.id}`)}`,
+          `Website Assets/career/${item.id}-${sanitizeFilename(item.data.company || `company-${item.id}`)}`,
           prepared.image
         );
         updateData.logo = uploaded.publicUrl;
@@ -313,7 +330,7 @@ async function batchPublishCareer(
 
       const { data, error } = await admin
         .from('career_entries')
-        .update(updateData)
+        .update(toCareerDbData(updateData))
         .eq('id', item.id)
         .select()
         .single();
@@ -333,7 +350,7 @@ async function batchPublishCareer(
         );
       }
 
-      changed.push(data as CareerEntry);
+      changed.push(normalizeCareerEntry(data));
     }
 
     if (operation.deletes.length > 0) {
@@ -391,7 +408,10 @@ async function batchPublishCareer(
 async function getCareerData(_supabase: SupabaseClient): Promise<CareerResult> {
   try {
     const careerEntries = await getCareerEntries();
-    return { success: true, data: careerEntries };
+    return {
+      success: true,
+      data: careerEntries?.map(normalizeCareerEntry) ?? null,
+    };
   } catch (error) {
     console.error('Error fetching career data:', error);
     return {
@@ -414,14 +434,14 @@ async function createCareer(
     const admin = getAdminClient();
     const { data: newCareer, error } = await admin
       .from('career_entries')
-      .insert(data)
+      .insert(toCareerDbData(data))
       .select()
       .single();
 
     if (error) throw error;
 
     revalidateTag('career', {});
-    return { success: true, data: newCareer };
+    return { success: true, data: normalizeCareerEntry(newCareer) };
   } catch (error) {
     console.error('Error creating career entry:', error);
     return {
@@ -455,7 +475,7 @@ async function updateCareer(
 
     const { data: updatedCareer, error } = await admin
       .from('career_entries')
-      .update(data)
+      .update(toCareerDbData(data))
       .eq('id', id)
       .select()
       .single();
@@ -463,7 +483,7 @@ async function updateCareer(
     if (error) throw error;
 
     revalidateTag('career', {});
-    return { success: true, data: updatedCareer };
+    return { success: true, data: normalizeCareerEntry(updatedCareer) };
   } catch (error) {
     console.error('Error updating career entry:', error);
     return {
@@ -610,7 +630,7 @@ async function uploadCareerLogo(
     const sanitizedCompany = sanitizeFilename(
       existingCareer.company || 'company'
     );
-    const fileName = `career/logos/${careerId}-${sanitizedCompany}.webp`;
+    const fileName = `Website Assets/career/${careerId}-${sanitizedCompany}.webp`;
 
     await admin.storage.from('website').remove([fileName]);
 
@@ -628,9 +648,9 @@ async function uploadCareerLogo(
       .from('website')
       .getPublicUrl(fileName);
 
-    const updateData: { logo: string; blurhashURL?: string | null } = {
+    const updateData: { logo: string; blurhashurl?: string | null } = {
       logo: urlData.publicUrl,
-      blurhashURL: blurhash ?? null,
+      blurhashurl: blurhash ?? null,
     };
 
     const { error: updateError } = await admin

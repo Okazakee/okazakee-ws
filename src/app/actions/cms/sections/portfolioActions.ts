@@ -291,7 +291,7 @@ async function batchPublishPortfolio(
       const upload = await uploadPreparedImage(
         admin,
         'website',
-        `portfolio/images/${Date.now()}-${sanitizedTitle}`,
+        `Website Assets/portfolio/${Date.now()}-${sanitizedTitle}`,
         prepared.image
       );
 
@@ -339,7 +339,7 @@ async function batchPublishPortfolio(
         uploaded = await uploadPreparedImage(
           admin,
           'website',
-          `portfolio/images/${item.id}-${titleForPath}`,
+          `Website Assets/portfolio/${item.id}-${titleForPath}`,
           prepared.image
         );
         updateData.image = uploaded.publicUrl;
@@ -661,7 +661,7 @@ async function uploadPortfolioImageForNewPost(
     }
 
     const sanitizedTitle = sanitizeFilename(titleEn || 'untitled');
-    const fileName = `portfolio/images/${Date.now()}-${sanitizedTitle}.webp`;
+    const fileName = `Website Assets/portfolio/${Date.now()}-${sanitizedTitle}.webp`;
 
     const { error: uploadError } = await admin.storage
       .from('website')
@@ -785,7 +785,7 @@ async function uploadPortfolioImage(
     const sanitizedTitle = sanitizeFilename(
       existingPortfolio.title_en || 'untitled'
     );
-    const fileName = `portfolio/images/${portfolioId}-${sanitizedTitle}.webp`;
+    const fileName = `Website Assets/portfolio/${portfolioId}-${sanitizedTitle}.webp`;
 
     await admin.storage.from('website').remove([fileName]);
 

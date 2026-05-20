@@ -257,7 +257,7 @@ async function batchPublishBlog(
       const upload = await uploadPreparedImage(
         admin,
         'website',
-        `blog/images/${Date.now()}-${sanitizedTitle}`,
+        `Website Assets/blog/${Date.now()}-${sanitizedTitle}`,
         prepared.image
       );
 
@@ -307,7 +307,7 @@ async function batchPublishBlog(
         const upload = await uploadPreparedImage(
           admin,
           'website',
-          `blog/images/${item.id}-${titleForPath}`,
+          `Website Assets/blog/${item.id}-${titleForPath}`,
           prepared.image
         );
         uploaded = {
@@ -633,7 +633,7 @@ async function uploadBlogImageForNewPost(
     }
 
     const sanitizedTitle = sanitizeFilename(titleEn || 'untitled');
-    const fileName = `blog/images/${Date.now()}-${sanitizedTitle}.webp`;
+    const fileName = `Website Assets/blog/${Date.now()}-${sanitizedTitle}.webp`;
 
     const { error: uploadError } = await admin.storage
       .from('website')
@@ -754,7 +754,7 @@ async function uploadBlogImage(
     const sanitizedTitle = sanitizeFilename(
       existingBlog.title_en || 'untitled'
     );
-    const fileName = `blog/images/${blogId}-${sanitizedTitle}.webp`;
+    const fileName = `Website Assets/blog/${blogId}-${sanitizedTitle}.webp`;
 
     await admin.storage.from('website').remove([fileName]);
 

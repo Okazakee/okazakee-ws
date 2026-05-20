@@ -315,5 +315,13 @@ export async function getCareerEntries(): Promise<CareerEntry[] | null> {
     throw error;
   }
 
-  return data || null;
+  return (
+    data?.map((entry) => ({
+      ...entry,
+      blurhashURL:
+        (entry as Record<string, unknown>).blurhashURL ??
+        (entry as Record<string, unknown>).blurhashurl ??
+        '',
+    })) || null
+  ) as CareerEntry[] | null;
 }
