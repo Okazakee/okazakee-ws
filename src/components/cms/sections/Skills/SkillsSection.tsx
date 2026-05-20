@@ -3,8 +3,6 @@
 import {
   ArrowDown,
   ArrowUp,
-  Edit3,
-  Eye,
   Plus,
   Trash2,
   X,
@@ -12,7 +10,6 @@ import {
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
-import { i18nActions } from '@/app/actions/cms/sections/i18nActions';
 import { skillsActions } from '@/app/actions/cms/sections/skillsActions';
 import { SectionHeader } from '@/components/cms/shared/SectionHeader';
 import { TranslationField } from '@/components/cms/shared/TranslationField';
@@ -21,7 +18,6 @@ import { ErrorBanner } from '@/components/cms/shared/ErrorBanner';
 import { ConfirmDialog } from '@/components/cms/shared/ConfirmDialog';
 import { CardToolbar } from '@/components/cms/shared/CardToolbar';
 import { EmptyState } from '@/components/cms/shared/EmptyState';
-import { ValidationMessage } from '@/components/cms/shared/ValidationMessage';
 import { useSectionTranslations } from '@/hooks/cms/useSectionTranslations';
 import { useSectionDirty } from '@/hooks/cms/useSectionDirty';
 import { useSectionCallbacks } from '@/hooks/cms/useSectionCallbacks';
@@ -39,7 +35,7 @@ export default function SkillsSection() {
   const [originalCategories, setOriginalCategories] = useState<EditableCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [_isUpdating, setIsUpdating] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [showConfirmRevert, setShowConfirmRevert] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -55,7 +51,6 @@ export default function SkillsSection() {
   const [categoryOrderChanged, setCategoryOrderChanged] = useState(false);
 
   const {
-    translations,
     isDirty: transDirty,
     isLoading: transLoading,
     getField,
@@ -99,88 +94,43 @@ export default function SkillsSection() {
 
   const handlePublish = useCallback(async () => {
     const errors: string[] = [];
-    const tempIdToRealId: Record<number, number> = {};
     setIsUpdating(true);
     setError(null);
 
-    for (const nc of newCategories) {
-      try {
-        const r = await skillsActions({ type: 'CREATE_CATEGORY', data: { name: nc.name } });
-        if (r.success) tempIdToRealId[nc.tempId] = (r as { data: { id: number } }).data.id;
-        else errors.push(`Category "${nc.name}": ${r.error}`);
-      } catch (e) {
-        errors.push(`Category "${nc.name}": ${e instanceof Error ? e.message : 'error'}`);
-      }
-    }
-
-    for (const { categoryId, skill } of newSkills) {
-      try {
-        const realId = tempIdToRealId[categoryId] ?? categories.find((c) => c.id === categoryId)?.id ?? categoryId;
-        const r = await skillsActions({
-          type: 'CREATE',
-          data: { title: skill.title, icon: skill.icon, invert: skill.invert, category_id: realId, blurhashURL: skill.blurhashURL || '' },
-        });
-        if (!r.success) errors.push(`Skill "${skill.title}": ${r.error}`);
-      } catch (e) {
-        errors.push(`Skill "${skill.title}": ${e instanceof Error ? e.message : 'error'}`);
-      }
-    }
-
-    for (const skillId of deletedSkills) {
-      try {
-        const r = await skillsActions({ type: 'DELETE', id: skillId });
-        if (!r.success) errors.push(`Delete skill: ${r.error}`);
-      } catch (e) {
-        errors.push(`Delete skill: ${e instanceof Error ? e.message : 'error'}`);
-      }
-    }
-
-    for (const catId of deletedCategories) {
-      try {
-        const r = await skillsActions({ type: 'DELETE_CATEGORY', id: catId });
-        if (!r.success) errors.push(`Delete category: ${r.error}`);
-      } catch (e) {
-        errors.push(`Delete category: ${e instanceof Error ? e.message : 'error'}`);
-      }
-    }
-
-    if (categoryOrderChanged) {
-      for (let i = 0; i < categories.length; i++) {
-        const cat = categories[i];
-        const realId = tempIdToRealId[cat.id] ?? cat.id;
-        if (realId == null) continue;
-        try {
-          await skillsActions({ type: 'UPDATE_CATEGORY', id: realId, data: { position: i } });
-        } catch (e) {
-          errors.push(`Reorder "${cat.name}": ${e instanceof Error ? e.message : 'error'}`);
-        }
-      }
-    }
-
-    for (const catId of modifiedCategories) {
-      const cat = categories.find((c) => c.id === catId);
-      if (!cat) continue;
-      try {
-        const realId = tempIdToRealId[catId] ?? catId;
-        await skillsActions({ type: 'UPDATE_CATEGORY', id: realId, data: { name: cat.name } });
-      } catch (e) {
-        errors.push(`Category "${cat.name}": ${e instanceof Error ? e.message : 'error'}`);
-      }
-    }
-
-    for (const key of modifiedSkills) {
-      const [catStr, skillStr] = key.split('-');
-      const catId = parseInt(catStr, 10);
-      const skillId = parseInt(skillStr, 10);
-      const cat = categories.find((c) => c.id === catId);
-      const skill = cat?.skills.find((s) => s.id === skillId);
-      if (!skill) continue;
-      try {
-        await skillsActions({ type: 'UPDATE', id: skillId, data: { title: skill.title, icon: skill.icon, invert: skill.invert } });
-      } catch (e) {
-        errors.push(`Skill "${skill.title}": ${e instanceof Error ? e.message : 'error'}`);
-      }
-    }
+    const batch = await skillsActions({
+      type: 'BATCH_PUBLISH',
+      newCategories,
+      newSkills: newSkills.map(({ categoryId, skill }) => ({
+        categoryId,
+        data: {
+          title: skill.title,
+          icon: skill.icon,
+          invert: skill.invert,
+          category_id: categoryId,
+          blurhashURL: skill.blurhashURL || '',
+        },
+      })),
+      deleteSkills: Array.from(deletedSkills),
+      deleteCategories: Array.from(deletedCategories),
+      categoryOrder: categoryOrderChanged
+        ? categories.map((cat, i) => ({ id: cat.id, position: i }))
+        : [],
+      updateCategories: Array.from(modifiedCategories).flatMap((catId) => {
+        const cat = categories.find((c) => c.id === catId);
+        return cat ? [{ id: catId, data: { name: cat.name } }] : [];
+      }),
+      updateSkills: Array.from(modifiedSkills).flatMap((key) => {
+        const [catStr, skillStr] = key.split('-');
+        const catId = parseInt(catStr, 10);
+        const skillId = parseInt(skillStr, 10);
+        const cat = categories.find((c) => c.id === catId);
+        const skill = cat?.skills.find((s) => s.id === skillId);
+        return skill
+          ? [{ id: skillId, data: { title: skill.title, icon: skill.icon, invert: skill.invert } }]
+          : [];
+      }),
+    });
+    if (!batch.success && batch.error) errors.push(batch.error);
 
     if (transDirty) {
       const tErrs = await saveTranslations();

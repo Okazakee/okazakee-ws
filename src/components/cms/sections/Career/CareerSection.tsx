@@ -4,7 +4,6 @@ import { Calendar, Globe, MapPin, Plus, X } from 'lucide-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
-import { encode as encodeBlurhash } from 'blurkit/browser';
 import { careerActions } from '@/app/actions/cms/sections/careerActions';
 import { SectionHeader } from '@/components/cms/shared/SectionHeader';
 import { TranslationField } from '@/components/cms/shared/TranslationField';
@@ -23,6 +22,7 @@ import { CareerPreview } from '@/components/common/cms/previews/CareerPreview';
 import type { CareerEntry, RemoteType } from '@/types/fetchedData.types';
 
 type FormMode = 'list' | 'create' | 'edit';
+type EditableCareerEntry = CareerEntry & { _new?: boolean; logo_file?: File | null };
 
 interface CareerFormData {
   title: string;
@@ -54,10 +54,10 @@ const remoteBadgeClass: Record<RemoteType, string> = {
 
 export default function CareerSection() {
   const t = useTranslations('cms');
-  const [entries, setEntries] = useState<(CareerEntry & { _new?: boolean })[]>([]);
+  const [entries, setEntries] = useState<EditableCareerEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [_isUpdating, setIsUpdating] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [showConfirmRevert, setShowConfirmRevert] = useState(false);
   const [mode, setMode] = useState<FormMode>('list');
@@ -67,12 +67,12 @@ export default function CareerSection() {
   const [activeLocale, setActiveLocale] = useState<'en' | 'it'>('en');
   const [formLocale, setFormLocale] = useState<'en' | 'it'>('en');
   const [modifiedIds, setModifiedIds] = useState<Set<number>>(new Set());
-  const [newEntries, setNewEntries] = useState<Array<CareerEntry & { imageFile: File | null }>>([]);
+  const [newEntries, setNewEntries] = useState<Array<EditableCareerEntry & { imageFile: File | null }>>([]);
   const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
 
   const logoUpload = useFileUpload({ accept: 'image/*', maxSizeMB: 5, imageProcessing: { maxWidth: 256, maxHeight: 256, quality: 0.85 }, generateBlurhash: true });
 
-  const { translations, isDirty: transDirty, isLoading: transLoading, getField, setField, saveTranslations, revertTranslations } = useSectionTranslations('career-section');
+  const { isDirty: transDirty, isLoading: transLoading, getField, setField, saveTranslations, revertTranslations } = useSectionTranslations('career-section');
 
   const isDirty = modifiedIds.size > 0 || newEntries.length > 0 || deletedIds.size > 0 || transDirty;
   useSectionDirty('career', isDirty);
@@ -111,10 +111,10 @@ export default function CareerSection() {
   const handleCreate = () => {
     if (!formData.title || !formData.company || !formData.startDate) { setError('Title, company, and start date are required'); return; }
     const tempId = -Date.now();
-    const entry: CareerEntry & { _new?: boolean } = {
+    const entry: EditableCareerEntry = {
       id: tempId, _new: true,
       title: formData.title, company: formData.company, website_url: formData.website_url,
-      logo: '', blurhashURL: '', location_en: formData.location_en, location_it: formData.location_it,
+      logo: '', blurhashURL: logoUpload.blurhash || '', logo_file: logoUpload.file, location_en: formData.location_en, location_it: formData.location_it,
       remote: formData.remote, startDate: formData.startDate, endDate: isCurrentPosition ? null : formData.endDate,
       description_en: formData.description_en, description_it: formData.description_it,
       skills: formData.skills, company_description_en: formData.company_description_en, company_description_it: formData.company_description_it,
@@ -133,6 +133,8 @@ export default function CareerSection() {
       startDate: formData.startDate, endDate: isCurrentPosition ? null : formData.endDate,
       description_en: formData.description_en, description_it: formData.description_it,
       skills: formData.skills, company_description_en: formData.company_description_en, company_description_it: formData.company_description_it,
+      logo_file: logoUpload.file || e.logo_file || null,
+      blurhashURL: logoUpload.blurhash || e.blurhashURL || '',
     } : e));
     setModifiedIds((prev) => new Set(prev).add(editingId));
     closeForm();
@@ -148,45 +150,61 @@ export default function CareerSection() {
 
   const handlePublish = useCallback(async () => {
     const errors: string[] = [];
-    const tempToReal: Record<number, number> = {};
     setIsUpdating(true); setError(null);
 
-    for (const entry of newEntries) {
-      try {
-        const r = await careerActions({ type: 'CREATE', data: { ...entry, logo: '', blurhashURL: '' } });
-        if (!r.success) { errors.push(`"${entry.title}": ${r.error}`); continue; }
-        const createdId = (r as { data: { id: number } }).data.id;
-        tempToReal[entry.id] = createdId;
-
-        if (entry.imageFile) {
-          const bh = (await encodeBlurhash(entry.imageFile, { size: 32 }).catch(() => null))?.hash;
-          const imgResult = await careerActions({ type: 'UPLOAD_LOGO', careerId: createdId, file: entry.imageFile, blurhashURL: bh });
-          if (!imgResult.success) { errors.push(`Logo for "${entry.title}": ${imgResult.error}`); }
-          else {
-            const d = imgResult.data as { logo: string; blurhashURL: string };
-            await careerActions({ type: 'UPDATE', id: createdId, data: { logo: d.logo, blurhashURL: d.blurhashURL } });
-          }
-        }
-      } catch (e) { errors.push(`"${entry.title}": ${e instanceof Error ? e.message : 'error'}`); }
-    }
-
-    for (const id of deletedIds) {
-      try { const r = await careerActions({ type: 'DELETE', id }); if (!r.success) errors.push(`Delete: ${r.error}`); }
-      catch (e) { errors.push(`Delete: ${e instanceof Error ? e.message : 'error'}`); }
-    }
-
-    for (const id of modifiedIds) {
-      const entry = entries.find((e) => e.id === id);
-      if (!entry) continue;
-      try {
-        let r = await careerActions({ type: 'UPDATE', id, data: { ...entry } });
-        if (!r.success) { errors.push(`"${entry.title}": ${r.error}`); continue; }
-        if (logoUpload.file) {
-          const imgR = await careerActions({ type: 'UPLOAD_LOGO', careerId: id, file: logoUpload.file, blurhashURL: logoUpload.blurhash ?? undefined });
-          if (!imgR.success) errors.push(`Logo for "${entry.title}": ${imgR.error}`);
-        }
-      } catch (e) { errors.push(`"${entry.title}": ${e instanceof Error ? e.message : 'error'}`); }
-    }
+    const batch = await careerActions({
+      type: 'BATCH_PUBLISH',
+      creates: newEntries.map((entry) => ({
+        file: entry.imageFile,
+        blurhashURL: entry.blurhashURL || undefined,
+        data: {
+          title: entry.title,
+          company: entry.company,
+          website_url: entry.website_url || '',
+          logo: entry.logo || '',
+          blurhashURL: entry.blurhashURL || '',
+          location_en: entry.location_en || '',
+          location_it: entry.location_it || '',
+          remote: entry.remote,
+          startDate: entry.startDate,
+          endDate: entry.endDate,
+          description_en: entry.description_en || '',
+          description_it: entry.description_it || '',
+          skills: entry.skills || '',
+          company_description_en: entry.company_description_en || '',
+          company_description_it: entry.company_description_it || '',
+        },
+      })),
+      updates: Array.from(modifiedIds).flatMap((id) => {
+        const entry = entries.find((e) => e.id === id);
+        if (!entry) return [];
+        return [{
+          id,
+          file: entry.logo_file || null,
+          currentLogoUrl: entry.logo,
+          blurhashURL: entry.blurhashURL || undefined,
+          data: {
+            title: entry.title,
+            company: entry.company,
+            website_url: entry.website_url || '',
+            logo: entry.logo || '',
+            blurhashURL: entry.blurhashURL || '',
+            location_en: entry.location_en || '',
+            location_it: entry.location_it || '',
+            remote: entry.remote,
+            startDate: entry.startDate,
+            endDate: entry.endDate,
+            description_en: entry.description_en || '',
+            description_it: entry.description_it || '',
+            skills: entry.skills || '',
+            company_description_en: entry.company_description_en || '',
+            company_description_it: entry.company_description_it || '',
+          },
+        }];
+      }),
+      deletes: Array.from(deletedIds),
+    });
+    if (!batch.success && batch.error) errors.push(batch.error);
 
     if (transDirty) { const tErrs = await saveTranslations(); errors.push(...tErrs); }
     await fetchData();

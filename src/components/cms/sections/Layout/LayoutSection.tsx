@@ -14,7 +14,7 @@ import { useSectionCallbacks } from '@/hooks/cms/useSectionCallbacks';
 export default function LayoutSection() {
   const t = useTranslations('cms');
   const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [_isUpdating, setIsUpdating] = useState(false);
   const [showConfirmRevert, setShowConfirmRevert] = useState(false);
   const [activeLocale, setActiveLocale] = useState<'en' | 'it'>('en');
 

@@ -1,5 +1,4 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
-import { getTranslations } from 'next-intl/server';
 import { getCareerEntries } from '@/utils/getData';
 import { CareerClient } from './CareerClient';
 

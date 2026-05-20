@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 import {
   getAdminClient,
+  getCmsActionContext,
   isValidUrl,
   requireAdmin,
 } from '@/app/actions/cms/utils/fileHelpers';
@@ -14,7 +15,14 @@ type ContactOperation =
   | { type: 'CREATE'; data: CreateContactData }
   | { type: 'UPDATE'; id: number; data: UpdateContactData }
   | { type: 'DELETE'; id: number }
-  | { type: 'REORDER'; contacts: { id: number; position: number }[] };
+  | { type: 'REORDER'; contacts: { id: number; position: number }[] }
+  | {
+      type: 'BATCH_PUBLISH';
+      creates: CreateContactData[];
+      updates: Array<{ id: number; data: UpdateContactData }>;
+      deletes: number[];
+      reorder: { id: number; position: number }[];
+    };
 
 type CreateContactData = {
   label: string;
@@ -108,6 +116,10 @@ function validateContactData(data: CreateContactData | UpdateContactData): {
 export async function contactsActions(
   operation: ContactOperation
 ): Promise<ContactsResult> {
+  if (operation.type === 'BATCH_PUBLISH') {
+    return await batchPublishContacts(operation);
+  }
+
   // Admin check - only admins can manage contacts
   try {
     await requireAdmin();
@@ -143,6 +155,90 @@ export async function contactsActions(
       success: false,
       error:
         error instanceof Error ? error.message : 'An unknown error occurred',
+    };
+  }
+}
+
+async function batchPublishContacts(
+  operation: Extract<ContactOperation, { type: 'BATCH_PUBLISH' }>
+): Promise<ContactsResult> {
+  try {
+    await getCmsActionContext('admin');
+    const admin = getAdminClient();
+    const errors: string[] = [];
+    const changed: unknown[] = [];
+
+    for (const contact of operation.creates) {
+      const validation = validateContactData(contact);
+      if (!validation.isValid) {
+        errors.push(`"${contact.label}": ${validation.error}`);
+        continue;
+      }
+
+      const { data, error } = await admin
+        .from('contacts')
+        .insert(contact)
+        .select()
+        .single();
+
+      if (error) errors.push(`"${contact.label}": ${error.message}`);
+      else changed.push(data);
+    }
+
+    for (const contact of operation.updates) {
+      const validation = validateContactData(contact.data);
+      if (!validation.isValid) {
+        errors.push(`Update ${contact.id}: ${validation.error}`);
+        continue;
+      }
+
+      const { data, error } = await admin
+        .from('contacts')
+        .update(contact.data)
+        .eq('id', contact.id)
+        .select()
+        .single();
+
+      if (error) errors.push(`Update ${contact.id}: ${error.message}`);
+      else changed.push(data);
+    }
+
+    if (operation.deletes.length > 0) {
+      const { error } = await admin
+        .from('contacts')
+        .delete()
+        .in('id', operation.deletes);
+      if (error) errors.push(`Delete: ${error.message}`);
+    }
+
+    for (const contact of operation.reorder) {
+      const { error } = await admin
+        .from('contacts')
+        .update({ position: contact.position })
+        .eq('id', contact.id);
+      if (error) errors.push(`Reorder ${contact.id}: ${error.message}`);
+    }
+
+    if (
+      operation.creates.length > 0 ||
+      operation.updates.length > 0 ||
+      operation.deletes.length > 0 ||
+      operation.reorder.length > 0
+    ) {
+      revalidateTag('contacts', {});
+    }
+
+    return {
+      success: errors.length === 0,
+      data: changed,
+      error: errors.length > 0 ? errors.join('\n') : undefined,
+    };
+  } catch (error) {
+    console.error('Error batch publishing contacts:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Failed to publish contacts',
     };
   }
 }

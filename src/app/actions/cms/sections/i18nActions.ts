@@ -2,10 +2,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 import {
+  getCmsActionContext,
   getAdminClient,
-  requireAdmin,
 } from '@/app/actions/cms/utils/fileHelpers';
-import { createClient } from '@/utils/supabase/server';
 
 type I18nOperation =
   | { type: 'GET' }
@@ -15,6 +14,11 @@ type I18nOperation =
       locale: string;
       sectionKey: string;
       sectionData: Record<string, unknown>;
+    }
+  | {
+      type: 'UPDATE_SECTIONS';
+      sectionKey: string;
+      sections: Record<string, Record<string, unknown>>;
     };
 
 type UpdateI18nData = {
@@ -138,13 +142,16 @@ export async function i18nActions(
   operation: I18nOperation
 ): Promise<I18nResult> {
   // Admin check - only admins can manage i18n
+  let supabase: Awaited<ReturnType<typeof getCmsActionContext>>['supabase'];
   try {
-    await requireAdmin();
-  } catch {
-    return { success: false, error: 'Unauthorized: Admin access required' };
+    const context = await getCmsActionContext('admin');
+    supabase = context.supabase;
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unauthorized',
+    };
   }
-
-  const supabase = await createClient();
 
   try {
     switch (operation.type) {
@@ -162,6 +169,12 @@ export async function i18nActions(
           operation.sectionData
         );
 
+      case 'UPDATE_SECTIONS':
+        return await updateSectionTranslationsForLocales(
+          operation.sectionKey,
+          operation.sections
+        );
+
       default:
         return { success: false, error: 'Invalid operation' };
     }
@@ -171,6 +184,69 @@ export async function i18nActions(
       success: false,
       error:
         error instanceof Error ? error.message : 'An unknown error occurred',
+    };
+  }
+}
+
+async function updateSectionTranslationsForLocales(
+  sectionKey: string,
+  sections: Record<string, Record<string, unknown>>
+): Promise<I18nResult> {
+  try {
+    const validLocales = ['en', 'it'];
+    const locales = Object.keys(sections);
+    const invalidLocale = locales.find((locale) => !validLocales.includes(locale));
+    if (invalidLocale) {
+      return {
+        success: false,
+        error: `Invalid locale. Must be one of: ${validLocales.join(', ')}`,
+      };
+    }
+
+    const admin = getAdminClient();
+    const updated: unknown[] = [];
+
+    for (const locale of locales) {
+      const { data: currentData, error: fetchError } = await admin
+        .from('i18n_translations')
+        .select('translations, privacy_policy')
+        .eq('language', locale)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+
+      const currentTranslations =
+        (currentData?.translations as Record<string, unknown>) || {};
+      const mergedTranslations = mergeSectionTranslations(
+        currentTranslations,
+        sectionKey,
+        sections[locale]
+      );
+
+      const { data, error } = await admin
+        .from('i18n_translations')
+        .upsert({
+          language: locale,
+          translations: mergedTranslations,
+          privacy_policy: currentData?.privacy_policy || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      updated.push(data);
+    }
+
+    revalidateTag('translations', {});
+
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error('Error updating section translations for locales:', error);
+    return {
+      success: false,
+      error: 'Failed to update section translations',
     };
   }
 }

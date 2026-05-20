@@ -36,7 +36,6 @@ function flatten(obj: Record<string, unknown>, prefix = ''): FlatTranslations {
 
 function unflatten(flat: FlatTranslations): NestedTranslations {
   const result: NestedTranslations = {};
-  const arrayPaths = new Map<string, Map<number, string>>();
 
   for (const [path, value] of Object.entries(flat)) {
     const segments = path.split('.');
@@ -111,10 +110,6 @@ export function useSectionTranslations(
     en: FlatTranslations;
     it: FlatTranslations;
   }>({ en: {}, it: {} });
-  const [rawNested, setRawNested] = useState<{
-    en: NestedTranslations;
-    it: NestedTranslations;
-  }>({ en: {}, it: {} });
   const [isLoading, setIsLoading] = useState(true);
 
   const isDirty = !deepEqual(translations, original);
@@ -143,10 +138,8 @@ export function useSectionTranslations(
         const itFlat = Object.keys(itSectionRaw).length > 0 ? flatten(itSectionRaw) : {};
 
         const next = { en: enFlat, it: itFlat };
-        const nextRaw = { en: enSectionRaw, it: itSectionRaw };
         setTranslations(JSON.parse(JSON.stringify(next)));
         setOriginal(JSON.parse(JSON.stringify(next)));
-        setRawNested(JSON.parse(JSON.stringify(nextRaw)));
       })
       .catch(() => {})
       .finally(() => {
@@ -176,28 +169,21 @@ export function useSectionTranslations(
   );
 
   const saveTranslations = useCallback(async (): Promise<string[]> => {
-    const errors: string[] = [];
+    const result = await i18nActions({
+      type: 'UPDATE_SECTIONS',
+      sectionKey,
+      sections: {
+        en: unflatten(translations.en),
+        it: unflatten(translations.it),
+      },
+    });
 
-    for (const locale of ['en', 'it'] as const) {
-      const nested = unflatten(translations[locale]);
-      const result = await i18nActions({
-        type: 'UPDATE_SECTION',
-        locale,
-        sectionKey,
-        sectionData: nested,
-      });
-      if (!result.success) {
-        errors.push(
-          `${locale} translations: ${result.error || 'failed'}`
-        );
-      }
-    }
-
-    if (errors.length === 0) {
+    if (result.success) {
       setOriginal(JSON.parse(JSON.stringify(translations)));
+      return [];
     }
 
-    return errors;
+    return [result.error || 'translations: failed'];
   }, [sectionKey, translations]);
 
   const revertTranslations = useCallback(() => {

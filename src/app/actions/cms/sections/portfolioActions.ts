@@ -3,15 +3,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 import {
-  backupOldFile,
   generateBlurhashFromBuffer,
   getAdminClient,
+  getCmsActionContext,
   getStoragePathFromPublicUrl,
   isValidUrl,
+  prepareImageUpload,
   processImage,
   requireAllowedPostWriter,
   requireAuth,
+  removePublicFileIfDifferent,
+  removePublicFileIfPresent,
   sanitizeFilename,
+  uploadPreparedImage,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
@@ -36,6 +40,22 @@ type PortfolioOperation =
       file: File;
       currentImageUrl?: string;
       blurhashURL?: string;
+    }
+  | {
+      type: 'BATCH_PUBLISH';
+      creates: Array<{
+        data: CreatePortfolioData;
+        file: File;
+        blurhashURL?: string;
+      }>;
+      updates: Array<{
+        id: number;
+        data: UpdatePortfolioData;
+        file?: File | null;
+        currentImageUrl?: string;
+        blurhashURL?: string;
+      }>;
+      deletes: number[];
     };
 
 export type Author = {
@@ -179,6 +199,10 @@ function validatePortfolioData(
 export async function portfolioActions(
   operation: PortfolioOperation
 ): Promise<PortfolioResult> {
+  if (operation.type === 'BATCH_PUBLISH') {
+    return await batchPublishPortfolio(operation);
+  }
+
   // Auth check - reject unauthenticated requests
   try {
     await requireAuth();
@@ -236,6 +260,168 @@ export async function portfolioActions(
       success: false,
       error:
         error instanceof Error ? error.message : 'An unknown error occurred',
+    };
+  }
+}
+
+async function batchPublishPortfolio(
+  operation: Extract<PortfolioOperation, { type: 'BATCH_PUBLISH' }>
+): Promise<PortfolioResult> {
+  try {
+    const context = await getCmsActionContext('post-writer');
+    const admin = getAdminClient();
+    const errors: string[] = [];
+    const created: unknown[] = [];
+    const updated: unknown[] = [];
+
+    for (const item of operation.creates) {
+      const validation = validatePortfolioData(item.data);
+      if (!validation.isValid) {
+        errors.push(`"${item.data.title_en}": ${validation.error}`);
+        continue;
+      }
+
+      const prepared = await prepareImageUpload(item.file, item.blurhashURL);
+      if (!prepared.success) {
+        errors.push(`"${item.data.title_en}": ${prepared.error}`);
+        continue;
+      }
+
+      const sanitizedTitle = sanitizeFilename(item.data.title_en || 'untitled');
+      const upload = await uploadPreparedImage(
+        admin,
+        'website',
+        `portfolio/images/${Date.now()}-${sanitizedTitle}`,
+        prepared.image
+      );
+
+      const insertData = {
+        ...item.data,
+        author_id: item.data.author_id || context.user.id,
+        image: upload.publicUrl,
+        blurhashURL: prepared.image.blurhash,
+      };
+
+      const { data, error } = await admin
+        .from('portfolio_posts')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) {
+        await admin.storage.from('website').remove([upload.path]);
+        errors.push(`"${item.data.title_en}": ${error.message}`);
+        continue;
+      }
+
+      created.push(data);
+    }
+
+    for (const item of operation.updates) {
+      const validation = validatePortfolioData(item.data);
+      if (!validation.isValid) {
+        errors.push(`Update ${item.id}: ${validation.error}`);
+        continue;
+      }
+
+      let uploaded: { publicUrl: string; path: string } | null = null;
+      const updateData: UpdatePortfolioData = { ...item.data };
+
+      if (item.file) {
+        const prepared = await prepareImageUpload(item.file, item.blurhashURL);
+        if (!prepared.success) {
+          errors.push(`Update ${item.id}: ${prepared.error}`);
+          continue;
+        }
+        const titleForPath = sanitizeFilename(
+          item.data.title_en || `portfolio-${item.id}`
+        );
+        uploaded = await uploadPreparedImage(
+          admin,
+          'website',
+          `portfolio/images/${item.id}-${titleForPath}`,
+          prepared.image
+        );
+        updateData.image = uploaded.publicUrl;
+        updateData.blurhashURL = prepared.image.blurhash;
+      }
+
+      const { data, error } = await admin
+        .from('portfolio_posts')
+        .update(updateData)
+        .eq('id', item.id)
+        .select()
+        .single();
+
+      if (error) {
+        if (uploaded) await admin.storage.from('website').remove([uploaded.path]);
+        errors.push(`Update ${item.id}: ${error.message}`);
+        continue;
+      }
+
+      if (uploaded && item.currentImageUrl) {
+        await removePublicFileIfDifferent(
+          admin,
+          item.currentImageUrl,
+          'website',
+          uploaded.path
+        );
+      }
+
+      updated.push(data);
+    }
+
+    if (operation.deletes.length > 0) {
+      const { data: existingRows, error: fetchError } = await admin
+        .from('portfolio_posts')
+        .select('id, image')
+        .in('id', operation.deletes);
+
+      if (fetchError) {
+        errors.push(`Delete: ${fetchError.message}`);
+      } else {
+        const { error } = await admin
+          .from('portfolio_posts')
+          .delete()
+          .in('id', operation.deletes);
+
+        if (error) {
+          errors.push(`Delete: ${error.message}`);
+        } else {
+          for (const row of existingRows || []) {
+            await removePublicFileIfPresent(
+              admin,
+              row.image as string | null,
+              'website'
+            );
+          }
+        }
+      }
+    }
+
+    if (
+      operation.creates.length > 0 ||
+      operation.updates.length > 0 ||
+      operation.deletes.length > 0
+    ) {
+      revalidateTag('portfolio', {});
+      revalidateTag('posts', {});
+      revalidateTag('post', {});
+    }
+
+    return {
+      success: errors.length === 0,
+      data: { created, updated },
+      error: errors.length > 0 ? errors.join('\n') : undefined,
+    };
+  } catch (error) {
+    console.error('Error batch publishing portfolio posts:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to publish portfolio posts',
     };
   }
 }
@@ -570,10 +756,6 @@ async function uploadPortfolioImage(
       return { success: false, error: 'Portfolio post not found' };
     }
 
-    if (currentImageUrl) {
-      await backupOldFile(admin, currentImageUrl, 'website');
-    }
-
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
@@ -634,6 +816,8 @@ async function uploadPortfolioImage(
       .eq('id', portfolioId);
 
     if (updateError) throw updateError;
+
+    await removePublicFileIfDifferent(admin, currentImageUrl, 'website', fileName);
 
     revalidateTag('portfolio', {});
     revalidateTag('posts', {});

@@ -15,34 +15,14 @@ import { useSectionTranslations } from '@/hooks/cms/useSectionTranslations';
 import { useSectionDirty } from '@/hooks/cms/useSectionDirty';
 import { useSectionCallbacks } from '@/hooks/cms/useSectionCallbacks';
 import { useLayoutStore } from '@/store/layoutStore';
-import { processImageToWebP } from '@/utils/imageProcessor';
 import { PreviewModal } from '@/components/common/cms/PreviewModal';
 import { HeroPreview } from '@/components/common/cms/previews/HeroPreview';
-
-type TranslationKey =
-  | 'top.name'
-  | 'top.role'
-  | 'aboutme.title'
-  | 'aboutme.paragraph';
-
-const heroFields: {
-  path: TranslationKey;
-  labelEn: string;
-  labelIt: string;
-  type: 'text' | 'textarea';
-  rows?: number;
-}[] = [
-  { path: 'top.name', labelEn: 'Name', labelIt: 'Nome', type: 'text' },
-  { path: 'top.role', labelEn: 'Role', labelIt: 'Ruolo', type: 'text' },
-  { path: 'aboutme.title', labelEn: 'About Me Title', labelIt: 'Titolo Chi Sono', type: 'text' },
-  { path: 'aboutme.paragraph', labelEn: 'About Me Paragraph', labelIt: 'Paragrafo Chi Sono', type: 'textarea', rows: 8 },
-];
 
 export default function HeroSection() {
   const t = useTranslations('cms');
   const { heroSection, setHeroSection } = useLayoutStore();
 
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [_isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [showConfirmRevert, setShowConfirmRevert] = useState(false);
@@ -56,7 +36,6 @@ export default function HeroSection() {
   });
 
   const {
-    translations,
     isDirty: transDirty,
     isLoading: transLoading,
     getField,
@@ -86,21 +65,10 @@ export default function HeroSection() {
 
     try {
       if (imgUpload.file) {
-        const processed = await processImageToWebP(imgUpload.file, {
-          maxWidth: 512,
-          maxHeight: 512,
-          quality: 0.85,
-        });
-        if (!processed.success || !processed.file) {
-          setError(processed.error || t('hero.errorProcessFile'));
-          setIsUpdating(false);
-          return;
-        }
-
         const result = await heroActions({
           type: 'UPDATE_WITH_FILES',
           files: {
-            mainImage: processed.file,
+            mainImage: imgUpload.file,
           },
           currentData: {
             mainImage: heroSection?.mainImage || '',

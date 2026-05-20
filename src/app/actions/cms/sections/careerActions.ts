@@ -3,15 +3,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 import {
-  backupOldFile,
   generateBlurhashFromBuffer,
   getAdminClient,
+  getCmsActionContext,
   getStoragePathFromPublicUrl,
   isValidDate,
   isValidUrl,
+  prepareImageUpload,
   processImage,
   requireAdmin,
+  removePublicFileIfDifferent,
+  removePublicFileIfPresent,
   sanitizeFilename,
+  uploadPreparedImage,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
 import type { CareerEntry } from '@/types/fetchedData.types';
@@ -31,7 +35,23 @@ type CareerOperation =
       currentLogoUrl?: string;
       blurhashURL?: string;
     }
-  | { type: 'ROLLBACK_CREATE'; entryId: number };
+  | { type: 'ROLLBACK_CREATE'; entryId: number }
+  | {
+      type: 'BATCH_PUBLISH';
+      creates: Array<{
+        data: CreateCareerData;
+        file?: File | null;
+        blurhashURL?: string;
+      }>;
+      updates: Array<{
+        id: number;
+        data: UpdateCareerData;
+        file?: File | null;
+        currentLogoUrl?: string;
+        blurhashURL?: string;
+      }>;
+      deletes: number[];
+    };
 
 type CreateCareerData = {
   title: string;
@@ -155,6 +175,10 @@ function validateCareerData(data: CreateCareerData | UpdateCareerData): {
 export async function careerActions(
   operation: CareerOperation
 ): Promise<CareerResult> {
+  if (operation.type === 'BATCH_PUBLISH') {
+    return await batchPublishCareer(operation);
+  }
+
   // Admin check - only admins can manage career
   try {
     await requireAdmin();
@@ -199,6 +223,167 @@ export async function careerActions(
       success: false,
       error:
         error instanceof Error ? error.message : 'An unknown error occurred',
+    };
+  }
+}
+
+async function batchPublishCareer(
+  operation: Extract<CareerOperation, { type: 'BATCH_PUBLISH' }>
+): Promise<CareerResult> {
+  try {
+    await getCmsActionContext('admin');
+    const admin = getAdminClient();
+    const errors: string[] = [];
+    const changed: CareerEntry[] = [];
+
+    for (const item of operation.creates) {
+      const validation = validateCareerData(item.data);
+      if (!validation.isValid) {
+        errors.push(`"${item.data.title}": ${validation.error}`);
+        continue;
+      }
+
+      const insertData: CreateCareerData = { ...item.data };
+      let uploaded: { publicUrl: string; path: string } | null = null;
+
+      if (item.file) {
+        const prepared = await prepareImageUpload(item.file, item.blurhashURL, {
+          maxWidth: 256,
+          maxHeight: 256,
+          quality: 80,
+        });
+        if (!prepared.success) {
+          errors.push(`"${item.data.title}": ${prepared.error}`);
+          continue;
+        }
+        uploaded = await uploadPreparedImage(
+          admin,
+          'website',
+          `career/logos/${Date.now()}-${sanitizeFilename(item.data.company || 'company')}`,
+          prepared.image
+        );
+        insertData.logo = uploaded.publicUrl;
+        insertData.blurhashURL = prepared.image.blurhash;
+      }
+
+      const { data, error } = await admin
+        .from('career_entries')
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) {
+        if (uploaded) await admin.storage.from('website').remove([uploaded.path]);
+        errors.push(`"${item.data.title}": ${error.message}`);
+        continue;
+      }
+
+      changed.push(data as CareerEntry);
+    }
+
+    for (const item of operation.updates) {
+      const validation = validateCareerData(item.data);
+      if (!validation.isValid) {
+        errors.push(`Update ${item.id}: ${validation.error}`);
+        continue;
+      }
+
+      const updateData: UpdateCareerData = { ...item.data };
+      let uploaded: { publicUrl: string; path: string } | null = null;
+
+      if (item.file) {
+        const prepared = await prepareImageUpload(item.file, item.blurhashURL, {
+          maxWidth: 256,
+          maxHeight: 256,
+          quality: 80,
+        });
+        if (!prepared.success) {
+          errors.push(`Update ${item.id}: ${prepared.error}`);
+          continue;
+        }
+        uploaded = await uploadPreparedImage(
+          admin,
+          'website',
+          `career/logos/${item.id}-${sanitizeFilename(item.data.company || `company-${item.id}`)}`,
+          prepared.image
+        );
+        updateData.logo = uploaded.publicUrl;
+        updateData.blurhashURL = prepared.image.blurhash;
+      }
+
+      const { data, error } = await admin
+        .from('career_entries')
+        .update(updateData)
+        .eq('id', item.id)
+        .select()
+        .single();
+
+      if (error) {
+        if (uploaded) await admin.storage.from('website').remove([uploaded.path]);
+        errors.push(`Update ${item.id}: ${error.message}`);
+        continue;
+      }
+
+      if (uploaded && item.currentLogoUrl) {
+        await removePublicFileIfDifferent(
+          admin,
+          item.currentLogoUrl,
+          'website',
+          uploaded.path
+        );
+      }
+
+      changed.push(data as CareerEntry);
+    }
+
+    if (operation.deletes.length > 0) {
+      const { data: existingRows, error: fetchError } = await admin
+        .from('career_entries')
+        .select('id, logo')
+        .in('id', operation.deletes);
+
+      if (fetchError) {
+        errors.push(`Delete: ${fetchError.message}`);
+      } else {
+        const { error } = await admin
+          .from('career_entries')
+          .delete()
+          .in('id', operation.deletes);
+        if (error) {
+          errors.push(`Delete: ${error.message}`);
+        } else {
+          for (const row of existingRows || []) {
+            await removePublicFileIfPresent(
+              admin,
+              row.logo as string | null,
+              'website'
+            );
+          }
+        }
+      }
+    }
+
+    if (
+      operation.creates.length > 0 ||
+      operation.updates.length > 0 ||
+      operation.deletes.length > 0
+    ) {
+      revalidateTag('career', {});
+    }
+
+    return {
+      success: errors.length === 0,
+      data: changed,
+      error: errors.length > 0 ? errors.join('\n') : undefined,
+    };
+  } catch (error) {
+    console.error('Error batch publishing career entries:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to publish career entries',
     };
   }
 }
@@ -396,10 +581,6 @@ async function uploadCareerLogo(
       return { success: false, error: 'Career entry not found' };
     }
 
-    if (currentLogoUrl) {
-      await backupOldFile(supabase, currentLogoUrl, 'website');
-    }
-
     const isWebP = file.type === 'image/webp';
     let buffer: Buffer;
     let blurhash: string | undefined;
@@ -458,6 +639,8 @@ async function uploadCareerLogo(
       .eq('id', careerId);
 
     if (updateError) throw updateError;
+
+    await removePublicFileIfDifferent(supabase, currentLogoUrl, 'website', fileName);
 
     revalidateTag('career', {});
     return {

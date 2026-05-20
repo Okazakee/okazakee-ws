@@ -12,9 +12,9 @@ export type CMSUser = {
   githubUsername: string | null;
 };
 
-export async function getUser(): Promise<CMSUser | null> {
-  const supabase = await createClient();
-
+async function buildCmsUser(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<CMSUser | null> {
   const {
     data: { user },
     error: authError,
@@ -110,5 +110,45 @@ export async function getUser(): Promise<CMSUser | null> {
     role: (allowedUser?.role as 'admin' | 'editor') || '',
     authProvider: (profile.auth_provider as 'email' | 'github') || 'email',
     githubUsername: profile.github_username || null,
+  };
+}
+
+export async function getUser(): Promise<CMSUser | null> {
+  const supabase = await createClient();
+  return buildCmsUser(supabase);
+}
+
+export type CMSBootData = {
+  user: CMSUser;
+  heroSection: {
+    mainImage: string | null;
+    blurhashURL: string | null;
+    resume_en: string | null;
+    resume_it: string | null;
+  } | null;
+};
+
+export async function getCmsBootData(): Promise<CMSBootData | null> {
+  const supabase = await createClient();
+  const user = await buildCmsUser(supabase);
+  if (!user) return null;
+
+  if (user.role !== 'admin') {
+    return { user, heroSection: null };
+  }
+
+  const heroResult = await supabase
+    .from('hero_section')
+    .select('propic, blurhashURL, resume_en, resume_it')
+    .single();
+
+  return {
+    user,
+    heroSection: {
+      mainImage: heroResult.data?.propic || null,
+      blurhashURL: heroResult.data?.blurhashURL || null,
+      resume_en: heroResult.data?.resume_en || null,
+      resume_it: heroResult.data?.resume_it || null,
+    },
   };
 }

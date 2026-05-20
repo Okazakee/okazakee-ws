@@ -15,6 +15,7 @@ interface FileDropzoneProps {
   currentUrl?: string | null;
   currentBlurhash?: string | null;
   dropzoneProps: {
+    onDragEnter?: (e: React.DragEvent) => void;
     onDragOver: (e: React.DragEvent) => void;
     onDragLeave: (e: React.DragEvent) => void;
     onDrop: (e: React.DragEvent) => void;
@@ -170,20 +171,16 @@ export function FileDropzone({
             </div>
           </div>
         ) : (
-          <div
-            className="space-y-2 cursor-pointer"
+          <button
+            type="button"
+            className="space-y-2 cursor-pointer w-full"
             onClick={onBrowse}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') onBrowse();
-            }}
           >
             <ImageIcon className="h-8 w-8 mx-auto text-gray-400" />
             <p className="text-sm text-darktext dark:text-lighttext2">
               {t('common.dropFilesHere')}
             </p>
-          </div>
+          </button>
         )}
 
         <input

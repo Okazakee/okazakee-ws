@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 import {
   getAdminClient,
+  getCmsActionContext,
   requireAdmin,
 } from '@/app/actions/cms/utils/fileHelpers';
 import { createClient } from '@/utils/supabase/server';
@@ -15,7 +16,17 @@ type SkillOperation =
   | { type: 'DELETE'; id: number }
   | { type: 'CREATE_CATEGORY'; data: CreateCategoryData }
   | { type: 'UPDATE_CATEGORY'; id: number; data: UpdateCategoryData }
-  | { type: 'DELETE_CATEGORY'; id: number };
+  | { type: 'DELETE_CATEGORY'; id: number }
+  | {
+      type: 'BATCH_PUBLISH';
+      newCategories: Array<{ name: string; tempId: number }>;
+      newSkills: Array<{ categoryId: number; data: CreateSkillData }>;
+      updateSkills: Array<{ id: number; data: UpdateSkillData }>;
+      deleteSkills: number[];
+      updateCategories: Array<{ id: number; data: UpdateCategoryData }>;
+      deleteCategories: number[];
+      categoryOrder: Array<{ id: number; position: number }>;
+    };
 
 type CreateSkillData = {
   title: string;
@@ -115,6 +126,10 @@ function validateSkillData(data: CreateSkillData | UpdateSkillData): {
 export async function skillsActions(
   operation: SkillOperation
 ): Promise<SkillsResult> {
+  if (operation.type === 'BATCH_PUBLISH') {
+    return await batchPublishSkills(operation);
+  }
+
   // Admin check - only admins can manage skills
   try {
     await requireAdmin();
@@ -156,6 +171,143 @@ export async function skillsActions(
       success: false,
       error:
         error instanceof Error ? error.message : 'An unknown error occurred',
+    };
+  }
+}
+
+async function batchPublishSkills(
+  operation: Extract<SkillOperation, { type: 'BATCH_PUBLISH' }>
+): Promise<SkillsResult> {
+  try {
+    await getCmsActionContext('admin');
+    const admin = getAdminClient();
+    const errors: string[] = [];
+    const tempIdToRealId: Record<number, number> = {};
+
+    for (const category of operation.newCategories) {
+      if (!category.name || category.name.trim().length === 0) {
+        errors.push('Category name is required');
+        continue;
+      }
+
+      const { data, error } = await admin
+        .from('skills_categories')
+        .insert({ name: category.name.trim() })
+        .select()
+        .single();
+
+      if (error) {
+        errors.push(`Category "${category.name}": ${error.message}`);
+      } else {
+        tempIdToRealId[category.tempId] = data.id as number;
+      }
+    }
+
+    for (const item of operation.newSkills) {
+      const categoryId = tempIdToRealId[item.categoryId] ?? item.categoryId;
+      const skillData = { ...item.data, category_id: categoryId };
+      const validation = validateSkillData(skillData);
+      if (!validation.isValid) {
+        errors.push(`Skill "${skillData.title}": ${validation.error}`);
+        continue;
+      }
+
+      const { error } = await admin.from('skills').insert(skillData);
+      if (error) errors.push(`Skill "${skillData.title}": ${error.message}`);
+    }
+
+    if (operation.deleteSkills.length > 0) {
+      const { error } = await admin
+        .from('skills')
+        .delete()
+        .in('id', operation.deleteSkills);
+      if (error) errors.push(`Delete skill: ${error.message}`);
+    }
+
+    for (const categoryId of operation.deleteCategories) {
+      const { data: skills, error: skillsError } = await admin
+        .from('skills')
+        .select('id')
+        .eq('category_id', categoryId);
+
+      if (skillsError) {
+        errors.push(`Delete category ${categoryId}: ${skillsError.message}`);
+        continue;
+      }
+
+      if (skills && skills.length > 0) {
+        errors.push(
+          `Cannot delete category with ${skills.length} skill(s). Remove all skills first.`
+        );
+        continue;
+      }
+
+      const { error } = await admin
+        .from('skills_categories')
+        .delete()
+        .eq('id', categoryId);
+      if (error) errors.push(`Delete category ${categoryId}: ${error.message}`);
+    }
+
+    for (const item of operation.updateCategories) {
+      const id = tempIdToRealId[item.id] ?? item.id;
+      const updateFields: UpdateCategoryData = {};
+      if (item.data.name !== undefined) updateFields.name = item.data.name.trim();
+      if (item.data.position !== undefined) updateFields.position = item.data.position;
+
+      const { error } = await admin
+        .from('skills_categories')
+        .update(updateFields)
+        .eq('id', id);
+      if (error) errors.push(`Category ${id}: ${error.message}`);
+    }
+
+    for (const item of operation.categoryOrder) {
+      const id = tempIdToRealId[item.id] ?? item.id;
+      const { error } = await admin
+        .from('skills_categories')
+        .update({ position: item.position })
+        .eq('id', id);
+      if (error) errors.push(`Reorder category ${id}: ${error.message}`);
+    }
+
+    for (const item of operation.updateSkills) {
+      const validation = validateSkillData(item.data);
+      if (!validation.isValid) {
+        errors.push(`Skill ${item.id}: ${validation.error}`);
+        continue;
+      }
+
+      const { error } = await admin
+        .from('skills')
+        .update(item.data)
+        .eq('id', item.id);
+      if (error) errors.push(`Skill ${item.id}: ${error.message}`);
+    }
+
+    if (
+      operation.newCategories.length > 0 ||
+      operation.newSkills.length > 0 ||
+      operation.updateSkills.length > 0 ||
+      operation.deleteSkills.length > 0 ||
+      operation.updateCategories.length > 0 ||
+      operation.deleteCategories.length > 0 ||
+      operation.categoryOrder.length > 0
+    ) {
+      revalidateTag('skills', {});
+    }
+
+    return {
+      success: errors.length === 0,
+      data: { tempIdToRealId },
+      error: errors.length > 0 ? errors.join('\n') : undefined,
+    };
+  } catch (error) {
+    console.error('Error batch publishing skills:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Failed to publish skills',
     };
   }
 }

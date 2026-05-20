@@ -3,17 +3,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
 import {
-  backupOldFile,
-  generateBlurhashFromBuffer,
   getAdminClient,
-  processImage,
+  prepareImageUpload,
   requireAdmin,
+  removePublicFileIfDifferent,
+  uploadPreparedImage,
   validateImageFile,
   validatePdfFile,
 } from '@/app/actions/cms/utils/fileHelpers';
 import { getHeroSection, getResumeLink } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
-import { isValidBlurhash } from '@/utils/blurhashUtils';
 
 type HeroOperation =
   | { type: 'GET' }
@@ -186,58 +185,25 @@ async function uploadHeroImage(
       return { success: false, error: fileValidation.error };
     }
 
-    if (currentImageUrl) {
-      await backupOldFile(getAdminClient(), currentImageUrl, 'website');
-    }
-
-    const isWebP = file.type === 'image/webp';
-    let buffer: Buffer;
-    let blurhash: string | undefined;
-    let format: 'webp' | 'png' = 'webp';
-
-    if (isWebP) {
-      const arrayBuffer = await file.arrayBuffer();
-      buffer = Buffer.from(arrayBuffer);
-      blurhash = isValidBlurhash(blurhashURL)
-        ? blurhashURL
-        : await generateBlurhashFromBuffer(buffer);
-    } else {
-      const processed = await processImage(file);
-      if (!processed.success || !processed.buffer) {
-        return {
-          success: false,
-          error: processed.error || 'Failed to process image',
-        };
-      }
-      buffer = processed.buffer;
-      blurhash = isValidBlurhash(blurhashURL)
-        ? blurhashURL
-        : processed.blurhash;
-      format = processed.format ?? 'webp';
-    }
-
-    const fileName = 'avatar/avatar.webp';
     const admin = getAdminClient();
-
-    await admin.storage.from('website').remove([fileName]);
-
-    const { error: uploadError } = await admin.storage
-      .from('website')
-      .upload(fileName, buffer, {
-        cacheControl: '3600',
-        contentType: format === 'png' ? 'image/png' : 'image/webp',
-        upsert: true,
-      });
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = admin.storage
-      .from('website')
-      .getPublicUrl(fileName);
+    const prepared = await prepareImageUpload(file, blurhashURL, {
+      maxWidth: 512,
+      maxHeight: 512,
+      quality: 80,
+    });
+    if (!prepared.success) {
+      return { success: false, error: prepared.error };
+    }
+    const upload = await uploadPreparedImage(
+      admin,
+      'website',
+      'avatar/avatar',
+      prepared.image
+    );
 
     const updateData: { propic: string; blurhashURL: string | null } = {
-      propic: urlData.publicUrl,
-      blurhashURL: blurhash ?? null,
+      propic: upload.publicUrl,
+      blurhashURL: prepared.image.blurhash,
     };
 
     const { error: updateError } = await admin
@@ -245,13 +211,23 @@ async function uploadHeroImage(
       .update(updateData)
       .eq('id', 1);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      await admin.storage.from('website').remove([upload.path]);
+      throw updateError;
+    }
+
+    await removePublicFileIfDifferent(
+      admin,
+      currentImageUrl,
+      'website',
+      upload.path
+    );
 
     revalidateTag('hero', {});
 
     return {
       success: true,
-      data: { propic: urlData.publicUrl, blurhashURL: blurhash ?? '' },
+      data: { propic: upload.publicUrl, blurhashURL: prepared.image.blurhash },
     };
   } catch (error) {
     console.error('Error uploading hero image:', error);
@@ -272,10 +248,6 @@ async function uploadResume(
     const fileValidation = validatePdfFile(file);
     if (!fileValidation.isValid) {
       return { success: false, error: fileValidation.error };
-    }
-
-    if (currentResumeUrl) {
-      await backupOldFile(supabase, currentResumeUrl, 'website');
     }
 
     const fileName = `resumes/${field}.pdf`;
@@ -302,7 +274,17 @@ async function uploadResume(
       .update({ [field]: urlData.publicUrl })
       .eq('id', 1);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      await admin.storage.from('website').remove([fileName]);
+      throw updateError;
+    }
+
+    await removePublicFileIfDifferent(
+      supabase,
+      currentResumeUrl,
+      'website',
+      fileName
+    );
 
     revalidateTag('resume', {});
     revalidateTag('hero_section', {});

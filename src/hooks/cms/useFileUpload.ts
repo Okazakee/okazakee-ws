@@ -26,6 +26,7 @@ interface UseFileUploadReturn {
   isDragging: boolean;
   error: string | null;
   dropzoneProps: {
+    onDragEnter: (e: React.DragEvent) => void;
     onDragOver: (e: React.DragEvent) => void;
     onDragLeave: (e: React.DragEvent) => void;
     onDrop: (e: React.DragEvent) => void;
@@ -75,7 +76,6 @@ export function useFileUpload({
         return;
       }
 
-      const typePattern = accept.replace('*', '');
       const acceptedTypes = accept
         .split(',')
         .map((t) => t.trim());
@@ -211,6 +211,7 @@ export function useFileUpload({
     isDragging,
     error,
     dropzoneProps: {
+      onDragEnter: handleDragEnter,
       onDragOver: handleDragOver,
       onDragLeave: handleDragLeave,
       onDrop: handleDrop,

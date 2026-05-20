@@ -100,7 +100,6 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-8 pr-8 py-2 text-sm bg-gray-50 dark:bg-darkestgray border border-gray-200 dark:border-darkgray/50 rounded-lg text-darktext dark:text-lighttext focus:outline-none focus:border-main"
                 placeholder={t('common.searchSections')}
-                autoFocus
               />
               {search && (
                 <button

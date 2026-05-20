@@ -1,9 +1,8 @@
 'use client';
 
-import { Calendar, Eye, FileText, Image as ImageIcon, Plus, Trash2, Edit3, Info } from 'lucide-react';
+import { Calendar, Eye, FileText, Plus, Trash2, Edit3, Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
-import { encode as encodeBlurhash } from 'blurkit/browser';
 import { blogActions, type Author } from '@/app/actions/cms/sections/blogActions';
 import { SectionHeader } from '@/components/cms/shared/SectionHeader';
 import { TranslationField } from '@/components/cms/shared/TranslationField';
@@ -17,7 +16,6 @@ import { useSectionTranslations } from '@/hooks/cms/useSectionTranslations';
 import { useSectionDirty } from '@/hooks/cms/useSectionDirty';
 import { useSectionCallbacks } from '@/hooks/cms/useSectionCallbacks';
 import { useLayoutStore } from '@/store/layoutStore';
-import { processImageToWebP } from '@/utils/imageProcessor';
 import { PreviewModal } from '@/components/common/cms/PreviewModal';
 import { BlogPreview } from '@/components/common/cms/previews/BlogPreview';
 import { PostPreview } from '@/components/common/cms/previews/PostPreview';
@@ -45,7 +43,7 @@ export default function BlogSection() {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [_isUpdating, setIsUpdating] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPostPreviewOpen, setIsPostPreviewOpen] = useState(false);
   const [showConfirmRevert, setShowConfirmRevert] = useState(false);
@@ -60,7 +58,7 @@ export default function BlogSection() {
 
   const imgUpload = useFileUpload({ accept: 'image/*', maxSizeMB: 10, imageProcessing: { maxWidth: 1920, maxHeight: 1080, quality: 0.85 }, generateBlurhash: true });
 
-  const { translations, isDirty: transDirty, isLoading: transLoading, getField, setField, saveTranslations, revertTranslations } = useSectionTranslations('posts-section');
+  const { isDirty: transDirty, isLoading: transLoading, getField, setField, saveTranslations, revertTranslations } = useSectionTranslations('posts-section');
 
   const isDirty = modifiedIds.size > 0 || newPosts.length > 0 || deletedIds.size > 0 || transDirty;
   useSectionDirty('blog', isDirty);
@@ -87,7 +85,7 @@ export default function BlogSection() {
   const handleCreate = () => {
     if (!formData.title_en || !imgUpload.file) { setError('Title and image are required'); return; }
     const tempId = -Date.now();
-    const post: EditablePost = { id: tempId, title: formData.title_en, ...formData, views: 0, image_file: imgUpload.file };
+    const post: EditablePost = { id: tempId, title: formData.title_en, ...formData, blurhashURL: imgUpload.blurhash || formData.blurhashURL, views: 0, image_file: imgUpload.file };
     setPosts((prev) => [...prev, post]);
     setNewPosts((prev) => [...prev, { post, imageFile: imgUpload.file }]);
     closeForm();
@@ -95,7 +93,7 @@ export default function BlogSection() {
 
   const handleUpdate = () => {
     if (!editingId) return;
-    setPosts((prev) => prev.map((p) => p.id === editingId ? { ...p, ...formData, image_file: imgUpload.file || p.image_file } : p));
+    setPosts((prev) => prev.map((p) => p.id === editingId ? { ...p, ...formData, blurhashURL: imgUpload.blurhash || formData.blurhashURL, image_file: imgUpload.file || p.image_file } : p));
     setModifiedIds((prev) => new Set(prev).add(editingId));
     closeForm();
   };
@@ -110,37 +108,51 @@ export default function BlogSection() {
   const handlePublish = useCallback(async () => {
     const errors: string[] = []; setIsUpdating(true); setError(null);
 
-    for (const { post, imageFile } of newPosts) {
-      if (!imageFile) { errors.push(`"${post.title_en}": image required`); continue; }
-      try {
-        const processed = await processImageToWebP(imageFile, { maxWidth: 1920, maxHeight: 1080, quality: 0.85 });
-        if (!processed.success || !processed.file) { errors.push(`"${post.title_en}": image processing failed`); continue; }
-        const imgR = await blogActions({ type: 'UPLOAD_IMAGE_FOR_NEW_POST', file: processed.file, titleEn: post.title_en, blurhashURL: (await encodeBlurhash(processed.file, { size: 32 }).catch(() => null))?.hash });
-        if (!imgR.success) { errors.push(`"${post.title_en}": ${imgR.error}`); continue; }
-        const { image: imgUrl, blurhashURL: bh, path: imgPath } = imgR.data as { image: string; blurhashURL: string; path: string };
-        const cr = await blogActions({ type: 'CREATE', data: { ...post, author_id: post.author_id || user?.id || '', image: imgUrl, blurhashURL: bh || post.blurhashURL || '' } });
-        if (!cr.success) { await blogActions({ type: 'ROLLBACK_CREATE', postId: 0, imagePath: imgPath }).catch(() => {}); errors.push(`"${post.title_en}": ${cr.error}`); }
-      } catch (e) { errors.push(`"${post.title_en}": ${e instanceof Error ? e.message : 'error'}`); }
-    }
-
-    for (const id of modifiedIds) {
-      const post = posts.find((p) => p.id === id); if (!post) continue;
-      try {
-        const ur = await blogActions({ type: 'UPDATE', id, data: { title_en: post.title_en, title_it: post.title_it, description_en: post.description_en, description_it: post.description_it, body_en: post.body_en, body_it: post.body_it, post_tags: post.post_tags, created_at: post.created_at, author_id: post.author_id } });
-        if (!ur.success) { errors.push(`"${post.title_en}": ${ur.error}`); continue; }
-        if (post.image_file) {
-          const processed = await processImageToWebP(post.image_file, { maxWidth: 1920, maxHeight: 1080, quality: 0.85 });
-          if (processed.success && processed.file) {
-            const ir = await blogActions({ type: 'UPLOAD_IMAGE', blogId: id, file: processed.file, currentImageUrl: post.image, blurhashURL: (await encodeBlurhash(processed.file, { size: 32 }).catch(() => null))?.hash });
-            if (!ir.success) errors.push(`"${post.title_en}" image: ${ir.error}`);
-          }
-        }
-      } catch (e) { errors.push(`"${post.title_en}": ${e instanceof Error ? e.message : 'error'}`); }
-    }
-
-    for (const id of deletedIds) {
-      try { const r = await blogActions({ type: 'DELETE', id }); if (!r.success) errors.push(`Delete: ${r.error}`); } catch (e) { errors.push(`Delete: ${e instanceof Error ? e.message : 'error'}`); }
-    }
+    const batch = await blogActions({
+      type: 'BATCH_PUBLISH',
+      creates: newPosts
+        .filter((item): item is { post: EditablePost; imageFile: File } => item.imageFile !== null)
+        .map(({ post, imageFile }) => ({
+          file: imageFile,
+          blurhashURL: post.blurhashURL,
+          data: {
+            title_en: post.title_en,
+            title_it: post.title_it,
+            image: '',
+            description_en: post.description_en,
+            description_it: post.description_it,
+            body_en: post.body_en,
+            body_it: post.body_it,
+            blurhashURL: post.blurhashURL || '',
+            post_tags: post.post_tags,
+            created_at: post.created_at,
+            author_id: post.author_id || user?.id || '',
+          },
+        })),
+      updates: Array.from(modifiedIds).flatMap((id) => {
+        const post = posts.find((p) => p.id === id);
+        if (!post) return [];
+        return [{
+          id,
+          file: post.image_file || null,
+          currentImageUrl: post.image,
+          blurhashURL: post.blurhashURL,
+          data: {
+            title_en: post.title_en,
+            title_it: post.title_it,
+            description_en: post.description_en,
+            description_it: post.description_it,
+            body_en: post.body_en,
+            body_it: post.body_it,
+            post_tags: post.post_tags,
+            created_at: post.created_at,
+            author_id: post.author_id,
+          },
+        }];
+      }),
+      deletes: Array.from(deletedIds),
+    });
+    if (!batch.success && batch.error) errors.push(batch.error);
 
     if (transDirty) { const te = await saveTranslations(); errors.push(...te); }
     await fetchData();

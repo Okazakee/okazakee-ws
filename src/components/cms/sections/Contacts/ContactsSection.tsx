@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, Eye, FileText, Plus, Trash2, X } from 'lucide-react';
+import { ExternalLink, Plus, Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { heroActions } from '@/app/actions/cms/sections/heroActions';
@@ -30,7 +30,7 @@ export default function ContactsSection() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [_isUpdating, setIsUpdating] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [showConfirmRevert, setShowConfirmRevert] = useState(false);
 
@@ -48,7 +48,7 @@ export default function ContactsSection() {
   const resumeInitRef = useRef(false);
 
   const {
-    translations, isDirty: transDirty, isLoading: transLoading,
+    isDirty: transDirty, isLoading: transLoading,
     getField, setField, saveTranslations, revertTranslations,
   } = useSectionTranslations('contacts-section');
 
@@ -140,27 +140,35 @@ export default function ContactsSection() {
       }
     }
 
-    for (const c of newContacts) {
-      try {
-        const r = await contactsActions({ type: 'CREATE', data: { label: c.label, icon: c.icon, link: c.link, bg_color: c.bg_color, position: contacts.length } });
-        if (!r.success) errors.push(`"${c.label}": ${r.error}`);
-      } catch (e) { errors.push(`"${c.label}": ${e instanceof Error ? e.message : 'error'}`); }
-    }
-    for (const id of deletedIds) {
-      try { const r = await contactsActions({ type: 'DELETE', id }); if (!r.success) errors.push(`Delete: ${r.error}`); }
-      catch (e) { errors.push(`Delete: ${e instanceof Error ? e.message : 'error'}`); }
-    }
-    for (const id of modifiedIds) {
-      const c = contacts.find((cc) => cc.id === id);
-      if (!c) continue;
-      try { const r = await contactsActions({ type: 'UPDATE', id, data: { label: c.label, icon: c.icon, link: c.link, bg_color: c.bg_color } }); if (!r.success) errors.push(`"${c.label}": ${r.error}`); }
-      catch (e) { errors.push(`"${c.label}": ${e instanceof Error ? e.message : 'error'}`); }
-    }
-    if (orderChanged) {
-      const reorder = contacts.map((c, i) => ({ id: c.id, position: i }));
-      try { const r = await contactsActions({ type: 'REORDER', contacts: reorder }); if (!r.success) errors.push(`Reorder: ${r.error}`); }
-      catch (e) { errors.push(`Reorder: ${e instanceof Error ? e.message : 'error'}`); }
-    }
+    const batch = await contactsActions({
+      type: 'BATCH_PUBLISH',
+      creates: newContacts.map((c, i) => ({
+        label: c.label,
+        icon: c.icon,
+        link: c.link,
+        bg_color: c.bg_color,
+        position: c.position ?? i,
+      })),
+      updates: Array.from(modifiedIds).flatMap((id) => {
+        const c = contacts.find((cc) => cc.id === id);
+        if (!c || id < 0) return [];
+        return [{
+          id,
+          data: {
+            label: c.label,
+            icon: c.icon,
+            link: c.link,
+            bg_color: c.bg_color,
+            position: c.position,
+          },
+        }];
+      }),
+      deletes: Array.from(deletedIds),
+      reorder: orderChanged
+        ? contacts.filter((c) => c.id > 0).map((c, i) => ({ id: c.id, position: i }))
+        : [],
+    });
+    if (!batch.success && batch.error) errors.push(batch.error);
     if (transDirty) { const tErrs = await saveTranslations(); errors.push(...tErrs); }
     await fetchData();
     setModifiedIds(new Set()); setNewContacts([]); setDeletedIds(new Set()); setOrderChanged(false); setIsUpdating(false);

@@ -25,7 +25,6 @@ import {
 } from '@/app/actions/cms/sections/usersActions';
 import { SectionHeader } from '@/components/cms/shared/SectionHeader';
 import { ErrorBanner } from '@/components/cms/shared/ErrorBanner';
-import { ConfirmDialog } from '@/components/cms/shared/ConfirmDialog';
 import { useLayoutStore } from '@/store/layoutStore';
 import { processImageToWebP } from '@/utils/imageProcessor';
 
@@ -45,7 +44,7 @@ type AllowedUser = {
 
 export default function UsersSection() {
   const t = useTranslations('cms');
-  const { user, setUser } = useLayoutStore();
+  const { user } = useLayoutStore();
   const [users, setUsers] = useState<AllowedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

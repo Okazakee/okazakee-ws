@@ -4,8 +4,7 @@ import { Menu } from 'lucide-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { getUser } from '@/app/actions/cms/getUser';
-import { heroActions } from '@/app/actions/cms/sections/heroActions';
+import { getCmsBootData } from '@/app/actions/cms/getUser';
 import AccountSection from '@/components/common/cms/AccountSection';
 import BlogSection from '@/components/cms/sections/Blog/BlogSection';
 import CareerSection from '@/components/cms/sections/Career/CareerSection';
@@ -19,12 +18,6 @@ import SkillsSection from '@/components/cms/sections/Skills/SkillsSection';
 import UsersSection from '@/components/cms/sections/Users/UsersSection';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useLayoutStore } from '@/store/layoutStore';
-
-// sectionLabels is built inside the component using t()
-
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
 
 export default function CMS() {
   const t = useTranslations('cms');
@@ -57,19 +50,12 @@ export default function CMS() {
   const [canShowError, setCanShowError] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const initializeCMS = async () => {
       setLoading(true);
       setError(null);
       setCanShowError(false);
-
-      const startedAt = Date.now();
-      const errorDelayMs = 5000;
-      let cancelled = false;
-
-      // If component unmounts, prevent setting state
-      const cleanup = () => {
-        cancelled = true;
-      };
 
       try {
         // Load saved section FIRST, before fetching user (to avoid race conditions)
@@ -78,16 +64,12 @@ export default function CMS() {
             ? localStorage.getItem('cms_active_section')
             : null;
 
-        // Fetch user (keep spinner up; retry until either success or 5s timeout)
-        let fetchedUser = await getUser();
-        while (!fetchedUser && Date.now() - startedAt < errorDelayMs) {
-          await sleep(250);
-          fetchedUser = await getUser();
-        }
+        const bootData = await getCmsBootData();
 
-        if (!fetchedUser) {
+        if (!bootData?.user) {
           throw new Error(t('page.authError'));
         }
+        const fetchedUser = bootData.user;
         setUser(fetchedUser);
 
         // Validate saved section based on user role
@@ -135,39 +117,8 @@ export default function CMS() {
           localStorage.setItem('cms_active_section', sectionToUse);
         }
 
-        // Fetch hero data for admins (required for initial render to avoid section-level flashes)
         if (fetchedUser.role === 'admin') {
-          type HeroBootData = {
-            hero: { propic: string; blurhashURL: string } | null;
-            resume: { resume_en: string; resume_it: string } | null;
-          };
-
-          let lastError: string | null = null;
-          let data: HeroBootData | null = null;
-
-          while (!data && Date.now() - startedAt < errorDelayMs) {
-            const result = await heroActions({ type: 'GET' });
-            if (result.success && result.data) {
-              data = result.data as HeroBootData;
-              break;
-            }
-
-            lastError = result.error || 'Failed to fetch hero section data';
-
-            // Transient right-after-login auth propagation: wait and retry
-            await sleep(250);
-          }
-
-          if (!data) {
-            throw new Error(lastError || 'Failed to fetch hero section data');
-          }
-
-          setHeroSection({
-            mainImage: data.hero?.propic || null,
-            blurhashURL: data.hero?.blurhashURL || null,
-            resume_en: data.resume?.resume_en || null,
-            resume_it: data.resume?.resume_it || null,
-          });
+          setHeroSection(bootData.heroSection);
         }
         if (cancelled) return;
         setLoading(false);
@@ -176,22 +127,17 @@ export default function CMS() {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : t('page.initError'));
 
-        // Keep showing the full-page spinner until 5s have elapsed since init started
-        const elapsed = Date.now() - startedAt;
-        const remaining = errorDelayMs - elapsed;
-        if (remaining > 0) {
-          await sleep(remaining);
-        }
-
         if (cancelled) return;
         setCanShowError(true);
         setLoading(false);
       }
 
-      return cleanup;
     };
 
     initializeCMS();
+    return () => {
+      cancelled = true;
+    };
   }, [setUser, setActiveSection, setHeroSection, setLoading, setError]);
 
   const needsAdminBootData = user?.role === 'admin' && !heroSection;

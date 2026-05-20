@@ -19,7 +19,7 @@ export default function PrivacyPolicySection() {
   const [original, setOriginal] = useState({ en: '', it: '' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [_isUpdating, setIsUpdating] = useState(false);
   const [showConfirmRevert, setShowConfirmRevert] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [activeLocale, setActiveLocale] = useState<'en' | 'it'>('en');

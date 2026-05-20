@@ -3,7 +3,91 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { encode as blurkitEncode } from 'blurkit/node';
 import sharp from 'sharp';
 import { createClient } from '@/utils/supabase/server';
-import { FALLBACK_BLURHASH } from '@/utils/blurhashUtils';
+import { FALLBACK_BLURHASH, isValidBlurhash } from '@/utils/blurhashUtils';
+
+type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+type CmsActionRole = 'authenticated' | 'admin' | 'post-writer';
+
+export type CmsActionContext = {
+  supabase: ServerSupabaseClient;
+  user: { id: string; email: string; githubUsername: string | null };
+  role: string | null;
+};
+
+async function findAllowedUserRole(
+  supabase: ServerSupabaseClient,
+  email: string | undefined,
+  githubUsername: string | null | undefined
+): Promise<string | null> {
+  if (email) {
+    const { data: emailMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('email', email.toLowerCase())
+      .single();
+    if (emailMatch?.role) return emailMatch.role as string;
+  }
+
+  if (githubUsername) {
+    const { data: githubMatch } = await supabase
+      .from('cms_allowed_users')
+      .select('role')
+      .eq('github_username', githubUsername)
+      .single();
+    if (githubMatch?.role) return githubMatch.role as string;
+  }
+
+  return null;
+}
+
+export async function getCmsActionContext(
+  requiredRole: CmsActionRole = 'authenticated'
+): Promise<CmsActionContext> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+
+  const githubUsername =
+    typeof user.user_metadata?.user_name === 'string'
+      ? user.user_metadata.user_name
+      : null;
+  const role =
+    requiredRole === 'authenticated'
+      ? null
+      : await findAllowedUserRole(supabase, user.email, githubUsername);
+
+  if (requiredRole === 'admin' && role !== 'admin') {
+    throw new Error('Unauthorized: Admin access required');
+  }
+
+  if (
+    requiredRole === 'post-writer' &&
+    !CMS_POST_WRITER_ROLES.includes(
+      role as (typeof CMS_POST_WRITER_ROLES)[number]
+    )
+  ) {
+    throw new Error(
+      'Unauthorized: You do not have permission to create or edit posts'
+    );
+  }
+
+  return {
+    supabase,
+    user: {
+      id: user.id,
+      email: user.email || '',
+      githubUsername,
+    },
+    role,
+  };
+}
 
 /**
  * Verifies the user is authenticated before allowing CMS operations
@@ -166,6 +250,13 @@ type ProcessImageResult = {
   error?: string;
 };
 
+type PreparedImageUpload = {
+  buffer: Buffer;
+  blurhash: string;
+  extension: 'webp' | 'png';
+  contentType: 'image/webp' | 'image/png';
+};
+
 /**
  * Processes an image: resize to max dimensions, convert to WebP
  * Returns the processed buffer and metadata
@@ -235,6 +326,98 @@ export async function generateBlurhashFromBuffer(
   } catch {
     return FALLBACK_BLURHASH;
   }
+}
+
+export async function prepareImageUpload(
+  file: File,
+  blurhashURL?: string,
+  options?: ProcessImageOptions
+): Promise<{ success: true; image: PreparedImageUpload } | { success: false; error: string }> {
+  const validation = validateImageFile(file);
+  if (!validation.isValid) {
+    return { success: false, error: validation.error || 'Invalid image file' };
+  }
+
+  if (file.type === 'image/webp') {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const blurhash = isValidBlurhash(blurhashURL)
+      ? blurhashURL
+      : await generateBlurhashFromBuffer(buffer);
+
+    return {
+      success: true,
+      image: {
+        buffer,
+        blurhash,
+        extension: 'webp',
+        contentType: 'image/webp',
+      },
+    };
+  }
+
+  const processed = await processImage(file, options);
+  if (!processed.success || !processed.buffer) {
+    return {
+      success: false,
+      error: processed.error || 'Failed to process image',
+    };
+  }
+
+  return {
+    success: true,
+    image: {
+      buffer: processed.buffer,
+      blurhash: isValidBlurhash(blurhashURL)
+        ? blurhashURL
+        : processed.blurhash || FALLBACK_BLURHASH,
+      extension: processed.format ?? 'webp',
+      contentType: processed.format === 'png' ? 'image/png' : 'image/webp',
+    },
+  };
+}
+
+export async function uploadPreparedImage(
+  supabase: SupabaseClient,
+  bucket: string,
+  pathWithoutExtension: string,
+  prepared: PreparedImageUpload
+): Promise<{ publicUrl: string; path: string }> {
+  const path = `${pathWithoutExtension}.${prepared.extension}`;
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, prepared.buffer, {
+      cacheControl: '3600',
+      contentType: prepared.contentType,
+      upsert: true,
+    });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return { publicUrl: data.publicUrl, path };
+}
+
+export async function removePublicFileIfPresent(
+  supabase: SupabaseClient,
+  fileUrl: string | null | undefined,
+  bucket: string
+): Promise<void> {
+  if (!fileUrl) return;
+  const filePath = getStoragePathFromPublicUrl(fileUrl, bucket);
+  if (!filePath) return;
+  await supabase.storage.from(bucket).remove([filePath]);
+}
+
+export async function removePublicFileIfDifferent(
+  supabase: SupabaseClient,
+  fileUrl: string | null | undefined,
+  bucket: string,
+  nextPath: string
+): Promise<void> {
+  if (!fileUrl) return;
+  const filePath = getStoragePathFromPublicUrl(fileUrl, bucket);
+  if (!filePath || filePath === nextPath) return;
+  await supabase.storage.from(bucket).remove([filePath]);
 }
 
 /**
@@ -417,41 +600,6 @@ export function getStoragePathFromPublicUrl(
     return filePath || null;
   } catch {
     return null;
-  }
-}
-
-/**
- * Backs up an old file before replacing it
- */
-export async function backupOldFile(
-  supabase: SupabaseClient,
-  fileUrl: string,
-  bucket: string
-): Promise<void> {
-  try {
-    const filePath = getStoragePathFromPublicUrl(fileUrl, bucket);
-    if (!filePath) {
-      console.warn('Could not extract file path from URL:', fileUrl);
-      return;
-    }
-
-    const pathParts = filePath.split('/');
-    const fileName = pathParts[pathParts.length - 1];
-    const backupPath = `backup/${Date.now()}_${fileName}`;
-
-    // Copy file to backup location
-    const { error } = await supabase.storage
-      .from(bucket)
-      .copy(filePath, backupPath);
-
-    if (error) {
-      console.warn('Failed to backup old file:', error.message);
-    }
-  } catch (error) {
-    console.warn(
-      'Error backing up old file:',
-      error instanceof Error ? error.message : 'Unknown error'
-    );
   }
 }
 
