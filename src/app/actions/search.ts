@@ -1,6 +1,6 @@
 'use server';
 
-import { getPosts } from '@/utils/getData';
+import { searchPostsData } from '@/utils/getData';
 
 export async function searchPosts(
   post_type: string,
@@ -8,7 +8,7 @@ export async function searchPosts(
   locale: string
 ) {
   try {
-    const posts = await getPosts(post_type, searchQuery, locale);
+    const posts = await searchPostsData(post_type, searchQuery, locale);
     return { posts };
   } catch (error) {
     console.error('Search error:', error);

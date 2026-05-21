@@ -45,7 +45,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages = locales.flatMap((locale) => [
     {
       url: `${baseUrl}/${locale}`,
-      lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 1,
     },

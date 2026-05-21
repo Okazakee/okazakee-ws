@@ -60,6 +60,7 @@ DOMAIN_URL=http://localhost:3000
 # Optional
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 UMAMI_ENABLED=false
+ISR_REVALIDATION=86400
 NEXT_PUBLIC_LOCALES=en,it
 NEXT_PUBLIC_DEFAULT_LOCALE=en
 ```
@@ -86,6 +87,8 @@ bun run dev
 
 **Optional:**
 - `UMAMI_ENABLED` - Enable Umami analytics (`true`/`false`)
+- `ISR_REVALIDATION` - Production ISR/cache lifetime in seconds
+  (default: `86400`; use `604800` for 7 days)
 - `NEXT_PUBLIC_LOCALES` - Comma-separated locales (default: `en,it`)
 - `NEXT_PUBLIC_DEFAULT_LOCALE` - Default locale (default: `en`)
 

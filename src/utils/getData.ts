@@ -17,8 +17,15 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 const production = JSON.parse(process.env.UMAMI_ENABLED || 'false');
+const productionRevalTime = Number.parseInt(
+  process.env.ISR_REVALIDATION || '86400',
+  10
+);
 
-const revalTime = production ? 86400 : 60;
+const revalTime =
+  production && Number.isFinite(productionRevalTime) && productionRevalTime > 0
+    ? productionRevalTime
+    : 60;
 
 const getCurrentTime = () => new Date().toISOString();
 
@@ -177,16 +184,12 @@ export async function getContacts(): Promise<Contact[] | null> {
   return data;
 }
 
-export async function getPosts(
+async function queryPosts(
   type: string,
   searchQuery?: string,
   locale?: string,
   limit?: number
 ): Promise<BlogPost[] | PortfolioPost[] | null> {
-  'use cache';
-  cacheTag('posts');
-  cacheLife({ expire: revalTime });
-
   const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
 
   let query = supabase.from(table).select('*');
@@ -216,6 +219,27 @@ export async function getPosts(
   }
 
   return postsData;
+}
+
+export async function getPosts(
+  type: string,
+  searchQuery?: string,
+  locale?: string,
+  limit?: number
+): Promise<BlogPost[] | PortfolioPost[] | null> {
+  'use cache';
+  cacheTag('posts');
+  cacheLife({ expire: revalTime });
+
+  return queryPosts(type, searchQuery, locale, limit);
+}
+
+export async function searchPostsData(
+  type: string,
+  searchQuery: string,
+  locale: string
+): Promise<BlogPost[] | PortfolioPost[] | null> {
+  return queryPosts(type, searchQuery, locale);
 }
 
 export type PostAuthor = {
@@ -315,13 +339,11 @@ export async function getCareerEntries(): Promise<CareerEntry[] | null> {
     throw error;
   }
 
-  return (
-    data?.map((entry) => ({
-      ...entry,
-      blurhashURL:
-        (entry as Record<string, unknown>).blurhashURL ??
-        (entry as Record<string, unknown>).blurhashurl ??
-        '',
-    })) || null
-  ) as CareerEntry[] | null;
+  return (data?.map((entry) => ({
+    ...entry,
+    blurhashURL:
+      (entry as Record<string, unknown>).blurhashURL ??
+      (entry as Record<string, unknown>).blurhashurl ??
+      '',
+  })) || null) as CareerEntry[] | null;
 }
