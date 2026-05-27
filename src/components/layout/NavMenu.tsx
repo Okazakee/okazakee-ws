@@ -56,7 +56,7 @@ export default function ResponsiveNav({
   const t = useTranslations('header');
   const pathname = usePathname();
   const router = useRouter();
-  const isHomePage = pathname === `/${locale}`;
+  const isHomePage = pathname === '/' || pathname === `/${locale}`;
   const isCms = pathname.includes('/cms');
   const isLogin = pathname.includes('/cms/login');
   const isRegister = pathname.includes('/cms/register');
