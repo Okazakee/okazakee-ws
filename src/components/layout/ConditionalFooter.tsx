@@ -1,12 +1,21 @@
-import Footer from './Footer';
+'use client';
+
+import { usePathname } from 'next/navigation';
+import type { ReactNode } from 'react';
+
+interface ConditionalFooterProps {
+  children: ReactNode;
+}
 
 export default function ConditionalFooter({
-  locale,
-  isCMSRoute = false,
-}: {
-  locale: string;
-  isCMSRoute?: boolean;
-}) {
+  children,
+}: ConditionalFooterProps) {
+  const pathname = usePathname();
+  const isCMSRoute =
+    pathname?.includes('/cms') &&
+    !pathname?.includes('/cms/login') &&
+    !pathname?.includes('/cms/register');
+
   return (
     <div
       className={
@@ -15,7 +24,7 @@ export default function ConditionalFooter({
           : ''
       }
     >
-      <Footer locale={locale} />
+      {children}
     </div>
   );
 }

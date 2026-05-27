@@ -1,12 +1,12 @@
 import '../globals.css';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import localFont from 'next/font/local';
-import { headers } from 'next/headers';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { Suspense } from 'react';
 import ConditionalFooter from '@/components/layout/ConditionalFooter';
 import ConditionalHeader from '@/components/layout/ConditionalHeader';
+import Footer from '@/components/layout/Footer';
 import ScrollTop from '@/components/layout/ScrollTop';
 import cmsEn from '@/i18n/messages/cms.en.json';
 import cmsIt from '@/i18n/messages/cms.it.json';
@@ -31,19 +31,14 @@ async function LocaleShell({
   const cmsMessages = locale === 'it' ? cmsIt : cmsEn;
   const messages = { ...supabaseMessages, cms: cmsMessages };
 
-  const headersList = await headers();
-  const pathname = headersList.get('x-pathname') || '';
-  const isCMSRoute =
-    pathname?.includes('/cms') &&
-    !pathname?.includes('/cms/login') &&
-    !pathname?.includes('/cms/register');
-
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
       <ConditionalHeader locale={locale} />
       {children}
       <ScrollTop />
-      <ConditionalFooter locale={locale} isCMSRoute={isCMSRoute} />
+      <ConditionalFooter>
+        <Footer locale={locale} />
+      </ConditionalFooter>
     </NextIntlClientProvider>
   );
 }

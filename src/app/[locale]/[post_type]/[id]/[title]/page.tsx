@@ -1,10 +1,17 @@
 import { getPost, getPosts, type PostWithAuthor } from '@utils/getData';
-import { CirclePlay, Clock, ExternalLink, Globe, Smartphone, Star } from 'lucide-react';
-import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
+import {
+  CirclePlay,
+  Clock,
+  ExternalLink,
+  Globe,
+  Smartphone,
+  Star,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
 import FormattedDate from '@/components/common/FormattedDate';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
@@ -36,9 +43,12 @@ export default async function Page({
     const portfolioPost = post as PortfolioPost; // Type assertion
     const repoName = portfolioPost.source_link.split('/').pop();
 
-    ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`)
-      .then((res) => res.json())
-      .then((data) => data.stargazers_count);
+    ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`, {
+      next: { revalidate: 86400 },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data?.stargazers_count ?? 0)
+      .catch(() => 0);
   }
 
   // checks
@@ -284,24 +294,28 @@ export default async function Page({
       {/* mobile btns */}
       <div
         className={`${
-          post_type === 'portfolio' ? 'flex flex-col gap-2 mb-8 md:hidden' : 'hidden'
+          post_type === 'portfolio'
+            ? 'flex flex-col gap-2 mb-8 md:hidden'
+            : 'hidden'
         }`}
       >
         {/* Row 1: source + website side by side */}
         {post_type === 'portfolio' && post && (
           <div className="flex gap-2">
-            {'source_link' in post && post.source_link && post.source_link !== null && (
-              <Link
-                target="_blank"
-                href={post.source_link || ''}
-                className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                data-umami-event="View Source Code button"
-                data-umami-event-post={title}
-              >
-                <GithubIcon size={18} />
-                <div className="mt-0.5 md:mt-0">{t('source')}</div>
-              </Link>
-            )}
+            {'source_link' in post &&
+              post.source_link &&
+              post.source_link !== null && (
+                <Link
+                  target="_blank"
+                  href={post.source_link || ''}
+                  className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                  data-umami-event="View Source Code button"
+                  data-umami-event-post={title}
+                >
+                  <GithubIcon size={18} />
+                  <div className="mt-0.5 md:mt-0">{t('source')}</div>
+                </Link>
+              )}
             {'website' in post && post.website && post.website !== null && (
               <Link
                 target="_blank"
@@ -335,43 +349,108 @@ export default async function Page({
           )}
 
         {/* Stores: adaptive layout */}
-        {post_type === 'portfolio' && post && (() => {
-          const stores: Array<{ key: string; label: string; icon: React.ReactNode; href: string; event: string }> = [];
-          if ('store_link' in post && post.store_link && post.store_link !== null) stores.push({ key: 'store', label: t('store'), icon: <CirclePlay size={18} />, href: post.store_link, event: 'Play Store button' });
-          if ('fdroid_link' in post && post.fdroid_link && post.fdroid_link !== null) stores.push({ key: 'fdroid', label: t('fdroid'), icon: <Smartphone size={18} />, href: post.fdroid_link, event: 'F-Droid button' });
-          if ('ios_store_link' in post && post.ios_store_link && post.ios_store_link !== null) stores.push({ key: 'ios', label: t('ios'), icon: <AppleIcon size={18} />, href: post.ios_store_link, event: 'iOS Store button' });
-          if (stores.length === 0) return null;
-          if (stores.length === 3) {
-            const topRow = stores.filter((s) => s.key !== 'fdroid');
-            const bottomRow = stores.filter((s) => s.key === 'fdroid');
-            return (
-              <>
-                <div className="grid grid-cols-2 gap-2">
-                  {topRow.map((s) => (
-                    <Link key={s.key} target="_blank" href={s.href} className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary" data-umami-event={s.event} data-umami-event-post={title}>
-                      {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
+        {post_type === 'portfolio' &&
+          post &&
+          (() => {
+            const stores: Array<{
+              key: string;
+              label: string;
+              icon: React.ReactNode;
+              href: string;
+              event: string;
+            }> = [];
+            if (
+              'store_link' in post &&
+              post.store_link &&
+              post.store_link !== null
+            )
+              stores.push({
+                key: 'store',
+                label: t('store'),
+                icon: <CirclePlay size={18} />,
+                href: post.store_link,
+                event: 'Play Store button',
+              });
+            if (
+              'fdroid_link' in post &&
+              post.fdroid_link &&
+              post.fdroid_link !== null
+            )
+              stores.push({
+                key: 'fdroid',
+                label: t('fdroid'),
+                icon: <Smartphone size={18} />,
+                href: post.fdroid_link,
+                event: 'F-Droid button',
+              });
+            if (
+              'ios_store_link' in post &&
+              post.ios_store_link &&
+              post.ios_store_link !== null
+            )
+              stores.push({
+                key: 'ios',
+                label: t('ios'),
+                icon: <AppleIcon size={18} />,
+                href: post.ios_store_link,
+                event: 'iOS Store button',
+              });
+            if (stores.length === 0) return null;
+            if (stores.length === 3) {
+              const topRow = stores.filter((s) => s.key !== 'fdroid');
+              const bottomRow = stores.filter((s) => s.key === 'fdroid');
+              return (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    {topRow.map((s) => (
+                      <Link
+                        key={s.key}
+                        target="_blank"
+                        href={s.href}
+                        className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                        data-umami-event={s.event}
+                        data-umami-event-post={title}
+                      >
+                        {s.icon}
+                        <div className="mt-0.5 md:mt-0">{s.label}</div>
+                      </Link>
+                    ))}
+                  </div>
+                  {bottomRow.map((s) => (
+                    <Link
+                      key={s.key}
+                      target="_blank"
+                      href={s.href}
+                      className="flex w-full text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                      data-umami-event={s.event}
+                      data-umami-event-post={title}
+                    >
+                      {s.icon}
+                      <div className="mt-0.5 md:mt-0">{s.label}</div>
                     </Link>
                   ))}
-                </div>
-                {bottomRow.map((s) => (
-                  <Link key={s.key} target="_blank" href={s.href} className="flex w-full text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary" data-umami-event={s.event} data-umami-event-post={title}>
-                    {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
+                </>
+              );
+            }
+            const gridCols = stores.length === 1 ? '' : 'grid-cols-2';
+            return (
+              <div className={`grid ${gridCols} gap-2`}>
+                {stores.map((s) => (
+                  <Link
+                    key={s.key}
+                    target="_blank"
+                    href={s.href}
+                    className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
+                    data-umami-event={s.event}
+                    data-umami-event-post={title}
+                  >
+                    {s.icon}
+                    <div className="mt-0.5 md:mt-0">{s.label}</div>
                   </Link>
                 ))}
-              </>
+              </div>
             );
-          }
-          const gridCols = stores.length === 1 ? '' : 'grid-cols-2';
-          return (
-            <div className={`grid ${gridCols} gap-2`}>
-              {stores.map((s) => (
-                <Link key={s.key} target="_blank" href={s.href} className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary" data-umami-event={s.event} data-umami-event-post={title}>
-                  {s.icon}<div className="mt-0.5 md:mt-0">{s.label}</div>
-                </Link>
-              ))}
-            </div>
-          );
-        })()}
+          })()}
       </div>
 
       {/* Project Description */}

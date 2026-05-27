@@ -160,8 +160,5 @@ export async function updateSession(request: NextRequest, locale: string) {
     return NextResponse.redirect(new URL(`/${locale}/cms`, request.url));
   }
 
-  // Pass pathname to headers for ConditionalFooter
-  supabaseResponse.headers.set('x-pathname', pathname);
-
   return supabaseResponse;
 }
