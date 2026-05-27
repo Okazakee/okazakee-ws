@@ -2,6 +2,7 @@
 
 import { Languages } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function LanguageToggle({
@@ -13,8 +14,9 @@ export default function LanguageToggle({
 }) {
   const pathname = usePathname();
   const _router = useRouter();
+  const locale = useLocale();
   const [mounted, setMounted] = useState(false);
-  const isItalian = pathname.startsWith('/it');
+  const isItalian = locale === 'it';
 
   useEffect(() => {
     setMounted(true);
@@ -22,9 +24,14 @@ export default function LanguageToggle({
 
   const switchLanguage = useCallback(() => {
     const newLocale = isItalian ? 'en' : 'it';
-    const pathSegments = pathname.split('/');
-    pathSegments[1] = newLocale;
-    const newPath = pathSegments.join('/');
+    const pathSegments = pathname.split('/').filter(Boolean);
+    const firstSegment = pathSegments[0];
+    const hasVisibleLocale = firstSegment === 'en' || firstSegment === 'it';
+    const normalizedPath = pathname === '/' ? '' : pathname;
+
+    const newPath = hasVisibleLocale
+      ? [''].concat([newLocale, ...pathSegments.slice(1)]).join('/')
+      : `/${newLocale}${normalizedPath}`;
 
     // Use window.location.href for a full page refresh instead of client-side navigation
     window.location.href = newPath;
