@@ -16,16 +16,19 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
+const isDevEnv = process.env.NODE_ENV === 'development';
 const production = JSON.parse(process.env.UMAMI_ENABLED || 'false');
 const productionRevalTime = Number.parseInt(
   process.env.ISR_REVALIDATION || '86400',
   10
 );
 
-const revalTime =
-  production && Number.isFinite(productionRevalTime) && productionRevalTime > 0
+// Use short cache in development, but keep production ISR long-lived.
+const revalTime = isDevEnv
+  ? 60
+  : Number.isFinite(productionRevalTime) && productionRevalTime > 0
     ? productionRevalTime
-    : 60;
+    : 86400;
 
 const getCurrentTime = () => new Date().toISOString();
 
