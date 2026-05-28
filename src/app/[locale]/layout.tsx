@@ -1,6 +1,7 @@
 import '../globals.css';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import localFont from 'next/font/local';
+import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { Suspense } from 'react';
@@ -10,6 +11,7 @@ import Footer from '@/components/layout/Footer';
 import ScrollTop from '@/components/layout/ScrollTop';
 import cmsEn from '@/i18n/messages/cms.en.json';
 import cmsIt from '@/i18n/messages/cms.it.json';
+import { isValidLocale, locales } from '@/i18n/routing';
 import { getTranslationsSupabase } from '@/utils/getData';
 import { Providers } from '../providers';
 
@@ -18,6 +20,10 @@ const whiteRabbit = localFont({
   variable: '--font-whiterabt',
   weight: '400',
 });
+
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
 
 async function LocaleShell({
   params,
@@ -51,6 +57,10 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
+
+  if (!isValidLocale(locale)) {
+    notFound();
+  }
 
   return (
     <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>

@@ -1,5 +1,5 @@
 import { CircleX } from 'lucide-react';
-import { redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import PostList from '@/components/common/PostList';
@@ -65,14 +65,14 @@ export default async function PostsPage({
 }) {
   const { post_type, locale } = await params;
 
+  if (!validPostTypes.includes(post_type)) {
+    notFound();
+  }
+
   const t = await getTranslations({ locale, namespace: 'posts-section' });
 
   // Get posts based on the post_type
   const posts = (await getPosts(post_type)) as PortfolioPost[] | BlogPost[];
-
-  if (!validPostTypes.includes(post_type)) {
-    redirect(`/${locale}`);
-  }
 
   return (
     <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
