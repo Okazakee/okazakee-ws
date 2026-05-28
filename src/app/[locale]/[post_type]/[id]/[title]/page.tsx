@@ -50,7 +50,7 @@ export default async function Page({
     const repoName = portfolioPost.source_link.split('/').pop();
 
     ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`, {
-      next: { revalidate: 86400 },
+      next: { revalidate: 604800 },
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => data?.stargazers_count ?? 0)
@@ -520,23 +520,34 @@ export async function generateMetadata({
   }>;
 }) {
   const { id, post_type, locale } = await params;
+  const normalizedLocale = locale === 'it' ? 'it' : 'en';
 
-  const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
-
-  if (!post) {
+  if (!validPostTypes.has(post_type) || !numericIdPattern.test(id)) {
     return {
-      title: locale === 'en' ? 'Post Not Found' : 'Post non trovato',
+      title: normalizedLocale === 'en' ? 'Post Not Found' : 'Post non trovato',
       description:
-        locale === 'en'
+        normalizedLocale === 'en'
           ? 'The requested post could not be found.'
           : 'Il post richiesto non è stato trovato',
     };
   }
 
-  const postDescription = `description_${locale}` as keyof typeof post;
+  const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
+
+  if (!post) {
+    return {
+      title: normalizedLocale === 'en' ? 'Post Not Found' : 'Post non trovato',
+      description:
+        normalizedLocale === 'en'
+          ? 'The requested post could not be found.'
+          : 'Il post richiesto non è stato trovato',
+    };
+  }
+
+  const postDescription = `description_${normalizedLocale}` as keyof typeof post;
   const postTitle =
     post_type === 'blog'
-      ? (`title_${locale}` as keyof typeof post)
+      ? (`title_${normalizedLocale}` as keyof typeof post)
       : 'title_en';
 
   return {

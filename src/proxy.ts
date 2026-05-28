@@ -35,9 +35,12 @@ const STATIC_ASSET_PATTERN = /\.[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*$/;
 const CMS_ROUTE_PATTERN = /^\/[a-z]{2}\/cms(?:\/.*)?$/;
 const LOCALE_COOKIE_PATTERN = /^[a-zA-Z0-9_-]+$/;
 const BOT_PROBE_PATTERNS = [
-  /^\/(?:wp-admin(?:\/|$)|wp-login\.php$|xmlrpc\.php$|phpmyadmin(?:\/|$))/i,
+  /^\/(?:wp-admin(?:\/|$)|wp-content(?:\/|$)|wp-includes(?:\/|$)|wp-json(?:\/|$)|wp-login\.php$|xmlrpc\.php$|phpmyadmin(?:\/|$))/i,
+  /^\/wp-[a-z0-9-]+\.php(?:$|[/?#])/i,
+  /^\/(?:index|install|setup|config|admin|login|backup|shell|test)\.php(?:$|[/?#])/i,
+  /^\/(?:vendor\/phpunit|cgi-bin)(?:\/|$)/i,
   /(?:^|\/)\.(?:env|git|docker)(?:$|[/.])/i,
-  /^\/(?:sitemap(?:\.[a-z0-9_-]+)?|news_sitemap\.xml)\/.+/i,
+  /^\/(?:sitemap(?:\.[a-z0-9_-]+)?|news_sitemap\.xml)(?:\/|%2f).+/i,
 ];
 const ACCEPT_LANGUAGE_PATTERN =
   /^([a-z]{2})(?:-[a-z]{2})?(?:;q=[0-9.]+)?(?:,|$)/i;
