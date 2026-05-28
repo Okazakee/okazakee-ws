@@ -13,11 +13,22 @@ export async function generateMetadata({
   params: Promise<{ post_type: string; locale: string }>;
 }) {
   const { post_type, locale } = await params;
+  const normalizedLocale = locale === 'it' ? 'it' : 'en';
+
+  if (!validPostTypes.includes(post_type)) {
+    return {
+      title: normalizedLocale === 'en' ? 'Post Not Found' : 'Post non trovato',
+      description:
+        normalizedLocale === 'en'
+          ? 'The requested post could not be found.'
+          : 'Il post richiesto non è stato trovato',
+    };
+  }
 
   const title = post_type.charAt(0).toUpperCase() + post_type.slice(1);
 
   const tagDesc =
-    locale === 'en'
+    normalizedLocale === 'en'
       ? `My ${post_type} showcasing ${
           post_type === 'portfolio'
             ? 'projects i worked on'

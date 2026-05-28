@@ -6,8 +6,22 @@ const withNextIntl = createNextIntlPlugin();
 const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
   : 'mtvwynyikouqzmhqespl.supabase.co';
+const sevenDaysInSeconds = 60 * 60 * 24 * 7;
+const thirtyDaysInSeconds = 60 * 60 * 24 * 30;
 
 const nextConfig: NextConfig = {
+  cacheLife: {
+    default: {
+      stale: 300,
+      revalidate: sevenDaysInSeconds,
+      expire: thirtyDaysInSeconds,
+    },
+    supabaseContent: {
+      stale: 300,
+      revalidate: sevenDaysInSeconds,
+      expire: thirtyDaysInSeconds,
+    },
+  },
   images: {
     remotePatterns: [
       {
