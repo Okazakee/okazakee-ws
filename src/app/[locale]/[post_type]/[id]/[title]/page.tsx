@@ -20,6 +20,8 @@ import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 
 /* ONLY PORTFOLIO POSTS USE title_en AS TITLE FOR BOTH LANGS, BLOG POSTS CAN SWAP title_en and title_it */
+const validPostTypes = new Set(['portfolio', 'blog']);
+const numericIdPattern = /^\d+$/;
 
 export default async function Page({
   params,
@@ -32,6 +34,10 @@ export default async function Page({
   }>;
 }) {
   const { id, title, post_type, locale } = await params;
+
+  if (!validPostTypes.has(post_type) || !numericIdPattern.test(id)) {
+    notFound();
+  }
 
   const post: PostWithAuthor | null = await getPost(id, post_type);
 
@@ -70,7 +76,7 @@ export default async function Page({
     .replace(/\s+/g, '-');
 
   if (title !== slugifiedTitle) {
-    redirect(`/${post_type}/${id}/${slugifiedTitle}`);
+    redirect(`/${locale}/${post_type}/${id}/${slugifiedTitle}`);
   }
 
   const localeKey = `body_${locale}` as keyof typeof post;
