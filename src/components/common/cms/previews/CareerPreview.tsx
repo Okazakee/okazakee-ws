@@ -3,7 +3,7 @@
 import { SkillsCarousel } from '@components/common/SkillsCarousel';
 import { Calendar, MapPin } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
-import moment, { type MomentInput } from 'moment';
+import { diffMonths, formatMonthYear } from '@/utils/formatDate';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -38,15 +38,14 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
   const locale = pathname.split('/')[1] || 'en';
   const t = useTranslations('career-section');
 
-  const formatDate = (dateString: MomentInput) => {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return t('present');
-    return moment(dateString).format('MMM YYYY');
+    return formatMonthYear(dateString);
   };
 
-  const calculateDuration = (startDate: MomentInput, endDate: MomentInput) => {
-    const start = moment(startDate);
-    const end = endDate ? moment(endDate) : moment();
-    const months = end.diff(start, 'months');
+  const calculateDuration = (startDate: string | null, endDate?: string | null) => {
+    const end = endDate || new Date().toISOString();
+    const months = Math.max(0, diffMonths(end, startDate));
 
     if (months < 12) {
       return months === 1 ? `1 ${t('month')}` : `${months} ${t('months')}`;
@@ -79,7 +78,7 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
     return Object.entries(grouped).map(([company, positions]) => ({
       company,
       positions: positions.sort((a, b) =>
-        moment(b.startDate).diff(moment(a.startDate))
+        diffMonths(b.startDate, a.startDate)
       ),
     }));
   };

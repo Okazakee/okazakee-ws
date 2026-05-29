@@ -1,12 +1,12 @@
 'use client';
 
-import moment from 'moment';
+import { formatDMY } from '@/utils/formatDate';
 
 interface FormattedDateProps {
   date: string | null | undefined;
 }
 
 export default function FormattedDate({ date }: FormattedDateProps) {
-  const formattedDate = moment(date).format('DD/MM/YYYY');
+  const formattedDate = formatDMY(date);
   return <span>{formattedDate}</span>;
 }

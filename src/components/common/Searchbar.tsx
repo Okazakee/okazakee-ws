@@ -1,5 +1,5 @@
 'use client';
-import { debounce } from 'lodash';
+import { debounce } from '@/utils/debounce';
 import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import {
