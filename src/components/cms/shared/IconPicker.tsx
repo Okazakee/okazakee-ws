@@ -1,7 +1,6 @@
 'use client';
 
 import { Search, X } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -27,35 +26,56 @@ const POPULAR_ICONS = [
   'Heart',
 ];
 
-const LUCIDE_ICON_NAMES = Object.keys(LucideIcons).filter(
-  (name) =>
-    name !== 'createLucideIcon' &&
-    name !== 'default' &&
-    /^[A-Z]/.test(name)
-);
+type IconMap = Record<string, React.ComponentType<{ className?: string; size?: number | string }>>;
 
-function getIconComponent(name: string): React.ComponentType<{ className?: string; size?: number | string }> | null {
-  const icon = (LucideIcons as Record<string, unknown>)[name];
-  return typeof icon === 'function' ? icon as React.ComponentType<{ className?: string; size?: number | string }> : null;
+let iconMapCache: IconMap | null = null;
+let iconNamesCache: string[] | null = null;
+
+async function loadIconMap(): Promise<{ map: IconMap; names: string[] }> {
+  if (iconMapCache && iconNamesCache) return { map: iconMapCache, names: iconNamesCache };
+
+  const mod = await import('lucide-react');
+  const names = Object.keys(mod).filter(
+    (name) =>
+      name !== 'createLucideIcon' &&
+      name !== 'default' &&
+      /^[A-Z]/.test(name)
+  );
+  const map = mod as unknown as IconMap;
+  iconMapCache = map;
+  iconNamesCache = names;
+  return { map, names };
 }
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
   const t = useTranslations('cms');
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [iconMap, setIconMap] = useState<IconMap | null>(null);
+  const [iconNames, setIconNames] = useState<string[] | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (isOpen && !iconMap) {
+      loadIconMap().then(({ map, names }) => {
+        setIconMap(map);
+        setIconNames(names);
+      });
+    }
+  }, [isOpen, iconMap]);
+
   const filtered = useMemo(() => {
+    const names = iconNames || POPULAR_ICONS;
     if (!search.trim()) {
-      return POPULAR_ICONS.filter((name) => LUCIDE_ICON_NAMES.includes(name));
+      return POPULAR_ICONS.filter((name) => names.includes(name));
     }
     const lower = search.toLowerCase();
-    return LUCIDE_ICON_NAMES.filter((name) =>
+    return names.filter((name) =>
       name.toLowerCase().includes(lower)
     ).slice(0, 50);
-  }, [search]);
+  }, [search, iconNames]);
 
-  const SelectedIcon = value ? getIconComponent(value) : null;
+  const SelectedIcon = value && iconMap ? (iconMap[value] ?? null) : null;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -122,7 +142,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
           <div className="max-h-48 overflow-y-auto p-2">
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-1">
               {filtered.map((name) => {
-                const Icon = getIconComponent(name);
+                const Icon = iconMap?.[name];
                 if (!Icon) return null;
                 const isSelected = value === name;
                 return (

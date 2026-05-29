@@ -2,7 +2,7 @@
 
 import { CirclePlay, Clock, ExternalLink, Globe, Smartphone } from 'lucide-react';
 import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
-import moment from 'moment';
+import { formatDMY } from '@/utils/formatDate';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import React from 'react';
@@ -88,7 +88,7 @@ export function PostPreview({
   const bodyContent = String(formData[localeKey] || '');
   const description = String(formData[postDescription] || '');
 
-  const formattedDate = moment(formData.created_at).format('DD/MM/YYYY');
+  const formattedDate = formatDMY(formData.created_at);
 
   const portfolioData =
     postType === 'portfolio' ? (formData as PortfolioFormData) : null;
