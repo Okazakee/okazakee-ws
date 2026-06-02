@@ -90,8 +90,8 @@ bun run dev
 **Optional:**
 - `NEXT_PUBLIC_SITE_URL` - Site URL used for invite/reset redirects; optional locally, but should be set on Vercel
 - `UMAMI_ENABLED` - Enable Umami analytics (`true`/`false`)
-- `ISR_REVALIDATION` - Production ISR/cache lifetime in seconds
-  (default: `86400`; use `604800` for 7 days)
+- `ISR_REVALIDATION` - ISR/cache lifetime in seconds for both content caches and the GitHub stars fetch
+  (default: `86400` in production, `600` in preview/beta)
 - `NEXT_PUBLIC_LOCALES` - Comma-separated locales (default: `en,it`)
 - `NEXT_PUBLIC_DEFAULT_LOCALE` - Default locale (default: `en`)
 
@@ -132,6 +132,10 @@ bun run format    # Format code
 4. Deploy: Push to main branch or trigger manual deployment
 
 **Vercel:** Framework Preset: Next.js, Build Command: `bun run build`, Output: `.next`
+
+**Recommended cache setup on Vercel:**
+- Production: set `ISR_REVALIDATION=86400`
+- Beta preview branch: set `ISR_REVALIDATION=600` with a branch-scoped preview env
 
 ## 📖 CMS Usage
 
