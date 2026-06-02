@@ -55,6 +55,7 @@ bun install
 # Required - Get from Supabase project settings (Settings → API)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key-here
 DOMAIN_URL=http://localhost:3000
 
 # Optional
@@ -83,9 +84,11 @@ bun run dev
 **Required:**
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL (from project settings)
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (from API settings)
+- `SUPABASE_SERVICE_ROLE_KEY` - Server-only Supabase admin key used by CMS actions that bypass RLS
 - `DOMAIN_URL` - Production domain (e.g., `https://example.com`)
 
 **Optional:**
+- `NEXT_PUBLIC_SITE_URL` - Site URL used for invite/reset redirects; optional locally, but should be set on Vercel
 - `UMAMI_ENABLED` - Enable Umami analytics (`true`/`false`)
 - `ISR_REVALIDATION` - Production ISR/cache lifetime in seconds
   (default: `86400`; use `604800` for 7 days)
