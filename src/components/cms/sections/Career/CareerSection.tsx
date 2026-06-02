@@ -210,7 +210,15 @@ export default function CareerSection() {
     await fetchData();
     setModifiedIds(new Set()); setNewEntries([]); setDeletedIds(new Set()); setIsUpdating(false);
     if (errors.length > 0) setError(errors.join('\n'));
-  }, [entries, newEntries, deletedIds, modifiedIds, logoUpload, transDirty, saveTranslations, fetchData]);
+  }, [
+    entries,
+    newEntries,
+    deletedIds,
+    modifiedIds,
+    transDirty,
+    saveTranslations,
+    fetchData,
+  ]);
 
   const handleRevert = () => { setShowConfirmRevert(false); fetchData(); setModifiedIds(new Set()); setNewEntries([]); setDeletedIds(new Set()); revertTranslations(); setError(null); };
 

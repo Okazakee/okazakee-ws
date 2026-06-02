@@ -454,50 +454,6 @@ export function validateImageFile(file: File): {
 }
 
 /**
- * Validates an uploaded file for images (including SVG for skills)
- * Allows SVG files which are typically used for icons
- */
-export function validateImageFileWithSvg(file: File): {
-  isValid: boolean;
-  error?: string;
-} {
-  // File type validation - allow raster formats and SVG
-  const allowedTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/webp',
-    'image/gif',
-    'image/avif',
-    'image/svg+xml',
-  ] as const;
-
-  if (!allowedTypes.includes(file.type as (typeof allowedTypes)[number])) {
-    return {
-      isValid: false,
-      error:
-        'Please select a valid image file (JPG, PNG, WebP, GIF, AVIF, or SVG)',
-    };
-  }
-
-  // File size validation (10MB limit)
-  if (file.size > 10 * 1024 * 1024) {
-    return {
-      isValid: false,
-      error:
-        'Image file is too large. Please select an image smaller than 10MB',
-    };
-  }
-
-  // File name validation
-  if (file.name.length > 255) {
-    return { isValid: false, error: 'File name is too long' };
-  }
-
-  return { isValid: true };
-}
-
-/**
  * Validates an uploaded PDF file
  */
 export function validatePdfFile(file: File): {
