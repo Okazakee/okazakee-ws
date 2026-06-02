@@ -6,19 +6,28 @@ const withNextIntl = createNextIntlPlugin();
 const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
   : 'mtvwynyikouqzmhqespl.supabase.co';
-const sevenDaysInSeconds = 60 * 60 * 24 * 7;
+const defaultRevalidateSeconds =
+  process.env.VERCEL_ENV === 'production' ? 60 * 60 * 24 : 60 * 10;
 const thirtyDaysInSeconds = 60 * 60 * 24 * 30;
+const isrRevalidation = Number.parseInt(
+  process.env.ISR_REVALIDATION || `${defaultRevalidateSeconds}`,
+  10
+);
+const revalidateSeconds =
+  Number.isFinite(isrRevalidation) && isrRevalidation > 0
+    ? isrRevalidation
+    : defaultRevalidateSeconds;
 
 const nextConfig: NextConfig = {
   cacheLife: {
     default: {
       stale: 300,
-      revalidate: sevenDaysInSeconds,
+      revalidate: revalidateSeconds,
       expire: thirtyDaysInSeconds,
     },
     supabaseContent: {
       stale: 300,
-      revalidate: sevenDaysInSeconds,
+      revalidate: revalidateSeconds,
       expire: thirtyDaysInSeconds,
     },
   },

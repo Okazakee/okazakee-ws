@@ -22,6 +22,16 @@ import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 /* ONLY PORTFOLIO POSTS USE title_en AS TITLE FOR BOTH LANGS, BLOG POSTS CAN SWAP title_en and title_it */
 const validPostTypes = new Set(['portfolio', 'blog']);
 const numericIdPattern = /^\d+$/;
+const defaultRevalidateSeconds =
+  process.env.VERCEL_ENV === 'production' ? 60 * 60 * 24 : 60 * 10;
+const isrRevalidation = Number.parseInt(
+  process.env.ISR_REVALIDATION || `${defaultRevalidateSeconds}`,
+  10
+);
+const revalidateSeconds =
+  Number.isFinite(isrRevalidation) && isrRevalidation > 0
+    ? isrRevalidation
+    : defaultRevalidateSeconds;
 
 export default async function Page({
   params,
@@ -50,7 +60,7 @@ export default async function Page({
     const repoName = portfolioPost.source_link.split('/').pop();
 
     ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`, {
-      next: { revalidate: 604800 },
+      next: { revalidate: revalidateSeconds },
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => data?.stargazers_count ?? 0)
