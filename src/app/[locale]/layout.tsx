@@ -15,6 +15,8 @@ import { isValidLocale, locales } from '@/i18n/routing';
 import { getTranslationsSupabase } from '@/utils/getData';
 import { Providers } from '../providers';
 
+const umamiEnabled = process.env.UMAMI_ENABLED === 'true';
+
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',
   variable: '--font-whiterabt',
@@ -99,7 +101,7 @@ export default async function RootLayout({
           <SpeedInsights />
         </body>
       </Providers>
-      {process.env.UMAMI_ENABLED && (
+      {umamiEnabled && (
         <Script
           src="https://umami.okazakee.dev/script.js"
           data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c"
