@@ -17,7 +17,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 const isDevEnv = process.env.NODE_ENV === 'development';
-const production = JSON.parse(process.env.UMAMI_ENABLED || 'false');
+const enforcePublishDate = process.env.VERCEL_ENV === 'production';
 const SUPABASE_CACHE_PROFILE = 'supabaseContent';
 const DEV_CACHE_LIFE = { stale: 30, revalidate: 60, expire: 300 };
 
@@ -137,7 +137,7 @@ export async function getPortfolioPosts(): Promise<PortfolioPost[] | null> {
 
   let query = supabase.from('portfolio_posts').select('*').limit(3);
 
-  if (production) {
+  if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
   }
 
@@ -158,7 +158,7 @@ export async function getBlogPosts(): Promise<BlogPost[] | null> {
 
   let query = supabase.from('blog_posts').select('*').limit(3);
 
-  if (production) {
+  if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
   }
 
@@ -197,7 +197,7 @@ async function queryPosts(
 
   let query = supabase.from(table).select('*');
 
-  if (production) {
+  if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
   }
 
@@ -267,7 +267,7 @@ export async function getPost(
 
   let query = supabase.from(tableName).select('*').eq('id', id);
 
-  if (production) {
+  if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
   }
 
