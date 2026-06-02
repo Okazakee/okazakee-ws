@@ -97,33 +97,6 @@ function deepMerge(
   return output;
 }
 
-// Helper function to get section translations
-export async function getSectionTranslations(
-  supabase: SupabaseClient,
-  locale: string,
-  sectionKey: string
-): Promise<Record<string, unknown> | null> {
-  try {
-    const { data, error } = await supabase
-      .from('i18n_translations')
-      .select('translations')
-      .eq('language', locale)
-      .single();
-
-    if (error) throw error;
-
-    const translations = data?.translations as
-      | Record<string, unknown>
-      | undefined;
-    if (!translations) return null;
-
-    return (translations[sectionKey] as Record<string, unknown>) || null;
-  } catch (error) {
-    console.error('Error fetching section translations:', error);
-    return null;
-  }
-}
-
 // Helper function to merge section translations
 function mergeSectionTranslations(
   currentTranslations: Record<string, unknown>,

@@ -73,9 +73,13 @@ export default function BlogSection() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  useEffect(() => { if (mode === 'create' && user && !formData.author_id) setFormData((p) => ({ ...p, author_id: user.id })); }, [mode, user]);
-
-  const openCreate = () => { setFormData(emptyForm); imgUpload.clearFile(); setEditingId(null); setFormLocale(activeLocale); setMode('create'); };
+  const openCreate = () => {
+    setFormData({ ...emptyForm, author_id: user?.id ?? '' });
+    imgUpload.clearFile();
+    setEditingId(null);
+    setFormLocale(activeLocale);
+    setMode('create');
+  };
   const openEdit = (post: EditablePost) => {
     setFormData({ title_en: post.title_en ?? '', title_it: post.title_it ?? '', image: post.image ?? '', blurhashURL: post.blurhashURL ?? '', description_en: post.description_en ?? '', description_it: post.description_it ?? '', body_en: post.body_en ?? '', body_it: post.body_it ?? '', post_tags: post.post_tags ?? '', created_at: post.created_at?.split('T')[0] ?? '', author_id: post.author_id ?? user?.id ?? '' });
     imgUpload.clearFile(); setEditingId(post.id); setFormLocale(activeLocale); setMode('edit');
@@ -158,7 +162,16 @@ export default function BlogSection() {
     await fetchData();
     setModifiedIds(new Set()); setNewPosts([]); setDeletedIds(new Set()); setIsUpdating(false);
     if (errors.length > 0) setError(errors.join('\n'));
-  }, [posts, newPosts, deletedIds, modifiedIds, transDirty, saveTranslations, fetchData]);
+  }, [
+    posts,
+    newPosts,
+    deletedIds,
+    modifiedIds,
+    transDirty,
+    saveTranslations,
+    fetchData,
+    user,
+  ]);
 
   const handleRevert = () => { setShowConfirmRevert(false); fetchData(); setModifiedIds(new Set()); setNewPosts([]); setDeletedIds(new Set()); revertTranslations(); setError(null); };
 
