@@ -202,7 +202,7 @@ async function uploadHeroImage(
     );
 
     const updateData: { propic: string; blurhashURL: string | null } = {
-      propic: upload.publicUrl,
+      propic: `${upload.publicUrl}?t=${Date.now()}`,
       blurhashURL: prepared.image.blurhash,
     };
 
