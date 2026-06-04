@@ -90,24 +90,24 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <Providers>
-        <body
-          id="about"
-          className={`${whiteRabbit.variable} transition-colors duration-400 ease-in-out font-whiterabt antialiased scroll-smooth relative`}
-        >
+      <body
+        id="about"
+        className={`${whiteRabbit.variable} transition-colors duration-400 ease-in-out font-whiterabt antialiased scroll-smooth relative`}
+      >
+        <Providers>
           <Suspense>
             <LocaleShell params={params}>{children}</LocaleShell>
           </Suspense>
           <SpeedInsights />
-        </body>
-      </Providers>
-      {umamiEnabled && (
-        <Script
-          src="https://umami.okazakee.dev/script.js"
-          data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c"
-          strategy="lazyOnload"
-        />
-      )}
+          {umamiEnabled && (
+            <Script
+              src="https://umami.okazakee.dev/script.js"
+              data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c"
+              strategy="lazyOnload"
+            />
+          )}
+        </Providers>
+      </body>
     </html>
   );
 }

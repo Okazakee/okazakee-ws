@@ -10,6 +10,14 @@ interface ThemeState {
   initializeTheme: () => void;
 }
 
+type LegacyMediaQueryList = Omit<
+  MediaQueryList,
+  'addListener' | 'removeListener'
+> & {
+  addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+  removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+};
+
 const useThemeStore = create<ThemeState>((set, get) => {
   // Helper function to determine if dark mode is active
   const isDarkActive = (mode: ThemeMode): boolean => {
@@ -59,7 +67,9 @@ const useThemeStore = create<ThemeState>((set, get) => {
       document.cookie = `resolvedTheme=${resolvedTheme}; path=/; max-age=${365 * 24 * 60 * 60}`;
 
       // Listen for system theme changes when in auto mode
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const mediaQuery = window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ) as LegacyMediaQueryList;
       const handleSystemThemeChange = () => {
         const currentMode = get().mode;
         if (currentMode === 'auto') {
@@ -71,7 +81,14 @@ const useThemeStore = create<ThemeState>((set, get) => {
         }
       };
 
-      mediaQuery.addEventListener('change', handleSystemThemeChange);
+      if (typeof mediaQuery.addEventListener === 'function') {
+        mediaQuery.addEventListener('change', handleSystemThemeChange);
+        return;
+      }
+
+      if (typeof mediaQuery.addListener === 'function') {
+        mediaQuery.addListener(handleSystemThemeChange);
+      }
     },
 
     setThemeMode: (newMode: ThemeMode) => {
