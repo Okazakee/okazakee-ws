@@ -4,6 +4,14 @@ import { Moon, Smartphone, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import useThemeStore, { type ThemeMode } from '@/store/themeStore';
 
+type LegacyMediaQueryList = Omit<
+  MediaQueryList,
+  'addListener' | 'removeListener'
+> & {
+  addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+  removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+};
+
 export default function ThemeToggle({
   compact = false,
   sidebar = false,
@@ -22,7 +30,7 @@ export default function ThemeToggle({
     // Get system preference after hydration
     const darkModePreference = window.matchMedia(
       '(prefers-color-scheme: dark)'
-    );
+    ) as LegacyMediaQueryList;
     setSystemIsDark(darkModePreference.matches);
 
     // Listen for changes in system preference
@@ -30,8 +38,16 @@ export default function ThemeToggle({
       setSystemIsDark(event.matches);
     };
 
-    darkModePreference.addEventListener('change', handleChange);
-    return () => darkModePreference.removeEventListener('change', handleChange);
+    if (typeof darkModePreference.addEventListener === 'function') {
+      darkModePreference.addEventListener('change', handleChange);
+      return () =>
+        darkModePreference.removeEventListener('change', handleChange);
+    }
+
+    if (typeof darkModePreference.addListener === 'function') {
+      darkModePreference.addListener(handleChange);
+      return () => darkModePreference.removeListener?.(handleChange);
+    }
   }, []);
 
   if (!mounted) {
