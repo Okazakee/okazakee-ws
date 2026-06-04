@@ -5,6 +5,10 @@ import { useEffect } from 'react';
 import useThemeStore from '../store/themeStore';
 
 type IdleHandle = number | ReturnType<typeof setTimeout>;
+type IdleWindow = Window & {
+  requestIdleCallback?: (callback: IdleRequestCallback) => IdleHandle;
+  cancelIdleCallback?: (handle: IdleHandle) => void;
+};
 
 const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -12,16 +16,17 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const { initializeTheme } = useThemeStore();
 
   useEffect(() => {
+    const idleWindow = window as IdleWindow;
     let idleHandle: IdleHandle;
 
-    if ('requestIdleCallback' in window) {
-      idleHandle = window.requestIdleCallback(() => initializeTheme());
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+      idleHandle = idleWindow.requestIdleCallback(() => initializeTheme());
 
-      return () => window.cancelIdleCallback(idleHandle as number);
+      return () => idleWindow.cancelIdleCallback?.(idleHandle);
     }
 
-    idleHandle = window.setTimeout(() => initializeTheme(), 1);
-    return () => window.clearTimeout(idleHandle);
+    idleHandle = globalThis.setTimeout(() => initializeTheme(), 1);
+    return () => globalThis.clearTimeout(idleHandle);
   }, [initializeTheme]);
 
   useEffect(() => {
