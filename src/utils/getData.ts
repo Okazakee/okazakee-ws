@@ -12,15 +12,9 @@ import type {
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 
-// Initialize Supabase clients
+// Initialize Supabase client
 const supabase = createClient(supabaseUrl || '', supabaseKey || '');
-const supabaseAdmin = serviceRoleKey
-  ? createClient(supabaseUrl || '', serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    })
-  : null;
 
 const isDevEnv = process.env.NODE_ENV === 'development';
 const enforcePublishDate = process.env.VERCEL_ENV === 'production';
@@ -290,8 +284,7 @@ export async function getPost(
 
   let author: PostAuthor | null = null;
   if (data?.author_id) {
-    const client = supabaseAdmin || supabase;
-    const { data: authorData } = await client
+    const { data: authorData } = await supabase
       .from('user_profiles')
       .select('id, display_name, avatar_url')
       .eq('id', data.author_id)
