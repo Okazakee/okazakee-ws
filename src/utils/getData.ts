@@ -135,7 +135,11 @@ export async function getPortfolioPosts(): Promise<PortfolioPost[] | null> {
   cacheTag('portfolio');
   applySupabaseCacheLife();
 
-  let query = supabase.from('portfolio_posts').select('*').limit(3);
+  let query = supabase
+    .from('portfolio_posts')
+    .select('*')
+    .eq('hidden', false)
+    .limit(3);
 
   if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
@@ -156,7 +160,11 @@ export async function getBlogPosts(): Promise<BlogPost[] | null> {
   cacheTag('blog');
   applySupabaseCacheLife();
 
-  let query = supabase.from('blog_posts').select('*').limit(3);
+  let query = supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('hidden', false)
+    .limit(3);
 
   if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
@@ -195,7 +203,7 @@ async function queryPosts(
 ): Promise<BlogPost[] | PortfolioPost[] | null> {
   const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
 
-  let query = supabase.from(table).select('*');
+  let query = supabase.from(table).select('*').eq('hidden', false);
 
   if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
@@ -265,7 +273,11 @@ export async function getPost(
 
   const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 
-  let query = supabase.from(tableName).select('*').eq('id', id);
+  let query = supabase
+    .from(tableName)
+    .select('*')
+    .eq('id', id)
+    .eq('hidden', false);
 
   if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());

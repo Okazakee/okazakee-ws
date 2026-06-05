@@ -82,6 +82,7 @@ type CreatePortfolioData = {
   ios_store_link?: string | null;
   created_at?: string;
   author_id: string;
+  hidden?: boolean;
 };
 
 type UpdatePortfolioData = Partial<CreatePortfolioData>;

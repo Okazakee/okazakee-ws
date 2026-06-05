@@ -97,6 +97,11 @@ export default function HeroSection() {
           resume_en: data.resume_en || heroSection?.resume_en || null,
           resume_it: data.resume_it || heroSection?.resume_it || null,
         });
+
+        imgUpload.clearFile();
+        if (data.propic) {
+          imgUpload.setFileFromUrl(data.propic);
+        }
       }
 
       const transErrors = await saveTranslations();

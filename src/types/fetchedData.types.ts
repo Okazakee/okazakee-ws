@@ -39,6 +39,7 @@ export type PortfolioPost = {
   website: string | null;
   ios_store_link: string | null;
   views: number;
+  hidden: boolean;
   author_id?: string;
 };
 
@@ -56,6 +57,7 @@ export type BlogPost = {
   blurhashURL: string;
   post_tags: string;
   views: number;
+  hidden: boolean;
   author_id?: string;
 };
 

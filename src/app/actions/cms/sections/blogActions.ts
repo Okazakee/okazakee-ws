@@ -75,6 +75,7 @@ type CreateBlogData = {
   post_tags: string;
   created_at?: string;
   author_id: string;
+  hidden?: boolean;
 };
 
 type UpdateBlogData = Partial<CreateBlogData>;

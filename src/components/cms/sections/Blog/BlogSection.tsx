@@ -28,12 +28,12 @@ type EditablePost = BlogPost & { image_file?: File | null };
 interface BlogFormData {
   title_en: string; title_it: string; image: string; blurhashURL: string;
   description_en: string; description_it: string; body_en: string; body_it: string;
-  post_tags: string; created_at: string; author_id: string;
+  post_tags: string; created_at: string; author_id: string; hidden: boolean;
 }
 
 const emptyForm: BlogFormData = {
   title_en: '', title_it: '', image: '', blurhashURL: '', description_en: '', description_it: '',
-  body_en: '', body_it: '', post_tags: '', created_at: new Date().toISOString().split('T')[0], author_id: '',
+  body_en: '', body_it: '', post_tags: '', created_at: new Date().toISOString().split('T')[0], author_id: '', hidden: false,
 };
 
 export default function BlogSection() {
@@ -81,7 +81,7 @@ export default function BlogSection() {
     setMode('create');
   };
   const openEdit = (post: EditablePost) => {
-    setFormData({ title_en: post.title_en ?? '', title_it: post.title_it ?? '', image: post.image ?? '', blurhashURL: post.blurhashURL ?? '', description_en: post.description_en ?? '', description_it: post.description_it ?? '', body_en: post.body_en ?? '', body_it: post.body_it ?? '', post_tags: post.post_tags ?? '', created_at: post.created_at?.split('T')[0] ?? '', author_id: post.author_id ?? user?.id ?? '' });
+    setFormData({ title_en: post.title_en ?? '', title_it: post.title_it ?? '', image: post.image ?? '', blurhashURL: post.blurhashURL ?? '', description_en: post.description_en ?? '', description_it: post.description_it ?? '', body_en: post.body_en ?? '', body_it: post.body_it ?? '', post_tags: post.post_tags ?? '', created_at: post.created_at?.split('T')[0] ?? '', author_id: post.author_id ?? user?.id ?? '', hidden: post.hidden ?? false });
     imgUpload.clearFile(); setEditingId(post.id); setFormLocale(activeLocale); setMode('edit');
   };
   const closeForm = () => { setMode('list'); imgUpload.clearFile(); setEditingId(null); };
@@ -131,6 +131,7 @@ export default function BlogSection() {
             post_tags: post.post_tags,
             created_at: post.created_at,
             author_id: post.author_id || user?.id || '',
+            hidden: post.hidden ?? false,
           },
         })),
       updates: Array.from(modifiedIds).flatMap((id) => {
@@ -151,6 +152,7 @@ export default function BlogSection() {
             post_tags: post.post_tags,
             created_at: post.created_at,
             author_id: post.author_id,
+            hidden: post.hidden ?? false,
           },
         }];
       }),
@@ -229,6 +231,15 @@ export default function BlogSection() {
               </select>
             </div>
           </div>
+          <label className="flex items-center gap-2 text-sm text-darktext dark:text-lighttext cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.hidden}
+              onChange={(e) => setFormData((p) => ({ ...p, hidden: e.target.checked }))}
+              className="w-4 h-4 rounded border-gray-300 dark:border-lighttext2/30 text-main focus:ring-main"
+            />
+            Hidden
+          </label>
         </div>
 
         {/* Media */}
