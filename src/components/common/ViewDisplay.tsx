@@ -91,7 +91,7 @@ export default function ViewDisplay({
     <div className="flex items-center text-darktext dark:text-lighttext">
       <Eye size={20} className={isCard ? 'mr-1' : 'mr-2'} />
       <span
-        className={`mt-0.5 inline-block shrink-0 text-right ${
+        className={`mt-0.5 inline-block shrink-0 ${
           isCard ? 'w-[5ch]' : 'w-[6ch]'
         } tabular-nums`}
       >
