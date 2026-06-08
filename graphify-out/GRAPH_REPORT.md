@@ -1,16 +1,16 @@
 # Graph Report - okazakee-ws  (2026-06-08)
 
 ## Corpus Check
-- 140 files · ~78,094 words
+- 141 files · ~78,103 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1617 nodes · 2538 edges · 66 communities (58 shown, 8 thin omitted)
+- 1621 nodes · 2541 edges · 66 communities (56 shown, 10 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 5 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2499bd24`
+- Built from commit: `99ee3803`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -98,7 +98,7 @@
 - `SidePanel()` --calls--> `useLayoutStore`  [EXTRACTED]
   src/components/common/cms/SidePanel.tsx → src/store/layoutStore.ts
 
-## Communities (66 total, 8 thin omitted)
+## Communities (66 total, 10 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.06
@@ -106,19 +106,19 @@ Nodes (31): For --cluster-only, For git commit hook, For /graphify add, For /gra
 
 ### Community 1 - "Community 1"
 Cohesion: 0.05
-Nodes (113): batchPublishBlog(), blogActions(), BlogOperation, BlogResult, createBlog(), CreateBlogData, deleteBlog(), getAuthors() (+105 more)
+Nodes (115): batchPublishBlog(), blogActions(), BlogOperation, BlogResult, createBlog(), CreateBlogData, deleteBlog(), getAuthors() (+107 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.12
 Nodes (16): 10. Error Handling, 11. Comments and Docstrings, 12. Testing, 13. Git, 14. Dependencies and Tooling, 15. Red Lines, 1. Overview, 2. Repository Structure (+8 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.06
-Nodes (71): BlogFormData, BlogSection(), EditablePost, emptyForm, FormMode, CareerFormData, CareerSection(), EditableCareerEntry (+63 more)
+Cohesion: 0.05
+Nodes (80): BlogFormData, BlogSection(), EditablePost, emptyForm, FormMode, CareerFormData, CareerSection(), EditableCareerEntry (+72 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.06
-Nodes (54): getCurrentViews(), incrementViews(), GET(), AccountSection(), deleteMyAccount(), getAdminClient(), buildCmsUser(), CMSBootData (+46 more)
+Cohesion: 0.05
+Nodes (64): getCurrentViews(), incrementViews(), GET(), AccountSection(), deleteMyAccount(), getAdminClient(), buildCmsUser(), CMSBootData (+56 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.03
@@ -153,8 +153,8 @@ Cohesion: 0.04
 Nodes (50): blog, addBlogPost, bodyEnLabel, bodyEnPlaceholder, bodyItLabel, bodyItPlaceholder, buttonTextLabel, changeImage (+42 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.05
-Nodes (28): IdleHandle, IdleWindow, Providers(), ThemeProvider(), BlogSection, CareerSection, CMS(), ContactsSection (+20 more)
+Cohesion: 0.19
+Nodes (10): IdleHandle, IdleWindow, Providers(), ThemeProvider(), LegacyMediaQueryList, ThemeToggle(), LegacyMediaQueryList, ThemeMode (+2 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.05
@@ -189,12 +189,12 @@ Cohesion: 0.11
 Nodes (12): ErrorDiv(), InnerHtml(), InnerHtmlProps, Career(), CareerEntry, CareerClient(), Hero(), Skills() (+4 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.12
-Nodes (17): AppleIcon(), GithubIcon(), IconProps, LinkedinIcon(), Contacts(), BlogFormData, PortfolioFormData, PostPreviewProps (+9 more)
+Cohesion: 0.13
+Nodes (11): AppleIcon(), GithubIcon(), IconProps, LinkedinIcon(), ResumeButtonProps, Contacts(), BlogFormData, PortfolioFormData (+3 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.14
-Nodes (14): Tags(), BlogPreview(), BlogPreviewProps, HeroPreview(), HeroPreviewProps, PortfolioPreview(), PortfolioPreviewProps, Skill (+6 more)
+Cohesion: 0.13
+Nodes (15): Tags(), BlogPreview(), BlogPreviewProps, CareerPreview(), HeroPreview(), HeroPreviewProps, PortfolioPreview(), PortfolioPreviewProps (+7 more)
 
 ### Community 26 - "Community 26"
 Cohesion: 0.09
@@ -213,12 +213,12 @@ Cohesion: 0.09
 Nodes (23): skills, addCategory, addSkill, categoryNamePlaceholder, categoryNamesLabel, categoryTranslationPlaceholder, confirmDeleteCategory, errorCategoryName (+15 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.16
-Nodes (15): ClientMarkdown(), FormattedDate(), FormattedDateProps, SkillsCarousel(), CareerClientProps, CareerEntry, CareerPreview(), CareerPreviewProps (+7 more)
+Cohesion: 0.17
+Nodes (14): ClientMarkdown(), FormattedDate(), FormattedDateProps, SkillsCarousel(), CareerClientProps, CareerEntry, CareerPreviewProps, PreviewCareerEntry (+6 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.18
-Nodes (16): searchPosts(), sitemap(), PostsSection(), generateStaticParams(), applySupabaseCacheLife(), DEV_CACHE_LIFE, getBlogPosts(), getCurrentTime() (+8 more)
+Cohesion: 0.13
+Nodes (21): searchPosts(), sitemap(), PostsSection(), generateMetadata(), generateStaticParams(), Page(), validPostTypes, applySupabaseCacheLife() (+13 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.19
@@ -252,29 +252,25 @@ Nodes (16): contacts, addNewContact, iconNameLabel, iconNamePlaceholder, labelFi
 Cohesion: 0.12
 Nodes (15): 🏗️ Architecture, 📖 CMS Usage, 🤝 Contributing, 🚀 Deployment, 🎨 Development, 🔐 Environment Variables, 🚀 Features, 🚦 Getting Started (+7 more)
 
-### Community 40 - "Community 40"
-Cohesion: 0.17
-Nodes (10): ResumeButtonProps, ContactsPreview(), ContactsPreviewProps, CareerEntry, Contact, HeroSection, ResumeData, Skill (+2 more)
-
 ### Community 41 - "Community 41"
-Cohesion: 0.19
-Nodes (6): ImageModal(), ImageModalProps, useZoom(), NextImageProps, PreChild, PreCustomProps
+Cohesion: 0.36
+Nodes (4): ImageModal(), ImageModalProps, useZoom(), NextImageProps
 
 ### Community 42 - "Community 42"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (8): AppLocale, isValidLocale(), locales, routing, ConditionalFooterProps, LocaleShell(), whiteRabbit, getTranslationsSupabase()
 
 ### Community 43 - "Community 43"
-Cohesion: 0.17
-Nodes (12): sectionLabels, account, blog, career, contacts, hero, layout, portfolio (+4 more)
+Cohesion: 0.11
+Nodes (18): page, authError, cmsDashboard, initError, sectionLabels, settingsComingSoon, settingsTitle, account (+10 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.17
-Nodes (12): sectionLabels, account, blog, career, contacts, hero, layout, portfolio (+4 more)
+Cohesion: 0.11
+Nodes (18): page, authError, cmsDashboard, initError, sectionLabels, settingsComingSoon, settingsTitle, account (+10 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.20
-Nodes (7): RootLayout(), PostsPage(), descriptions, PrivacyPolicyPage(), titles, NotFound(), getPrivacyPolicy()
+Cohesion: 0.13
+Nodes (9): PreChild, PreCustomProps, RootLayout(), PostsPage(), descriptions, PrivacyPolicyPage(), titles, NotFound() (+1 more)
 
 ### Community 46 - "Community 46"
 Cohesion: 0.33
@@ -290,35 +286,31 @@ Nodes (8): privacy, confirmCancel, errorFetch, errorSave, saveChanges, subtitle,
 
 ### Community 50 - "Community 50"
 Cohesion: 0.29
-Nodes (6): page, authError, cmsDashboard, initError, settingsComingSoon, settingsTitle
-
-### Community 51 - "Community 51"
-Cohesion: 0.29
-Nodes (6): page, authError, cmsDashboard, initError, settingsComingSoon, settingsTitle
+Nodes (6): CONFIG_ITEMS, CONTENT_ITEMS, MenuItem, SidePanel(), SidePanelProps, createClient()
 
 ### Community 55 - "Community 55"
 Cohesion: 0.50
 Nodes (3): isrRevalidation, nextConfig, withNextIntl
 
 ## Knowledge Gaps
-- **1110 isolated node(s):** `config`, `config`, `name`, `version`, `private` (+1105 more)
+- **1112 isolated node(s):** `config`, `config`, `name`, `version`, `private` (+1107 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `blog` connect `Community 14` to `Community 51`?**
+- **Why does `blog` connect `Community 14` to `Community 42`?**
   _High betweenness centrality (0.077) - this node is a cross-community bridge._
-- **Why does `career` connect `Community 11` to `Community 51`?**
+- **Why does `career` connect `Community 11` to `Community 42`?**
   _High betweenness centrality (0.064) - this node is a cross-community bridge._
-- **Why does `portfolio` connect `Community 12` to `Community 51`?**
+- **Why does `portfolio` connect `Community 12` to `Community 42`?**
   _High betweenness centrality (0.064) - this node is a cross-community bridge._
 - **What connects `config`, `config`, `name` to the rest of the system?**
-  _1110 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1112 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.0625 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.051515151515151514 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05037984806077569 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.11764705882352941 - nodes in this community are weakly interconnected._

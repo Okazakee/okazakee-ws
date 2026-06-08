@@ -675,8 +675,8 @@
     "semantic_hash": ""
   },
   "/home/okazakee/Desktop/Projects/okazakee-ws/.opencode/opencode.json": {
-    "mtime": 1780930345.4449868,
-    "ast_hash": "abcc8b9dcd80bca5f9dde6d9f0c3ae79",
+    "mtime": 1780930870.1752303,
+    "ast_hash": "e5f74d14a81702b55bdf53b33ec991d7",
     "semantic_hash": ""
   },
   "/home/okazakee/Desktop/Projects/okazakee-ws/.opencode/plugins/graphify.js": {
@@ -712,6 +712,11 @@
   "/home/okazakee/Desktop/Projects/okazakee-ws/src/app/public/logo.svg": {
     "mtime": 1764936876.1718893,
     "ast_hash": "9ee32e9989f5e5cee318b15d33cbfaeb",
+    "semantic_hash": ""
+  },
+  "/home/okazakee/Desktop/Projects/okazakee-ws/.opencode/package.json": {
+    "mtime": 1780930872.8512933,
+    "ast_hash": "c9442b1dfba4cd254e8dc712cf2d3da8",
     "semantic_hash": ""
   }
 }
