@@ -21,12 +21,12 @@ const revalidateSeconds =
 const nextConfig: NextConfig = {
   cacheLife: {
     default: {
-      stale: 300,
+      stale: revalidateSeconds,
       revalidate: revalidateSeconds,
       expire: thirtyDaysInSeconds,
     },
     supabaseContent: {
-      stale: 300,
+      stale: revalidateSeconds,
       revalidate: revalidateSeconds,
       expire: thirtyDaysInSeconds,
     },

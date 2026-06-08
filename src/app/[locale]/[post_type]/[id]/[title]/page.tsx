@@ -5,13 +5,13 @@ import {
   ExternalLink,
   Globe,
   Smartphone,
-  Star,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
+import GitHubStars from '@/components/common/GitHubStars';
 import FormattedDate from '@/components/common/FormattedDate';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
@@ -22,16 +22,6 @@ import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 /* ONLY PORTFOLIO POSTS USE title_en AS TITLE FOR BOTH LANGS, BLOG POSTS CAN SWAP title_en and title_it */
 const validPostTypes = new Set(['portfolio', 'blog']);
 const numericIdPattern = /^\d+$/;
-const defaultRevalidateSeconds =
-  process.env.VERCEL_ENV === 'production' ? 60 * 60 * 24 : 60 * 10;
-const isrRevalidation = Number.parseInt(
-  process.env.ISR_REVALIDATION || `${defaultRevalidateSeconds}`,
-  10
-);
-const revalidateSeconds =
-  Number.isFinite(isrRevalidation) && isrRevalidation > 0
-    ? isrRevalidation
-    : defaultRevalidateSeconds;
 
 export default async function Page({
   params,
@@ -52,20 +42,6 @@ export default async function Page({
   const post: PostWithAuthor | null = await getPost(id, post_type);
 
   const t = await getTranslations({ locale, namespace: 'posts-section' });
-
-  let ghStars = 0;
-
-  if (post_type === 'portfolio' && post) {
-    const portfolioPost = post as PortfolioPost; // Type assertion
-    const repoName = portfolioPost.source_link.split('/').pop();
-
-    ghStars = await fetch(`https://api.github.com/repos/okazakee/${repoName}`, {
-      next: { revalidate: revalidateSeconds },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => data?.stargazers_count ?? 0)
-      .catch(() => 0);
-  }
 
   // checks
   if (!post) {
@@ -265,17 +241,17 @@ export default async function Page({
           </span>
         </div>
 
-        {post_type === 'portfolio' && (
-          <div className="flex items-center text-darktext dark:text-lighttext">
-            <Star size={20} className="mr-2" />
-            <span className="mt-0.5">{ghStars || 0}</span>
-          </div>
-        )}
+        {post_type === 'portfolio' &&
+          post &&
+          'source_link' in post &&
+          post.source_link && (
+            <GitHubStars sourceLink={post.source_link} />
+          )}
 
         <ViewDisplay
           postId={id}
           postType={post_type as 'blog' | 'portfolio'}
-          initialViews={post.views || '⏳'}
+          initialViews={post.views ?? 0}
         />
 
         <ShareButton

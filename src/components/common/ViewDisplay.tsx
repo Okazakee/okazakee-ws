@@ -20,6 +20,7 @@ export default function ViewDisplay({
 }: ViewDisplayProps) {
   const [views, setViews] = useState(initialViews);
   const [hasIncremented, setHasIncremented] = useState(false);
+  const displayViews = `${views}`;
 
   useEffect(() => {
     if (isCard) {
@@ -33,12 +34,6 @@ export default function ViewDisplay({
       setViews(initialViews);
       return;
     }
-
-    console.log('🚀 ViewDisplay useEffect triggered', {
-      postId,
-      postType,
-      hasIncremented,
-    });
 
     // Create a unique key for this post visit with 24-hour expiration
     const visitKey = `viewed_${postType}_${postId}`;
@@ -54,18 +49,7 @@ export default function ViewDisplay({
       hasViewedRecently = now - lastViewedTime < twentyFourHours;
     }
 
-    console.log('🔍 24h check:', {
-      visitKey,
-      lastViewed,
-      hasViewedRecently,
-      hoursSinceLastView: lastViewed
-        ? Math.round((now - parseInt(lastViewed, 10)) / (60 * 60 * 1000))
-        : 'never',
-      hasIncremented,
-    });
-
     if (!hasViewedRecently && !hasIncremented) {
-      console.log('✅ Proceeding with increment (24h window)');
       setHasIncremented(true);
 
       // Mark as viewed with current timestamp
@@ -74,10 +58,7 @@ export default function ViewDisplay({
       // First increment in the database
       incrementViews(postId, postType)
         .then((result) => {
-          console.log('🔍 Increment result:', result);
           if (result.success) {
-            console.log('✅ Database updated successfully');
-
             // Then fetch the real current view count from database
             return getCurrentViews(postId, postType);
           }
@@ -89,7 +70,6 @@ export default function ViewDisplay({
           if (viewsResult?.success) {
             // Update with the real count from database
             setViews(viewsResult.views);
-            console.log('📊 Updated with real view count:', viewsResult.views);
           }
         })
         .catch((error) => {
@@ -98,23 +78,25 @@ export default function ViewDisplay({
           localStorage.removeItem(visitKey);
         });
     } else if (hasViewedRecently) {
-      console.log('📋 Already viewed in last 24h, fetching current count');
       // If already viewed in this session, just fetch current count
       getCurrentViews(postId, postType).then((viewsResult) => {
         if (viewsResult?.success) {
           setViews(viewsResult.views);
-          console.log('📊 Fetched current view count:', viewsResult.views);
         }
       });
-    } else {
-      console.log('❌ Not incrementing - conditions not met');
     }
   }, [isCard, initialViews, postId, postType, hasIncremented]);
 
   return (
     <div className="flex items-center text-darktext dark:text-lighttext">
       <Eye size={20} className={isCard ? 'mr-1' : 'mr-2'} />
-      <span className="mt-0.5">{views}</span>
+      <span
+        className={`mt-0.5 inline-block shrink-0 text-right ${
+          isCard ? 'w-[5ch]' : 'w-[6ch]'
+        } tabular-nums`}
+      >
+        {displayViews}
+      </span>
     </div>
   );
 }

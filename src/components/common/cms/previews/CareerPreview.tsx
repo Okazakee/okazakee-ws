@@ -251,17 +251,17 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
                       className="group bg-[#c5c5c5] dark:bg-[#0e0e0e] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 mx-auto max-w-md hover:scale-105 transition-all cursor-pointer block"
                     >
                       <div className="text-center mb-6">
-                        <div className="relative inline-block">
+                        <div className="relative mx-auto h-[160px] w-full max-w-[400px]">
                           <Image
                             src={latestPosition.logo || '/placeholder.png'}
                             alt={latestPosition.company}
-                            width={400}
-                            height={0}
+                            fill
+                            sizes="400px"
                             {...(latestPosition.blurhashURL && {
                               placeholder: 'blur' as const,
                               blurDataURL: latestPosition.blurhashURL,
                             })}
-                            className="rounded-xl shadow-md h-auto md:max-h-[160px] w-auto"
+                            className="rounded-xl object-contain shadow-md"
                           />
                         </div>
                       </div>
@@ -311,17 +311,17 @@ export function CareerPreview({ entries }: CareerPreviewProps) {
                           className="block"
                         >
                           <div className="text-center mb-2">
-                            <div className="relative inline-block mb-4">
+                            <div className="relative mx-auto mb-4 h-[120px] w-full max-w-[250px]">
                               <Image
                                 src={latestPosition.logo || '/placeholder.png'}
                                 alt={latestPosition.company}
-                                width={250}
-                                height={0}
+                                fill
+                                sizes="250px"
                                 {...(latestPosition.blurhashURL && {
                                   placeholder: 'blur' as const,
                                   blurDataURL: latestPosition.blurhashURL,
                                 })}
-                                className="rounded-xl shadow-md h-auto max-h-[120px] w-auto"
+                                className="rounded-xl object-contain shadow-md"
                               />
                             </div>
                             <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
