@@ -56,7 +56,7 @@ export default function Postcard({
       <div className="flex flex-col justify-between flex-1">
         <div>
           <div className="flex justify-between items-start mb-2">
-            <h1 className="font-bold text-[1.4rem] md:text-2xl flex-shrink min-w-0">
+            <h1 className="font-bold text-[1.4rem] md:text-2xl shrink min-w-0">
               {initTitle}
             </h1>
             <ViewDisplay
