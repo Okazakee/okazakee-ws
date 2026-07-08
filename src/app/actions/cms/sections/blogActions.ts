@@ -1,7 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { revalidateTag } from 'next/cache';
+import { updateTag } from 'next/cache';
 import {
   generateBlurhashFromBuffer,
   getAdminClient,
@@ -377,9 +377,9 @@ async function batchPublishBlog(
       operation.updates.length > 0 ||
       operation.deletes.length > 0
     ) {
-      revalidateTag('blog', {});
-      revalidateTag('posts', {});
-      revalidateTag('post', {});
+      updateTag('blog');
+      updateTag('posts');
+      updateTag('post');
     }
 
     return {
@@ -475,8 +475,8 @@ async function createBlog(
 
     if (error) throw error;
 
-    revalidateTag('blog', {});
-    revalidateTag('posts', {});
+    updateTag('blog');
+    updateTag('posts');
     return { success: true, data: newBlog };
   } catch (error) {
     console.error('Error creating blog post:', error);
@@ -524,9 +524,9 @@ async function updateBlog(
 
     if (error) throw error;
 
-    revalidateTag('blog', {});
-    revalidateTag('posts', {});
-    revalidateTag('post', {});
+    updateTag('blog');
+    updateTag('posts');
+    updateTag('post');
     return { success: true, data: updatedBlog };
   } catch (error) {
     console.error('Error updating blog post:', error);
@@ -572,9 +572,9 @@ async function deleteBlog(
 
     if (error) throw error;
 
-    revalidateTag('blog', {});
-    revalidateTag('posts', {});
-    revalidateTag('post', {});
+    updateTag('blog');
+    updateTag('posts');
+    updateTag('post');
     return { success: true };
   } catch (error) {
     console.error('Error deleting blog post:', error);

@@ -1,6 +1,6 @@
 'use server';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { revalidateTag } from 'next/cache';
+import { updateTag } from 'next/cache';
 import {
   getCmsActionContext,
   getAdminClient,
@@ -212,7 +212,7 @@ async function updateSectionTranslationsForLocales(
       updated.push(data);
     }
 
-    revalidateTag('translations', {});
+    updateTag('translations');
 
     return { success: true, data: updated };
   } catch (error) {
@@ -268,8 +268,8 @@ async function updateI18nData(
     if (error) throw error;
 
     // Invalidate cache
-    revalidateTag('translations', {});
-    revalidateTag('privacy-policy', {});
+    updateTag('translations');
+    updateTag('privacy-policy');
 
     return { success: true, data };
   } catch (error) {
@@ -328,7 +328,7 @@ async function updateSectionTranslations(
 
     if (error) throw error;
 
-    revalidateTag('translations', {});
+    updateTag('translations');
 
     return { success: true, data };
   } catch (error) {

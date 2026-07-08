@@ -1,7 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { revalidateTag } from 'next/cache';
+import { updateTag } from 'next/cache';
 import {
   generateBlurhashFromBuffer,
   getAdminClient,
@@ -405,9 +405,9 @@ async function batchPublishPortfolio(
       operation.updates.length > 0 ||
       operation.deletes.length > 0
     ) {
-      revalidateTag('portfolio', {});
-      revalidateTag('posts', {});
-      revalidateTag('post', {});
+      updateTag('portfolio');
+      updateTag('posts');
+      updateTag('post');
     }
 
     return {
@@ -501,8 +501,8 @@ async function createPortfolio(
 
     if (error) throw error;
 
-    revalidateTag('portfolio', {});
-    revalidateTag('posts', {});
+    updateTag('portfolio');
+    updateTag('posts');
     return { success: true, data: newPortfolio };
   } catch (error) {
     console.error('Error creating portfolio post:', error);
@@ -552,9 +552,9 @@ async function updatePortfolio(
 
     if (error) throw error;
 
-    revalidateTag('portfolio', {});
-    revalidateTag('posts', {});
-    revalidateTag('post', {});
+    updateTag('portfolio');
+    updateTag('posts');
+    updateTag('post');
     return { success: true, data: updatedPortfolio };
   } catch (error) {
     console.error('Error updating portfolio post:', error);
@@ -600,9 +600,9 @@ async function deletePortfolio(
 
     if (error) throw error;
 
-    revalidateTag('portfolio', {});
-    revalidateTag('posts', {});
-    revalidateTag('post', {});
+    updateTag('portfolio');
+    updateTag('posts');
+    updateTag('post');
     return { success: true };
   } catch (error) {
     console.error('Error deleting portfolio post:', error);
@@ -820,9 +820,9 @@ async function uploadPortfolioImage(
 
     await removePublicFileIfDifferent(admin, currentImageUrl, 'website', fileName);
 
-    revalidateTag('portfolio', {});
-    revalidateTag('posts', {});
-    revalidateTag('post', {});
+    updateTag('portfolio');
+    updateTag('posts');
+    updateTag('post');
     return {
       success: true,
       data: { image: urlData.publicUrl, blurhashURL: blurhash },

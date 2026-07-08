@@ -1,7 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { revalidateTag } from 'next/cache';
+import { updateTag } from 'next/cache';
 import {
   generateBlurhashFromBuffer,
   getAdminClient,
@@ -385,7 +385,7 @@ async function batchPublishCareer(
       operation.updates.length > 0 ||
       operation.deletes.length > 0
     ) {
-      revalidateTag('career', {});
+      updateTag('career');
     }
 
     return {
@@ -440,7 +440,7 @@ async function createCareer(
 
     if (error) throw error;
 
-    revalidateTag('career', {});
+    updateTag('career');
     return { success: true, data: normalizeCareerEntry(newCareer) };
   } catch (error) {
     console.error('Error creating career entry:', error);
@@ -482,7 +482,7 @@ async function updateCareer(
 
     if (error) throw error;
 
-    revalidateTag('career', {});
+    updateTag('career');
     return { success: true, data: normalizeCareerEntry(updatedCareer) };
   } catch (error) {
     console.error('Error updating career entry:', error);
@@ -523,7 +523,7 @@ async function deleteCareer(
 
     if (error) throw error;
 
-    revalidateTag('career', {});
+    updateTag('career');
     return { success: true };
   } catch (error) {
     console.error('Error deleting career entry:', error);
@@ -662,7 +662,7 @@ async function uploadCareerLogo(
 
     await removePublicFileIfDifferent(supabase, currentLogoUrl, 'website', fileName);
 
-    revalidateTag('career', {});
+    updateTag('career');
     return {
       success: true,
       data: { logo: urlData.publicUrl, blurhashURL: blurhash || '' },

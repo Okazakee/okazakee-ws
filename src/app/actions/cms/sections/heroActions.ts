@@ -1,7 +1,7 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { revalidateTag } from 'next/cache';
+import { updateTag } from 'next/cache';
 import {
   getAdminClient,
   prepareImageUpload,
@@ -161,7 +161,7 @@ async function updateHero(
 
     if (error) throw error;
 
-    revalidateTag('hero', {});
+    updateTag('hero');
 
     return { success: true, data };
   } catch (error) {
@@ -223,7 +223,7 @@ async function uploadHeroImage(
       upload.path
     );
 
-    revalidateTag('hero', {});
+    updateTag('hero');
 
     return {
       success: true,
@@ -286,8 +286,8 @@ async function uploadResume(
       fileName
     );
 
-    revalidateTag('resume', {});
-    revalidateTag('hero_section', {});
+    updateTag('resume');
+    updateTag('hero_section');
 
     return {
       success: true,
