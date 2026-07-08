@@ -33,8 +33,5 @@ bun-error.log*
 next-env.d.ts
 .env*.local
 
-# graphify
-graphify-out/cost.json
-graphify-out/cache/
 # Added by code-review-graph
 .code-review-graph/
