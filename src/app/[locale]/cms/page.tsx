@@ -217,6 +217,7 @@ export default function CMS() {
                   src={user.avatarUrl}
                   alt={user.displayName || 'User'}
                   fill
+                  sizes="32px"
                   className="object-cover"
                 />
               ) : (
