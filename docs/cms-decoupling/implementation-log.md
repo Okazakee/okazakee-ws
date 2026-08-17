@@ -256,3 +256,16 @@ production-validated would remove the rollback path.
 2. Validate new CMS on production data (email login, GitHub OAuth, CRUD,
    uploads, resume flow, author profile → public cache invalidation).
 3. Then: restrict/redirect old CMS URLs, proceed to Phase 13 cleanup.
+
+### Cutover step 4 — legacy CMS redirect (2026-08-17)
+
+- User added Supabase redirect URLs (localhost:3001 + okazakee-cms.vercel.app
+  callbacks). Verified GitHub OAuth chain on the deployed CMS: start → 307 →
+  Supabase authorize (redirect_to = okazakee-cms.vercel.app/en/cms/auth/callback)
+  → 302 → GitHub (allowlist accepted).
+- Public Proxy: `LEGACY_CMS_REDIRECT_HOST` env-gated 307 redirect for
+  /{locale}/cms* → new host (query strings preserved; unset = integrated CMS
+  keeps serving for local/rollback). Env set on Vercel production.
+- Verified live: /en/cms, /en/cms/login, /it/cms → 307 → okazakee-cms.vercel.app;
+  OAuth callback with ?code= carried through; /en still 200.
+- Commits: 6c0a0ee (redirect), 42fcbb9 (docs); master == beta, both pushed.
