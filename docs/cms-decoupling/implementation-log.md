@@ -422,3 +422,23 @@ REMAINING USER STEP (cannot be automated — secret values are one-time):
 - Legacy keys (anon + service_role) remain ACTIVE in Supabase but are now
   unused by both apps. USER ACTION (optional, reversible): deactivate them in
   Dashboard → Settings → API Keys → Legacy API Keys tab.
+
+### Final cleanup (2026-08-17)
+
+- Vercel stale envs removed from the PUBLIC project: SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_JWT_SECRET,
+  SUPABASE_PUBLISHABLE_KEY (all targets). App now uses only
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY + NEXT_PUBLIC_SUPABASE_URL. The CMS
+  project had no stale envs left.
+- CMS repo made PUBLIC (Okazakee/okazakee-cms). Verified no real secrets in
+  files or git history (only env var names/placeholders); internal
+  docs/cms-decoupling removed (deployment details, key prefixes); README
+  rewritten as a standalone public project README.
+- Legacy key fallbacks removed from src/config/shared.ts + env examples in
+  both repos (new key names only).
+- CMS head title fixed: "Okazakee CMS" (metadata on the (app) layout) —
+  verified on login + dashboard.
+- GitHub OAuth application: no changes needed — its callback URL is
+  Supabase's (`https://mtvwynyikouqzmhqespl.supabase.co/auth/v1/callback`),
+  unchanged by the migration; only the Supabase-side redirect allowlist
+  matters (done).
