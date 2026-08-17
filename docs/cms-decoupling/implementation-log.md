@@ -400,3 +400,25 @@ REMAINING USER STEP (cannot be automated — secret values are one-time):
    uploads) still work.
 4. Dashboard: deactivate legacy anon + service_role keys (step 6 of
    Supabase's migration guide) once nothing uses them.
+
+### Supabase publishable/secret key migration — COMPLETE (2026-08-17)
+
+- Secret key value obtained (dashboard `default` key: sb_secret_VouKP...).
+  Verified against the project: REST 200, RLS bypass 200, Auth Admin 200,
+  Storage 200 (both-header usage, as supabase-js sends).
+- CMS Vercel project: added SUPABASE_SECRET_KEY (prod+preview); REMOVED
+  SUPABASE_SERVICE_ROLE_KEY + NEXT_PUBLIC_SUPABASE_ANON_KEY. CMS now runs
+  purely on publishable + secret keys.
+- Public Vercel project: NEXT_PUBLIC_SUPABASE_ANON_KEY removed; app reads
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (set earlier).
+- Code: middleware, SSR server client and browser client now read the key
+  from shared config (publishable) instead of the removed legacy env name —
+  this was a REGRESSION introduced by the env removal (empty key made
+  createServerClient throw → proxy redirect loop on /en/login, ERR_TOO_MANY_
+  REDIRECTS). Fixed + redeployed; login 200, flows correct.
+- Verified end-to-end in the deployed app: /en/auth/ready with a real admin
+  session ran syncCmsUserProfile (admin client → SECRET key) and redirected
+  to the dashboard, which rendered with the admin identity.
+- Legacy keys (anon + service_role) remain ACTIVE in Supabase but are now
+  unused by both apps. USER ACTION (optional, reversible): deactivate them in
+  Dashboard → Settings → API Keys → Legacy API Keys tab.
