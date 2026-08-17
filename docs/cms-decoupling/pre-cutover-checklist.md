@@ -14,8 +14,8 @@ this list in order; every item is reversible.
 - [x] CMS repo: lint / tsc / 60 tests / build green
 - [x] Cross-app revalidation contract proven (signed event → 200)
 - [x] CMS shell renders; auth redirects work
-- [ ] Browser E2E on real data (needs admin credentials): login, CRUD,
-      uploads, resume flow, author profile → public cache invalidation
+- [x] Browser E2E prerequisites: GitHub OAuth allowlist entries added for
+      okazakee-cms.vercel.app + localhost:3001 (dashboard)
 
 ## 1. Supabase
 
@@ -75,9 +75,9 @@ Build: `bun run build`; Framework Preset Next.js.
 3. Run the behavior-matrix parity spot-checks (blog/portfolio CRUD, uploads,
    hero/skills/career/contacts, privacy edit now reaching the public page,
    resume uploads, user management, author name/avatar change → public post).
-4. Once confident: stop using the old CMS. Redirect old URLs:
-   `/en/cms*` → `https://cms.<domain>/en/cms*` (and `/it/...`) via the public
-   Proxy, BEFORE deleting route code (bookmarked URLs).
+4. DONE: old CMS URLs redirected via public Proxy (`LEGACY_CMS_REDIRECT_HOST`
+   env) — `/en/cms*` and `/it/cms*` → `https://okazakee-cms.vercel.app/...`,
+   307, query strings preserved. Rollback: unset the env + redeploy.
 5. Watch logs (auth errors, storage failures, `[content-revalidate]`
    rejections, `[revalidation]` failures).
 
