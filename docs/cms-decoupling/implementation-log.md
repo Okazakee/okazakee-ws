@@ -57,3 +57,165 @@ calls are parallelized instead.
   production build green (~10s).
 
 ### Phase 2 — Make the monolith easier to split (in progress)
+### Phase 2 — Monolith split preparation (done)
+
+- Config modules: `src/config/shared.ts` (appEnv/APP_ENV, supabase url/key,
+  parsePositiveInt), `src/config/public.ts` (hostname, publish-date
+  enforcement, ISR seconds, umami), `src/config/cms.ts` (CMS_PUBLIC_URL,
+  auth debug).
+- Removed `VERCEL_ENV` business semantics from `getData.ts` and
+  `next.config.ts`; hostname now derived from NEXT_PUBLIC_SUPABASE_URL with a
+  clear build error when missing; layout preconnect literal also replaced.
+- Canonical elevated Supabase client: `src/libs/cms/supabase/admin.ts`
+  (module-cached, no session persistence). Replaced 5 duplicated constructors
+  (fileHelpers, deleteAccount, usersActions x2 + inline x2, profileSync).
+- Removed dead registration: `signup.ts` + `/[locale]/cms/register` deleted;
+  middleware comment cleaned.
+- FIXED privacy write bug: new `i18nActions UPDATE_PRIVACY` writes the real
+  `privacy_policy` column (preserving translations JSON), tags
+  `privacy-policy`; PrivacyPolicySection uses it. (Was writing
+  `translations.privacy_policy.privacy_policy` — never reached public page.)
+- FIXED hero image URL inconsistency: stored and returned `propic` now
+  identical (cache-busted canonical value).
+- FIXED URL validation: added `isValidHttpUrl` (career/portfolio links) and
+  `isValidContactUrl` (contacts http/https/mailto/tel); generic `isValidUrl`
+  no longer used as the security policy.
+- FIXED `usersActions(GET)` authorization: all user-management operations
+  (including list) now require admin. Verified author picker uses
+  `blogActions GET_AUTHORS`, unaffected.
+- Consolidated avatar uploads (admin + self) onto `prepareImageUpload`/
+  `uploadPreparedImage`: extension and MIME now follow the actual processed
+  format (WebP passthrough or PNG fallback).
+- Invalidation descriptors: `src/libs/cms/invalidation.ts` (pure,
+  unit-tested) maps entity+operation → public tag set; `invalidateContent`
+  adapter applied `updateTag` in the monolith. All 8 section action files
+  + deleteAccount switched from ad-hoc tags to descriptors.
+- Gates green: lint, tsc, 53 tests, build.
+
+### Phase 3 — Public cache contract (done)
+
+- `src/libs/content/cacheTags.ts`: single source of truth for the public tag
+  vocabulary (`translations`, `privacy-policy`, `hero`, `skills`, `career`,
+  `contacts`, `blog`, `portfolio`, `posts`, `post`, `resume`, `hero_section`
+  + builders `postDetailTag`, `authorTag`).
+- Descriptor rewritten on the constants; `getData.ts` uses constants.
+- `getPost()` now tags `post:blog:<id>` / `post:portfolio:<id>` AND
+  `author:<author-id>` when the post embeds a profile (retains legacy `post`).
+- Author-profile mutations (`updateMyProfile`, `updateUserProfile`,
+  `updateUserDisplayName`, `uploadUserAvatar`, `removeUser`, `deleteMyAccount`)
+  emit `author:<id>` invalidation.
+- Invalidation matrix covered by descriptor + cacheTags unit tests (56 total).
+
+### Phase 4 — Standalone CMS repository (done)
+
+- Created `Okazakee/okazakee-cms` (private) via gh CLI.
+- Extracted from public repo at commit `234b064` (beta HEAD after Phases 0-3)
+  via `git archive` — no secrets, no `.git` history copied.
+- Import commit `chore: import cms from okazakee-ws` pushed to `main`;
+  provenance recorded in README; package name `okazakee-cms`.
+- Import baseline builds with real env (same Supabase project, read-only).
+
+### Phase 5 — Standalone CMS shell (done)
+
+- CMS-only locale layout: removed public Header/Footer/ScrollTop/SpeedInsights/
+  Umami; kept Providers, theme script, fonts; preconnect derived from config.
+- i18n: CMS static messages merged with Supabase public translations — kept
+  deliberately because CMS previews render public section content.
+- Proxy: removed public-site bot-probe block; kept locale routing + session
+  refresh + CMS route protection.
+- `CMS_PUBLIC_URL` introduced: `getRequestOrigin()` uses it in production
+  (no forwarded-header reconstruction); invite/recovery redirects target it;
+  `.env.local.example` documents it.
+
+### Phase 6 — CMS auth/RBAC (done)
+
+- Consolidated auth context: `requireAuth`/`requireAdmin`/
+  `requireAllowedPostWriter` now delegate to `getCmsActionContext` (one
+  canonical authorization path).
+- Durable rate limiter: `supabase/migrations/20260817100000_cms_login_rate_limit.sql`
+  (table + SECURITY DEFINER RPC, 5/min, 15-min lockout) + module
+  `src/libs/cms/loginRateLimit.ts` with hashed identifiers. ACTIVATION
+  deferred to pre-cutover (cannot apply DDL to production Supabase from here:
+  no CLI token, no DB password). Current Map limiter kept for parity.
+- Account semantics documented in CMS README (delete = revoke access, keeps
+  auth identity; dummy authors; last-admin protection).
+
+### Phase 7 — CMS state/components/hooks (done)
+
+- `src/store/layoutStore.ts` → `src/store/cmsStore.ts`,
+  `useLayoutStore` → `useCmsStore`, `LayoutState` → `CmsState`; all 10
+  consumers updated.
+- Components/hooks/theme primitives already present in the CMS repo via the
+  full import — no cross-repo filesystem dependencies exist.
+
+### Phase 8 — CMS content actions / data reads (done)
+
+- CMS reads decoupled from public cached getters: career + hero GET now query
+  Supabase directly (uncached); blog/portfolio/contacts/skills GETs already
+  direct.
+- Upload consolidation: all blog + portfolio legacy upload paths
+  (`uploadBlogImageForNewPost`, `uploadBlogImage`, `uploadPortfolioImage*`)
+  now use `prepareImageUpload`/`uploadPreparedImage`; extension/MIME match the
+  actual processed format; stale `.webp`/`.png` variants cleaned on replace;
+  blog single-image upload gained the previously-missing asset invalidation.
+- Author invalidation carried over (usersActions).
+
+### Phase 9 — Public signed revalidation endpoint (done)
+
+- `src/libs/content/revalidation.ts` (public repo): event schema validation,
+  HMAC-SHA256 signing/verification (constant-time), 5-min replay window,
+  hard-coded allowed tag namespace, max 50 tags / 16 KB body.
+- `src/app/api/internal/content-revalidate/route.ts`: POST-only Route Handler,
+  `revalidateTag(tag, 'max')` (never `updateTag`), structured errors, logs
+  eventId/operation/entity/tags/duration — never secrets.
+- 16 unit tests; live smoke: valid → 200 accepted, wrong sig → 401, unknown
+  tag → 400, stale timestamp → 401, missing headers → 401, GET → 405.
+
+### Phase 10 — CMS revalidation client (done)
+
+- `src/libs/public-site/revalidation.ts` (CMS repo): builds the signed event
+  from descriptors, one deduplicated event per operation, 5 s timeout,
+  never throws (a committed DB write is never reported failed because the
+  cross-app request failed); logs eventId on failure for retry/debug.
+- Replaced the monolithic `invalidateContent`/`updateTag` adapter in all
+  action files + deleteAccount.
+- Cross-app contract test: CMS `invalidatePublicContent` → public endpoint →
+  200 accepted.
+
+### Phase 11 — Dual-run validation (in progress)
+
+Verified (no credentials required):
+- Both repos: lint clean, tsc 0, public 72 tests / CMS 60 tests, builds exit 0.
+- Public pages smoke: /en, /it, /en/privacy-policy, /sitemap.xml, /robots.txt
+  → 200; revalidation endpoint GET → 405.
+- CMS shell smoke: /en/cms/login → 200; /en/cms unauthenticated → 307 →
+  login; GitHub OAuth start → Supabase authorize with callback
+  `http://localhost:3001/en/cms/auth/callback` (canonical origin OK).
+- Cross-app revalidation: signed event from CMS module accepted by public
+  endpoint; author event with no id correctly skipped.
+
+NOT verified (blocked — requires admin credentials / deployment):
+- Browser E2E: admin/editor login, GitHub OAuth session, section CRUD,
+  uploads, EN/IT resume flow, author profile → public cache invalidation.
+- Storage parity (bucket/path/contentType/dimensions per asset type).
+- Production deploy + dual-run against real data.
+
+## Next phases
+
+### Phase 12 — Production cutover (BLOCKED: requires user)
+
+Requires user action: deploy standalone CMS (Vercel), configure secrets,
+update Supabase redirect allowlist, apply rate-limit migration SQL, restrict
+old CMS. Pre-cutover checklist: docs/cms-decoupling/pre-cutover-checklist.md.
+
+### Phase 13 — Remove CMS from public repo (GATED on Phase 12)
+
+Plan: "Only start after the standalone CMS has passed production cutover."
+NOT started — deleting the integrated CMS before the standalone CMS is
+production-validated would remove the rollback path.
+
+### Phase 14 — Post-extraction cleanup / docs (in progress)
+
+- Durable rate limiter activation (pre-cutover).
+- Publishable/secret key migration (post-cutover, Supabase console).
+- Docs sync for both repos.

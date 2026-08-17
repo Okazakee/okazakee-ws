@@ -84,14 +84,17 @@ bun run dev
 **Required:**
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL (from project settings)
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (from API settings)
-- `SUPABASE_SERVICE_ROLE_KEY` - Server-only Supabase admin key used by CMS actions that bypass RLS
+- `SUPABASE_SERVICE_ROLE_KEY` - Server-only Supabase admin key used by the integrated CMS actions that bypass RLS (removed after the CMS decoupling cutover)
 - `DOMAIN_URL` - Production domain (e.g., `https://example.com`)
 
 **Optional:**
-- `NEXT_PUBLIC_SITE_URL` - Site URL used for invite/reset redirects; optional locally, but should be set on Vercel
+- `APP_ENV` - Application environment: `production` | `staging` | `development` (defaults from `NODE_ENV`). Controls cache defaults and publish-date enforcement.
+- `CONTENT_ENFORCE_PUBLISH_DATE` - Hide future-dated posts from public reads (`true`/`false`; default: production builds only)
+- `NEXT_PUBLIC_SITE_URL` - Site URL used for metadata/OG; optional locally, set on Vercel
+- `CONTENT_REVALIDATION_SECRET` - Shared secret authenticating content-change events from the standalone CMS (`POST /api/internal/content-revalidate`)
 - `UMAMI_ENABLED` - Enable Umami analytics (`true`/`false`)
-- `ISR_REVALIDATION` - ISR/cache lifetime in seconds for both content caches and the GitHub stars fetch
-  (default: `86400` in production, `600` in preview/beta)
+- `ISR_REVALIDATION` - Cache lifetime in seconds for both content caches and the GitHub stars fetch
+  (default: `86400` in production, `600` otherwise)
 - `NEXT_PUBLIC_LOCALES` - Comma-separated locales (default: `en,it`)
 - `NEXT_PUBLIC_DEFAULT_LOCALE` - Default locale (default: `en`)
 
@@ -104,6 +107,7 @@ bun run start     # Production server
 bun run lint      # Lint code
 bun run lint-fix  # Lint and auto-fix
 bun run format    # Format code
+bun run test      # Run the Vitest test suite
 ```
 
 ## 🎨 Development
