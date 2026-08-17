@@ -341,3 +341,32 @@ Note: the public monolith has the same latent sharp packaging issue for its
   /en/cms → 307 → cms.okazakee.dev, revalidation bridge `sent`,
   cms.okazakee.dev login 200. CMS repo likewise pruned of public-only code
   (commit ef0a226): / → login redirect, /en → 404, login 200.
+
+### CMS routes moved to root path (2026-08-17)
+
+- `/[locale]/cms/*` → `/[locale]/*` (route group `(app)` keeps a
+  `connection()` layout for request-time rendering; root layout keeps
+  generateStaticParams for [locale]).
+  - dashboard `/en/cms` → `/en`; login → `/en/login`; auth → `/en/auth/*`.
+- Updated: getSafeCmsNext (root semantics, default `/`), login action/page
+  redirects, OAuth start/callback/ready URLs, middleware PUBLIC_PATHS,
+  SidePanel logout, invite target, auth tests.
+- CMS Proxy: whole app protected (session refresh on every locale path);
+  legacy `/{locale}/cms...` paths 307 → root paths (fixed locale
+  double-prefix bug); root `/` → `/{locale}` → login when unauthenticated.
+- Public Proxy: LEGACY_CMS_REDIRECT_HOST now strips the `/cms` segment
+  (`/en/cms` → `https://cms.okazakee.dev/en`, single hop).
+- Build fixes: login page usePathname moved inside Suspense; `connection()`
+  moved to the (app) route-group layout (root-layout connection() triggered
+  the blocking-route error); `force-dynamic` is incompatible with
+  `cacheComponents` (not used).
+- CI: public repo secrets (NEXT_PUBLIC_SUPABASE_URL/ANON_KEY, DOMAIN_URL —
+  public values) set via gh on both repos; CMS workflow now triggers on
+  `main` and uses secrets (was hardcoded placeholder + master/beta). Public
+  CI green (master+beta), CMS CI green (main).
+- Verified production: /en → login (unauth), /en/login 200, legacy
+  okazakee.dev/en/cms → cms.okazakee.dev/en, /it/cms → /it, public /en 200.
+- USER ACTION: add `https://cms.okazakee.dev/{en,it}/auth/callback` +
+  `http://localhost:3001/{en,it}/auth/callback` to the Supabase redirect
+  allowlist (GitHub OAuth uses the new paths); old `/cms/` entries can be
+  removed.

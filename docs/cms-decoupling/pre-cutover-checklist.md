@@ -23,9 +23,11 @@ this list in order; every item is reversible.
    (SQL editor or `supabase db push`) — creates `cms_login_attempts` +
    `cms_check_login_rate` + `cms_purge_login_attempts`. Additive/reversible.
 2. Update Auth → URL Configuration → Redirect URLs:
-   - `https://cms.okazakee.dev/en/cms/auth/callback`
-   - `https://cms.okazakee.dev/it/cms/auth/callback`
-   - local: `http://localhost:3001/en/cms/auth/callback` (dev)
+   (the CMS serves root paths since the route move; old `/cms/` entries can
+   be removed)
+   - `https://cms.okazakee.dev/en/auth/callback`
+   - `https://cms.okazakee.dev/it/auth/callback`
+   - local: `http://localhost:3001/en/auth/callback` (dev)
    - recovery destinations under the CMS origin.
 3. (Post-cutover, separate task) create a dedicated Supabase secret key
    `SUPABASE_SECRET_KEY=sb_secret_...` for the CMS; then remove
