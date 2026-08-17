@@ -370,3 +370,33 @@ Note: the public monolith has the same latent sharp packaging issue for its
   `http://localhost:3001/{en,it}/auth/callback` to the Supabase redirect
   allowlist (GitHub OAuth uses the new paths); old `/cms/` entries can be
   removed.
+
+### Supabase publishable/secret key migration — prepared (2026-08-17)
+
+- Created API keys via Management API: `okazakee_cms_publishable`
+  (publishable, works) — value captured and set as
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY on BOTH Vercel projects (prod+preview).
+- Discovered: the Management API REDACTS secret key values (one-time display
+  only in the Dashboard); API-created secret keys return "Invalid API key"
+  (the earlier failures were tests against the redacted string). Dashboard
+  creation is the only path for the secret key value.
+- Code prepared in both repos: config reads
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY / SUPABASE_SECRET_KEY with legacy
+  fallbacks (NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY) so
+  the swap is safe; admin client uses the shared server secret. Commits:
+  CMS `refactor: support publishable/secret supabase key names`, public
+  `refactor: support publishable supabase key name` (38093cc). Deployed;
+  CMS login 200, public /en 200.
+- Cleaned up junk keys; final key set: legacy anon/service_role (active),
+  publishable okazakee_cms_publishable, secret default (dashboard-created).
+
+REMAINING USER STEP (cannot be automated — secret values are one-time):
+1. Dashboard Settings → API Keys → Publishable and secret API keys tab →
+   copy the `default` secret key value (or create a named one).
+2. Set it as SUPABASE_SECRET_KEY in the okazakee-cms Vercel project
+   (production + preview).
+3. Remove SUPABASE_SERVICE_ROLE_KEY + NEXT_PUBLIC_SUPABASE_ANON_KEY from the
+   okazakee-cms project, redeploy, verify CMS admin ops (user management,
+   uploads) still work.
+4. Dashboard: deactivate legacy anon + service_role keys (step 6 of
+   Supabase's migration guide) once nothing uses them.
