@@ -269,3 +269,19 @@ production-validated would remove the rollback path.
 - Verified live: /en/cms, /en/cms/login, /it/cms → 307 → okazakee-cms.vercel.app;
   OAuth callback with ?code= carried through; /en still 200.
 - Commits: 6c0a0ee (redirect), 42fcbb9 (docs); master == beta, both pushed.
+
+### Custom domain — cms.okazakee.dev (2026-08-17)
+
+- User added the Cloudflare CNAME (cms.okazakee.dev, proxied). DNS resolved
+  (Cloudflare anycast), initial HTTPS 525 (SSL handshake to origin) until the
+  domain was attached to the Vercel project.
+- `vercel domains add cms.okazakee.dev okazakee-cms` → assigned; `vercel
+  domains verify` → "configured_correctly" (CNAME). HTTPS then 200.
+- Env switched: CMS `CMS_PUBLIC_URL=https://cms.okazakee.dev`; public
+  `LEGACY_CMS_REDIRECT_HOST=https://cms.okazakee.dev`. Both redeployed.
+- Verified: cms.okazakee.dev/en/cms/login 200; okazakee.dev/en/cms → 307 →
+  cms.okazakee.dev; okazakee.dev /en 200; GitHub OAuth start on the custom
+  domain → Supabase authorize (redirect_to=cms.okazakee.dev) → GitHub
+  authorize (allowlist accepted).
+- No Cloudflare API access existed (wrangler unauthenticated); DNS was set by
+  the user in the Cloudflare dashboard, domain attachment done via Vercel CLI.
