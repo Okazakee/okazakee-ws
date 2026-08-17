@@ -1,7 +1,8 @@
 'use server';
 
-import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { refresh } from 'next/cache';
+import { getCmsAdminClient } from '@/libs/cms/supabase/admin';
+import { invalidateContent } from '@/libs/cms/invalidate';
 import { createClient } from '@/utils/supabase/server';
 
 export async function deleteMyAccount() {
@@ -18,7 +19,7 @@ export async function deleteMyAccount() {
   }
 
   // Get admin client for operations that might bypass RLS
-  const adminClient = getAdminClient();
+  const adminClient = getCmsAdminClient();
 
   try {
     // Find the user in cms_allowed_users by email or GitHub username
@@ -91,6 +92,12 @@ export async function deleteMyAccount() {
       // Don't throw - profile deletion is not critical if it fails
     }
 
+    invalidateContent({
+      entity: 'author',
+      operation: 'update',
+      id: authUser.id,
+    });
+
     // Sign out the user
     const { error: signOutError } = await supabase.auth.signOut();
     if (signOutError) {
@@ -109,20 +116,4 @@ export async function deleteMyAccount() {
         error instanceof Error ? error.message : 'Failed to delete account',
     };
   }
-}
-
-function getAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Missing Supabase environment variables');
-  }
-
-  return createAdminClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
 }

@@ -1,10 +1,34 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { encode as blurkitEncode } from 'blurkit/node';
 import sharp from 'sharp';
 import { findAllowedCmsUser, getUserGithubUsername } from './auth';
+import { getCmsAdminClient } from '@/libs/cms/supabase/admin';
 import { createClient } from '@/utils/supabase/server';
 import { FALLBACK_BLURHASH, isValidBlurhash } from '@/utils/blurhashUtils';
+
+// Pure validation helpers live in @/utils/cms/validation (unit-tested).
+// Re-exported here to keep every existing call site unchanged.
+import {
+  getStoragePathFromPublicUrl,
+  isValidContactUrl,
+  isValidDate,
+  isValidHttpUrl,
+  isValidUrl,
+  sanitizeFilename,
+  validateImageFile,
+  validatePdfFile,
+} from '@/utils/cms/validation';
+
+export {
+  getStoragePathFromPublicUrl,
+  isValidContactUrl,
+  isValidDate,
+  isValidHttpUrl,
+  isValidUrl,
+  sanitizeFilename,
+  validateImageFile,
+  validatePdfFile,
+};
 
 type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -33,8 +57,8 @@ export async function getCmsActionContext(
   const role =
     requiredRole === 'authenticated'
       ? null
-      : (await findAllowedCmsUser(supabase, user.email, githubUsername))?.role ||
-        null;
+      : (await findAllowedCmsUser(supabase, user.email, githubUsername))
+          ?.role || null;
 
   if (requiredRole === 'admin' && role !== 'admin') {
     throw new Error('Unauthorized: Admin access required');
@@ -153,17 +177,10 @@ export async function requireAllowedPostWriter(): Promise<{
 
 /**
  * Service-role Supabase client. Use only in server code after validating the request (e.g. requireAllowedPostWriter).
- * Bypasses RLS.
+ * Bypasses RLS. Canonical implementation: src/libs/cms/supabase/admin.ts
  */
 export function getAdminClient(): SupabaseClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error('Missing Supabase admin credentials');
-  }
-  return createSupabaseClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  return getCmsAdminClient();
 }
 
 /**
@@ -218,11 +235,17 @@ export async function processImage(
     let pipeline = sharp(inputBuffer);
 
     if (maxWidth && maxHeight) {
-      pipeline = pipeline.resize(maxWidth, maxHeight, { fit: 'cover', position: 'center' });
+      pipeline = pipeline.resize(maxWidth, maxHeight, {
+        fit: 'cover',
+        position: 'center',
+      });
     } else {
       const metadata = await sharp(inputBuffer).metadata();
       if ((metadata.height || 0) > maxHeight) {
-        pipeline = pipeline.resize(undefined, maxHeight, { fit: 'inside', withoutEnlargement: true });
+        pipeline = pipeline.resize(undefined, maxHeight, {
+          fit: 'inside',
+          withoutEnlargement: true,
+        });
       }
     }
 
@@ -235,7 +258,10 @@ export async function processImage(
       format = 'png';
     }
 
-    const { hash: blurhash } = await blurkitEncode(inputBuffer.buffer as ArrayBuffer, { size: 32 });
+    const { hash: blurhash } = await blurkitEncode(
+      inputBuffer.buffer as ArrayBuffer,
+      { size: 32 }
+    );
 
     const outMeta = await sharp(processedBuffer).metadata();
 
@@ -263,7 +289,9 @@ export async function generateBlurhashFromBuffer(
   buffer: Buffer
 ): Promise<string> {
   try {
-    const { hash } = await blurkitEncode(buffer.buffer as ArrayBuffer, { size: 32 });
+    const { hash } = await blurkitEncode(buffer.buffer as ArrayBuffer, {
+      size: 32,
+    });
     return hash;
   } catch {
     return FALLBACK_BLURHASH;
@@ -274,7 +302,10 @@ export async function prepareImageUpload(
   file: File,
   blurhashURL?: string,
   options?: ProcessImageOptions
-): Promise<{ success: true; image: PreparedImageUpload } | { success: false; error: string }> {
+): Promise<
+  | { success: true; image: PreparedImageUpload }
+  | { success: false; error: string }
+> {
   const validation = validateImageFile(file);
   if (!validation.isValid) {
     return { success: false, error: validation.error || 'Invalid image file' };
@@ -360,172 +391,4 @@ export async function removePublicFileIfDifferent(
   const filePath = getStoragePathFromPublicUrl(fileUrl, bucket);
   if (!filePath || filePath === nextPath) return;
   await supabase.storage.from(bucket).remove([filePath]);
-}
-
-/**
- * Sanitizes a string for use in filenames
- * Removes special characters, replaces spaces with hyphens, converts to lowercase
- */
-export function sanitizeFilename(str: string): string {
-  return str
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single
-    .substring(0, 50); // Limit length
-}
-
-// Allowed image MIME types (raster formats only - NO SVG for security)
-const ALLOWED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/avif',
-] as const;
-
-/**
- * Validates an uploaded file for images
- * Rejects SVGs to prevent XSS/script injection attacks
- * Accepts WebP files (expected to be pre-processed client-side)
- */
-export function validateImageFile(file: File): {
-  isValid: boolean;
-  error?: string;
-} {
-  // Reject SVG explicitly (security risk - can contain scripts)
-  if (
-    file.type === 'image/svg+xml' ||
-    file.name.toLowerCase().endsWith('.svg')
-  ) {
-    return {
-      isValid: false,
-      error:
-        'SVG files are not allowed for security reasons. Please use JPG, PNG, or WebP.',
-    };
-  }
-
-  // Accept WebP files (should be pre-processed client-side)
-  if (file.type === 'image/webp') {
-    // File size validation (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      return {
-        isValid: false,
-        error:
-          'Image file is too large. Please select an image smaller than 10MB',
-      };
-    }
-    // File name validation
-    if (file.name.length > 255) {
-      return { isValid: false, error: 'File name is too long' };
-    }
-    return { isValid: true };
-  }
-
-  // File type validation - only allow specific raster formats
-  if (
-    !ALLOWED_IMAGE_TYPES.includes(
-      file.type as (typeof ALLOWED_IMAGE_TYPES)[number]
-    )
-  ) {
-    return {
-      isValid: false,
-      error: 'Please select a valid image file (JPG, PNG, WebP, GIF, or AVIF)',
-    };
-  }
-
-  // File size validation (10MB limit - will be compressed anyway)
-  if (file.size > 10 * 1024 * 1024) {
-    return {
-      isValid: false,
-      error:
-        'Image file is too large. Please select an image smaller than 10MB',
-    };
-  }
-
-  // File name validation
-  if (file.name.length > 255) {
-    return { isValid: false, error: 'File name is too long' };
-  }
-
-  return { isValid: true };
-}
-
-/**
- * Validates an uploaded PDF file
- */
-export function validatePdfFile(file: File): {
-  isValid: boolean;
-  error?: string;
-} {
-  // File type validation
-  const fileType = file.type.toLowerCase();
-  const hasPdfExtension = file.name.toLowerCase().endsWith('.pdf');
-  const hasPdfMimeType = fileType === 'application/pdf';
-  const hasGenericMimeType = fileType === '' || fileType === 'application/octet-stream';
-
-  if (!hasPdfMimeType && !(hasPdfExtension && hasGenericMimeType)) {
-    return { isValid: false, error: 'Please select a valid PDF file' };
-  }
-
-  // File size validation (10MB limit for PDFs)
-  if (file.size > 10 * 1024 * 1024) {
-    return {
-      isValid: false,
-      error: 'PDF file is too large. Please select a file smaller than 10MB',
-    };
-  }
-
-  // File name validation
-  if (file.name.length > 255) {
-    return { isValid: false, error: 'File name is too long' };
-  }
-
-  return { isValid: true };
-}
-
-/**
- * Extracts the storage path (within the bucket) from a Supabase public object URL.
- * Returns null if the URL is not from the given bucket or path is empty.
- */
-export function getStoragePathFromPublicUrl(
-  fileUrl: string,
-  bucket: string
-): string | null {
-  try {
-    const url = new URL(fileUrl);
-    const pathParts = url.pathname.split('/');
-    const bucketIndex = pathParts.indexOf(bucket);
-    if (bucketIndex === -1) return null;
-    const filePath = decodeURIComponent(
-      pathParts.slice(bucketIndex + 1).join('/')
-    );
-    return filePath || null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Validates a URL string
- */
-export function isValidUrl(urlString: string): boolean {
-  if (!urlString || urlString.trim() === '') return true; // Empty is valid (optional field)
-  try {
-    new URL(urlString);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Validates a date string
- */
-export function isValidDate(dateString: string): boolean {
-  if (!dateString) return false;
-  const date = new Date(dateString);
-  return date instanceof Date && !Number.isNaN(date.getTime());
 }
