@@ -270,7 +270,6 @@ export async function getPost(
   type: string
 ): Promise<PostWithAuthor | null> {
   'use cache';
-  cacheTag(cacheTags.post); // legacy broad detail tag (migration compat)
   cacheTag(postDetailTag(type === 'portfolio' ? 'portfolio' : 'blog', id));
   applySupabaseCacheLife();
 

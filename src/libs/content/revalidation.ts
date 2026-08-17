@@ -44,7 +44,7 @@ const ALLOWED_ENTITIES = [
 
 // Hard-coded allowed tag namespace. Never accept arbitrary tags from the CMS.
 const ALLOWED_TAG_PATTERN =
-  /^(translations|privacy-policy|hero|skills|career|contacts|blog|portfolio|posts|post|resume|hero_section|post:(blog|portfolio):[A-Za-z0-9_-]+|author:[A-Za-z0-9_-]+)$/;
+  /^(translations|privacy-policy|hero|skills|career|contacts|blog|portfolio|posts|resume|hero_section|post:(blog|portfolio):[A-Za-z0-9_-]+|author:[A-Za-z0-9_-]+)$/;
 
 const EVENT_ID_PATTERN = /^[A-Za-z0-9-]{8,100}$/;
 const MAX_ENTITY_ID_LENGTH = 100;

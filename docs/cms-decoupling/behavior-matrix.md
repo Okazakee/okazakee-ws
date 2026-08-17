@@ -98,8 +98,8 @@ classified so no feature is silently lost during the split.
 |---|---|---|
 | GET posts | PRESERVE | `blogActions GET` — `requireAuth()` |
 | Create post | PRESERVE | `requireAllowedPostWriter()`; elevated insert; `updateTag('blog')` + `updateTag('posts')`; rollback helper deletes image + row on apply failure |
-| Update post | PRESERVE | same auth; `updateTag('blog','posts','post')` |
-| Delete post | PRESERVE | removes image object then row; tags |
+| Update post | PRESERVE | same auth; signed revalidation event: `blog`, `posts`, `post:blog:<id>` |
+| Delete post | PRESERVE | deletes the row first, then the image object (best-effort); detail + collection tags |
 | Batch publish | PRESERVE | structured `created/updated/errors`; tags only when committed changes exist |
 | Hidden flag | PRESERVE | public queries filter `hidden = false` |
 | Future date | DEFER (decision) | public filters `created_at <= now` when `VERCEL_ENV=production`; exact scheduled publishing needs a decision (§10) |
@@ -114,7 +114,7 @@ Same profile as Blog:
 
 | Capability | Status | Evidence / note |
 |---|---|---|
-| CRUD + batch publish | PRESERVE | `portfolioActions`; `requireAllowedPostWriter()`; tags `portfolio`, `posts`, `post` |
+| CRUD + batch publish | PRESERVE | `portfolioActions`; `requireAllowedPostWriter()`; tags `portfolio`, `posts`, `post:portfolio:<id>` |
 | External links / store links | FIX DURING EXTRACTION (validation) | generic `isValidUrl` currently accepts any scheme; use https/http + required store scheme |
 | Image upload | FIX DURING EXTRACTION | same `.webp` filename hardcoding as Blog |
 | Shared `posts-section` translations | PRESERVE | same block as Blog |
