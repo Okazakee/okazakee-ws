@@ -239,8 +239,29 @@ export default async function proxy(request: NextRequest) {
     const currentLocale = extractLocaleFromPath(pathname);
     const hasLocale = currentLocale !== null;
 
-    // Handle CMS routes authentication
+    // CMS cutover redirect: once the standalone CMS is live, legacy
+    // /{locale}/cms* URLs go to the new host (307 preserves the query
+    // string, e.g. OAuth codes and next= params). Controlled by
+    // LEGACY_CMS_REDIRECT_HOST; when unset the integrated CMS keeps
+    // serving (local dev / rollback).
     if (hasLocale && isCMSRoute(pathname)) {
+      const legacyCmsHost = process.env.LEGACY_CMS_REDIRECT_HOST;
+      if (legacyCmsHost) {
+        try {
+          const target = new URL(legacyCmsHost);
+          const url = request.nextUrl.clone();
+          url.protocol = target.protocol;
+          url.host = target.host;
+          return NextResponse.redirect(url, 307);
+        } catch {
+          console.error(
+            'Invalid LEGACY_CMS_REDIRECT_HOST:',
+            legacyCmsHost
+          );
+        }
+      }
+
+      // Handle CMS routes authentication
       try {
         const response = await updateSession(request, currentLocale);
         if (response instanceof NextResponse) {
