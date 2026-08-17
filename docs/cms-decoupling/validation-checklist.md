@@ -40,5 +40,7 @@ delete it at the end. Expected results are from the behavior matrix
 
 ## Rollback note
 
-Any failure is localized — both apps share Supabase; the old integrated CMS is
-one commit + env toggle away (`LEGACY_CMS_REDIRECT_HOST` unset).
+Any failure is localized — both apps share Supabase. The integrated CMS no
+longer exists in the public repo (removed during Phase 13); the only rollback
+lever is the Proxy redirect (`LEGACY_CMS_REDIRECT_HOST` unset), which routes
+`/{locale}/cms*` to the public site's not-found instead of the CMS.

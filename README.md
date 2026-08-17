@@ -2,9 +2,10 @@
 
 A modern personal portfolio and blog website built with Next.js 16, with
 multi-language support. Content is managed by a **separate standalone CMS**
-([Okazakee/okazakee-cms](https://github.com/Okazakee/okazakee-cms), private)
-which writes to the same Supabase project and invalidates public caches via a
-signed revalidation endpoint (`POST /api/internal/content-revalidate`).
+([Okazakee/okazakee-cms](https://github.com/Okazakee/okazakee-cms), private,
+live at [cms.okazakee.dev](https://cms.okazakee.dev)) which writes to the
+same Supabase project and invalidates public caches via a signed revalidation
+endpoint (`POST /api/internal/content-revalidate`).
 
 ## 🚀 Features
 
@@ -54,7 +55,7 @@ bun install
 ```env
 # Required - Get from Supabase project settings (Settings → API)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your-key
 DOMAIN_URL=http://localhost:3000
 
 # Optional
@@ -66,11 +67,13 @@ NEXT_PUBLIC_DEFAULT_LOCALE=en
 ```
 
 3. Set up Supabase:
-   - Create project and get URL/anon key
-   - Create tables: `user_profiles`, `cms_allowed_users`, `blog_posts`, `portfolio_posts`, `skills`, `career_entries`, `contacts`, `hero`, `resume`, `i18n_translations`, `layout_settings`, `privacy_policy`
-   - Create functions: `increment_blog_post_views_bigint`, `increment_portfolio_post_views_bigint`
-   - Create storage bucket: `website`
-   - Configure RLS policies
+   - The content schema (tables, RLS, storage) is owned by the standalone
+     CMS repository ([Okazakee/okazakee-cms](https://github.com/Okazakee/okazakee-cms),
+     private). The public site only READS content via the publishable key.
+   - Public-site functions: `increment_blog_post_views_bigint`,
+     `increment_portfolio_post_views_bigint`
+   - Storage bucket: `website`
+   - Configure RLS so public reads are allowed for `anon`
 
 4. Run dev server:
 
@@ -82,13 +85,15 @@ bun run dev
 
 **Required:**
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL (from project settings)
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (from API settings)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` - Supabase publishable key (`sb_publishable_…`; never use a secret/service key here)
 - `DOMAIN_URL` - Production domain (e.g., `https://example.com`)
 
 **Optional:**
 - `APP_ENV` - Application environment: `production` | `staging` | `development` (defaults from `NODE_ENV`). Controls cache defaults and publish-date enforcement.
 - `CONTENT_ENFORCE_PUBLISH_DATE` - Hide future-dated posts from public reads (`true`/`false`; default: production builds only)
 - `NEXT_PUBLIC_SITE_URL` - Site URL used for metadata/OG; optional locally, set on Vercel
+- `NEXT_PUBLIC_CMS_URL` - Standalone CMS origin (footer "CMS" link; falls back to the legacy `/{locale}/cms` path, which the Proxy redirects)
+- `LEGACY_CMS_REDIRECT_HOST` - When set, legacy `/{locale}/cms*` URLs redirect (307) to the standalone CMS host
 - `CONTENT_REVALIDATION_SECRET` - Shared secret authenticating content-change events from the standalone CMS (`POST /api/internal/content-revalidate`)
 - `UMAMI_ENABLED` - Enable Umami analytics (`true`/`false`)
 - `ISR_REVALIDATION` - Cache lifetime in seconds for both content caches and the GitHub stars fetch
@@ -146,10 +151,19 @@ endpoint validates them (HMAC, replay window, tag allowlist) and calls
 ## 🐛 Troubleshooting
 
 **Build Errors:** Check env vars, Node.js version, clear `.next` folder  
-**Auth Issues:** Verify Supabase credentials, check `cms_allowed_users` table, OAuth redirect URLs  
-**Database:** Ensure tables exist, check RLS policies, verify functions  
+**Cache not updating:** Verify the CMS's `WEBSITE_REVALIDATION_SECRET` matches this repo's `CONTENT_REVALIDATION_SECRET`; check the CMS logs for `[revalidation]` failures  
+**Database:** Ensure tables exist (schema is owned by the CMS repo), check RLS policies, verify view-counter functions  
 **Images:** Check storage bucket config, policies, file size limits  
-**i18n:** Verify translations in database, check locale routing
+**i18n:** Verify translations in database (managed from the CMS), check locale routing
+
+## 🧪 Tests & CI
+
+- Unit tests: `bun run test` (Vitest, `src/**/*.test.ts`) — covers the cache-tag
+  vocabulary, the signed revalidation contract, and routing rules.
+- CI (`.github/workflows/ci.yml`) runs on `master`/`beta` and pull requests:
+  install → lint → test → build → typecheck (`bunx tsc --noEmit`). Build runs
+  before typecheck because a fresh checkout needs `.next/types` for route and
+  image module declarations.
 
 ## 🤝 Contributing
 

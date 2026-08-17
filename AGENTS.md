@@ -122,8 +122,8 @@ export function SectionHeader({
 - **Types and interfaces:** PascalCase. `PostAuthor`, `ThemeState`, `BlogPost`
 - **Type aliases for discriminated unions:** `{Entity}Result` for operation results. `ContactsResult`, `I18nResult`
 - **Data types:** `{Entity}Data` suffix. `PostWithAuthor`, `CreateContactData`
-- **Zustand stores:** `use{Name}Store`. `useThemeStore`, `useLayoutStore`
-- **Server action files:** camelCase with domain prefix. `login.ts`, `signup.ts`, `getUser.ts`
+- **Zustand stores:** `use{Name}Store`. `useThemeStore`
+- **Server action files:** camelCase with domain prefix. `getCurrentViews.ts`, `incrementViews.ts`, `search.ts`
 - **Section action files:** `{section}Actions.ts`. `blogActions.ts`, `careerActions.ts`
 - **Component files:** PascalCase matching component name. `SectionHeader.tsx`, `TranslationField.tsx`
 - **Hook files:** `use{HookName}.ts`. `useDraft.ts`, `useFileUpload.ts`
@@ -172,7 +172,10 @@ export async function getPosts(): Promise<BlogPost[] | null> {
 | `@app/*` | `./src/app/*` |
 | `@layout/*` | `./src/components/layout/*` |
 
-- **Supabase clients:** Server client: `import { createClient } from '@/utils/supabase/server'`. Client-side: `import { createClient } from '@/utils/supabase/client'`. Admin/browser client: `import { createClient as createAdminClient } from '@supabase/supabase-js'`.
+- **Supabase clients:** The public site is read-only and uses ONE stateless
+  client created in `src/utils/getData.ts` with the publishable key
+  (`@supabase/supabase-js`). There is no server/client/admin Supabase client
+  in this repo — the CMS owns all writes. Never add elevated keys here.
 - **Never use relative imports** for anything outside the immediate sibling directory. Always use `@/` aliases.
 
 ```typescript
@@ -229,12 +232,8 @@ export async function getCurrentViews(postId: string, postType: 'blog' | 'portfo
 - **Supabase/RPC comments:** Keep inline comments when the API behavior is non-obvious.
 
 ```typescript
-// Rate limit by both IP and email
-const rateLimitKey = `login:${clientIp}:${email.toLowerCase()}`;
-
-// Do not revalidatePath here: it can trigger layout refetch before the client
-// redirects, causing a client-side exception.
-return { success: true };
+// Skip API calls for preview or non-numeric post id (e.g. CMS post preview)
+const numericId = postId.trim() !== '' && /^\d+$/.test(postId);
 ```
 
 ## 12. Testing
@@ -266,7 +265,7 @@ conventions for file placement, naming, and structure.
 - **Type checker:** `tsc` with `strict: true`. Config: `tsconfig.json`.
 - **CSS:** Tailwind CSS 4 with `@tailwindcss/postcss`. Config: `postcss.config.mjs`, `tailwind.config.ts`.
 - **Runtime:** Next.js 16 with Turbopack dev server. Config: `next.config.ts`.
-- **Environment variables:** Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DOMAIN_URL`. Full list in `.env.local.example`.
+- **Environment variables:** Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `DOMAIN_URL`. Full list in `.env.local.example`.
 - **Deployment:** Vercel with Next.js framework preset. Build output: `.next/`.
 
 ## 15. Red Lines

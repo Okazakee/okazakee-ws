@@ -1,5 +1,14 @@
 # CMS Decoupling — Production Cutover Checklist
 
+> **Status: COMPLETED (2026-08-17).** The env names below reflect the
+> pre-cutover state. Since cutover the public site and the CMS migrated to
+> the publishable/secret Supabase key split:
+> - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+> - `SUPABASE_SERVICE_ROLE_KEY` → `SUPABASE_SECRET_KEY`
+> Login rate limiting now uses the hardened, split-bucket migrations in
+> `Okazakee/okazakee-cms/supabase/migrations/` (see that repo's README).
+> This checklist is kept as the historical record of the cutover.
+
 Standalone CMS: `Okazakee/okazakee-cms` (private, `main`)
 Public site: `Okazakee/okazakee-ws` (`beta`/`master`)
 Extraction source commit: `234b064` (public repo beta)
