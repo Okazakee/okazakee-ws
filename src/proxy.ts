@@ -224,9 +224,10 @@ export default async function proxy(request: NextRequest) {
     const hasLocale = currentLocale !== null;
 
     // Legacy CMS cutover redirect: /{locale}/cms* URLs go to the standalone
-    // CMS host (307 preserves the query string). Controlled by
-    // LEGACY_CMS_REDIRECT_HOST; when unset these routes no longer exist in
-    // this repository.
+    // CMS host, with the /cms segment stripped (the CMS now serves root
+    // paths: /en/cms -> https://cms.okazakee.dev/en). 307 preserves the
+    // query string. Controlled by LEGACY_CMS_REDIRECT_HOST; when unset these
+    // routes no longer exist in this repository.
     if (hasLocale && isCMSRoute(pathname)) {
       const legacyCmsHost = process.env.LEGACY_CMS_REDIRECT_HOST;
       if (legacyCmsHost) {
@@ -235,6 +236,9 @@ export default async function proxy(request: NextRequest) {
           const url = request.nextUrl.clone();
           url.protocol = target.protocol;
           url.host = target.host;
+          url.pathname = validatePathname(
+            pathname.replace(/\/cms/, '')
+          );
           return NextResponse.redirect(url, 307);
         } catch {
           console.error(
