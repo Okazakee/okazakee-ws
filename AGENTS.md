@@ -1,15 +1,17 @@
 ## 1. Overview
 
-Next.js 16 personal portfolio, blog, and CMS. TypeScript throughout, React 19, Supabase for auth/storage/DB, Tailwind CSS 4 for styling, Zustand for client state, and next-intl for EN/IT i18n. The app router routes all pages under `/[locale]/...`.
+Next.js 16 personal portfolio and blog. TypeScript throughout, React 19, Supabase for storage/DB (content + RPCs), Tailwind CSS 4 for styling, Zustand for client state, and next-intl for EN/IT i18n. The app router routes all pages under `/[locale]/...`.
 
-> **CMS decoupling in progress (2026-08):** the integrated CMS is being
-> extracted to `Okazakee/okazakee-cms` (private). Until production cutover
-> (see `docs/cms-decoupling/pre-cutover-checklist.md`) the monolith still
-> contains the CMS; the public cache contract is already centralized in
-> `src/libs/content/cacheTags.ts` + `src/libs/cms/invalidation.ts`, and the
-> signed revalidation endpoint lives at `/api/internal/content-revalidate`.
-> Do not reintroduce ad-hoc cache-tag strings in CMS actions; use
-> `invalidatePublicContent` / descriptors.
+> **CMS decoupled (2026-08):** content editing lives in the standalone
+> `Okazakee/okazakee-cms` repo (private). This repo is public-site only: no
+> CMS routes, actions, components, hooks, stores or elevated Supabase
+> credentials. The public cache vocabulary lives in
+> `src/libs/content/cacheTags.ts`; the CMS sends signed content-change events
+> to `/api/internal/content-revalidate`, which validates them (HMAC, replay
+> window, hard-coded tag allowlist) and calls `revalidateTag(tag, 'max')`.
+> Legacy `/{locale}/cms*` URLs redirect to the CMS via
+> `LEGACY_CMS_REDIRECT_HOST` in `src/proxy.ts`. Migration docs:
+> `docs/cms-decoupling/`.
 
 ## 2. Repository Structure
 
@@ -17,28 +19,21 @@ Next.js 16 personal portfolio, blog, and CMS. TypeScript throughout, React 19, S
 src/
   app/
     [locale]/                       # Next.js app router pages (i18n route group)
-      cms/                          # CMS auth (login, register, OAuth callbacks) and admin dashboard
       [post_type]/[id]/[title]/     # Blog/portfolio post detail pages
     actions/                        # Server actions ('use server')
-      cms/                          # CMS actions: auth, CRUD per section, file helpers, profile sync
       getCurrentViews.ts            # View count fetcher
       incrementViews.ts             # View count incrementer
       search.ts                     # Search action
-    hooks/                          # Shared client hooks (useAutoSave, useZoom)
     providers.tsx                   # Client providers (ThemeProvider)
   components/
-    cms/sections/                   # CMS editor components per section (Blog, Career, Contacts, Hero, Layout, Portfolio, Privacy, Skills, Users)
-    cms/shared/                     # Shared CMS UI (TranslationField, FileDropzone, PublishBar, ConfirmDialog, etc.)
     common/                         # Reusable public components (PostCard, Searchbar, ImageModal, etc.)
-    common/cms/                     # CMS shared components (AccountSection, SidePanel, Previews)
     layout/                         # Layout components (Header, Footer, NavMenu, ThemeToggle, LanguageToggle, NextImage, MarkdownRenderer)
     layout/mainPage/                # Page-specific sections (Hero, Skills, Career, Contacts, PostSections)
-  hooks/cms/                        # CMS-specific client hooks (useDraft, useFileUpload, useFormValidation, useSectionTranslations, etc.)
-  i18n/                             # next-intl config (routing, request) + static CMS JSON messages
-  libs/                             # Shared libs (rateLimiters)
-  store/                            # Zustand stores (layoutStore, themeStore)
+  i18n/                             # next-intl config (routing, request) + public messages
+  libs/content/                     # Public cache-tag vocabulary + revalidation contract
+  store/                            # Zustand stores (themeStore)
   types/                            # Shared domain types (fetchedData.types)
-  utils/                            # Utilities (getData, imageProcessor, tokenBucket, blurhash, Supabase clients)
+  utils/                            # Utilities (getData, tokenBucket, formatDate, Supabase stateless client)
   proxy.ts                          # Proxy handler for Vercel deployment (not app code)
 ```
 
@@ -124,9 +119,9 @@ export function SectionHeader({
 - **Functions:** camelCase. Prefer `get`/`handle`/`use` prefixes where semantically appropriate. `getUser()`, `handleSubmit()`, `useDraft()`
 - **React components:** PascalCase, named exports. `export function SectionHeader(...)`
 - **Component props interfaces:** `{ComponentName}Props`. `SectionHeaderProps`, `ErrorBannerProps`
-- **Types and interfaces:** PascalCase. `CMSUser`, `CMSBootData`, `ThemeState`, `PostAuthor`
+- **Types and interfaces:** PascalCase. `PostAuthor`, `ThemeState`, `BlogPost`
 - **Type aliases for discriminated unions:** `{Entity}Result` for operation results. `ContactsResult`, `I18nResult`
-- **Data types:** `{Entity}Data` suffix. `CMSHeroBootData`, `CreateContactData`
+- **Data types:** `{Entity}Data` suffix. `PostWithAuthor`, `CreateContactData`
 - **Zustand stores:** `use{Name}Store`. `useThemeStore`, `useLayoutStore`
 - **Server action files:** camelCase with domain prefix. `login.ts`, `signup.ts`, `getUser.ts`
 - **Section action files:** `{section}Actions.ts`. `blogActions.ts`, `careerActions.ts`
@@ -147,7 +142,7 @@ export function SectionHeader({
 - **Type assertion with `as`:** Used sparingly for Supabase query results.
 
 ```typescript
-export type CmsRole = (typeof CMS_ALLOWED_ROLES)[number];
+export type ThemeMode = 'light' | 'dark' | 'auto';
 
 interface ThemeState {
   mode: ThemeMode;
@@ -155,7 +150,7 @@ interface ThemeState {
   setThemeMode: (mode: ThemeMode) => void;
 }
 
-export async function getUser(): Promise<CMSUser | null> {
+export async function getPosts(): Promise<BlogPost[] | null> {
   // ...
 }
 ```
@@ -245,8 +240,8 @@ return { success: true };
 ## 12. Testing
 
 Vitest is configured (`vitest.config.ts`, node environment). Tests live next
-to sources as `*.test.ts` (currently: CMS validation/auth helpers, cache-tag
-vocabulary, invalidation descriptors, revalidation contract). Run with
+to sources as `*.test.ts` (currently: cache-tag vocabulary and the
+revalidation contract). Run with
 `bun run test` (`vitest run`). CI (`.github/workflows/ci.yml`) runs lint,
 test, build, then typecheck (build first: fresh checkouts need `.next/types`
 for image/route module resolution). When tests are added, follow existing
@@ -255,7 +250,7 @@ conventions for file placement, naming, and structure.
 ## 13. Git
 
 - **Commit prefixes:** Conventional commits are used alongside unprefixed messages. Observed prefixes: `fix:`, `feat:`, `refactor:`, `chore:`, `revert:`, `security:`, `docs:`.
-- **Scoped commits:** Rare (3.7% of commits). Scopes are lowercase: `auth`, `images`, `cms`.
+- **Scoped commits:** Rare (3.7% of commits). Scopes are lowercase: `auth`, `images`.
 - **Subject length:** p50 is 23 chars, p95 is 72 chars. Keep subjects concise.
 - **Body:** Only 13% of commits have a body. No strict convention.
 - **Branch naming:** No strict prefix convention observed. Active branches use descriptive names like `beta`.

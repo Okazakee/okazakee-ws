@@ -5,6 +5,10 @@ import CopyLinkButton from '../common/CopyButton';
 export default async function Footer({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: 'footer' });
 
+  // Standalone CMS origin (falls back to the legacy path, which the Proxy
+  // redirects to the CMS host when LEGACY_CMS_REDIRECT_HOST is set).
+  const cmsPublicUrl = process.env.NEXT_PUBLIC_CMS_URL ?? `/${locale}/cms`;
+
   return (
     <footer className="border-t border-darktext dark:border-lighttext">
       <div className="py-4 lg:flex-row flex-col-reverse flex items-center lg:justify-between justify-center relative mx-auto max-w-(--breakpoint-2xl)">
@@ -32,7 +36,7 @@ export default async function Footer({ locale }: { locale: string }) {
 
         <div className="text-xs xs:text-base sm:text-base md:my-0 w-fit lg:mr-5 flex items-center gap-3">
           <Link
-            href={`/${locale}/cms`}
+            href={cmsPublicUrl}
             prefetch={false}
             className="hover:text-main text-xs xs:text-sm md:text-base text-right transition-colors duration-0"
           >

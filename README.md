@@ -1,6 +1,10 @@
 # Okazakee Website
 
-A modern personal portfolio and blog website built with Next.js 16, featuring an integrated CMS with role-based access control and multi-language support.
+A modern personal portfolio and blog website built with Next.js 16, with
+multi-language support. Content is managed by a **separate standalone CMS**
+([Okazakee/okazakee-cms](https://github.com/Okazakee/okazakee-cms), private)
+which writes to the same Supabase project and invalidates public caches via a
+signed revalidation endpoint (`POST /api/internal/content-revalidate`).
 
 ## 🚀 Features
 
@@ -9,12 +13,6 @@ A modern personal portfolio and blog website built with Next.js 16, featuring an
 - Portfolio projects and blog posts with search
 - Dark/Light/Auto theme, multi-language (EN/IT)
 - View tracking, SEO optimization, responsive design
-
-**CMS:**
-- Role-based access (Admin/Editor)
-- Section management (Hero, Skills, Career, Portfolio, Blog, Contacts, Layout, Privacy Policy)
-- Email/Password + GitHub OAuth authentication
-- Auto-save, live previews, image optimization, markdown support
 
 ## 🛠️ Tech Stack
 
@@ -29,8 +27,10 @@ A modern personal portfolio and blog website built with Next.js 16, featuring an
 
 **Routing:** `/[locale]/[post_type]/[id]/[title]` structure with i18n  
 **Components:** Server Components for data/SEO, Client Components for interactivity  
-**State:** Zustand stores (`layoutStore`, `themeStore`)  
-**Supabase:** Server/client clients + middleware for session management
+**State:** Zustand store (`themeStore`)  
+**Supabase:** stateless publishable-key read client for content, RPCs and view counters  
+**Caching:** Next Cache Components + `cacheTags` vocabulary (`src/libs/content/cacheTags.ts`);
+the signed revalidation endpoint accepts content-change events from the CMS
 
 ## 🚦 Getting Started
 
@@ -55,7 +55,6 @@ bun install
 # Required - Get from Supabase project settings (Settings → API)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key-here
 DOMAIN_URL=http://localhost:3000
 
 # Optional
@@ -84,7 +83,6 @@ bun run dev
 **Required:**
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL (from project settings)
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (from API settings)
-- `SUPABASE_SERVICE_ROLE_KEY` - Server-only Supabase admin key used by the integrated CMS actions that bypass RLS (removed after the CMS decoupling cutover)
 - `DOMAIN_URL` - Production domain (e.g., `https://example.com`)
 
 **Optional:**
@@ -114,14 +112,16 @@ bun run test      # Run the Vitest test suite
 
 **Structure:**
 - `src/components/common/` - Reusable components
-- `src/components/common/cms/` - CMS sections and SidePanel
-- `src/app/actions/cms/` - Server actions (`'use server'`) and file helpers
-- `src/utils/` - Utilities and Supabase clients
+- `src/app/actions/` - Server actions (`'use server'`): search, view counters
+- `src/utils/getData.ts` - Cached public read layer (Next Cache Components)
+- `src/libs/content/` - Public cache-tag vocabulary and revalidation contract
+- `src/utils/` - Utilities and the stateless Supabase read client
 
-**Adding CMS Sections:**
-1. Create section component in `src/components/common/cms/`
-2. Add actions in `src/app/actions/cms/sections/`
-3. Register in `src/app/[locale]/cms/page.tsx` and `src/components/common/cms/SidePanel.tsx`
+**Caching:** public reads are cached with `cacheTag`/`cacheLife` using the
+vocabulary in `src/libs/content/cacheTags.ts`. The CMS (separate repo) sends
+signed content-change events to `/api/internal/content-revalidate`; the
+endpoint validates them (HMAC, replay window, tag allowlist) and calls
+`revalidateTag(tag, 'max')`.
 
 **i18n:** Translations in Supabase `i18n_translations` table. Use `getTranslations()` (server) or `useTranslations()` (client).
 
@@ -141,19 +141,7 @@ bun run test      # Run the Vitest test suite
 - Production: set `ISR_REVALIDATION=86400`
 - Beta preview branch: set `ISR_REVALIDATION=600` with a branch-scoped preview env
 
-## 📖 CMS Usage
 
-**Access:** Navigate to `/[locale]/cms/login`, sign in with email/password or GitHub OAuth.
-
-**Roles:**
-- **Admin:** Full access to all sections, user management
-- **Editor:** Portfolio and Blog sections only
-
-**Content Management:**
-- **Blog/Portfolio:** Create/edit posts with markdown, tags, images
-- **Other Sections:** Hero, Skills, Career, Contacts, Layout, Privacy Policy (Admin only)
-- **Users:** Add/edit/delete users, manage roles (Admin only)
-- **Account:** Update profile, change password, delete account
 
 ## 🐛 Troubleshooting
 

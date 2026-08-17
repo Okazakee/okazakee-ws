@@ -1,13 +1,18 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import { publicConfig } from '@/config/public';
+
+const supabase = createClient(
+  publicConfig.supabaseUrl,
+  publicConfig.supabasePublishableKey
+);
 
 export async function getCurrentViews(
   postId: string,
   postType: 'blog' | 'portfolio'
 ) {
   try {
-    const supabase = await createClient();
     const tableName =
       postType === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
 

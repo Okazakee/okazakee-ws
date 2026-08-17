@@ -1,7 +1,13 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import { publicConfig } from '@/config/public';
+
+const supabase = createClient(
+  publicConfig.supabaseUrl,
+  publicConfig.supabasePublishableKey
+);
 
 export async function incrementViews(
   postId: string,
@@ -16,8 +22,6 @@ export async function incrementViews(
     if (host?.includes('beta.') || host?.includes('localhost')) {
       return { success: true, message: 'View not counted (beta/localhost)' };
     }
-
-    const supabase = await createClient();
 
     const functionName =
       postType === 'portfolio'

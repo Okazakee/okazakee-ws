@@ -6,12 +6,9 @@ import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { Suspense } from 'react';
 import { publicConfig } from '@/config/public';
-import ConditionalFooter from '@/components/layout/ConditionalFooter';
-import ConditionalHeader from '@/components/layout/ConditionalHeader';
 import Footer from '@/components/layout/Footer';
+import Header from '@/components/layout/Header';
 import ScrollTop from '@/components/layout/ScrollTop';
-import cmsEn from '@/i18n/messages/cms.en.json';
-import cmsIt from '@/i18n/messages/cms.it.json';
 import { isValidLocale, locales } from '@/i18n/routing';
 import { getTranslationsSupabase } from '@/utils/getData';
 import { Providers } from '../providers';
@@ -36,18 +33,14 @@ async function LocaleShell({
   children: React.ReactNode;
 }) {
   const { locale } = await params;
-  const supabaseMessages = await getTranslationsSupabase(locale);
-  const cmsMessages = locale === 'it' ? cmsIt : cmsEn;
-  const messages = { ...supabaseMessages, cms: cmsMessages };
+  const messages = await getTranslationsSupabase(locale);
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <ConditionalHeader locale={locale} />
+      <Header locale={locale} />
       {children}
       <ScrollTop />
-      <ConditionalFooter>
-        <Footer locale={locale} />
-      </ConditionalFooter>
+      <Footer locale={locale} />
     </NextIntlClientProvider>
   );
 }

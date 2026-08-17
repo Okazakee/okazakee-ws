@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
-import { updateSession } from '@/utils/supabase/middleware';
 
 // Environment-based configuration with validation
 const LOCALES_ENV = process.env.NEXT_PUBLIC_LOCALES?.split(',') || ['en', 'it'];
@@ -152,21 +151,6 @@ function createRewriteResponse(
   return NextResponse.rewrite(url);
 }
 
-function handleAuthError(
-  request: NextRequest,
-  locale: string,
-  error: unknown
-): NextResponse {
-  console.error('Authentication failed for CMS route:', {
-    pathname: request.nextUrl.pathname,
-    locale,
-    error: error instanceof Error ? error.message : 'Unknown error',
-    timestamp: new Date().toISOString(),
-  });
-
-  return createRedirectResponse(request, '/cms/login', locale);
-}
-
 function handleMiddlewareError(
   request: NextRequest,
   error: unknown
@@ -239,11 +223,10 @@ export default async function proxy(request: NextRequest) {
     const currentLocale = extractLocaleFromPath(pathname);
     const hasLocale = currentLocale !== null;
 
-    // CMS cutover redirect: once the standalone CMS is live, legacy
-    // /{locale}/cms* URLs go to the new host (307 preserves the query
-    // string, e.g. OAuth codes and next= params). Controlled by
-    // LEGACY_CMS_REDIRECT_HOST; when unset the integrated CMS keeps
-    // serving (local dev / rollback).
+    // Legacy CMS cutover redirect: /{locale}/cms* URLs go to the standalone
+    // CMS host (307 preserves the query string). Controlled by
+    // LEGACY_CMS_REDIRECT_HOST; when unset these routes no longer exist in
+    // this repository.
     if (hasLocale && isCMSRoute(pathname)) {
       const legacyCmsHost = process.env.LEGACY_CMS_REDIRECT_HOST;
       if (legacyCmsHost) {
@@ -259,20 +242,6 @@ export default async function proxy(request: NextRequest) {
             legacyCmsHost
           );
         }
-      }
-
-      // Handle CMS routes authentication
-      try {
-        const response = await updateSession(request, currentLocale);
-        if (response instanceof NextResponse) {
-          response.headers.set('x-cms-route', 'true');
-          return response;
-        }
-        const nextResponse = NextResponse.next();
-        nextResponse.headers.set('x-cms-route', 'true');
-        return nextResponse;
-      } catch (authError) {
-        return handleAuthError(request, currentLocale, authError);
       }
     }
 
