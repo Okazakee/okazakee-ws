@@ -285,3 +285,33 @@ production-validated would remove the rollback path.
   authorize (allowlist accepted).
 - No Cloudflare API access existed (wrangler unauthenticated); DNS was set by
   the user in the Cloudflare dashboard, domain attachment done via Vercel CLI.
+
+### Post-cutover hotfix — sharp runtime failure (2026-08-17)
+
+Symptom: after login, `POST /en/cms` failed with
+"Failed to load external module sharp-... ERR_DLOPEN_FAILED:
+libvips-cpp.so.8.18.3: cannot open shared object file" → the CMS dashboard
+never rendered (Server Components render error). User reported landing on the
+og homepage at /en (the CMS app still ships the imported public routes; the
+dashboard error had redirected them around).
+
+Root cause (diagnosed with a temporary /api/diag FS probe): the runtime
+filesystem HAD all native files
+(/vercel/path0/node_modules/@img/sharp-linux-x64/lib/*.node and
+@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.8.18.3) — the failure was
+Turbopack's EXTERNAL module loader (`serverExternalPackages: ['sharp']`)
+breaking sharp's __dirname-relative native requires at runtime.
+
+Fix (CMS repo, deployed, verified via browser with real session):
+1. Removed `serverExternalPackages: ['sharp']` — Turbopack now bundles the
+   native addon with correct resolution.
+2. Lazy-loaded sharp inside processImage() — the addon is no longer in any
+   action module's load path (dashboard boot works even if native loading
+   regresses).
+3. Kept @img/sharp-linux-x64 + @img/sharp-libvips-linux-x64 as direct deps.
+Verified: dashboard renders (admin user, sidebar + hero editor).
+Temporary debug account (auth user + allowlist + profile) created to
+reproduce, then fully deleted; /api/diag removed.
+
+Note: the public monolith has the same latent sharp packaging issue for its
+(now-redirected) old CMS actions; Phase 13 removes that code.
