@@ -1,13 +1,13 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updateTag } from 'next/cache';
 import {
   getAdminClient,
   getCmsActionContext,
-  isValidUrl,
+  isValidContactUrl,
   requireAdmin,
 } from '@/app/actions/cms/utils/fileHelpers';
+import { invalidateContent } from '@/libs/cms/invalidate';
 import { createClient } from '@/utils/supabase/server';
 
 type ContactOperation =
@@ -79,11 +79,7 @@ function validateContactData(data: CreateContactData | UpdateContactData): {
     if (!data.link || data.link.trim().length === 0) {
       return { isValid: false, error: 'Contact link is required' };
     }
-    if (
-      !isValidUrl(data.link) &&
-      !data.link.startsWith('mailto:') &&
-      !data.link.startsWith('tel:')
-    ) {
+    if (!isValidContactUrl(data.link)) {
       return {
         isValid: false,
         error: 'Link must be a valid URL, email (mailto:), or phone (tel:)',
@@ -225,7 +221,7 @@ async function batchPublishContacts(
       operation.deletes.length > 0 ||
       operation.reorder.length > 0
     ) {
-      updateTag('contacts');
+      invalidateContent({ entity: 'contacts', operation: 'publish' });
     }
 
     return {
@@ -283,7 +279,7 @@ async function createContact(
 
     if (error) throw error;
 
-    updateTag('contacts');
+    invalidateContent({ entity: 'contacts', operation: 'create' });
     return { success: true, data };
   } catch (error) {
     console.error('Error creating contact:', error);
@@ -324,7 +320,7 @@ async function updateContact(
 
     if (error) throw error;
 
-    updateTag('contacts');
+    invalidateContent({ entity: 'contacts', operation: 'update' });
     return { success: true, data };
   } catch (error) {
     console.error('Error updating contact:', error);
@@ -345,7 +341,7 @@ async function deleteContact(
 
     if (error) throw error;
 
-    updateTag('contacts');
+    invalidateContent({ entity: 'contacts', operation: 'delete' });
     return { success: true };
   } catch (error) {
     console.error('Error deleting contact:', error);
@@ -371,7 +367,7 @@ async function reorderContacts(
       if (error) throw error;
     }
 
-    updateTag('contacts');
+    invalidateContent({ entity: 'contacts', operation: 'update' });
     return { success: true };
   } catch (error) {
     console.error('Error reordering contacts:', error);

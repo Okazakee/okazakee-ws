@@ -1,25 +1,25 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updateTag } from 'next/cache';
 import {
   generateBlurhashFromBuffer,
   getAdminClient,
   getCmsActionContext,
   getStoragePathFromPublicUrl,
-  isValidUrl,
+  isValidHttpUrl,
   prepareImageUpload,
   processImage,
-  requireAllowedPostWriter,
-  requireAuth,
   removePublicFileIfDifferent,
   removePublicFileIfPresent,
+  requireAllowedPostWriter,
+  requireAuth,
   sanitizeFilename,
   uploadPreparedImage,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
-import { createClient } from '@/utils/supabase/server';
+import { invalidateContent } from '@/libs/cms/invalidate';
 import { isValidBlurhash } from '@/utils/blurhashUtils';
+import { createClient } from '@/utils/supabase/server';
 
 type PortfolioOperation =
   | { type: 'GET' }
@@ -170,27 +170,27 @@ function validatePortfolioData(
   }
 
   // URL validation
-  if (data.source_link?.trim() && !isValidUrl(data.source_link)) {
+  if (data.source_link?.trim() && !isValidHttpUrl(data.source_link)) {
     return { isValid: false, error: 'Source link must be a valid URL' };
   }
 
-  if (data.demo_link?.trim() && !isValidUrl(data.demo_link)) {
+  if (data.demo_link?.trim() && !isValidHttpUrl(data.demo_link)) {
     return { isValid: false, error: 'Demo link must be a valid URL' };
   }
 
-  if (data.store_link?.trim() && !isValidUrl(data.store_link)) {
+  if (data.store_link?.trim() && !isValidHttpUrl(data.store_link)) {
     return { isValid: false, error: 'Store link must be a valid URL' };
   }
 
-  if (data.fdroid_link?.trim() && !isValidUrl(data.fdroid_link)) {
+  if (data.fdroid_link?.trim() && !isValidHttpUrl(data.fdroid_link)) {
     return { isValid: false, error: 'F-Droid link must be a valid URL' };
   }
 
-  if (data.website?.trim() && !isValidUrl(data.website)) {
+  if (data.website?.trim() && !isValidHttpUrl(data.website)) {
     return { isValid: false, error: 'Website link must be a valid URL' };
   }
 
-  if (data.ios_store_link?.trim() && !isValidUrl(data.ios_store_link)) {
+  if (data.ios_store_link?.trim() && !isValidHttpUrl(data.ios_store_link)) {
     return { isValid: false, error: 'iOS Store link must be a valid URL' };
   }
 
@@ -355,7 +355,8 @@ async function batchPublishPortfolio(
         .single();
 
       if (error) {
-        if (uploaded) await admin.storage.from('website').remove([uploaded.path]);
+        if (uploaded)
+          await admin.storage.from('website').remove([uploaded.path]);
         errors.push(`Update ${item.id}: ${error.message}`);
         continue;
       }
@@ -405,9 +406,14 @@ async function batchPublishPortfolio(
       operation.updates.length > 0 ||
       operation.deletes.length > 0
     ) {
-      updateTag('portfolio');
-      updateTag('posts');
-      updateTag('post');
+      invalidateContent({
+        entity: 'portfolio',
+        operation: 'publish',
+        ids: [
+          ...updated.map((r) => (r as { id: number }).id),
+          ...operation.deletes,
+        ],
+      });
     }
 
     return {
@@ -501,8 +507,7 @@ async function createPortfolio(
 
     if (error) throw error;
 
-    updateTag('portfolio');
-    updateTag('posts');
+    invalidateContent({ entity: 'portfolio', operation: 'create' });
     return { success: true, data: newPortfolio };
   } catch (error) {
     console.error('Error creating portfolio post:', error);
@@ -552,9 +557,11 @@ async function updatePortfolio(
 
     if (error) throw error;
 
-    updateTag('portfolio');
-    updateTag('posts');
-    updateTag('post');
+    invalidateContent({
+      entity: 'portfolio',
+      operation: 'update',
+      id,
+    });
     return { success: true, data: updatedPortfolio };
   } catch (error) {
     console.error('Error updating portfolio post:', error);
@@ -600,9 +607,11 @@ async function deletePortfolio(
 
     if (error) throw error;
 
-    updateTag('portfolio');
-    updateTag('posts');
-    updateTag('post');
+    invalidateContent({
+      entity: 'portfolio',
+      operation: 'delete',
+      id,
+    });
     return { success: true };
   } catch (error) {
     console.error('Error deleting portfolio post:', error);
@@ -818,11 +827,18 @@ async function uploadPortfolioImage(
 
     if (updateError) throw updateError;
 
-    await removePublicFileIfDifferent(admin, currentImageUrl, 'website', fileName);
+    await removePublicFileIfDifferent(
+      admin,
+      currentImageUrl,
+      'website',
+      fileName
+    );
 
-    updateTag('portfolio');
-    updateTag('posts');
-    updateTag('post');
+    invalidateContent({
+      entity: 'portfolio',
+      operation: 'asset-update',
+      id: portfolioId,
+    });
     return {
       success: true,
       data: { image: urlData.publicUrl, blurhashURL: blurhash },
