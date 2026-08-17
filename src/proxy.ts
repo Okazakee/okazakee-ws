@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+import {
+  isLegacyCmsRoute,
+  stripLegacyCmsSegment,
+} from '@/utils/legacyCmsRoute';
 
 // Environment-based configuration with validation
 const LOCALES_ENV = process.env.NEXT_PUBLIC_LOCALES?.split(',') || ['en', 'it'];
@@ -31,7 +35,6 @@ const REDIRECT_HEADER = 'x-redirected';
 const LOCALE_SET = new Set(LOCALES);
 const LOCALE_PATTERN = new RegExp(`^/(${LOCALES.join('|')})(?:/|$)`);
 const STATIC_ASSET_PATTERN = /\.[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*$/;
-const CMS_ROUTE_PATTERN = /^\/[a-z]{2}\/cms(?:\/.*)?$/;
 const LOCALE_COOKIE_PATTERN = /^[a-zA-Z0-9_-]+$/;
 const BOT_PROBE_PATTERNS = [
   /^\/(?:wp-admin(?:\/|$)|wp-content(?:\/|$)|wp-includes(?:\/|$)|wp-json(?:\/|$)|wp-login\.php$|xmlrpc\.php$|phpmyadmin(?:\/|$))/i,
@@ -68,10 +71,6 @@ function isValidLocale(locale: string | null | undefined): locale is string {
 function extractLocaleFromPath(pathname: string): string | null {
   const match = pathname.match(LOCALE_PATTERN);
   return match?.[1] && isValidLocale(match[1]) ? match[1] : null;
-}
-
-function isCMSRoute(pathname: string): boolean {
-  return CMS_ROUTE_PATTERN.test(pathname);
 }
 
 function isBotProbePath(pathname: string): boolean {
@@ -228,7 +227,7 @@ export default async function proxy(request: NextRequest) {
     // paths: /en/cms -> https://cms.okazakee.dev/en). 307 preserves the
     // query string. Controlled by LEGACY_CMS_REDIRECT_HOST; when unset these
     // routes no longer exist in this repository.
-    if (hasLocale && isCMSRoute(pathname)) {
+    if (hasLocale && isLegacyCmsRoute(pathname)) {
       const legacyCmsHost = process.env.LEGACY_CMS_REDIRECT_HOST;
       if (legacyCmsHost) {
         try {
@@ -237,7 +236,7 @@ export default async function proxy(request: NextRequest) {
           url.protocol = target.protocol;
           url.host = target.host;
           url.pathname = validatePathname(
-            pathname.replace(/\/cms/, '')
+            stripLegacyCmsSegment(pathname)
           );
           return NextResponse.redirect(url, 307);
         } catch {
