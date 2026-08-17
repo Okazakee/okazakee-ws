@@ -1,23 +1,28 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updateTag } from 'next/cache';
 import {
   getAdminClient,
   prepareImageUpload,
-  requireAdmin,
   removePublicFileIfDifferent,
+  requireAdmin,
   uploadPreparedImage,
   validateImageFile,
   validatePdfFile,
 } from '@/app/actions/cms/utils/fileHelpers';
+import { invalidateContent } from '@/libs/cms/invalidate';
 import { getHeroSection, getResumeLink } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
 
 type HeroOperation =
   | { type: 'GET' }
   | { type: 'UPDATE'; data: HeroUpdateData }
-  | { type: 'UPLOAD_IMAGE'; file: File; currentImageUrl?: string; blurhashURL?: string }
+  | {
+      type: 'UPLOAD_IMAGE';
+      file: File;
+      currentImageUrl?: string;
+      blurhashURL?: string;
+    }
   | {
       type: 'UPLOAD_RESUME';
       file: File;
@@ -161,7 +166,7 @@ async function updateHero(
 
     if (error) throw error;
 
-    updateTag('hero');
+    invalidateContent({ entity: 'hero', operation: 'update' });
 
     return { success: true, data };
   } catch (error) {
@@ -201,8 +206,11 @@ async function uploadHeroImage(
       prepared.image
     );
 
+    // Canonical stored value: cache-busted public URL. Persist and return the
+    // SAME value so CMS state matches the database row.
+    const propicUrl = `${upload.publicUrl}?t=${Date.now()}`;
     const updateData: { propic: string; blurhashURL: string | null } = {
-      propic: `${upload.publicUrl}?t=${Date.now()}`,
+      propic: propicUrl,
       blurhashURL: prepared.image.blurhash,
     };
 
@@ -223,11 +231,11 @@ async function uploadHeroImage(
       upload.path
     );
 
-    updateTag('hero');
+    invalidateContent({ entity: 'hero', operation: 'asset-update' });
 
     return {
       success: true,
-      data: { propic: upload.publicUrl, blurhashURL: prepared.image.blurhash },
+      data: { propic: propicUrl, blurhashURL: prepared.image.blurhash },
     };
   } catch (error) {
     console.error('Error uploading hero image:', error);
@@ -286,8 +294,7 @@ async function uploadResume(
       fileName
     );
 
-    updateTag('resume');
-    updateTag('hero_section');
+    invalidateContent({ entity: 'resume', operation: 'update' });
 
     return {
       success: true,

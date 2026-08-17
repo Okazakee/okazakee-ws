@@ -1,27 +1,27 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updateTag } from 'next/cache';
 import {
   generateBlurhashFromBuffer,
   getAdminClient,
   getCmsActionContext,
   getStoragePathFromPublicUrl,
   isValidDate,
-  isValidUrl,
+  isValidHttpUrl,
   prepareImageUpload,
   processImage,
-  requireAdmin,
   removePublicFileIfDifferent,
   removePublicFileIfPresent,
+  requireAdmin,
   sanitizeFilename,
   uploadPreparedImage,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
+import { invalidateContent } from '@/libs/cms/invalidate';
 import type { CareerEntry } from '@/types/fetchedData.types';
+import { isValidBlurhash } from '@/utils/blurhashUtils';
 import { getCareerEntries } from '@/utils/getData';
 import { createClient } from '@/utils/supabase/server';
-import { isValidBlurhash } from '@/utils/blurhashUtils';
 
 type CareerOperation =
   | { type: 'GET' }
@@ -164,7 +164,7 @@ function validateCareerData(data: CreateCareerData | UpdateCareerData): {
   }
 
   // URL validation
-  if (data.website_url?.trim() && !isValidUrl(data.website_url)) {
+  if (data.website_url?.trim() && !isValidHttpUrl(data.website_url)) {
     return { isValid: false, error: 'Website URL must be a valid URL' };
   }
 
@@ -290,7 +290,8 @@ async function batchPublishCareer(
         .single();
 
       if (error) {
-        if (uploaded) await admin.storage.from('website').remove([uploaded.path]);
+        if (uploaded)
+          await admin.storage.from('website').remove([uploaded.path]);
         errors.push(`"${item.data.title}": ${error.message}`);
         continue;
       }
@@ -336,7 +337,8 @@ async function batchPublishCareer(
         .single();
 
       if (error) {
-        if (uploaded) await admin.storage.from('website').remove([uploaded.path]);
+        if (uploaded)
+          await admin.storage.from('website').remove([uploaded.path]);
         errors.push(`Update ${item.id}: ${error.message}`);
         continue;
       }
@@ -385,7 +387,7 @@ async function batchPublishCareer(
       operation.updates.length > 0 ||
       operation.deletes.length > 0
     ) {
-      updateTag('career');
+      invalidateContent({ entity: 'career', operation: 'publish' });
     }
 
     return {
@@ -440,7 +442,7 @@ async function createCareer(
 
     if (error) throw error;
 
-    updateTag('career');
+    invalidateContent({ entity: 'career', operation: 'create' });
     return { success: true, data: normalizeCareerEntry(newCareer) };
   } catch (error) {
     console.error('Error creating career entry:', error);
@@ -482,7 +484,7 @@ async function updateCareer(
 
     if (error) throw error;
 
-    updateTag('career');
+    invalidateContent({ entity: 'career', operation: 'update' });
     return { success: true, data: normalizeCareerEntry(updatedCareer) };
   } catch (error) {
     console.error('Error updating career entry:', error);
@@ -523,7 +525,7 @@ async function deleteCareer(
 
     if (error) throw error;
 
-    updateTag('career');
+    invalidateContent({ entity: 'career', operation: 'delete' });
     return { success: true };
   } catch (error) {
     console.error('Error deleting career entry:', error);
@@ -660,9 +662,14 @@ async function uploadCareerLogo(
 
     if (updateError) throw updateError;
 
-    await removePublicFileIfDifferent(supabase, currentLogoUrl, 'website', fileName);
+    await removePublicFileIfDifferent(
+      supabase,
+      currentLogoUrl,
+      'website',
+      fileName
+    );
 
-    updateTag('career');
+    invalidateContent({ entity: 'career', operation: 'asset-update' });
     return {
       success: true,
       data: { logo: urlData.publicUrl, blurhashURL: blurhash || '' },

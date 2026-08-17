@@ -1,22 +1,18 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import { publicConfig } from './src/config/public';
 
 const withNextIntl = createNextIntlPlugin();
 
-const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
-  : 'mtvwynyikouqzmhqespl.supabase.co';
-const defaultRevalidateSeconds =
-  process.env.VERCEL_ENV === 'production' ? 60 * 60 * 24 : 60 * 10;
+if (!publicConfig.supabaseUrl) {
+  throw new Error(
+    'NEXT_PUBLIC_SUPABASE_URL is required to build the application'
+  );
+}
+
+const supabaseHostname = publicConfig.supabaseHostname;
+const revalidateSeconds = publicConfig.isrRevalidationSeconds;
 const thirtyDaysInSeconds = 60 * 60 * 24 * 30;
-const isrRevalidation = Number.parseInt(
-  process.env.ISR_REVALIDATION || `${defaultRevalidateSeconds}`,
-  10
-);
-const revalidateSeconds =
-  Number.isFinite(isrRevalidation) && isrRevalidation > 0
-    ? isrRevalidation
-    : defaultRevalidateSeconds;
 
 const nextConfig: NextConfig = {
   cacheLife: {

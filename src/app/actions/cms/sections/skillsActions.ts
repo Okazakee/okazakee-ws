@@ -1,12 +1,12 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updateTag } from 'next/cache';
 import {
   getAdminClient,
   getCmsActionContext,
   requireAdmin,
 } from '@/app/actions/cms/utils/fileHelpers';
+import { invalidateContent } from '@/libs/cms/invalidate';
 import { createClient } from '@/utils/supabase/server';
 
 type SkillOperation =
@@ -217,8 +217,10 @@ async function batchPublishSkills(
     for (const item of operation.updateCategories) {
       const id = tempIdToRealId[item.id] ?? item.id;
       const updateFields: UpdateCategoryData = {};
-      if (item.data.name !== undefined) updateFields.name = item.data.name.trim();
-      if (item.data.position !== undefined) updateFields.position = item.data.position;
+      if (item.data.name !== undefined)
+        updateFields.name = item.data.name.trim();
+      if (item.data.position !== undefined)
+        updateFields.position = item.data.position;
 
       const { error } = await admin
         .from('skills_categories')
@@ -259,7 +261,7 @@ async function batchPublishSkills(
       operation.deleteCategories.length > 0 ||
       operation.categoryOrder.length > 0
     ) {
-      updateTag('skills');
+      invalidateContent({ entity: 'skills', operation: 'publish' });
     }
 
     return {
@@ -318,7 +320,7 @@ async function createSkill(
 
     if (error) throw error;
 
-    updateTag('skills');
+    invalidateContent({ entity: 'skills', operation: 'create' });
     return { success: true, data };
   } catch (error) {
     console.error('Error creating skill:', error);
@@ -359,7 +361,7 @@ async function updateSkill(
 
     if (error) throw error;
 
-    updateTag('skills');
+    invalidateContent({ entity: 'skills', operation: 'update' });
     return { success: true, data };
   } catch (error) {
     console.error('Error updating skill:', error);
@@ -380,7 +382,7 @@ async function deleteSkill(
 
     if (error) throw error;
 
-    updateTag('skills');
+    invalidateContent({ entity: 'skills', operation: 'delete' });
     return { success: true };
   } catch (error) {
     console.error('Error deleting skill:', error);
@@ -416,7 +418,7 @@ async function createCategory(
 
     if (error) throw error;
 
-    updateTag('skills');
+    invalidateContent({ entity: 'skills', operation: 'create' });
     return { success: true, data };
   } catch (error) {
     console.error('Error creating category:', error);
@@ -473,7 +475,7 @@ async function updateCategory(
 
     if (error) throw error;
 
-    updateTag('skills');
+    invalidateContent({ entity: 'skills', operation: 'update' });
     return { success: true, data };
   } catch (error) {
     console.error('Error updating category:', error);
@@ -511,7 +513,7 @@ async function deleteCategory(
 
     if (error) throw error;
 
-    updateTag('skills');
+    invalidateContent({ entity: 'skills', operation: 'delete' });
     return { success: true };
   } catch (error) {
     console.error('Error deleting category:', error);

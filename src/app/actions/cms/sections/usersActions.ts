@@ -1,10 +1,12 @@
 'use server';
 
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { getCmsAdminClient } from '@/libs/cms/supabase/admin';
+import { invalidateContent } from '@/libs/cms/invalidate';
 import { refresh } from 'next/cache';
 import {
-  processImage,
+  prepareImageUpload,
   requireAuth,
+  uploadPreparedImage,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
 import {
@@ -68,25 +70,6 @@ async function isAdmin(
   return allowedUser?.role === 'admin';
 }
 
-/**
- * Create admin client for user invitations
- */
-function getAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Missing Supabase admin credentials');
-  }
-
-  return createAdminClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
-
 export async function usersActions(
   operation: UserOperation
 ): Promise<UsersResult> {
@@ -99,8 +82,10 @@ export async function usersActions(
 
   const supabase = await createClient();
 
-  // Admin check for non-GET operations
-  if (operation.type !== 'GET') {
+  // Admin check for every operation. User management (including listing
+  // allowlist emails/GitHub usernames) is admin-only. The blog/portfolio
+  // author picker uses blogActions GET_AUTHORS, not this list.
+  {
     const admin = await isAdmin(supabase);
     if (!admin) {
       return { success: false, error: 'Unauthorized: Admin access required' };
@@ -300,7 +285,7 @@ async function addEmailUser(
 
   // Create user and send password reset email using admin client
   try {
-    const adminClient = getAdminClient();
+    const adminClient = getCmsAdminClient();
 
     // Create the user with a random password (they'll reset it)
     const tempPassword = crypto.randomUUID();
@@ -426,7 +411,7 @@ async function addDummyUser(
   const dummyEmail = `dummy-${emailUuid}@dummy.local`;
 
   // Use admin client to create auth user and profile (bypasses RLS)
-  const adminClient = getAdminClient();
+  const adminClient = getCmsAdminClient();
 
   // Check if a dummy user with this email already exists in cms_allowed_users
   const { data: existingAllowed } = await supabase
@@ -621,7 +606,7 @@ async function removeUser(
   }
 
   // Find and delete user profile
-  const adminClient = getAdminClient();
+  const adminClient = getCmsAdminClient();
   let profileId: string | null = null;
 
   // Check if this is a dummy user (email format: dummy-{uuid}@dummy.local)
@@ -679,6 +664,10 @@ async function removeUser(
     }
   }
 
+  if (profileId) {
+    invalidateContent({ entity: 'author', operation: 'update', id: profileId });
+  }
+
   // Revalidate CMS paths to ensure fresh data
   refresh();
 
@@ -702,13 +691,14 @@ async function updateUserProfile(
     return { success: false, error: 'No changes to save' };
   }
 
-  const { error } = await getAdminClient()
+  const { error } = await getCmsAdminClient()
     .from('user_profiles')
     .update(updates)
     .eq('id', profileId);
 
   if (error) throw error;
 
+  invalidateContent({ entity: 'author', operation: 'update', id: profileId });
   return { success: true };
 }
 
@@ -749,37 +739,18 @@ export async function uploadUserAvatar(
     return { success: false, error: validation.error };
   }
 
-  // Check if file is already WebP (pre-processed client-side)
-  const isWebP = avatarFile.type === 'image/webp';
-  let buffer: Buffer;
+  const adminClient = getCmsAdminClient();
 
-  if (isWebP) {
-    // File is already WebP - upload directly
-    const arrayBuffer = await avatarFile.arrayBuffer();
-    buffer = Buffer.from(arrayBuffer);
-  } else {
-    // Fallback: process image server-side (should be rare)
-    const processed = await processImage(avatarFile, {
-      maxWidth: 256,
-      maxHeight: 256,
-      quality: 85,
-    });
-
-    if (!processed.success || !processed.buffer) {
-      return {
-        success: false,
-        error: processed.error || 'Failed to process image',
-      };
-    }
-
-    buffer = processed.buffer;
+  // Format-aware processing: extension and MIME follow the ACTUAL processed
+  // format (WebP passthrough or Sharp fallback, which may produce PNG).
+  const prepared = await prepareImageUpload(avatarFile, undefined, {
+    maxWidth: 256,
+    maxHeight: 256,
+    quality: 85,
+  });
+  if (!prepared.success) {
+    return { success: false, error: prepared.error };
   }
-
-  // Use admin client for storage uploads (bypasses RLS)
-  const adminClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
 
   // Get current avatar URL to delete old file
   const { data: currentProfile } = await adminClient
@@ -807,29 +778,22 @@ export async function uploadUserAvatar(
     }
   }
 
-  // Upload to Supabase Storage as WebP
-  const filePath = `Website Assets/avatars/${profileId}-avatar.webp`;
-  const { error: uploadError } = await adminClient.storage
-    .from('website')
-    .upload(filePath, buffer, {
-      contentType: 'image/webp',
-      upsert: true,
-    });
-
-  if (uploadError) {
+  // Upload via the shared prepared-image pipeline
+  let upload: { publicUrl: string; path: string };
+  try {
+    upload = await uploadPreparedImage(
+      adminClient,
+      'website',
+      `Website Assets/avatars/${profileId}-avatar`,
+      prepared.image
+    );
+  } catch (uploadError) {
     console.error('Avatar upload error:', uploadError);
     return { success: false, error: 'Failed to upload avatar' };
   }
 
-  // Get public URL
-  const { data: urlData } = adminClient.storage
-    .from('website')
-    .getPublicUrl(filePath);
-
   // Add cache-busting param
-  const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
-  // Update user_profiles table using admin client to bypass RLS
+  const avatarUrl = `${upload.publicUrl}?t=${Date.now()}`;
   const { error: updateError } = await adminClient
     .from('user_profiles')
     .update({ avatar_url: avatarUrl })
@@ -842,6 +806,7 @@ export async function uploadUserAvatar(
 
   // Revalidate CMS paths to ensure fresh data
   refresh();
+  invalidateContent({ entity: 'author', operation: 'update', id: profileId });
 
   return { success: true, avatarUrl };
 }
@@ -876,7 +841,7 @@ export async function updateUserDisplayName(
   }
 
   // Use admin client to bypass RLS when updating other users' profiles
-  const adminClient = getAdminClient();
+  const adminClient = getCmsAdminClient();
 
   // Update user_profiles table using admin client
   const { error: updateError } = await adminClient
@@ -891,6 +856,7 @@ export async function updateUserDisplayName(
 
   // Revalidate CMS paths to ensure fresh data
   refresh();
+  invalidateContent({ entity: 'author', operation: 'update', id: profileId });
 
   return { success: true };
 }
@@ -940,37 +906,18 @@ export async function updateMyProfile(
       return { success: false, error: validation.error };
     }
 
-    // Check if file is already WebP (pre-processed client-side)
-    const isWebP = avatarFile.type === 'image/webp';
-    let buffer: Buffer;
+    const adminClient = getCmsAdminClient();
 
-    if (isWebP) {
-      // File is already WebP - upload directly
-      const arrayBuffer = await avatarFile.arrayBuffer();
-      buffer = Buffer.from(arrayBuffer);
-    } else {
-      // Fallback: process image server-side (should be rare)
-      const processed = await processImage(avatarFile, {
-        maxWidth: 256,
-        maxHeight: 256,
-        quality: 85,
-      });
-
-      if (!processed.success || !processed.buffer) {
-        return {
-          success: false,
-          error: processed.error || 'Failed to process image',
-        };
-      }
-
-      buffer = processed.buffer;
+    // Format-aware processing: extension and MIME follow the ACTUAL processed
+    // format (WebP passthrough or Sharp fallback, which may produce PNG).
+    const prepared = await prepareImageUpload(avatarFile, undefined, {
+      maxWidth: 256,
+      maxHeight: 256,
+      quality: 85,
+    });
+    if (!prepared.success) {
+      return { success: false, error: prepared.error };
     }
-
-    // Use admin client for storage uploads (bypasses RLS)
-    const adminClient = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // Get current avatar URL to delete old file
     const { data: currentProfile } = await supabase
@@ -998,27 +945,22 @@ export async function updateMyProfile(
       }
     }
 
-    // Upload to Supabase Storage as WebP
-    const filePath = `Website Assets/avatars/${user.id}-avatar.webp`;
-    const { error: uploadError } = await adminClient.storage
-      .from('website')
-      .upload(filePath, buffer, {
-        contentType: 'image/webp',
-        upsert: true,
-      });
-
-    if (uploadError) {
+    // Upload via the shared prepared-image pipeline
+    let upload: { publicUrl: string; path: string };
+    try {
+      upload = await uploadPreparedImage(
+        adminClient,
+        'website',
+        `Website Assets/avatars/${user.id}-avatar`,
+        prepared.image
+      );
+    } catch (uploadError) {
       console.error('Avatar upload error:', uploadError);
       return { success: false, error: 'Failed to upload avatar' };
     }
 
-    // Get public URL
-    const { data: urlData } = adminClient.storage
-      .from('website')
-      .getPublicUrl(filePath);
-
     // Add cache-busting param to force refresh
-    updates.avatar_url = `${urlData.publicUrl}?t=${Date.now()}`;
+    updates.avatar_url = `${upload.publicUrl}?t=${Date.now()}`;
   }
 
   // If nothing to update
@@ -1039,6 +981,7 @@ export async function updateMyProfile(
 
   // Revalidate CMS paths to ensure fresh data
   refresh();
+  invalidateContent({ entity: 'author', operation: 'update', id: user.id });
 
   return { success: true, avatarUrl: updates.avatar_url };
 }

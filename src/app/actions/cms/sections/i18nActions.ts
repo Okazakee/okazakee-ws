@@ -1,10 +1,11 @@
 'use server';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updateTag } from 'next/cache';
 import {
-  getCmsActionContext,
   getAdminClient,
+  getCmsActionContext,
 } from '@/app/actions/cms/utils/fileHelpers';
+import { invalidateContent } from '@/libs/cms/invalidate';
+import { getContentInvalidation } from '@/libs/cms/invalidation';
 
 type I18nOperation =
   | { type: 'GET' }
@@ -19,7 +20,8 @@ type I18nOperation =
       type: 'UPDATE_SECTIONS';
       sectionKey: string;
       sections: Record<string, Record<string, unknown>>;
-    };
+    }
+  | { type: 'UPDATE_PRIVACY'; locale: string; markdown: string };
 
 type UpdateI18nData = {
   translations: Record<string, unknown>;
@@ -148,6 +150,9 @@ export async function i18nActions(
           operation.sections
         );
 
+      case 'UPDATE_PRIVACY':
+        return await updatePrivacyPolicy(operation.locale, operation.markdown);
+
       default:
         return { success: false, error: 'Invalid operation' };
     }
@@ -168,7 +173,9 @@ async function updateSectionTranslationsForLocales(
   try {
     const validLocales = ['en', 'it'];
     const locales = Object.keys(sections);
-    const invalidLocale = locales.find((locale) => !validLocales.includes(locale));
+    const invalidLocale = locales.find(
+      (locale) => !validLocales.includes(locale)
+    );
     if (invalidLocale) {
       return {
         success: false,
@@ -212,7 +219,7 @@ async function updateSectionTranslationsForLocales(
       updated.push(data);
     }
 
-    updateTag('translations');
+    invalidateContent({ entity: 'translations', operation: 'update' });
 
     return { success: true, data: updated };
   } catch (error) {
@@ -268,8 +275,14 @@ async function updateI18nData(
     if (error) throw error;
 
     // Invalidate cache
-    updateTag('translations');
-    updateTag('privacy-policy');
+    invalidateContent({
+      entity: 'translations',
+      operation: 'update',
+      extraTags: getContentInvalidation({
+        entity: 'privacy',
+        operation: 'update',
+      }),
+    });
 
     return { success: true, data };
   } catch (error) {
@@ -328,7 +341,7 @@ async function updateSectionTranslations(
 
     if (error) throw error;
 
-    updateTag('translations');
+    invalidateContent({ entity: 'translations', operation: 'update' });
 
     return { success: true, data };
   } catch (error) {
@@ -336,6 +349,64 @@ async function updateSectionTranslations(
     return {
       success: false,
       error: 'Failed to update section translations',
+    };
+  }
+}
+
+async function updatePrivacyPolicy(
+  locale: string,
+  markdown: string
+): Promise<I18nResult> {
+  try {
+    const validLocales = ['en', 'it'];
+    if (!validLocales.includes(locale)) {
+      return {
+        success: false,
+        error: `Invalid locale. Must be one of: ${validLocales.join(', ')}`,
+      };
+    }
+
+    if (typeof markdown !== 'string' || markdown.length > 50000) {
+      return {
+        success: false,
+        error: 'Privacy policy content is too long (max 50,000 characters)',
+      };
+    }
+
+    const admin = getAdminClient();
+    const { data: currentData, error: fetchError } = await admin
+      .from('i18n_translations')
+      .select('translations, privacy_policy')
+      .eq('language', locale)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError;
+    }
+
+    // Write the TOP-LEVEL privacy_policy column (what the public site reads)
+    // while preserving the translations JSON untouched.
+    const { data, error } = await admin
+      .from('i18n_translations')
+      .upsert({
+        language: locale,
+        translations:
+          (currentData?.translations as Record<string, unknown>) || {},
+        privacy_policy: markdown,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    invalidateContent({ entity: 'privacy', operation: 'update' });
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error updating privacy policy:', error);
+    return {
+      success: false,
+      error: 'Failed to update privacy policy',
     };
   }
 }

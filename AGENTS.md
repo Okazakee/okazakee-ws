@@ -2,6 +2,15 @@
 
 Next.js 16 personal portfolio, blog, and CMS. TypeScript throughout, React 19, Supabase for auth/storage/DB, Tailwind CSS 4 for styling, Zustand for client state, and next-intl for EN/IT i18n. The app router routes all pages under `/[locale]/...`.
 
+> **CMS decoupling in progress (2026-08):** the integrated CMS is being
+> extracted to `Okazakee/okazakee-cms` (private). Until production cutover
+> (see `docs/cms-decoupling/pre-cutover-checklist.md`) the monolith still
+> contains the CMS; the public cache contract is already centralized in
+> `src/libs/content/cacheTags.ts` + `src/libs/cms/invalidation.ts`, and the
+> signed revalidation endpoint lives at `/api/internal/content-revalidate`.
+> Do not reintroduce ad-hoc cache-tag strings in CMS actions; use
+> `invalidatePublicContent` / descriptors.
+
 ## 2. Repository Structure
 
 ```
@@ -235,7 +244,13 @@ return { success: true };
 
 ## 12. Testing
 
-There are zero test files in the repository. No test framework (Jest, Vitest) is configured. There is no `test` script in `package.json`. When tests are added, follow existing conventions for file placement, naming, and structure.
+Vitest is configured (`vitest.config.ts`, node environment). Tests live next
+to sources as `*.test.ts` (currently: CMS validation/auth helpers, cache-tag
+vocabulary, invalidation descriptors, revalidation contract). Run with
+`bun run test` (`vitest run`). CI (`.github/workflows/ci.yml`) runs lint,
+test, build, then typecheck (build first: fresh checkouts need `.next/types`
+for image/route module resolution). When tests are added, follow existing
+conventions for file placement, naming, and structure.
 
 ## 13. Git
 

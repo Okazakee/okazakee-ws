@@ -1,5 +1,5 @@
-import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
+import { getCmsAdminClient } from '@/libs/cms/supabase/admin';
 import {
   getUserAuthProvider,
   getUserAvatarUrl,
@@ -15,19 +15,6 @@ type CmsProfile = {
   auth_provider: string | null;
   github_username: string | null;
 };
-
-function getCmsAdminClient(): SupabaseClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error('Missing Supabase admin credentials');
-  }
-
-  return createSupabaseClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-}
 
 export async function syncCmsUserProfile(user: User): Promise<void> {
   const adminClient = getCmsAdminClient();

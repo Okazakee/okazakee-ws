@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [master, beta]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.7
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Test
+        run: bun run test
+
+      # Build first: a fresh checkout needs .next/types (route/image module
+      # declarations) before tsc can resolve imports like `@public/logo.svg`.
+      # Requires the following repo secrets (Supabase project, see
+      # .env.local.example): NEXT_PUBLIC_SUPABASE_URL,
+      # NEXT_PUBLIC_SUPABASE_ANON_KEY, DOMAIN_URL.
+      - name: Build
+        run: bun run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          DOMAIN_URL: ${{ secrets.DOMAIN_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.DOMAIN_URL }}

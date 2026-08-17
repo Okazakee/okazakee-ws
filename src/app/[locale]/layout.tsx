@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { Suspense } from 'react';
+import { publicConfig } from '@/config/public';
 import ConditionalFooter from '@/components/layout/ConditionalFooter';
 import ConditionalHeader from '@/components/layout/ConditionalHeader';
 import Footer from '@/components/layout/Footer';
@@ -59,6 +60,7 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }>) {
   const { locale } = await params;
+  const supabasePreconnect = publicConfig.supabaseHostname;
 
   if (!isValidLocale(locale)) {
     notFound();
@@ -74,14 +76,12 @@ export default async function RootLayout({
         <meta name="theme-color" content="#0a0a0a" />
         <meta name="darkreader-lock" />
         <meta name="color-scheme" content="dark light" />
-        <link
-          rel="preconnect"
-          href="https://mtvwynyikouqzmhqespl.supabase.co"
-        />
-        <link
-          rel="dns-prefetch"
-          href="https://mtvwynyikouqzmhqespl.supabase.co"
-        />
+        {supabasePreconnect && (
+          <>
+            <link rel="preconnect" href={`https://${supabasePreconnect}`} />
+            <link rel="dns-prefetch" href={`https://${supabasePreconnect}`} />
+          </>
+        )}
         <link rel="preconnect" href="https://umami.okazakee.dev" />
         {/* Blocking theme script — runs before paint to avoid flash */}
         <script
