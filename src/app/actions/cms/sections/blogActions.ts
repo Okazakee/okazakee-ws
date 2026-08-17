@@ -1,7 +1,6 @@
 'use server';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { updateTag } from 'next/cache';
 import {
   generateBlurhashFromBuffer,
   getAdminClient,
@@ -9,16 +8,17 @@ import {
   getStoragePathFromPublicUrl,
   prepareImageUpload,
   processImage,
-  requireAllowedPostWriter,
-  requireAuth,
   removePublicFileIfDifferent,
   removePublicFileIfPresent,
+  requireAllowedPostWriter,
+  requireAuth,
   sanitizeFilename,
   uploadPreparedImage,
   validateImageFile,
 } from '@/app/actions/cms/utils/fileHelpers';
-import { createClient } from '@/utils/supabase/server';
+import { invalidateContent } from '@/libs/cms/invalidate';
 import { isValidBlurhash } from '@/utils/blurhashUtils';
+import { createClient } from '@/utils/supabase/server';
 
 type BlogOperation =
   | { type: 'GET' }
@@ -291,9 +291,11 @@ async function batchPublishBlog(
         continue;
       }
 
-      let uploaded:
-        | { publicUrl: string; path: string; blurhash: string }
-        | null = null;
+      let uploaded: {
+        publicUrl: string;
+        path: string;
+        blurhash: string;
+      } | null = null;
       const updateData: UpdateBlogData = { ...item.data };
 
       if (item.file) {
@@ -327,7 +329,8 @@ async function batchPublishBlog(
         .single();
 
       if (error) {
-        if (uploaded) await admin.storage.from('website').remove([uploaded.path]);
+        if (uploaded)
+          await admin.storage.from('website').remove([uploaded.path]);
         errors.push(`Update ${item.id}: ${error.message}`);
         continue;
       }
@@ -377,9 +380,14 @@ async function batchPublishBlog(
       operation.updates.length > 0 ||
       operation.deletes.length > 0
     ) {
-      updateTag('blog');
-      updateTag('posts');
-      updateTag('post');
+      invalidateContent({
+        entity: 'blog',
+        operation: 'publish',
+        ids: [
+          ...updated.map((r) => (r as { id: number }).id),
+          ...operation.deletes,
+        ],
+      });
     }
 
     return {
@@ -475,8 +483,7 @@ async function createBlog(
 
     if (error) throw error;
 
-    updateTag('blog');
-    updateTag('posts');
+    invalidateContent({ entity: 'blog', operation: 'create' });
     return { success: true, data: newBlog };
   } catch (error) {
     console.error('Error creating blog post:', error);
@@ -524,9 +531,7 @@ async function updateBlog(
 
     if (error) throw error;
 
-    updateTag('blog');
-    updateTag('posts');
-    updateTag('post');
+    invalidateContent({ entity: 'blog', operation: 'update', id });
     return { success: true, data: updatedBlog };
   } catch (error) {
     console.error('Error updating blog post:', error);
@@ -572,9 +577,7 @@ async function deleteBlog(
 
     if (error) throw error;
 
-    updateTag('blog');
-    updateTag('posts');
-    updateTag('post');
+    invalidateContent({ entity: 'blog', operation: 'delete', id });
     return { success: true };
   } catch (error) {
     console.error('Error deleting blog post:', error);
@@ -787,7 +790,12 @@ async function uploadBlogImage(
 
     if (updateError) throw updateError;
 
-    await removePublicFileIfDifferent(admin, currentImageUrl, 'website', fileName);
+    await removePublicFileIfDifferent(
+      admin,
+      currentImageUrl,
+      'website',
+      fileName
+    );
 
     return {
       success: true,
