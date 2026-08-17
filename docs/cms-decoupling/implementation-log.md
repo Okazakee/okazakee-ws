@@ -315,3 +315,29 @@ reproduce, then fully deleted; /api/diag removed.
 
 Note: the public monolith has the same latent sharp packaging issue for its
 (now-redirected) old CMS actions; Phase 13 removes that code.
+
+### Phase 13 — CMS removed from public repo (2026-08-17)
+
+- Deleted from okazakee-ws: `/[locale]/cms/**` routes, `actions/cms/**`,
+  `components/cms/**`, `components/common/cms/**`, `hooks/cms/**`,
+  `store/layoutStore.ts`, `i18n/messages/cms.*.json`, `libs/cms/**`,
+  `config/cms.ts`, `libs/rateLimiters.ts`, `utils/cms/**`,
+  `utils/imageProcessor.ts`, `utils/blurhashUtils.ts`,
+  `utils/supabase/{middleware,client,server}.ts`,
+  `ConditionalHeader/Footer.tsx`, CMS tests (auth/validation/invalidation).
+- Public-only cleanup: layout renders Header/Footer directly (no CMS message
+  merge); `i18n/request.ts` public messages only; NavMenu CMS branch removed;
+  Footer "CMS" link → `NEXT_PUBLIC_CMS_URL` (fallback `/en/cms` redirects);
+  Proxy: session middleware removed, keeps locale routing + legacy
+  `LEGACY_CMS_REDIRECT_HOST` 307; view counters switched to stateless
+  publishable-key client; `@supabase/ssr` + `blurkit` deps removed
+  (validator kept — Searchbar).
+- Docs: README (public-only + CMS repo link), AGENTS.md (structure/examples),
+  .env.local.example (no elevated key; NEXT_PUBLIC_CMS_URL documented).
+- SECURITY: `SUPABASE_SERVICE_ROLE_KEY` removed from the okazakee-ws Vercel
+  production env (repo audit: zero references).
+- Gates: lint 79 files clean, tsc 0, 19 tests, build green; commit 2af55d7.
+- Verified production post-removal: /en /it privacy sitemap 200, legacy
+  /en/cms → 307 → cms.okazakee.dev, revalidation bridge `sent`,
+  cms.okazakee.dev login 200. CMS repo likewise pruned of public-only code
+  (commit ef0a226): / → login redirect, /en → 404, login 200.
