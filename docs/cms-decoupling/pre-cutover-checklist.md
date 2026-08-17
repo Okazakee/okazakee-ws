@@ -23,8 +23,8 @@ this list in order; every item is reversible.
    (SQL editor or `supabase db push`) — creates `cms_login_attempts` +
    `cms_check_login_rate` + `cms_purge_login_attempts`. Additive/reversible.
 2. Update Auth → URL Configuration → Redirect URLs:
-   - `https://cms.<domain>/en/cms/auth/callback`
-   - `https://cms.<domain>/it/cms/auth/callback`
+   - `https://cms.okazakee.dev/en/cms/auth/callback`
+   - `https://cms.okazakee.dev/it/cms/auth/callback`
    - local: `http://localhost:3001/en/cms/auth/callback` (dev)
    - recovery destinations under the CMS origin.
 3. (Post-cutover, separate task) create a dedicated Supabase secret key
@@ -40,11 +40,11 @@ APP_ENV=production
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...        # replaced by SUPABASE_SECRET_KEY post-cutover
-CMS_PUBLIC_URL=https://cms.<domain>
+CMS_PUBLIC_URL=https://cms.okazakee.dev
 CMS_AUTH_DEBUG=false
-WEBSITE_REVALIDATION_URL=https://www.<domain>/api/internal/content-revalidate
+WEBSITE_REVALIDATION_URL=https://okazakee.dev/api/internal/content-revalidate
 WEBSITE_REVALIDATION_SECRET=<shared with public site>
-NEXT_PUBLIC_SITE_URL=https://cms.<domain>   # only if client code needs it
+NEXT_PUBLIC_SITE_URL=https://cms.okazakee.dev   # only if client code needs it
 NEXT_PUBLIC_LOCALES=en,it
 NEXT_PUBLIC_DEFAULT_LOCALE=en
 ISR_REVALIDATION=86400
@@ -76,7 +76,7 @@ Build: `bun run build`; Framework Preset Next.js.
    hero/skills/career/contacts, privacy edit now reaching the public page,
    resume uploads, user management, author name/avatar change → public post).
 4. DONE: old CMS URLs redirected via public Proxy (`LEGACY_CMS_REDIRECT_HOST`
-   env) — `/en/cms*` and `/it/cms*` → `https://okazakee-cms.vercel.app/...`,
+   env) — `/en/cms*` and `/it/cms*` → `https://cms.okazakee.dev/...`,
    307, query strings preserved. Rollback: unset the env + redeploy.
 5. Watch logs (auth errors, storage failures, `[content-revalidate]`
    rejections, `[revalidation]` failures).
