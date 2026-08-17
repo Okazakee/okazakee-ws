@@ -219,3 +219,40 @@ production-validated would remove the rollback path.
 - Durable rate limiter activation (pre-cutover).
 - Publishable/secret key migration (post-cutover, Supabase console).
 - Docs sync for both repos.
+
+### Cutover execution (2026-08-17, after CLI auth)
+
+- Verified: Vercel CLI as `okazakee`; Supabase CLI project
+  `mtvwynyikouqzmhqespl` (Okazakee's Project, Zurich).
+- Supabase: applied `20260817100000_cms_login_rate_limit.sql` via Management
+  API (`database/query`) — table `cms_login_attempts` + functions
+  `cms_check_login_rate`/`cms_purge_login_attempts` verified present.
+  Redirect allowlist NOT touched programmatically (risk of clobbering live
+  monolith OAuth); dashboard entries documented in the checklist.
+- Vercel: created + linked project `okazakee-cms`; 11 production env vars
+  (supabase creds, CMS_PUBLIC_URL=https://okazakee-cms.vercel.app,
+  WEBSITE_REVALIDATION_URL/SECRET, APP_ENV=production, locales, ISR).
+  Deployed to production — Ready; /en/cms/login 200, /en/cms 307 → login,
+  /it/cms/login 200.
+- Shared revalidation secret generated (hex 64) and set on BOTH Vercel
+  projects (CMS: WEBSITE_REVALIDATION_SECRET; public:
+  CONTENT_REVALIDATION_SECRET production+preview) and local .env.local files.
+- Public Vercel project: added CONTENT_REVALIDATION_SECRET (prod+preview),
+  APP_ENV (production prod / staging preview),
+  CONTENT_ENFORCE_PUBLISH_DATE (true prod / false preview).
+- Public repo: beta pushed (9 commits), merged into master (`c2af337 merge:
+  cms decoupling cutover (beta)`), production deploy Ready (57s).
+- Verified in production: okazakee.dev /, /en, /en/privacy-policy,
+  /sitemap.xml → 200; cross-app revalidation CMS module →
+  https://okazakee.dev/api/internal/content-revalidate → `sent`.
+- Old integrated CMS still live at okazakee.dev/en/cms (rollback path).
+
+### Remaining user actions (documented in pre-cutover-checklist.md)
+
+1. Supabase dashboard → Auth → URL Configuration: add CMS redirects
+   `http://localhost:3001/{en,it}/cms/auth/callback` and
+   `https://okazakee-cms.vercel.app/{en,it}/cms/auth/callback`
+   (required for GitHub OAuth on the new CMS).
+2. Validate new CMS on production data (email login, GitHub OAuth, CRUD,
+   uploads, resume flow, author profile → public cache invalidation).
+3. Then: restrict/redirect old CMS URLs, proceed to Phase 13 cleanup.
