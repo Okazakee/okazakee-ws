@@ -3,15 +3,14 @@
 Next.js 16 personal portfolio and blog. TypeScript throughout, React 19, Supabase for storage/DB (content + RPCs), Tailwind CSS 4 for styling, Zustand for client state, and next-intl for EN/IT i18n. The app router routes all pages under `/[locale]/...`.
 
 > **CMS decoupled (2026-08):** content editing lives in the standalone
-> `Okazakee/okazakee-cms` repo (private). This repo is public-site only: no
+> `Okazakee/okazakee-cms` repo (public). This repo is public-site only: no
 > CMS routes, actions, components, hooks, stores or elevated Supabase
 > credentials. The public cache vocabulary lives in
 > `src/libs/content/cacheTags.ts`; the CMS sends signed content-change events
 > to `/api/internal/content-revalidate`, which validates them (HMAC, replay
 > window, hard-coded tag allowlist) and calls `revalidateTag(tag, 'max')`.
 > Legacy `/{locale}/cms*` URLs redirect to the CMS via
-> `LEGACY_CMS_REDIRECT_HOST` in `src/proxy.ts`. Migration docs:
-> `docs/cms-decoupling/`.
+> `LEGACY_CMS_REDIRECT_HOST` in `src/proxy.ts`.
 
 ## 2. Repository Structure
 

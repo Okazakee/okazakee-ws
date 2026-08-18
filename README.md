@@ -21,8 +21,8 @@ dark/light/auto theming.
 This repository is deliberately **read-only for content**. It renders
 published data from a shared Supabase project using Next.js Cache Components
 and never edits it: all authoring happens in the standalone CMS
-([Okazakee/okazakee-cms](https://github.com/Okazakee/okazakee-cms), private,
-live at [cms.okazakee.dev](https://cms.okazakee.dev)), which invalidates
+([Okazakee/okazakee-cms](https://github.com/Okazakee/okazakee-cms), live at
+[cms.okazakee.dev](https://cms.okazakee.dev)), which invalidates
 public caches through a signed revalidation endpoint
 (`POST /api/internal/content-revalidate`).
 
