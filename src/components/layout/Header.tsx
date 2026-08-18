@@ -1,4 +1,5 @@
 import logo from '@public/title-ws.png';
+import logoLight from '@public/title-ws-lightmode.png';
 import Link from 'next/link';
 import NavMenu from './NavMenu';
 
@@ -16,7 +17,15 @@ export default function Header({ locale }: { locale: string }) {
               src={logo.src}
               width={2172}
               height={724}
-              className="block h-auto w-full relative -left-3"
+              className="block h-auto w-full relative -left-3 hidden dark:block"
+              alt="logo"
+            />
+            {/* biome-ignore lint/performance/noImgElement: static logo asset does not benefit from next/image and avoids a Next 16 runtime warning */}
+            <img
+              src={logoLight.src}
+              width={2172}
+              height={724}
+              className="block h-auto w-full relative -left-3 dark:hidden"
               alt="logo"
             />
           </span>
