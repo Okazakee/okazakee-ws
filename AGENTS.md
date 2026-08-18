@@ -47,9 +47,12 @@ src/
 - Lint: `bun run lint` (runs `biome lint .`)
 - Lint + auto-fix: `bun run lint-fix` (runs `biome check . --write --unsafe`)
 - Format: `bun run format` (runs `biome format . --write`)
+- Test: `bun run test` (runs `vitest run`)
 - Type check: `bunx tsc --noEmit`
 
-There is no `test` command — the repo has no test files and no test framework configured. There is no CI pipeline (no `.github/workflows/` directory).
+CI (`.github/workflows/ci.yml`, `master`/`beta` + PRs) runs install → lint →
+test → build → typecheck (build before typecheck: fresh checkouts need
+`.next/types`).
 
 ## 6. Code Formatting
 
@@ -238,8 +241,8 @@ const numericId = postId.trim() !== '' && /^\d+$/.test(postId);
 ## 12. Testing
 
 Vitest is configured (`vitest.config.ts`, node environment). Tests live next
-to sources as `*.test.ts` (currently: cache-tag vocabulary and the
-revalidation contract). Run with
+to sources as `*.test.ts` (currently: cache-tag vocabulary, the revalidation
+contract and legacy-CMS route matching). Run with
 `bun run test` (`vitest run`). CI (`.github/workflows/ci.yml`) runs lint,
 test, build, then typecheck (build first: fresh checkouts need `.next/types`
 for image/route module resolution). When tests are added, follow existing
