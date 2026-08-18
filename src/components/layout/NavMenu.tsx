@@ -147,7 +147,7 @@ export default function ResponsiveNav({
               <Link
                 key={button.href}
                 href={href}
-                className="mx-4 transition-all hover:text-main flex items-center"
+                className="lg:mx-2 xl:mx-4 transition-all hover:text-main flex items-center"
                 onClick={(e) => handleClick(e, button.href, button.isAnchor)}
               >
                 <button.icon className="mr-2 -mt-1" />
@@ -155,7 +155,7 @@ export default function ResponsiveNav({
               </Link>
             );
           })}
-          <div className="relative ml-4 settings-dropdown">
+          <div className="relative lg:ml-2 xl:ml-4 settings-dropdown">
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
               className={`transition-all hover:text-main flex items-center justify-center p-2 rounded-full ${

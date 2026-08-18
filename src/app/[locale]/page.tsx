@@ -19,18 +19,6 @@ export async function generateMetadata({
   return {
     title: 'Home - Okazakee WS',
     description: pageDesc,
-    openGraph: {
-      title: 'Home - Okazakee WS',
-      description: pageDesc,
-      images: [
-        {
-          url: 'https://mtvwynyikouqzmhqespl.supabase.co/storage/v1/object/public/website/Website%20Assets/logo.png',
-          width: 1200,
-          height: 630,
-          alt: 'logo',
-        },
-      ],
-    },
   };
 }
 

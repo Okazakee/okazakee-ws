@@ -1,19 +1,22 @@
-import logo from '@public/logo.svg';
+import logo from '@public/title-ws.png';
 import Link from 'next/link';
 import NavMenu from './NavMenu';
 
 export default function Header({ locale }: { locale: string }) {
   return (
-    <header className="max-w-(--breakpoint-2xl) mx-auto pt-2">
-      <div className="flex justify-between items-center pt-5 mx-5">
-        <Link href={'/'} className="xl:mr-auto xl:mx-0 xl:static">
-          <span className="block xl:w-[200px] xs:w-[160px] w-[130px]">
-            {/* biome-ignore lint/performance/noImgElement: static SVG logo does not benefit from next/image and avoids a Next 16 runtime warning */}
+    <header className="max-w-(--breakpoint-2xl) mx-auto pt-4">
+      <div className="flex justify-between items-center h-[clamp(63.6px,6.8vw_+_9.7px,80px)] mx-5">
+        <Link
+          href={'/'}
+          className="block xl:mr-auto xl:mx-0 xl:static"
+        >
+          <span className="block w-[clamp(191px,20.4vw_+_29px,240px)]">
+            {/* biome-ignore lint/performance/noImgElement: static logo asset does not benefit from next/image and avoids a Next 16 runtime warning */}
             <img
               src={logo.src}
-              width={200}
-              height={100}
-              className="dark:invert -mt-0.5 h-auto w-full transition-all duration-400 ease-in-out"
+              width={2172}
+              height={724}
+              className="block h-auto w-full relative -left-3"
               alt="logo"
             />
           </span>
