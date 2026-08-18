@@ -29,7 +29,7 @@ export default async function Skills({ locale }: { locale: string }) {
         {skills_categories.map((skillCategory, _index) => (
           <div key={skillCategory.id} className="">
             <h2 className="text-lg xs:text-xl tablet:text-3xl md:text-[2.33rem] xs:tracking-wider my-5">
-              {t(`skills.${skillCategory.name}`)}
+              {skillCategory.name}
             </h2>
             <div className="flex xl:flex-nowrap flex-wrap justify-center items-center">
               {skillCategory.skills.map((skill, _i) => (
