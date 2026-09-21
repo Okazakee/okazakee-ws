@@ -36,7 +36,8 @@ public caches through a signed revalidation endpoint
 - **Cache invalidation** — HMAC-signed, replay-protected revalidation events
   from the CMS (`cacheTag` / `cacheLife`, `revalidateTag(tag, 'max')`)
 - **Performance** — Server Components for data and SEO, client islands only
-  where interactivity demands it; WebP-only image pipeline
+  where interactivity demands it; WebP-only image pipeline (`next/image`
+  serves an animated WebP propic in its original format, keeping it animated)
 - **Quality** — TypeScript strict mode, Biome formatting/linting, Vitest
   suites, CI on every pull request
 
