@@ -250,12 +250,46 @@ conventions for file placement, naming, and structure.
 
 ## 13. Git
 
+### 13.1 Branch and PR workflow (mandatory)
+
+`master` is the integration branch and must stay releasable. Every change —
+feature, fix, refactor, docs, dependency bump — is made on a dedicated branch
+and merged through a pull request:
+
+1. Branch from the latest `master` (or `beta` when the change belongs to the
+   beta line): `<type>/<short-slug>`, e.g. `fix/view-counter-reset`,
+   `feat/cms-revalidation`.
+2. Commit only on that branch. `master` and `beta` never receive direct
+   commits.
+3. Push the branch and open a PR against `master` (or `beta`) with
+   `gh pr create`, describing the change, the affected contract, and the
+   checks run.
+4. CI (`.github/workflows/ci.yml`) must be green before merge.
+5. Merge with a merge commit (`gh pr merge --merge`); never squash or rebase,
+   never force-push `master`/`beta`.
+6. Delete the merged branch.
+
+**Exception — you ask for it.** A direct commit/push to `master`/`beta` is
+allowed only when you explicitly ask for one in the session (for example
+"push this to master"). That request is the authorization; the agent never
+decides on its own that a direct push is warranted. When it happens:
+
+- keep the diff to the minimum that resolves the issue, with a commit
+  message that states why it went straight to the branch;
+- no force-push, history rewrite, or unrelated cleanup in the same commit;
+- open a follow-up PR (or review) if the result is not trivially verifiable.
+
+Without that explicit request, work goes through a branch and a PR, however
+urgent it feels.
+
+### 13.2 Commit and merge conventions
+
 - **Commit prefixes:** Conventional commits are used alongside unprefixed messages. Observed prefixes: `fix:`, `feat:`, `refactor:`, `chore:`, `revert:`, `security:`, `docs:`.
 - **Scoped commits:** Rare (3.7% of commits). Scopes are lowercase: `auth`, `images`.
 - **Subject length:** p50 is 23 chars, p95 is 72 chars. Keep subjects concise.
 - **Body:** Only 13% of commits have a body. No strict convention.
-- **Branch naming:** No strict prefix convention observed. Active branches use descriptive names like `beta`.
-- **Merge strategy:** Merge commits (not squash or rebase).
+- **Branch naming:** `<type>/<short-slug>` (lowercase), see §13.1. `beta` is a long-lived line branch, not a feature branch.
+- **Merge strategy:** Merge commits (not squash or rebase), always via PR.
 - **No GPG signing.**
 
 ## 14. Dependencies and Tooling
@@ -278,6 +312,7 @@ conventions for file placement, naming, and structure.
 - **Never use relative imports across directory boundaries.** Use `@/` path aliases defined in `tsconfig.json`.
 - **Never call Supabase directly from client components (browser).** Use server actions (`'use server'`) to proxy all Supabase calls.
 - **Never commit `.env.local`** or any file containing secrets.
+- **Never commit or push directly to `master`/`beta`.** Work on a branch and open a PR — the only exception is a direct push you explicitly asked for in the session (§13.1).
 - **Never add a `'use server'` directive inside a file that also has `'use client'`.** These directives are mutually exclusive at the file level.
 - **Never import server-only modules (like `next/headers`, `next/cache`) into client components.** Keep server and client code separated.
 - **Never use `console.log` in production paths.** Use `console.error` for server-side error logging.
