@@ -2,6 +2,7 @@
 
 import { Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ChipRow } from '@components/common/ChipRow';
 import { ClientMarkdown } from '@components/common/ClientMarkdown';
 import { InnerHtml } from '@components/common/InnerHtml';
 import { diffMonths, formatMonthYear } from '@/utils/formatDate';
@@ -95,17 +96,17 @@ export function CareerClient({
   );
 
   const chips = (entry: CareerEntry) => (
-    <div className="flex flex-wrap gap-1.5">
+    <ChipRow>
       {parseSkills(entry.skills).map((skill) => (
         <span
-          className="inline-flex items-center gap-1 rounded border border-border-subtle bg-surface-raised px-2 py-0.5 font-mono text-xs text-text-muted"
+          className="mr-1.5 inline-flex shrink-0 items-center gap-1 rounded border border-border-subtle bg-surface-raised px-2 py-0.5 font-mono text-xs text-text-muted"
           key={skill}
         >
           <Tag className="mr-0.5 h-3 w-3 shrink-0 text-accent-violet/70" />
           {skill}
         </span>
       ))}
-    </div>
+    </ChipRow>
   );
 
   const position = (entry: CareerEntry, nested: boolean) => (

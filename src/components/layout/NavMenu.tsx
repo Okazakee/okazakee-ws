@@ -262,7 +262,12 @@ export default function NavMenu({
       </div>
 
       <div
-        className={`fixed inset-x-0 top-16 z-40 lg:hidden ${isOpen ? '' : 'hidden'}`}
+        aria-hidden={!isOpen}
+        className={`fixed inset-x-0 top-16 z-40 transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
+          isOpen
+            ? 'visible translate-y-0 opacity-100'
+            : 'invisible -translate-y-2 opacity-0'
+        }`}
         id="mobile-nav"
       >
         <div className="mx-5 rounded-2xl border border-border-subtle bg-surface-card/95 p-4 shadow-2xl backdrop-blur-xl" ref={panelRef}>

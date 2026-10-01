@@ -7,6 +7,12 @@ import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { formatLabels } from '@/utils/formatLabels';
 import { getPosts } from '@/utils/getData';
 
+// Unknown single-segment paths land here and call notFound(), which the
+// dev-mode instant validation reports as an unrenderable target. The page is
+// cached and still navigates instantly; this only opts the segment out of the
+// validation feedback (see the instant-navigation guide).
+export const instant = false;
+
 export async function generateMetadata({
   params,
 }: {

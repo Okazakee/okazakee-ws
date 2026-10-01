@@ -20,6 +20,12 @@ import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { slugifyTitle } from '@/utils/postHref';
 
+// Unknown ids/slugs reach this segment and call notFound(), which the dev-mode
+// instant validation reports as an unrenderable target. The page is cached and
+// still navigates instantly; this only opts the segment out of the validation
+// feedback (see the instant-navigation guide).
+export const instant = false;
+
 /* ONLY PORTFOLIO POSTS USE title_en AS TITLE FOR BOTH LANGS, BLOG POSTS CAN SWAP title_en and title_it */
 const validPostTypes = new Set(['portfolio', 'blog']);
 const numericIdPattern = /^\d+$/;
@@ -170,7 +176,7 @@ export default async function Page({
   ) : null;
 
   return (
-    <article className="mx-auto max-w-5xl px-6 pt-24 pb-24">
+    <article className="mx-auto max-w-5xl px-6 pt-12 pb-24 md:pt-24">
       <div className="mx-auto max-w-3xl">
         <h1 className="font-heading text-3xl font-semibold tracking-tight text-text-white md:text-4xl">
           {initTitle}

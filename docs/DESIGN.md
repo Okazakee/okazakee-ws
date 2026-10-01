@@ -294,9 +294,12 @@ Invented copy is a defect, not a placeholder.
   MinePanel is an org URL, which used to fetch a repo that 404s and render ★ 0).
 - Fixed: the grain rule matched `body.dark` while the theme class lives on `<html>`, so
   dark mode had no grain at all.
-- Open: the 404 routes answer **HTTP 200** (soft 404). The dev server also logs
-  `Could not validate 'instant' …` on that path. Both predate the redesign and come from
-  how unknown single-segment paths land on `/[post_type]` and call `notFound()`.
+- Fixed: the dev-mode instant validation used to log `Could not validate 'instant' …`
+  for every 404 path, because unknown single-segment paths land on `/[post_type]`
+  (and unknown posts on `/[post_type]/[id]/[title]`) and call `notFound()`. Both
+  segments now set `instant = false` — the pages are cached and still navigate
+  instantly, the flag only opts out of the validation feedback.
+- Open: the 404 routes answer **HTTP 200** (soft 404), which predates the redesign.
 - Open: `sitemap.ts` slugs posts differently from the card link helper, so it advertises
   `/blog/12/dear-mom...` while the card links `/blog/12/dear-mom`.
 
