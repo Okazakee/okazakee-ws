@@ -336,10 +336,31 @@
   background-size: 100% 100%;
 }
 
+/* Tag row: one line, seamless loop when the chips overflow. The track carries
+   the list twice while looping and slides half its width, so the junction is
+   invisible. The second copy only exists while looping. */
+@keyframes tags-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-tags {
+  animation: tags-scroll var(--tags-duration, 30s) linear infinite;
+}
+.animate-tags:hover,
+.animate-tags:focus-within {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
+  .tags-viewport {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
   *,
   *::before,
   *::after {

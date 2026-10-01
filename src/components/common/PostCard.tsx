@@ -57,7 +57,7 @@ export default function Postcard({
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col justify-between p-6">
+      <div className="flex min-w-0 flex-1 flex-col justify-between p-6">
         <div className="mb-4">
           <h3 className="mb-2 font-heading text-lg font-semibold text-text-white transition-colors group-hover:text-accent-violet-light">
             {title}

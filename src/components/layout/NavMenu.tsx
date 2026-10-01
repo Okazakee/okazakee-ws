@@ -4,7 +4,7 @@ import { ExternalLink, FileUser, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
 
@@ -64,11 +64,14 @@ export default function NavMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('home');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const menuItems = useMemo(() => createMenuItems(locale), [locale]);
   const t = useTranslations('header');
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === '/' || pathname === `/${locale}`;
+  const lastPath = useRef(pathname);
 
   // Scroll to an anchor once we are back on the home page
   useEffect(() => {
@@ -162,6 +165,32 @@ export default function NavMenu({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  // A navigation must not leave the drawer open over the next page
+  useEffect(() => {
+    if (lastPath.current !== pathname) {
+      lastPath.current = pathname;
+      setIsOpen(false);
+    }
+  }, [pathname]);
+
+  // Tapping outside the panel (or on the page behind it) closes the drawer
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (
+        !panelRef.current?.contains(target) &&
+        !toggleRef.current?.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [isOpen]);
+
   const isActive = (item: MenuItem) => {
     if (isHomePage) return activeSection === item.section;
     if (!item.page) return false;
@@ -224,6 +253,7 @@ export default function NavMenu({
             aria-label="Toggle menu"
             className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle bg-surface-card text-text-dim transition-colors hover:border-accent-violet/40 hover:text-accent-violet-light"
             onClick={() => setIsOpen((open) => !open)}
+            ref={toggleRef}
             type="button"
           >
             {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -235,7 +265,7 @@ export default function NavMenu({
         className={`fixed inset-x-0 top-16 z-40 lg:hidden ${isOpen ? '' : 'hidden'}`}
         id="mobile-nav"
       >
-        <div className="mx-5 rounded-2xl border border-border-subtle bg-surface-card/95 p-4 shadow-2xl backdrop-blur-xl">
+        <div className="mx-5 rounded-2xl border border-border-subtle bg-surface-card/95 p-4 shadow-2xl backdrop-blur-xl" ref={panelRef}>
           <nav className="flex flex-col gap-1">
             {menuItems.map((item, index) => {
               const active = isActive(item);
@@ -246,7 +276,10 @@ export default function NavMenu({
                   className={active ? rowActive : rowIdle}
                   href={getHref(item)}
                   key={item.id}
-                  onClick={(event) => handleClick(event, item)}
+                  onClick={(event) => {
+                    handleClick(event, item);
+                    setIsOpen(false);
+                  }}
                 >
                   {label(index)}
                 </Link>
@@ -263,6 +296,7 @@ export default function NavMenu({
                 className={`${resumeClass} px-3 py-3 text-sm`}
                 data-umami-event="Resume button"
                 href={resumeLink}
+                onClick={() => setIsOpen(false)}
                 rel="noopener noreferrer"
                 target="_blank"
               >

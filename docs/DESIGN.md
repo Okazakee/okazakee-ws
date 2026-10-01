@@ -173,8 +173,10 @@ card is a link to `/{locale}/{type}/{id}/{slug}`; no hover zoom.
 ### 5.2 Chips / tags
 `inline-flex items-center gap-1 rounded border border-border-subtle bg-surface-raised
 px-2 py-0.5 font-mono text-xs text-text-muted`, with the Tag glyph tinted
-`text-accent-violet/70`. Chips wrap; the live marquee behaviour is not part of the
-redesign.
+`text-accent-violet/70` and a 2px right margin on the glyph. The row keeps one line:
+when the chips fit they render once, and only when they overflow does the row become a
+seamless marquee (second copy `aria-hidden`, paused on hover/focus, and replaced by
+horizontal scroll under `prefers-reduced-motion`).
 
 ### 5.3 Career timeline
 - One card per **company** (same company = same job, role upgrades grouped): newest role
