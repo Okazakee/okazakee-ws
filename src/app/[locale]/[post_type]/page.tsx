@@ -1,11 +1,17 @@
-import { CircleX } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { ErrorDiv } from '@/components/common/ErrorDiv';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import PostList from '@/components/common/PostList';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { formatLabels } from '@/utils/formatLabels';
 import { getPosts } from '@/utils/getData';
+
+// Unknown single-segment paths land here and call notFound(), which the
+// dev-mode instant validation reports as an unrenderable target. The page is
+// cached and still navigates instantly; this only opts the segment out of the
+// validation feedback (see the instant-navigation guide).
+export const instant = false;
 
 export async function generateMetadata({
   params,
@@ -74,36 +80,30 @@ export default async function PostsPage({
   const posts = (await getPosts(post_type)) as PortfolioPost[] | BlogPost[];
 
   return (
-    <section className="md:mt-20 mt-10 flex mx-auto max-w-7xl">
-      <div className="xl:mx-16 text-center mb-20 max-w-480 w-full">
-        <h1 className="xl:text-5xl text-2xl xs:text-3xl mb-5">
-          {post_type === 'blog' ? t('title2') : t('title1')}
-        </h1>
+    <section className="mx-auto max-w-5xl px-6 py-24">
+      <div className="mb-14 text-center">
         <InnerHtml
-          as="h3"
-          className="mb-10 md:mb-10 md:mx-10 mx-5 text-base xs:text-lg md:text-2xl"
-          html={
-            post_type === 'blog'
-              ? formatLabels(t('subtitle2'))
-              : formatLabels(t('subtitle1'))
-          }
+          as="h1"
+          className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
+          html={formatLabels(
+            post_type === 'blog' ? t('title2') : t('title1')
+          )}
         />
-        {posts.length > 0 ? (
-          <PostList
-            initialPosts={posts}
-            post_type={post_type}
-            locale={locale}
-          />
-        ) : (
-          <div className="flex flex-col lg:flex-row justify-center items-center text-lg lg:text-5xl lg:mt-52 py-32 lg:py-0 lg:mb-52">
-            <CircleX
-              size={65}
-              className="stroke-main w-[80px] h-auto mb-12 lg:mb-0"
-            />
-            <h1 className="lg:ml-5">{t('no-posts')}</h1>
-          </div>
-        )}
+        <InnerHtml
+          as="p"
+          className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"
+          html={formatLabels(
+            post_type === 'blog' ? t('subtitle2') : t('subtitle1')
+          )}
+        />
+        <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
       </div>
+
+      {posts.length > 0 ? (
+        <PostList initialPosts={posts} post_type={post_type} locale={locale} />
+      ) : (
+        <ErrorDiv>{t('no-posts')}</ErrorDiv>
+      )}
     </section>
   );
 }

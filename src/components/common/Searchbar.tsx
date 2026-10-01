@@ -45,10 +45,6 @@ export default function Searchbar({
           }
         } else {
           SetIsRateLimited(true);
-          console.log(
-            'Rate limit exceeded. Please wait before searching again.'
-          );
-          // You could also show a user-friendly message here
         }
       }, 300),
     [SetIsRateLimited, SetPosts, post_type, locale]
@@ -70,18 +66,18 @@ export default function Searchbar({
   const t = useTranslations('posts-section');
 
   return (
-    <div className="mb-10 mx-10 sm:mx-auto max-w-xl relative items-center">
+    <div className="relative mx-auto mb-12 max-w-xl">
       <input
-        type="text"
-        value={searchFilter}
+        className="w-full rounded-lg border border-border-subtle bg-surface-card py-3 pr-4 pl-10 font-mono text-xs text-text-main transition-colors placeholder:text-text-dim focus:border-accent-violet/60 focus:outline-hidden"
         onChange={(e) => setSearchFilter(e.target.value)}
         placeholder={t('searchbar')}
-        className="md:text-xl w-full p-2 pl-10 rounded-xl border-2 bg-lighttext border-main focus:outline-hidden placeholder:text-darktext placeholder:opacity-70 text-darktext focus:placeholder:opacity-0 placeholder:text-sm xs:placeholder:text-base sm:placeholder:text-xl"
+        type="text"
+        value={searchFilter}
       />
       <Search
-        className="absolute left-3 top-1/2 transform-gpu -translate-y-1/2 stroke-main"
-        size={20}
-        strokeWidth={2.5}
+        className="absolute top-1/2 left-3 -translate-y-1/2 text-text-dim"
+        size={18}
+        strokeWidth={2}
       />
     </div>
   );

@@ -1,257 +1,318 @@
 'use client';
 
-import {
-  Briefcase,
-  Contact,
-  Home,
-  Menu,
-  NotebookPen,
-  Settings,
-  User2,
-  X,
-  Zap,
-} from 'lucide-react';
+import { ExternalLink, FileUser, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
 
-const createMenuItems = (locale: string) => [
-  { href: `/${locale}`, icon: Home, isAnchor: false },
-  { href: 'skills', icon: Zap, isAnchor: true },
-  { href: 'career', icon: User2, isAnchor: true },
-  { href: `/${locale}/portfolio`, icon: Briefcase, isAnchor: false },
-  { href: `/${locale}/blog`, icon: NotebookPen, isAnchor: false },
-  { href: 'contacts', icon: Contact, isAnchor: true },
-  // Resume button removed from main navigation
-];
-
-// Create a hardcoded mapping for Italian translations
-const getItalianButtonText = (index: number) => {
-  const italianButtons = [
-    'Home',
-    'Skills',
-    'Carriera',
-    'Portfolio',
-    'Blog',
-    'Contatti',
-    'Curriculum',
-  ];
-  return italianButtons[index];
+type MenuItem = {
+  id: string;
+  /** In-page section id on the home page (`home`, `skills`, ...). */
+  section: string;
+  /** Route used when the section cannot be reached on the current page. */
+  route: string;
+  /** True when the item is its own page (portfolio/blog) off the home page. */
+  page: boolean;
 };
 
-export default function ResponsiveNav({
-  className,
+const createMenuItems = (locale: string): MenuItem[] => [
+  { id: 'home', section: 'home', route: `/${locale}`, page: false },
+  { id: 'skills', section: 'skills', route: `/${locale}#skills`, page: false },
+  { id: 'career', section: 'career', route: `/${locale}#career`, page: false },
+  {
+    id: 'portfolio',
+    section: 'portfolio',
+    route: `/${locale}/portfolio`,
+    page: true,
+  },
+  { id: 'blog', section: 'blog', route: `/${locale}/blog`, page: true },
+  {
+    id: 'contacts',
+    section: 'contacts',
+    route: `/${locale}#contacts`,
+    page: false,
+  },
+];
+
+// Italian labels stay hardcoded here, as they were before the redesign
+const italianLabels = [
+  'Home',
+  'Skills',
+  'Carriera',
+  'Portfolio',
+  'Blog',
+  'Contatti',
+];
+
+/**
+ * Navigation (docs/DESIGN.md §4): centred desktop nav from `lg` up, plus the
+ * header controls and the mobile drawer. On the home page every item is an
+ * in-page anchor and the active one follows the scroll position (the mock's
+ * scroll-spy); on other pages the section items navigate back to their home
+ * anchor while portfolio and blog highlight by route.
+ */
+export default function NavMenu({
   locale,
+  resumeLink,
 }: {
-  className?: string;
   locale: string;
+  resumeLink: string | null;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const menuItems = createMenuItems(locale);
+  const [activeSection, setActiveSection] = useState<string>('home');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const menuItems = useMemo(() => createMenuItems(locale), [locale]);
   const t = useTranslations('header');
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === '/' || pathname === `/${locale}`;
+  const lastPath = useRef(pathname);
 
+  // Scroll to an anchor once we are back on the home page
   useEffect(() => {
-    // Handle scrolling when we're on the home page and have a pending scroll target
-    if (isHomePage && pendingScroll) {
-      const element = document.getElementById(pendingScroll);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-        setPendingScroll(null); // Clear the pending scroll
-      }
+    if (!isHomePage || !pendingScroll) return;
+
+    if (pendingScroll === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setPendingScroll(null);
+      return;
+    }
+
+    const element = document.getElementById(pendingScroll);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setPendingScroll(null);
     }
   }, [isHomePage, pendingScroll]);
 
-  const handleClick = async (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    href: string,
-    isAnchor: boolean
-  ) => {
-    if (!isAnchor) return;
+  // Home: every nav item is an anchor; other pages: only the section items
+  // scroll back home, portfolio and blog navigate to their own page.
+  const isAnchor = (item: MenuItem) => !item.page || isHomePage;
 
-    e.preventDefault();
+  const getHref = (item: MenuItem) => {
+    if (item.page && !isHomePage) return item.route;
+    if (isHomePage) return `#${item.section}`;
+    return `/${locale}`;
+  };
+
+  const handleClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    item: MenuItem
+  ) => {
+    if (!isAnchor(item)) return;
+
+    event.preventDefault();
     setIsOpen(false);
 
     if (isHomePage) {
-      // If we're already on the home page, just scroll
-      const element = document.getElementById(href);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+      if (item.section === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
       }
-    } else {
-      // If we're on another page, navigate to home first and set pending scroll
-      setPendingScroll(href);
-      router.push(`/${locale}`);
+      document
+        .getElementById(item.section)
+        ?.scrollIntoView({ behavior: 'smooth' });
+      return;
     }
+
+    setPendingScroll(item.section);
+    router.push(`/${locale}`);
   };
 
-  const getHref = (item: { href: string; isAnchor: boolean }) => {
-    if (item.isAnchor) {
-      // For anchor links, we'll handle the navigation in onClick
-      // but we still need a valid href for the link
-      return `/${locale}`;
-    }
-    return item.href;
-  };
+  const label = (index: number) =>
+    locale === 'it' ? italianLabels[index] : t(`buttons.${index}`);
 
-  // Function to get button text based on locale
-  const getButtonText = (index: number) => {
-    if (locale === 'it') {
-      return getItalianButtonText(index);
-    }
-    // For English, use the translation system
-    return t(`buttons.${index}`);
-  };
-
-  // Close settings dropdown when clicking outside
+  // Scroll-spy over every home section, exactly like the mock: the last
+  // section whose top passed the header threshold wins.
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (isSettingsOpen && !target.closest('.settings-dropdown')) {
-        setIsSettingsOpen(false);
+    if (!isHomePage) return;
+
+    const onScroll = () => {
+      let current = 'home';
+      for (const item of menuItems) {
+        const element = document.getElementById(item.section);
+        if (element && element.getBoundingClientRect().top <= 140) {
+          current = item.section;
+        }
       }
+      setActiveSection(current);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isSettingsOpen]);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [isHomePage, menuItems]);
 
+  // Drawer: lock the page behind it and close on Escape
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
+    document.body.style.overflow = isOpen ? 'hidden' : '';
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // A navigation must not leave the drawer open over the next page
+  useEffect(() => {
+    if (lastPath.current !== pathname) {
+      lastPath.current = pathname;
+      setIsOpen(false);
+    }
+  }, [pathname]);
+
+  // Tapping outside the panel (or on the page behind it) closes the drawer
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (
+        !panelRef.current?.contains(target) &&
+        !toggleRef.current?.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [isOpen]);
+
+  const isActive = (item: MenuItem) => {
+    if (isHomePage) return activeSection === item.section;
+    if (!item.page) return false;
+    return pathname === item.route || pathname.startsWith(`${item.route}/`);
+  };
+
+  const desktopIdle = 'transition-colors hover:text-accent-violet';
+  const desktopActive =
+    'font-semibold text-accent-violet-light border-b border-accent-violet pb-0.5';
+  const rowBase =
+    'flex items-center gap-3 rounded-lg px-3 py-3 font-mono text-sm transition-colors';
+  const rowIdle = `${rowBase} text-text-muted hover:bg-surface-raised hover:text-text-main`;
+  const rowActive = `${rowBase} bg-surface-raised text-accent-violet-light`;
+  const resumeClass =
+    'flex items-center gap-1.5 rounded-lg border border-accent-violet/40 bg-accent-violet/10 font-mono text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20';
+
   return (
-      <>
-        {/* Desktop Navigation */}
-        <nav className={`${className} hidden lg:flex text-xl`}>
-          {menuItems.map((button, i) => {
-            const href = getHref(button);
+    <>
+      <nav className="col-start-2 hidden items-center gap-6 justify-self-center font-mono text-xs text-text-muted lg:flex">
+        {menuItems.map((item, index) => {
+          const active = isActive(item);
 
-            return (
-              <Link
-                key={button.href}
-                href={href}
-                className="lg:mx-2 xl:mx-4 transition-all hover:text-main flex items-center"
-                onClick={(e) => handleClick(e, button.href, button.isAnchor)}
-              >
-                <button.icon className="mr-2 -mt-1" />
-                {getButtonText(i)}
-              </Link>
-            );
-          })}
-          <div className="relative lg:ml-2 xl:ml-4 settings-dropdown">
-            <button
-              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className={`transition-all hover:text-main flex items-center justify-center p-2 rounded-full ${
-                isSettingsOpen ? 'bg-gray-100 dark:bg-gray-800 text-main' : ''
-              }`}
-              aria-label="Settings"
-              type="button"
+          return (
+            <Link
+              aria-current={active ? 'page' : undefined}
+              className={active ? desktopActive : desktopIdle}
+              href={getHref(item)}
+              key={item.id}
+              onClick={(event) => handleClick(event, item)}
             >
-              <Settings size={25} />
-            </button>
+              {label(index)}
+            </Link>
+          );
+        })}
+      </nav>
 
-            {isSettingsOpen && (
-              <div className="absolute right-0 mt-2 py-4 px-5 bg-white dark:bg-darkergray shadow-lg rounded-xl z-50 min-w-[180px] border border-gray-100 dark:border-gray-800 transform-gpu origin-top-right transition-all duration-200 ease-out">
-                <h3 className="text-base font-medium mb-3 text-gray-500 dark:text-gray-400 text-center">
-                  {t('settings')}
-                </h3>
-
-                <div className="mb-4 flex justify-between items-center">
-                  <span className="text-base font-medium">
-                    {t('language')}:
-                  </span>
-                  <span className="flex justify-end min-w-[40px]">
-                    <LanguageToggle compact={true} />
-                  </span>
-                </div>
-
-                <div className="pt-2 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
-                  <span className="text-base font-medium">{t('theme')}:</span>
-                  <span className="flex justify-end min-w-[40px]">
-                    <ThemeToggle compact={true} />
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </nav>
-
-        {/* Mobile Navigation */}
-        <div className={`${className} lg:hidden`}>
-          <div className="flex items-center relative z-50">
-            <button
-              type="button"
-              onClick={() => setIsOpen(!isOpen)}
-              className="sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-              aria-label="Toggle menu"
+      <div className="col-start-3 flex items-center gap-2 justify-self-end lg:gap-3">
+        <div className="hidden items-center gap-3 lg:flex">
+          <LanguageToggle />
+          <ThemeToggle ariaLabel={t('theme')} />
+          {resumeLink && (
+            <Link
+              className={`${resumeClass} px-3 py-1.5 text-xs`}
+              data-umami-event="Resume button"
+              href={resumeLink}
+              rel="noopener noreferrer"
+              target="_blank"
             >
-              {isOpen ? (
-                <X className="w-6 h-6 sm:w-7 sm:h-7" />
-              ) : (
-                <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
-              )}
-            </button>
-          </div>
+              <FileUser className="h-[15px] w-[15px]" />
+              {locale === 'it' ? 'Curriculum' : 'Resume'}
+            </Link>
+          )}
+        </div>
 
-          <nav
-            className={`fixed mt-2 backdrop-blur-[70px] shadow-lg z-10 -top-1.5 left-1/2 transform-gpu -translate-x-1/2 w-screen h-screen max-w-full max-h-full right-auto flex justify-center items-center transition-all duration-400 ease-in-out ${
-              isOpen
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-0 -translate-y-20 pointer-events-none'
-            }`}
+        <div className="flex items-center gap-2 lg:hidden">
+          <ThemeToggle ariaLabel={t('theme')} />
+          <button
+            aria-controls="mobile-nav"
+            aria-expanded={isOpen}
+            aria-label="Toggle menu"
+            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle bg-surface-card text-text-dim transition-colors hover:border-accent-violet/40 hover:text-accent-violet-light"
+            onClick={() => setIsOpen((open) => !open)}
+            ref={toggleRef}
+            type="button"
           >
-            <ul
-              className={`space-y-12 sm:space-y-16 md:space-y-20 p-4 xs:scale-100 scale-110 sm:scale-105 md:scale-110 lg:scale-115 -mt-8 sm:-mt-12 md:-mt-16 transition-all duration-400 ease-in-out ${
-                isOpen ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              {menuItems.map((item, i) => {
-                const href = getHref(item);
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </div>
 
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={href}
-                      className="flex text-2xl sm:text-3xl md:text-4xl items-center space-x-2 sm:space-x-3 text-darktext dark:text-lighttext transition-all duration-400 ease-in-out"
-                      onClick={(e) => {
-                        handleClick(e, item.href, item.isAnchor);
-                        setIsOpen(false);
-                      }}
-                    >
-                      <item.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 mr-2" />
-                      <span>{getButtonText(i)}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-            <div
-              className={`flex space-x-3 sm:space-x-4 md:space-x-5 bottom-6 sm:bottom-8 md:bottom-10 absolute left-1/2 transform-gpu -translate-x-1/2 scale-75 sm:scale-100 md:scale-110 lg:scale-125 transition-all duration-400 ease-in-out ${
-                isOpen ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              <LanguageToggle compact={false} />
-              <ThemeToggle compact={false} />
+      <div
+        aria-hidden={!isOpen}
+        className={`fixed inset-x-0 top-16 z-40 transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
+          isOpen
+            ? 'visible translate-y-0 opacity-100'
+            : 'invisible -translate-y-2 opacity-0'
+        }`}
+        id="mobile-nav"
+      >
+        <div className="mx-5 rounded-2xl border border-border-subtle bg-surface-card/95 p-4 shadow-2xl backdrop-blur-xl" ref={panelRef}>
+          <nav className="flex flex-col gap-1">
+            {menuItems.map((item, index) => {
+              const active = isActive(item);
+
+              return (
+                <Link
+                  aria-current={active ? 'page' : undefined}
+                  className={active ? rowActive : rowIdle}
+                  href={getHref(item)}
+                  key={item.id}
+                  onClick={(event) => {
+                    handleClick(event, item);
+                    setIsOpen(false);
+                  }}
+                >
+                  {label(index)}
+                </Link>
+              );
+            })}
+
+            <div className="flex items-center justify-between rounded-lg px-3 py-3 font-mono text-sm text-text-muted">
+              <span>{t('language')}</span>
+              <LanguageToggle />
             </div>
+
+            {resumeLink && (
+              <Link
+                className={`${resumeClass} px-3 py-3 text-sm`}
+                data-umami-event="Resume button"
+                href={resumeLink}
+                onClick={() => setIsOpen(false)}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <FileUser className="h-4 w-4 shrink-0" />
+                {locale === 'it' ? 'Curriculum' : 'Resume'}
+                <ExternalLink className="ml-auto h-4 w-4 text-text-dim" />
+              </Link>
+            )}
           </nav>
         </div>
+      </div>
     </>
   );
 }

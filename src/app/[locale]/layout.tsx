@@ -10,7 +10,8 @@ import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
 import ScrollTop from '@/components/layout/ScrollTop';
 import { isValidLocale, locales } from '@/i18n/routing';
-import { getTranslationsSupabase } from '@/utils/getData';
+import type { ResumeData } from '@/types/fetchedData.types';
+import { getResumeLink, getTranslationsSupabase } from '@/utils/getData';
 import { Providers } from '../providers';
 
 const umamiEnabled = process.env.UMAMI_ENABLED === 'true';
@@ -35,10 +36,15 @@ async function LocaleShell({
   const { locale } = await params;
   const messages = await getTranslationsSupabase(locale);
 
+  const resumeData = (await getResumeLink()) as ResumeData;
+  const resumeLink = resumeData
+    ? resumeData[`resume_${locale}` as keyof ResumeData]
+    : null;
+
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <Header locale={locale} />
-      {children}
+      <Header locale={locale} resumeLink={resumeLink} />
+      <div className="flex min-w-0 flex-1 flex-col [&>*]:min-w-0 [&>*]:w-full">{children}</div>
       <ScrollTop />
       <Footer locale={locale} />
     </NextIntlClientProvider>
@@ -84,14 +90,15 @@ export default async function RootLayout({
         />
       </head>
       <body
-        id="about"
-        className={`${whiteRabbit.variable} transition-colors duration-400 ease-in-out font-whiterabt antialiased scroll-smooth relative`}
+        className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased transition-colors duration-400 ease-in-out scroll-smooth`}
       >
         <Providers>
           <Suspense>
             <LocaleShell params={params}>{children}</LocaleShell>
           </Suspense>
-          <SpeedInsights />
+          {/* Vercel-only analytics endpoint: skip it off-platform so local dev
+              does not request a script that only exists on Vercel. */}
+          {process.env.VERCEL && <SpeedInsights />}
           {umamiEnabled && (
             <Script
               src="https://umami.okazakee.dev/script.js"

@@ -1,6 +1,7 @@
 'use client';
 
-import { Check, Share2 } from 'lucide-react';
+import { Check, Share } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 export default function ShareButton({
@@ -14,6 +15,8 @@ export default function ShareButton({
   title: string;
   className?: string;
 }) {
+  const t = useTranslations('posts-section');
+
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -26,33 +29,40 @@ export default function ShareButton({
     }
   };
 
+  // Mobile opens the native share sheet; desktop keeps the copy affordance.
+  const handleShare = async () => {
+    if (window.matchMedia('(max-width: 767px)').matches && navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch {
+        // The user dismissed the native sheet; nothing to do.
+      }
+      return;
+    }
+    await handleCopy();
+  };
+
   return (
     <button
-      type="button"
-      onClick={handleCopy}
-      className={`${className} relative text-darktext dark:text-lighttext flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-400 ease-in-out w-5`}
-      title={buttonTitle}
+      className={`relative inline-flex items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-card px-3 py-2 transition-colors hover:border-accent-violet/50 hover:text-accent-violet-light ${className}`}
       data-umami-event="Share button"
       data-umami-event-post={title}
+      onClick={handleShare}
+      title={buttonTitle}
+      type="button"
     >
-      <div className="flex absolute right-0">
-        <Check
-          className={`w-5 h-5 mr-2 text-green-500 transition-all duration-400 ease-in-out ${
-            copied ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-        <span
-          className={`text-sm transition-all duration-400 ease-in-out ${
-            copied ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          Copied!
-        </span>
-      </div>
-
-      <Share2
-        className={`absolute left-1/2 transform-gpu transition-all duration-400 ease-in-out -translate-x-1/2 w-5 h-5 ${copied ? 'opacity-0' : 'opacity-100'}`}
-      />
+      <span
+        className={`absolute right-full mr-2 text-xs whitespace-nowrap transition-opacity duration-300 ${
+          copied ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {t('preCopy')}
+      </span>
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-green-500" />
+      ) : (
+        <Share className="h-3.5 w-3.5" />
+      )}
     </button>
   );
 }

@@ -4,48 +4,61 @@ import CopyLinkButton from '../common/CopyButton';
 
 export default async function Footer({ locale }: { locale: string }) {
   const t = await getTranslations({ locale, namespace: 'footer' });
+  const tPosts = await getTranslations({ locale, namespace: 'posts-section' });
 
   // Standalone CMS origin (falls back to the legacy path, which the Proxy
   // redirects to the CMS host when LEGACY_CMS_REDIRECT_HOST is set).
   const cmsPublicUrl = process.env.NEXT_PUBLIC_CMS_URL ?? `/${locale}/cms`;
 
+  const linkClass = 'transition-colors hover:text-accent-violet-light';
+
   return (
-    <footer className="border-t border-darktext dark:border-lighttext">
-      <div className="py-4 lg:flex-row flex-col-reverse flex items-center lg:justify-between justify-center relative mx-auto max-w-(--breakpoint-2xl)">
-        <div className="text-xs xs:text-base sm:text-base md:my-0 w-fit lg:ml-5">
+    <footer className="border-t border-border-subtle bg-surface-base py-8 font-mono text-xs text-text-dim">
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
+        <div>
           {t('left')}{' '}
-          <Link href="https://github.com/Okazakee" className="text-main">
+          <Link
+            className="text-text-muted transition-colors hover:text-accent-violet-light"
+            href="https://github.com/Okazakee"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
             Okazakee
           </Link>{' '}
-          |{' '}
+          <span className="text-border-hover">|</span>{' '}
           <Link
+            className={linkClass}
             href="https://github.com/Okazakee/okazakee-ws"
-            className="hover:text-main text-xs xs:stext-sm md:text-base text-left transition-colors duration-0"
+            rel="noopener noreferrer"
+            target="_blank"
           >
             {t('source')}
           </Link>
         </div>
 
-        <CopyLinkButton
-          className="lg:absolute lg:left-1/2 lg:transform-gpu lg:-translate-x-1/2"
-          copyValue="02863310815"
-          buttonTitle={t('buttonTitle')}
-        >
-          {t('middle')} - 02863310815
-        </CopyLinkButton>
-
-        <div className="text-xs xs:text-base sm:text-base md:my-0 w-fit lg:mr-5 flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <CopyLinkButton
+            buttonTitle={t('buttonTitle')}
+            className="transition-colors hover:text-text-muted"
+            copiedLabel={tPosts('preCopy')}
+            copyValue="02863310815"
+          >
+            {t('middle')} - 02863310815
+          </CopyLinkButton>
+          <span>•</span>
           <Link
+            className="underline transition-colors hover:text-text-muted"
             href={cmsPublicUrl}
             prefetch={false}
-            className="hover:text-main text-xs xs:text-sm md:text-base text-right transition-colors duration-0"
+            rel="noopener noreferrer"
+            target="_blank"
           >
             CMS
           </Link>
-          <span className="text-gray-500 dark:text-gray-400">|</span>
+          <span>•</span>
           <Link
+            className="underline transition-colors hover:text-text-muted"
             href={`/${locale}/privacy-policy`}
-            className="hover:text-main text-xs xs:text-sm md:text-base text-right transition-colors duration-0"
           >
             {t('privacyPolicy')}
           </Link>

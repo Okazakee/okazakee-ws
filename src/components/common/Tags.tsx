@@ -1,69 +1,30 @@
-'use client';
 import { Tag } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import ChipRow from './ChipRow';
 
+/**
+ * Post tags, canon chip row (docs/DESIGN.md §5.2): the row stays on one line
+ * and only loops when the chips overflow. The parsing stays here; the marquee
+ * behaviour lives in ChipRow so the career chips share it.
+ */
 export const Tags = ({ tags }: { tags: string }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [totalWidth, setTotalWidth] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(0);
+  const list = tags
+    ? Array.from(tags.matchAll(/"([^"]*?)"/g), (match) => match[1])
+    : [];
 
-  const reworkedTags = useMemo(() => {
-    return tags
-      ? Array.from(tags.matchAll(/"([^"]*?)"/g), (match) => match[1])
-      : [];
-  }, [tags]);
-
-  useEffect(() => {
-    const calculateWidths = () => {
-      if (containerRef.current) {
-        const tagElements = containerRef.current.querySelectorAll('.tag');
-        let width = 0;
-
-        for (const el of tagElements) {
-          width += el.getBoundingClientRect().width + 8; // Include spacing
-        }
-
-        setTotalWidth(width);
-        setContainerWidth(containerRef.current.offsetWidth); // Update container width
-      }
-    };
-
-    calculateWidths();
-    window.addEventListener('resize', calculateWidths);
-    return () => window.removeEventListener('resize', calculateWidths);
-  }, []);
-
-  const shouldAnimate = useMemo(() => {
-    return totalWidth > containerWidth;
-  }, [totalWidth, containerWidth]);
+  if (list.length === 0) return null;
 
   return (
-    <div className="relative overflow-hidden w-full">
-      <div
-        ref={containerRef}
-        className={`flex whitespace-nowrap transition-all duration-400 ease-in-out ${
-          shouldAnimate ? 'animate-carousel' : 'flex-wrap'
-        }`}
-        style={
-          shouldAnimate
-            ? ({
-                '--total-width': `${totalWidth}px`,
-                '--container-width': '100%',
-              } as React.CSSProperties)
-            : {}
-        }
-      >
-        {reworkedTags.map((tag) => (
-          <span
-            key={tag}
-            className="tag bg-secondary text-lighttext text-sm xs:text-base sm:text-base gap-1.5 xs:gap-2 sm:gap-2 px-2 py-1 rounded-lg flex items-center mr-2 xs:mb-1 sm:mb-1 sm:mt-2 xs:mt-2 mt-1"
-          >
-            <Tag size={15} className="w-[14px] xs:w-[15px] sm:w-[15px]" />
-            {tag}
-          </span>
-        ))}
-      </div>
-    </div>
+    <ChipRow>
+      {list.map((tag) => (
+        <span
+          className="mr-1.5 inline-flex shrink-0 items-center gap-1 rounded border border-border-subtle bg-surface-raised px-2 py-0.5 font-mono text-xs text-text-muted"
+          key={tag}
+        >
+          <Tag className="mr-0.5 h-3 w-3 shrink-0 text-accent-violet/70" />
+          {tag}
+        </span>
+      ))}
+    </ChipRow>
   );
 };
 

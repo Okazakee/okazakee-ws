@@ -1,17 +1,23 @@
 'use client';
 
-import { Check, Copy } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useState } from 'react';
 
+/**
+ * Copy-to-clipboard affordance for the footer VAT number (DESIGN.md §5.5):
+ * plain text with the copy action and the title from the CMS translations —
+ * no icon, the label itself confirms the copy.
+ */
 export default function CopyLinkButton({
   copyValue,
   buttonTitle,
+  copiedLabel,
   className,
   children,
 }: {
   copyValue: string;
   buttonTitle: string;
+  copiedLabel?: string;
   className: string;
   children: React.ReactNode;
 }) {
@@ -29,20 +35,13 @@ export default function CopyLinkButton({
 
   return (
     <button
-      type="button"
-      onClick={handleCopy}
-      className={`${className}  relative text-xs xs:text-base sm:text-base my-4 md:my-0 flex items-center gap-2 hover:text-main transition-all duration-0 group`}
-      title={buttonTitle}
+      className={className}
       data-umami-event="P.IVA Copy"
+      onClick={handleCopy}
+      title={buttonTitle}
+      type="button"
     >
-      <span>{children}</span>
-      <div className="absolute -right-6">
-        {copied ? (
-          <Check className="w-4 h-4 text-green-500" />
-        ) : (
-          <Copy className="w-4 h-4 opacity-0 group-hover:opacity-100 " />
-        )}
-      </div>
+      {copied && copiedLabel ? copiedLabel : children}
     </button>
   );
 }

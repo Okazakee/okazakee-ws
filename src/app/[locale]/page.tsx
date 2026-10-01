@@ -34,7 +34,7 @@ export default async function Home({
   const { locale } = await params;
 
   return (
-    <main className="mx-auto md:max-w-7xl mt-10 md:mt-0">
+    <main>
       <Hero locale={locale} />
 
       <Skills locale={locale} />
