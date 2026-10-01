@@ -1,4 +1,6 @@
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+import { InnerHtml } from '@/components/common/InnerHtml';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import { getPrivacyPolicy } from '@/utils/getData';
 
@@ -43,16 +45,40 @@ export default async function PrivacyPolicyPage({
     notFound();
   }
 
+  const t = await getTranslations({ locale, namespace: 'privacyPolicy' });
+
+  // The document ends with a "Last updated" line under a rule; the design wants
+  // it as a meta line under the title instead (docs/DESIGN.md §6).
+  // Locale-agnostic: the last rule in the document is followed by an italic
+  // line ("Last updated: ..." / "Ultimo aggiornamento: ...").
+  const lastUpdatedMatch = privacyPolicy.match(/-{3,}\s*\*([^*]+)\*\s*$/);
+  const lastUpdated = lastUpdatedMatch ? lastUpdatedMatch[1].trim() : null;
+  const body = lastUpdatedMatch
+    ? privacyPolicy.slice(0, lastUpdatedMatch.index).trim()
+    : privacyPolicy;
+
   return (
-    <main className="flex flex-col items-center justify-center max-w-(--breakpoint-2xl) mx-auto px-5 py-16">
-      <div className="w-full max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8 text-center">
-          {titles[locale] ?? titles.en}
-        </h1>
-        <div className="prose dark:prose-invert max-w-none">
-          <MarkdownRenderer markdown={privacyPolicy} />
-        </div>
+    <section className="mx-auto max-w-5xl px-6 py-24">
+      <div className="mb-14 text-center">
+        <InnerHtml
+          as="h1"
+          className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
+          html={titles[locale] ?? titles.en}
+        />
+        <p className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm">
+          {t('description')}
+        </p>
+        <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
+        {lastUpdated && (
+          <p className="mt-5 font-mono text-[11px] tracking-[0.08em] text-text-dim uppercase">
+            {lastUpdated}
+          </p>
+        )}
       </div>
-    </main>
+
+      <div className="legal post mx-auto max-w-3xl">
+        <MarkdownRenderer markdown={body} />
+      </div>
+    </section>
   );
 }

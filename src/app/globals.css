@@ -354,6 +354,37 @@
    Post prose and code blocks (docs/DESIGN.md §5.7). Descendant selectors keep
    the markdown renderer's own element overrides intact.
    ------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   Privacy document numbering. CSS counters only — the markdown pipeline is
+   untouched (docs/DESIGN.md §6).
+   ------------------------------------------------------------------------- */
+.legal {
+  counter-reset: section;
+}
+.legal h2 {
+  counter-increment: section;
+  counter-reset: subsection;
+}
+.legal h3 {
+  counter-increment: subsection;
+}
+.legal h2::before {
+  content: counter(section, decimal-leading-zero);
+  margin-right: 0.6rem;
+  font-family: 'White Rabbit', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--c-accent-violet);
+}
+.legal h3::before {
+  content: counter(section) '.' counter(subsection);
+  margin-right: 0.5rem;
+  font-family: 'White Rabbit', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--c-accent-violet);
+}
+
 .post h2 {
   font-family: 'White Rabbit', sans-serif;
   font-size: 1.5rem;
