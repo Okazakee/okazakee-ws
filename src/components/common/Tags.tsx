@@ -1,67 +1,71 @@
 'use client';
+
 import { Tag } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+/**
+ * Post tags, always on a single row (DESIGN.md §5.2). When the chips are wider
+ * than their container the list loops seamlessly: the track holds two copies and
+ * slides by half its width. A single measurement (no per-chip summing) decides
+ * whether to animate, and the duration keeps the speed constant.
+ */
 export const Tags = ({ tags }: { tags: string }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [totalWidth, setTotalWidth] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [duration, setDuration] = useState<number | null>(null);
 
-  const reworkedTags = useMemo(() => {
-    return tags
-      ? Array.from(tags.matchAll(/"([^"]*?)"/g), (match) => match[1])
-      : [];
-  }, [tags]);
+  const list = useMemo(
+    () =>
+      tags ? Array.from(tags.matchAll(/"([^"]*?)"/g), (match) => match[1]) : [],
+    [tags]
+  );
 
   useEffect(() => {
-    const calculateWidths = () => {
-      if (containerRef.current) {
-        const tagElements = containerRef.current.querySelectorAll('.tag');
-        let width = 0;
+    const track = trackRef.current;
+    const viewport = track?.parentElement;
+    if (!track || !viewport) return;
 
-        for (const el of tagElements) {
-          width += el.getBoundingClientRect().width + 8; // Include spacing
-        }
-
-        setTotalWidth(width);
-        setContainerWidth(containerRef.current.offsetWidth); // Update container width
-      }
+    const measure = () => {
+      const single = track.scrollWidth / 2;
+      const overflows = single > viewport.clientWidth + 1;
+      setDuration(overflows ? Math.max(12, Math.round(single / 45)) : null);
     };
 
-    calculateWidths();
-    window.addEventListener('resize', calculateWidths);
-    return () => window.removeEventListener('resize', calculateWidths);
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    return () => observer.disconnect();
   }, []);
 
-  const shouldAnimate = useMemo(() => {
-    return totalWidth > containerWidth;
-  }, [totalWidth, containerWidth]);
+  if (list.length === 0) return null;
+
+  const chips = (copy: string, hidden: boolean) => (
+    <div aria-hidden={hidden || undefined} className="flex shrink-0">
+      {list.map((tag) => (
+        <span
+          className="mr-2 inline-flex shrink-0 items-center gap-1 rounded border border-border-subtle bg-surface-raised px-2 py-0.5 font-mono text-xs text-text-muted"
+          key={`${copy}-${tag}`}
+        >
+          <Tag className="h-3 w-3 shrink-0 text-accent-violet/70" />
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="relative overflow-hidden w-full">
+    <div className="tags-row relative w-full overflow-hidden">
       <div
-        ref={containerRef}
-        className={`flex whitespace-nowrap transition-all duration-400 ease-in-out ${
-          shouldAnimate ? 'animate-carousel' : 'flex-wrap'
-        }`}
+        className={`flex w-max ${duration ? 'animate-tags' : ''}`}
+        ref={trackRef}
         style={
-          shouldAnimate
-            ? ({
-                '--total-width': `${totalWidth}px`,
-                '--container-width': '100%',
-              } as React.CSSProperties)
-            : {}
+          duration
+            ? ({ '--tags-duration': `${duration}s` } as React.CSSProperties)
+            : undefined
         }
       >
-        {reworkedTags.map((tag) => (
-          <span
-            key={tag}
-            className="tag bg-secondary text-lighttext text-sm xs:text-base sm:text-base gap-1.5 xs:gap-2 sm:gap-2 px-2 py-1 rounded-lg flex items-center mr-2 xs:mb-1 sm:mb-1 sm:mt-2 xs:mt-2 mt-1"
-          >
-            <Tag size={15} className="w-[14px] xs:w-[15px] sm:w-[15px]" />
-            {tag}
-          </span>
-        ))}
+        {chips('first', false)}
+        {chips('copy', true)}
       </div>
     </div>
   );

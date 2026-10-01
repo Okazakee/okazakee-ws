@@ -354,6 +354,24 @@
   }
 }
 
+/* Tag row: one line, seamless loop when the chips overflow (DESIGN.md §5.2).
+   The track carries the list twice and slides by exactly half its width, so the
+   junction is invisible; the duration is set inline for a constant speed. */
+@keyframes tags-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-tags {
+  animation: tags-scroll var(--tags-duration, 30s) linear infinite;
+}
+
+.animate-tags:hover,
+.animate-tags:focus-within {
+  animation-play-state: paused;
+}
+
 .animate-carousel {
   animation: carousel 8s ease-in-out infinite;
 }
@@ -366,6 +384,14 @@
   .animate-carousel {
     animation: none;
   }
+  .animate-tags {
+    animation: none;
+  }
+  .tags-row {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
   html {
     scroll-behavior: auto;
   }
