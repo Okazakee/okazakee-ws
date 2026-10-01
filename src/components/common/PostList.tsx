@@ -31,7 +31,7 @@ export default function PostList({
         locale={locale}
       />
 
-      <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
+      <div className="space-y-6">
         {posts.length > 0 ? (
           posts.map((post) => (
             <Postcard key={post.id} post={post} locale={locale} />

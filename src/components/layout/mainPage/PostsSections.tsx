@@ -1,17 +1,23 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
 import PostCard from '@components/common/PostCard';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { getBlogPosts, getPortfolioPosts } from '@/utils/getData';
 
+/**
+ * Home previews of the latest projects and posts (docs/DESIGN.md §6): the blog
+ * band is tinted, the portfolio one is not, and each closes with the link to
+ * its list page.
+ */
 export default async function PostsSection({ locale }: { locale: string }) {
   const portfolioPosts = await getPortfolioPosts();
   const blogPosts = await getBlogPosts();
 
   const t = await getTranslations({ locale, namespace: 'posts-section' });
-  const sections = ['Portfolio', 'Blog'] as const;
+  const sections = ['portfolio', 'blog'] as const;
 
   if (!portfolioPosts || !blogPosts)
     return <ErrorDiv>Error loading posts sections data</ErrorDiv>;
@@ -19,42 +25,49 @@ export default async function PostsSection({ locale }: { locale: string }) {
   return (
     <div>
       {sections.map((section) => {
-        const isBlog = section === 'Blog';
-
-        const postsCheck = isBlog ? blogPosts : portfolioPosts;
+        const isBlog = section === 'blog';
+        const posts = isBlog ? blogPosts : portfolioPosts;
 
         return (
-          postsCheck.length > 0 && (
+          posts.length > 0 && (
             <section
-              key={section}
-              id={section}
-              className={`text-center sm:mx-20 md:mx-auto mx-5 md:w-full mt-20 md:mt-20 lg:mt-32 xl:mt-40 ${
-                postsCheck.length > 2 && 'md:min-h-lvh'
+              className={`border-border-subtle/50 py-24 ${
+                isBlog ? 'border-t bg-surface-alt' : ''
               }`}
+              id={section}
+              key={section}
             >
-              <InnerHtml
-                as="h1"
-                className="xl:text-6xl tablet:text-5xl text-xl xs:text-2xl mb-5"
-                html={formatLabels(t(isBlog ? 'title2' : 'title1'))}
-              />
-              <InnerHtml
-                as="h2"
-                className="mb-10 md:mb-20 text-base xs:text-lg tablet:text-2xl tablet:mx-16 md:text-2xl"
-                html={formatLabels(t(isBlog ? 'subtitle2' : 'subtitle1'))}
-              />
-              <div className="flex flex-wrap gap-6 justify-center mx-5 transition-all">
-                {postsCheck.map((post) => (
-                  <PostCard key={post.id} post={post} locale={locale} />
-                ))}
+              <div className="mx-auto max-w-5xl px-6">
+                <div className="mb-14 text-center">
+                  <InnerHtml
+                    as="h2"
+                    className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
+                    html={formatLabels(t(isBlog ? 'title2' : 'title1'))}
+                  />
+                  <InnerHtml
+                    as="p"
+                    className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"
+                    html={formatLabels(t(isBlog ? 'subtitle2' : 'subtitle1'))}
+                  />
+                  <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
+                </div>
+
+                <div className="space-y-6">
+                  {posts.map((post) => (
+                    <PostCard key={post.id} locale={locale} post={post} />
+                  ))}
+                </div>
+
+                <div className="mt-12 flex justify-center">
+                  <Link
+                    className="inline-flex items-center gap-2 rounded-xl bg-accent-violet-deep px-6 py-2.5 font-mono text-xs text-white transition-all hover:-translate-y-0.5 hover:bg-accent-violet"
+                    href={`/${locale}/${section}`}
+                  >
+                    {t('button')}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
               </div>
-              <Link href={`/${locale}/${isBlog ? 'blog' : 'portfolio'}`}>
-                <button
-                  type="button"
-                  className="mt-10 md:mt-20 bg-secondary hover:bg-tertiary text-lighttext transition-all px-5 py-2 rounded-lg text-xl scale-[85%] sm:scale-100 xs:scale-100"
-                >
-                  {t('button')}
-                </button>
-              </Link>
             </section>
           )
         );
