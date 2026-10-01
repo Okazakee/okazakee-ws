@@ -38,8 +38,8 @@ export default async function Skills({ locale }: { locale: string }) {
                   className="md:drop-shadow-3xl drop-shadow-xl dark:drop-shadow-none hover:scale-110 transition-all mx-auto my-5 md:my-10 w-[calc(33.333%-1rem)]"
                 >
                   <Image
-                    placeholder="blur"
-                    blurDataURL={skill.blurhashURL}
+                    placeholder={skill.blurhashURL ? 'blur' : 'empty'}
+                    blurDataURL={skill.blurhashURL || undefined}
                     src={skill.icon}
                     width={80}
                     height={80}

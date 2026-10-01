@@ -2,6 +2,50 @@
 
 @config "../../tailwind.config.ts";
 
+/* Design tokens — docs/DESIGN.md §1. Light on :root, dark under the
+   .dark class that themeStore toggles on <html>. */
+:root {
+  --c-surface-base: #f4f5f9;
+  --c-surface-alt: #eceef5;
+  --c-surface-card: #ffffff;
+  --c-surface-card-hover: #f7f8fc;
+  --c-surface-raised: #eceef4;
+  --c-border-subtle: #d9dce6;
+  --c-border-hover: #b6bdcd;
+  --c-accent-violet: #7c3aed;
+  --c-accent-violet-light: #6d28d9;
+  --c-accent-violet-deep: #6d28d9;
+  --c-accent-cyan: #0369a1;
+  --c-text-white: #0b0e14;
+  --c-text-main: #141822;
+  --c-text-muted: #3a4254;
+  --c-text-dim: #55606f;
+  --c-status-active: #047857;
+  --c-code-bg: #f3f4f9;
+  --c-code-fg: #1b2030;
+}
+
+.dark {
+  --c-surface-base: #0a0a0a;
+  --c-surface-alt: #0c0d0d;
+  --c-surface-card: #111215;
+  --c-surface-card-hover: #15171e;
+  --c-surface-raised: #181a23;
+  --c-border-subtle: #21242b;
+  --c-border-hover: #353c4b;
+  --c-accent-violet: #a078ff;
+  --c-accent-violet-light: #c4b5fd;
+  --c-accent-violet-deep: #7c3aed;
+  --c-accent-cyan: #38bdf8;
+  --c-text-white: #f8fafc;
+  --c-text-main: #e2e8f0;
+  --c-text-muted: #a3aec0;
+  --c-text-dim: #808d9f;
+  --c-status-active: #10b981;
+  --c-code-bg: #08090d;
+  --c-code-fg: #e2e8f0;
+}
+
 /* Custom screen breakpoints for Tailwind CSS 4.x */
 @layer utilities {
   /* xs: (min-width: 400px) and (max-width: 1100px) */
@@ -255,7 +299,7 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply dark:text-lighttext text-darktext bg-bglight dark:bg-bgdark transition-all duration-400;
+    @apply bg-surface-base text-text-main transition-all duration-400;
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
@@ -273,17 +317,17 @@
     z-index: -1;
   }
 
-  body.dark::before {
+  html.dark body::before {
     background-image: url("./public/grain_dark.png");
-    opacity: 40%;
+    opacity: 15%;
   }
 
   label {
-    @apply cursor-text text-main;
+    @apply cursor-text text-accent-violet-light;
   }
 
   input {
-    @apply bg-white dark:bg-white text-black dark:text-black;
+    @apply bg-surface-base text-text-main;
   }
 
   button {
@@ -291,11 +335,11 @@
   }
 
   #post {
-    @apply leading-tight text-darktext dark:text-lighttext;
+    @apply leading-tight text-text-main;
   }
 
   #post li::marker {
-    @apply text-darktext dark:text-lighttext;
+    @apply text-text-main;
   }
 }
 
@@ -321,5 +365,14 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-carousel {
     animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
   }
 }
