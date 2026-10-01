@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Share2 } from 'lucide-react';
+import { Check, Share } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
@@ -29,26 +29,39 @@ export default function ShareButton({
     }
   };
 
+  // Mobile opens the native share sheet; desktop keeps the copy affordance.
+  const handleShare = async () => {
+    if (window.matchMedia('(max-width: 767px)').matches && navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch {
+        // The user dismissed the native sheet; nothing to do.
+      }
+      return;
+    }
+    await handleCopy();
+  };
+
   return (
     <button
-      className={`relative inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border-subtle bg-surface-card text-text-dim transition-colors hover:border-accent-violet/50 hover:text-accent-violet-light ${className}`}
+      className={`relative inline-flex items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-card px-3 py-2 transition-colors hover:border-accent-violet/50 hover:text-accent-violet-light ${className}`}
       data-umami-event="Share button"
       data-umami-event-post={title}
-      onClick={handleCopy}
+      onClick={handleShare}
       title={buttonTitle}
       type="button"
     >
       <span
-        className={`absolute right-full mr-2 whitespace-nowrap text-xs transition-opacity duration-300 ${
+        className={`absolute right-full mr-2 text-xs whitespace-nowrap transition-opacity duration-300 ${
           copied ? 'opacity-100' : 'opacity-0'
         }`}
       >
         {t('preCopy')}
       </span>
       {copied ? (
-        <Check className="h-4 w-4 text-green-500" />
+        <Check className="h-3.5 w-3.5 text-green-500" />
       ) : (
-        <Share2 className="h-4 w-4" />
+        <Share className="h-3.5 w-3.5" />
       )}
     </button>
   );

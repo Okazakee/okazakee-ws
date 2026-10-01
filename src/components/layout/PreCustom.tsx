@@ -39,7 +39,7 @@ export default function PreCustom({ children }: PreCustomProps) {
           onClick={handleCopy}
           type="button"
         >
-          {copied && <span>{t('preCopy')}</span>}
+          {copied && <span className="text-[0.7rem]">{t('preCopy')}</span>}
           {copied ? (
             <Check className="h-4 w-4" />
           ) : (

@@ -60,7 +60,7 @@ export default async function PostsSection({ locale }: { locale: string }) {
 
                 <div className="mt-12 flex justify-center">
                   <Link
-                    className="inline-flex items-center gap-2 rounded-xl bg-accent-violet-deep px-6 py-2.5 font-mono text-xs text-white transition-all hover:-translate-y-0.5 hover:bg-accent-violet"
+                    className="inline-flex items-center gap-2 rounded-xl bg-accent-violet-deep/80 px-6 py-2.5 font-mono text-xs text-white shadow-md shadow-accent-violet-deep/20 transition-all hover:-translate-y-0.5 hover:bg-accent-violet-deep"
                     href={`/${locale}/${section}`}
                   >
                     {t('button')}

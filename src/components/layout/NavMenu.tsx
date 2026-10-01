@@ -74,6 +74,12 @@ export default function NavMenu({
   useEffect(() => {
     if (!isHomePage || !pendingScroll) return;
 
+    if (pendingScroll === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setPendingScroll(null);
+      return;
+    }
+
     const element = document.getElementById(pendingScroll);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -101,6 +107,10 @@ export default function NavMenu({
     setIsOpen(false);
 
     if (isHomePage) {
+      if (item.section === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       document
         .getElementById(item.section)
         ?.scrollIntoView({ behavior: 'smooth' });

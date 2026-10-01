@@ -87,7 +87,7 @@ export default async function Page({
       key: 'website',
       href: post.website,
       label: null,
-      icon: <Globe size={18} />,
+      icon: <Globe size={14} />,
       event: 'Website button',
     });
   }
@@ -97,7 +97,7 @@ export default async function Page({
       key: 'source',
       href: post.source_link,
       label: t('source'),
-      icon: <GithubIcon size={18} />,
+      icon: <GithubIcon size={14} />,
       event: 'View Source Code button',
     });
   }
@@ -107,7 +107,7 @@ export default async function Page({
       key: 'demo',
       href: post.demo_link,
       label: t('demo'),
-      icon: <ExternalLink size={18} />,
+      icon: <ExternalLink size={14} />,
       event: 'View Demo button',
     });
   }
@@ -117,7 +117,7 @@ export default async function Page({
       key: 'store',
       href: post.store_link,
       label: t('store'),
-      icon: <CirclePlay size={18} />,
+      icon: <CirclePlay size={14} />,
       event: 'Play Store button',
     });
   }
@@ -127,7 +127,7 @@ export default async function Page({
       key: 'fdroid',
       href: post.fdroid_link,
       label: t('fdroid'),
-      icon: <Smartphone size={18} />,
+      icon: <Smartphone size={14} />,
       event: 'F-Droid button',
     });
   }
@@ -141,7 +141,7 @@ export default async function Page({
       key: 'ios',
       href: post.ios_store_link,
       label: t('ios'),
-      icon: <AppleIcon size={18} />,
+      icon: <AppleIcon size={14} />,
       event: 'iOS Store button',
     });
   }

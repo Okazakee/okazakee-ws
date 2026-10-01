@@ -101,7 +101,7 @@ export function CareerClient({
           className="inline-flex items-center gap-1 rounded border border-border-subtle bg-surface-raised px-2 py-0.5 font-mono text-xs text-text-muted"
           key={skill}
         >
-          <Tag className="h-3 w-3 shrink-0 text-accent-violet/70" />
+          <Tag className="mr-0.5 h-3 w-3 shrink-0 text-accent-violet/70" />
           {skill}
         </span>
       ))}
