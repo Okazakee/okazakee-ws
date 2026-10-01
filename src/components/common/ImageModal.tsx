@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useZoom } from '@/app/hooks/useZoom';
 
 interface ImageModalProps {
@@ -42,7 +43,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
     };
   }, [blockScroll, onClose]);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-xs -top-4">
       <div className="relative w-full h-full max-w-(--breakpoint-2xl)">
         <button
@@ -81,6 +82,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

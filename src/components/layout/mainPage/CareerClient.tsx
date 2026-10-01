@@ -81,7 +81,7 @@ export function CareerClient({
   };
 
   const dates = (entry: CareerEntry) =>
-    `${formatMonthYear(entry.startDate)} — ${
+    `${formatMonthYear(entry.startDate)} - ${
       entry.endDate ? formatMonthYear(entry.endDate) : t('present')
     } • ${duration(entry.startDate, entry.endDate)}`;
 
