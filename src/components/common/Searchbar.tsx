@@ -45,10 +45,6 @@ export default function Searchbar({
           }
         } else {
           SetIsRateLimited(true);
-          console.log(
-            'Rate limit exceeded. Please wait before searching again.'
-          );
-          // You could also show a user-friendly message here
         }
       }, 300),
     [SetIsRateLimited, SetPosts, post_type, locale]

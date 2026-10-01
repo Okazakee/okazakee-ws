@@ -49,7 +49,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 md:top-10 right-4 md:right-0 z-10 p-2 dark:bg-lighttext bg-darktext dark:text-darktext text-lighttext rounded-md"
+          className="absolute top-4 md:top-10 right-4 md:right-0 z-10 rounded-md bg-text-main p-2 text-surface-base"
           aria-label="Close modal"
         >
           <X className="w-6 h-6" />

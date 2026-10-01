@@ -11,7 +11,7 @@ export type SkillsCategory = {
   skills: Skill[];
 };
 
-export type Skill = {
+type Skill = {
   id: number;
   title: string;
   icon: string;
@@ -82,7 +82,7 @@ export type User = {
   propic: string;
 };
 
-export type RemoteType = 'full' | 'hybrid' | 'onSite';
+type RemoteType = 'full' | 'hybrid' | 'onSite';
 
 export type CareerEntry = {
   id: number;

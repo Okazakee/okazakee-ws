@@ -96,7 +96,9 @@ export default async function RootLayout({
           <Suspense>
             <LocaleShell params={params}>{children}</LocaleShell>
           </Suspense>
-          <SpeedInsights />
+          {/* Vercel-only analytics endpoint: skip it off-platform so local dev
+              does not request a script that only exists on Vercel. */}
+          {process.env.VERCEL && <SpeedInsights />}
           {umamiEnabled && (
             <Script
               src="https://umami.okazakee.dev/script.js"

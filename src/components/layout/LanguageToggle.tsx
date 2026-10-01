@@ -1,21 +1,17 @@
 'use client';
 
-import { Languages } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 
-export default function LanguageToggle({
-  compact = false,
-  sidebar = false,
-  segmented = false,
-}: {
-  compact?: boolean;
-  sidebar?: boolean;
-  segmented?: boolean;
-}) {
+/**
+ * Segmented EN/IT switch (docs/DESIGN.md §4). The switch is a client
+ * navigation with `scroll: false`, so changing language keeps the reader on
+ * the same section instead of hard-reloading and jumping to the top.
+ */
+export default function LanguageToggle() {
   const pathname = usePathname();
-  const _router = useRouter();
+  const router = useRouter();
   const locale = useLocale();
   const [mounted, setMounted] = useState(false);
   const isItalian = locale === 'it';
@@ -35,83 +31,41 @@ export default function LanguageToggle({
       ? [''].concat([newLocale, ...pathSegments.slice(1)]).join('/')
       : `/${newLocale}${normalizedPath}`;
 
-    // Use window.location.href for a full page refresh instead of client-side navigation
-    window.location.href = newPath;
-  }, [pathname, isItalian]);
+    // Same page in the other locale, same scroll position.
+    router.replace(`${newPath}${window.location.hash}`, { scroll: false });
+  }, [pathname, isItalian, router]);
 
   if (!mounted) return null;
 
-  if (sidebar) {
-    return (
-      <button
-        type="button"
-        onClick={switchLanguage}
-        className="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-darkergray dark:hover:bg-darkgray text-darktext dark:text-lighttext hover:text-darktext dark:hover:text-white transition-all duration-200"
-        data-umami-event="Language toggle"
-      >
-        <Languages className="w-4 h-4 flex-shrink-0" />
-        <span className="font-medium text-sm truncate">
-          {isItalian ? 'Italiano' : 'English'}
-        </span>
-      </button>
-    );
-  }
-
-  if (segmented) {
-    const base = 'rounded px-3.5 py-2 transition-colors lg:px-2 lg:py-1';
-    const active = `${base} bg-accent-violet/20 font-semibold text-accent-violet-light`;
-    const idle = `${base} text-text-dim hover:text-text-main`;
-
-    return (
-      <div
-        className="flex items-center rounded-lg border border-border-subtle bg-surface-card p-0.5 font-mono text-xs"
-        data-umami-event="Language toggle"
-      >
-        <button
-          aria-current={isItalian ? undefined : 'true'}
-          className={isItalian ? idle : active}
-          onClick={() => {
-            if (isItalian) switchLanguage();
-          }}
-          type="button"
-        >
-          EN
-        </button>
-        <button
-          aria-current={isItalian ? 'true' : undefined}
-          className={isItalian ? active : idle}
-          onClick={() => {
-            if (!isItalian) switchLanguage();
-          }}
-          type="button"
-        >
-          IT
-        </button>
-      </div>
-    );
-  }
-
-  // Use compact styling when in desktop header
-  const buttonClass = compact
-    ? 'flex items-center justify-center border-2 border-main rounded-2xl transition-all duration-300 ease-in-out w-fit px-3 h-10'
-    : 'space-x-2 relative flex justify-center items-center border-2 border-white dark:border-white rounded-2xl transition-all duration-300 ease-in-out h-16 w-48 lg:h-10 lg:w-32 lg:border-main';
+  const base = 'rounded px-3.5 py-2 transition-colors lg:px-2 lg:py-1';
+  const active = `${base} bg-accent-violet/20 font-semibold text-accent-violet-light`;
+  const idle = `${base} text-text-dim hover:text-text-main`;
 
   return (
-    <button
-      type="button"
-      onClick={switchLanguage}
-      className={buttonClass}
+    <div
+      className="flex items-center rounded-lg border border-border-subtle bg-surface-card p-0.5 font-mono text-xs"
       data-umami-event="Language toggle"
     >
-      {compact ? (
-        <span className="text-sm font-medium text-darktext dark:text-lighttext transition-all duration-300 ease-in-out">
-          {isItalian ? 'IT' : 'EN'}
-        </span>
-      ) : (
-        <div className="text-xl lg:text-lg text-darktext dark:text-lighttext transition-all duration-300 ease-in-out flex items-center justify-center w-full">
-          {isItalian ? 'Italiano' : 'English'}
-        </div>
-      )}
-    </button>
+      <button
+        aria-current={isItalian ? undefined : 'true'}
+        className={isItalian ? idle : active}
+        onClick={() => {
+          if (isItalian) switchLanguage();
+        }}
+        type="button"
+      >
+        EN
+      </button>
+      <button
+        aria-current={isItalian ? 'true' : undefined}
+        className={isItalian ? active : idle}
+        onClick={() => {
+          if (!isItalian) switchLanguage();
+        }}
+        type="button"
+      >
+        IT
+      </button>
+    </div>
   );
 }

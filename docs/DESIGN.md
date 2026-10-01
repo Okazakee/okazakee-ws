@@ -155,7 +155,9 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
 - Scroll-spy: the home page highlights the section currently in view, in **both** the
   desktop nav and the drawer.
 - No settings dropdown: it is dropped by design; language and theme stay as inline
-  controls.
+  controls. The language switch is a client navigation with `scroll: false`, so it
+  swaps the locale in place and keeps the reader at the same scroll position
+  instead of hard-reloading.
 - The bespoke `xs:` / `tablet:` / `mdh:` utilities are retired: standard Tailwind tiers
   cover every case. `SkillsCarousel` and the old `ResumeButton` card went with them,
   replaced by the canon chips and the header's resume action.
@@ -300,6 +302,10 @@ Invented copy is a defect, not a placeholder.
   segments now set `instant = false` — the pages are cached and still navigate
   instantly, the flag only opts out of the validation feedback.
 - Open: the 404 routes answer **HTTP 200** (soft 404), which predates the redesign.
+- Dev-only: React logs `Encountered a script tag …` when a client-side language switch
+  re-renders the `[locale]` layout, because the blocking theme-init script lives there.
+  It must stay inline to apply the stored theme before first paint (a
+  `beforeInteractive` Script lost that guarantee), so the warning is accepted.
 - Open: `sitemap.ts` slugs posts differently from the card link helper, so it advertises
   `/blog/12/dear-mom...` while the card links `/blog/12/dear-mom`.
 

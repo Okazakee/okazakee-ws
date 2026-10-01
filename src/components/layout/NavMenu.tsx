@@ -229,8 +229,8 @@ export default function NavMenu({
 
       <div className="col-start-3 flex items-center gap-2 justify-self-end lg:gap-3">
         <div className="hidden items-center gap-3 lg:flex">
-          <LanguageToggle segmented />
-          <ThemeToggle ariaLabel={t('theme')} icon />
+          <LanguageToggle />
+          <ThemeToggle ariaLabel={t('theme')} />
           {resumeLink && (
             <Link
               className={`${resumeClass} px-3 py-1.5 text-xs`}
@@ -246,7 +246,7 @@ export default function NavMenu({
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <ThemeToggle ariaLabel={t('theme')} icon />
+          <ThemeToggle ariaLabel={t('theme')} />
           <button
             aria-controls="mobile-nav"
             aria-expanded={isOpen}
@@ -293,7 +293,7 @@ export default function NavMenu({
 
             <div className="flex items-center justify-between rounded-lg px-3 py-3 font-mono text-sm text-text-muted">
               <span>{t('language')}</span>
-              <LanguageToggle segmented />
+              <LanguageToggle />
             </div>
 
             {resumeLink && (
