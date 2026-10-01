@@ -8,9 +8,11 @@ import { useCallback, useEffect, useState } from 'react';
 export default function LanguageToggle({
   compact = false,
   sidebar = false,
+  segmented = false,
 }: {
   compact?: boolean;
   sidebar?: boolean;
+  segmented?: boolean;
 }) {
   const pathname = usePathname();
   const _router = useRouter();
@@ -52,6 +54,40 @@ export default function LanguageToggle({
           {isItalian ? 'Italiano' : 'English'}
         </span>
       </button>
+    );
+  }
+
+  if (segmented) {
+    const base = 'rounded px-3 py-2 transition-colors';
+    const active = `${base} bg-accent-violet/20 font-semibold text-accent-violet-light`;
+    const idle = `${base} text-text-dim hover:text-text-main`;
+
+    return (
+      <div
+        className="flex items-center rounded-lg border border-border-subtle bg-surface-card p-0.5 font-mono text-xs"
+        data-umami-event="Language toggle"
+      >
+        <button
+          aria-current={isItalian ? undefined : 'true'}
+          className={isItalian ? idle : active}
+          onClick={() => {
+            if (isItalian) switchLanguage();
+          }}
+          type="button"
+        >
+          EN
+        </button>
+        <button
+          aria-current={isItalian ? 'true' : undefined}
+          className={isItalian ? active : idle}
+          onClick={() => {
+            if (!isItalian) switchLanguage();
+          }}
+          type="button"
+        >
+          IT
+        </button>
+      </div>
     );
   }
 

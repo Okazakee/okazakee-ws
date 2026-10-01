@@ -40,7 +40,7 @@ export default function ScrollTop() {
     showLink && (
       <button
         type="button"
-        className="cursor-pointer fixed z-40 right-4 md:right-8 flex items-center justify-center text-base xs:text-lg sm:text-lg bg-darktext text-lighttext dark:bg-lighttext dark:text-darktext p-3 md:px-4 md:py-2 rounded-xl shadow-lg transition-opacity duration-400"
+        className="fixed right-4 z-40 flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-text-main p-3 font-mono text-xs uppercase tracking-[0.08em] text-surface-base shadow-lg transition-colors duration-300 hover:bg-accent-violet hover:text-white md:right-8 md:px-4 md:py-2"
         style={{
           bottom: `${buttonOffset}px`,
           opacity: opacity,

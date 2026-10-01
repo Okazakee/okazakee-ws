@@ -1,37 +1,45 @@
-import logo from '@public/title-ws.png';
 import logoLight from '@public/title-ws-lightmode.png';
+import logo from '@public/title-ws.png';
 import Link from 'next/link';
 import NavMenu from './NavMenu';
 
-export default function Header({ locale }: { locale: string }) {
+/**
+ * Site header, canon layout (docs/DESIGN.md §4): a three-column grid whose
+ * children carry explicit col-start placements, so hiding the desktop nav on
+ * mobile cannot shift the controls into the middle column.
+ */
+export default function Header({
+  locale,
+  resumeLink,
+}: {
+  locale: string;
+  resumeLink: string | null;
+}) {
   return (
-    <header className="max-w-(--breakpoint-2xl) mx-auto pt-4">
-      <div className="flex justify-between items-center h-[clamp(63.6px,6.8vw_+_9.7px,80px)] mx-5">
+    <header className="sticky top-0 z-50 border-b border-border-subtle bg-surface-base/85 backdrop-blur-md">
+      <div className="mx-auto grid h-16 max-w-5xl grid-cols-[1fr_auto_1fr] items-center pl-6 pr-3 lg:pr-6">
         <Link
-          href={'/'}
-          className="block xl:mr-auto xl:mx-0 xl:static"
+          className="col-start-1 flex items-center justify-self-start"
+          href={`/${locale}`}
         >
-          <span className="block w-[clamp(191px,20.4vw_+_29px,240px)]">
-            {/* biome-ignore lint/performance/noImgElement: static logo asset does not benefit from next/image and avoids a Next 16 runtime warning */}
-            <img
-              src={logo.src}
-              width={1809}
-              height={320}
-              className="block h-auto w-full hidden dark:block"
-              alt="logo"
-            />
-            {/* biome-ignore lint/performance/noImgElement: static logo asset does not benefit from next/image and avoids a Next 16 runtime warning */}
-            <img
-              src={logoLight.src}
-              width={1815}
-              height={325}
-              className="block h-auto w-full dark:hidden"
-              alt="logo"
-            />
-          </span>
+          {/* biome-ignore lint/performance/noImgElement: static logo asset does not benefit from next/image and avoids a Next 16 runtime warning */}
+          <img
+            alt="logo"
+            className="hidden h-6 w-auto max-w-none shrink-0 object-contain dark:block"
+            height={320}
+            src={logo.src}
+            width={1809}
+          />
+          {/* biome-ignore lint/performance/noImgElement: static logo asset does not benefit from next/image and avoids a Next 16 runtime warning */}
+          <img
+            alt="logo"
+            className="block h-6 w-auto max-w-none shrink-0 object-contain dark:hidden"
+            height={325}
+            src={logoLight.src}
+            width={1815}
+          />
         </Link>
-
-        <NavMenu locale={locale} />
+        <NavMenu locale={locale} resumeLink={resumeLink} />
       </div>
     </header>
   );

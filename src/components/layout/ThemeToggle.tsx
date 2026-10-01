@@ -15,9 +15,13 @@ type LegacyMediaQueryList = Omit<
 export default function ThemeToggle({
   compact = false,
   sidebar = false,
+  icon = false,
+  ariaLabel,
 }: {
   compact?: boolean;
   sidebar?: boolean;
+  icon?: boolean;
+  ariaLabel?: string;
 }) {
   const { mode, setThemeMode } = useThemeStore();
   const [mounted, setMounted] = useState(false);
@@ -95,6 +99,21 @@ export default function ThemeToggle({
           {mode === 'light' && 'Light'}
           {mode === 'dark' && 'Dark'}
         </span>
+      </button>
+    );
+  }
+
+  if (icon) {
+    const Icon = mode === 'light' ? Sun : mode === 'dark' ? Moon : Smartphone;
+    return (
+      <button
+        aria-label={ariaLabel}
+        className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle bg-surface-card text-text-dim transition-colors hover:border-accent-violet/40 hover:text-accent-violet-light lg:h-9 lg:w-9"
+        data-umami-event="Theme toggle"
+        onClick={cycleThemeMode}
+        type="button"
+      >
+        <Icon className="h-4 w-4 lg:h-[17px] lg:w-[17px]" strokeWidth={2} />
       </button>
     );
   }
