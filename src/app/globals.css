@@ -398,7 +398,9 @@
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: must beat component utility classes */
     transition-duration: 0.001ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must beat component utility classes */
     animation-duration: 0.001ms !important;
   }
 }
