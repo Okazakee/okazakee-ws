@@ -7,12 +7,15 @@ export default function GitHubStars({ sourceLink }: { sourceLink: string }) {
   const [stars, setStars] = useState(0);
 
   useEffect(() => {
-    const repoName = sourceLink.split('/').pop();
-    if (!repoName) return;
+    // Only owner/repo links resolve to a repository: some posts store an
+    // organisation or profile URL, which would 404 and render a bogus 0.
+    const path = sourceLink.replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, '');
+    const [owner, repoName] = path.split('/');
+    if (!owner || !repoName) return;
 
     let cancelled = false;
 
-    fetch(`https://api.github.com/repos/okazakee/${repoName}`)
+    fetch(`https://api.github.com/repos/${owner}/${repoName}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!cancelled && data) {
@@ -27,9 +30,9 @@ export default function GitHubStars({ sourceLink }: { sourceLink: string }) {
   }, [sourceLink]);
 
   return (
-    <div className="flex items-center text-darktext dark:text-lighttext">
-      <Star size={20} className="mr-2" />
-      <span className="mt-0.5">{stars}</span>
+    <div className="inline-flex items-center gap-2">
+      <Star className="text-accent-violet" size={14} />
+      <span>{stars}</span>
     </div>
   );
 }

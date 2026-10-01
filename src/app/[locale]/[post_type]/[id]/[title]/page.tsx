@@ -18,6 +18,7 @@ import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import { slugifyTitle } from '@/utils/postHref';
 
 /* ONLY PORTFOLIO POSTS USE title_en AS TITLE FOR BOTH LANGS, BLOG POSTS CAN SWAP title_en and title_it */
 const validPostTypes = new Set(['portfolio', 'blog']);
@@ -56,10 +57,7 @@ export default async function Page({
       : post[`title_${locale}` as LocaleKey];
 
   // If the provided title doesn't match the actual post title, redirect to the correct URL
-  const slugifiedTitle = initTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-');
+  const slugifiedTitle = slugifyTitle(initTitle);
 
   if (title !== slugifiedTitle) {
     redirect(`/${locale}/${post_type}/${id}/${slugifiedTitle}`);
@@ -71,385 +69,220 @@ export default async function Page({
 
   const postURL = `${process.env.DOMAIN_URL}/${locale}/${post_type}/${id}/${slugifiedTitle}`;
 
-  return (
-    <article className="max-w-5xl mx-auto px-4 mb-20 md:mb-32 md:mt-16 mt-10">
-      <header className="flex relative mb-6 md:mb-0">
-        <div>
-          <h1 className="md:text-4xl text-2xl xs:text-3xl font-bold mb-4">
-            {initTitle}
-          </h1>
-          <p className="text-base xs:text-lg">
-            {String(post[postDescription])}
-          </p>
-        </div>
-      </header>
+  const linkClass =
+    'inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-text-muted transition-colors hover:border-accent-violet/50 hover:text-text-white';
+  const mobileLinkClass =
+    'flex flex-1 items-center justify-center gap-2 rounded-lg border border-accent-violet/40 bg-accent-violet/10 px-3 py-3 font-mono text-xs text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20';
 
-      {/* TAGS */}
-      <div className="md:my-4">
-        <Tags tags={post.post_tags} />
+  const metaLinks: {
+    key: string;
+    href: string;
+    label: string | null;
+    icon: React.ReactNode;
+    event: string;
+  }[] = [];
+
+  if (post_type === 'portfolio' && 'website' in post && post.website) {
+    metaLinks.push({
+      key: 'website',
+      href: post.website,
+      label: null,
+      icon: <Globe size={18} />,
+      event: 'Website button',
+    });
+  }
+
+  if (post_type === 'portfolio' && 'source_link' in post && post.source_link) {
+    metaLinks.push({
+      key: 'source',
+      href: post.source_link,
+      label: t('source'),
+      icon: <GithubIcon size={18} />,
+      event: 'View Source Code button',
+    });
+  }
+
+  if (post_type === 'portfolio' && 'demo_link' in post && post.demo_link) {
+    metaLinks.push({
+      key: 'demo',
+      href: post.demo_link,
+      label: t('demo'),
+      icon: <ExternalLink size={18} />,
+      event: 'View Demo button',
+    });
+  }
+
+  if (post_type === 'portfolio' && 'store_link' in post && post.store_link) {
+    metaLinks.push({
+      key: 'store',
+      href: post.store_link,
+      label: t('store'),
+      icon: <CirclePlay size={18} />,
+      event: 'Play Store button',
+    });
+  }
+
+  if (post_type === 'portfolio' && 'fdroid_link' in post && post.fdroid_link) {
+    metaLinks.push({
+      key: 'fdroid',
+      href: post.fdroid_link,
+      label: t('fdroid'),
+      icon: <Smartphone size={18} />,
+      event: 'F-Droid button',
+    });
+  }
+
+  if (
+    post_type === 'portfolio' &&
+    'ios_store_link' in post &&
+    post.ios_store_link
+  ) {
+    metaLinks.push({
+      key: 'ios',
+      href: post.ios_store_link,
+      label: t('ios'),
+      icon: <AppleIcon size={18} />,
+      event: 'iOS Store button',
+    });
+  }
+
+  const authorBlock = post.author ? (
+    <>
+      <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-surface-raised">
+        {post.author.avatar_url ? (
+          <Image
+            alt={post.author.display_name}
+            className="object-cover"
+            fill
+            sizes="32px"
+            src={post.author.avatar_url}
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center font-mono text-xs text-text-muted">
+            {post.author.display_name.charAt(0).toUpperCase()}
+          </span>
+        )}
+      </span>
+      <span className="text-sm text-text-main">
+        {post.author.display_name}
+      </span>
+    </>
+  ) : null;
+
+  return (
+    <article className="mx-auto max-w-5xl px-6 pt-24 pb-24">
+      <div className="mx-auto max-w-3xl">
+        <h1 className="font-heading text-3xl font-semibold tracking-tight text-text-white md:text-4xl">
+          {initTitle}
+        </h1>
+        <p className="mt-5 text-base leading-relaxed text-text-muted">
+          {String(post[postDescription])}
+        </p>
+        <div className="mt-7">
+          <Tags tags={post.post_tags} />
+        </div>
       </div>
 
-      {/* Main Image */}
-      <div className="w-full h-56 md:h-96 relative mx-auto mt-6 md:mt-0">
+      <div className="relative mt-10 h-56 w-full overflow-hidden rounded-2xl border border-accent-violet bg-surface-raised md:h-96">
         <Image
-          placeholder="blur"
-          blurDataURL={post.blurhashURL}
-          src={post.image}
-          fill
-          priority
-          fetchPriority="high"
-          loading="eager"
-          decoding="sync"
-          sizes="(min-width: 1024px) 1024px, 100vw"
-          style={{
-            objectFit: 'cover',
-            objectPosition: 'center',
-          }}
           alt="post_image"
-          className="rounded-lg border-[3px] border-main"
+          blurDataURL={post.blurhashURL}
+          className="object-cover"
+          decoding="sync"
+          fetchPriority="high"
+          fill
+          loading="eager"
+          placeholder="blur"
+          priority
+          sizes="(min-width: 1024px) 1024px, 100vw"
+          src={post.image}
         />
       </div>
 
-      {/* Quick Info */}
-      <div className="flex gap-5 md:justify-normal md:gap-6 sm:gap-4 my-6 md:my-8 text-lighttext items-center">
-        <div
-          className={`hidden gap-6 ${post_type === 'portfolio' && 'md:flex'}`}
-        >
-          {post_type === 'portfolio' &&
-            post &&
-            'website' in post &&
-            post.website &&
-            post.website !== null && (
+      <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center gap-4 font-mono text-xs">
+        {metaLinks.length > 0 && (
+          <div className="hidden items-center gap-3 md:flex">
+            {metaLinks.map((link) => (
               <Link
-                target="_blank"
-                href={post.website}
-                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                data-umami-event="Website button"
+                className={linkClass}
+                data-umami-event={link.event}
                 data-umami-event-post={title}
-              >
-                <Globe size={18} />
-              </Link>
-            )}
-          {post_type === 'portfolio' &&
-            post &&
-            'source_link' in post &&
-            post.source_link &&
-            post.source_link !== null && (
-              <Link
+                href={link.href}
+                key={link.key}
+                rel="noopener noreferrer"
                 target="_blank"
-                href={post.source_link}
-                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                data-umami-event="View Source Code button"
-                data-umami-event-post={title}
               >
-                <GithubIcon size={18} />
-                <div className="mt-0.5 md:mt-0">{t('source')}</div>
+                {link.icon}
+                {link.label}
               </Link>
-            )}
-
-          {post_type === 'portfolio' &&
-            post &&
-            'demo_link' in post &&
-            post.demo_link &&
-            post.demo_link !== null && (
-              <Link
-                target="_blank"
-                href={post.demo_link}
-                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                data-umami-event="View Demo button"
-                data-umami-event-post={title}
-              >
-                <ExternalLink size={18} />
-                <div className="mt-0.5 md:mt-0">{t('demo')}</div>
-              </Link>
-            )}
-          {post_type === 'portfolio' &&
-            post &&
-            'store_link' in post &&
-            post.store_link &&
-            post.store_link !== null && (
-              <Link
-                target="_blank"
-                href={post.store_link}
-                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                data-umami-event="Play Store button"
-                data-umami-event-post={title}
-              >
-                <CirclePlay size={18} />
-                <div className="mt-0.5 md:mt-0">{t('store')}</div>
-              </Link>
-            )}
-          {post_type === 'portfolio' &&
-            post &&
-            'fdroid_link' in post &&
-            post.fdroid_link &&
-            post.fdroid_link !== null && (
-              <Link
-                target="_blank"
-                href={post.fdroid_link}
-                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                data-umami-event="F-Droid button"
-                data-umami-event-post={title}
-              >
-                <Smartphone size={18} />
-                <div className="mt-0.5 md:mt-0">{t('fdroid')}</div>
-              </Link>
-            )}
-          {post_type === 'portfolio' &&
-            post &&
-            'ios_store_link' in post &&
-            post.ios_store_link &&
-            post.ios_store_link !== null && (
-              <Link
-                target="_blank"
-                href={post.ios_store_link}
-                className="flex items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                data-umami-event="iOS Store button"
-                data-umami-event-post={title}
-              >
-                <AppleIcon size={18} />
-                <div className="mt-0.5 md:mt-0">{t('ios')}</div>
-              </Link>
-            )}
-        </div>
-
-        {/* Author - desktop only */}
-        {post_type !== 'portfolio' && post.author && (
-          <div className="hidden md:flex items-center gap-3 text-darktext dark:text-lighttext">
-            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700">
-              {post.author.avatar_url ? (
-                <Image
-                  src={post.author.avatar_url}
-                  alt={post.author.display_name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
-                  {post.author.display_name.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <span className="mt-0.5 text-base">{post.author.display_name}</span>
+            ))}
           </div>
         )}
 
-        <div className="flex items-center text-darktext dark:text-lighttext">
-          <Clock size={20} className="mr-2" />
-          <span className="mt-0.5">
-            <FormattedDate date={post?.created_at} />
-          </span>
-        </div>
+        {post_type !== 'portfolio' && authorBlock && (
+          <div className="hidden items-center gap-3 md:flex">
+            {authorBlock}
+          </div>
+        )}
+
+        <span className="inline-flex items-center gap-2">
+          <Clock size={14} />
+          <FormattedDate date={post?.created_at} />
+        </span>
 
         {post_type === 'portfolio' &&
           post &&
           'source_link' in post &&
-          post.source_link && (
-            <GitHubStars sourceLink={post.source_link} />
-          )}
+          post.source_link && <GitHubStars sourceLink={post.source_link} />}
 
         <ViewDisplay
+          initialViews={post.views ?? 0}
           postId={id}
           postType={post_type as 'blog' | 'portfolio'}
-          initialViews={post.views ?? 0}
         />
 
         <ShareButton
-          className="ml-auto"
           buttonTitle={locale === 'en' ? 'Copy post url' : 'Copia url del post'}
-          url={postURL}
+          className="ml-auto"
           title={post.title_en}
+          url={postURL}
         />
       </div>
 
-      {/* Author - mobile only */}
-      {post_type !== 'portfolio' && post.author && (
-        <div className="flex md:hidden items-center gap-3 text-darktext dark:text-lighttext mb-6">
-          <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-300 dark:bg-gray-700">
-            {post.author.avatar_url ? (
-              <Image
-                src={post.author.avatar_url}
-                alt={post.author.display_name}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
-                {post.author.display_name.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-          <span className="mt-0.5 text-base">{post.author.display_name}</span>
+      {post_type !== 'portfolio' && authorBlock && (
+        <div className="mx-auto mt-5 flex max-w-3xl items-center gap-3 md:hidden">
+          {authorBlock}
         </div>
       )}
 
-      {/* mobile btns */}
-      <div
-        className={`${
-          post_type === 'portfolio'
-            ? 'flex flex-col gap-2 mb-8 md:hidden'
-            : 'hidden'
-        }`}
-      >
-        {/* Row 1: source + website side by side */}
-        {post_type === 'portfolio' && post && (
-          <div className="flex gap-2">
-            {'source_link' in post &&
-              post.source_link &&
-              post.source_link !== null && (
-                <Link
-                  target="_blank"
-                  href={post.source_link || ''}
-                  className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                  data-umami-event="View Source Code button"
-                  data-umami-event-post={title}
-                >
-                  <GithubIcon size={18} />
-                  <div className="mt-0.5 md:mt-0">{t('source')}</div>
-                </Link>
-              )}
-            {'website' in post && post.website && post.website !== null && (
-              <Link
-                target="_blank"
-                href={post.website}
-                className="flex flex-1 text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                data-umami-event="Website button"
-                data-umami-event-post={title}
-              >
-                <Globe size={18} />
-              </Link>
-            )}
-          </div>
-        )}
-
-        {/* Demo (full width) */}
-        {post_type === 'portfolio' &&
-          post &&
-          'demo_link' in post &&
-          post.demo_link &&
-          post.demo_link !== null && (
-            <Link
-              target="_blank"
-              href={post.demo_link}
-              className="flex w-full text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-              data-umami-event="View Demo button"
-              data-umami-event-post={title}
-            >
-              <ExternalLink size={18} />
-              <div className="mt-0.5 md:mt-0">{t('demo')}</div>
-            </Link>
-          )}
-
-        {/* Stores: adaptive layout */}
-        {post_type === 'portfolio' &&
-          post &&
-          (() => {
-            const stores: Array<{
-              key: string;
-              label: string;
-              icon: React.ReactNode;
-              href: string;
-              event: string;
-            }> = [];
-            if (
-              'store_link' in post &&
-              post.store_link &&
-              post.store_link !== null
-            )
-              stores.push({
-                key: 'store',
-                label: t('store'),
-                icon: <CirclePlay size={18} />,
-                href: post.store_link,
-                event: 'Play Store button',
-              });
-            if (
-              'fdroid_link' in post &&
-              post.fdroid_link &&
-              post.fdroid_link !== null
-            )
-              stores.push({
-                key: 'fdroid',
-                label: t('fdroid'),
-                icon: <Smartphone size={18} />,
-                href: post.fdroid_link,
-                event: 'F-Droid button',
-              });
-            if (
-              'ios_store_link' in post &&
-              post.ios_store_link &&
-              post.ios_store_link !== null
-            )
-              stores.push({
-                key: 'ios',
-                label: t('ios'),
-                icon: <AppleIcon size={18} />,
-                href: post.ios_store_link,
-                event: 'iOS Store button',
-              });
-            if (stores.length === 0) return null;
-            if (stores.length === 3) {
-              const topRow = stores.filter((s) => s.key !== 'fdroid');
-              const bottomRow = stores.filter((s) => s.key === 'fdroid');
-              return (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    {topRow.map((s) => (
-                      <Link
-                        key={s.key}
-                        target="_blank"
-                        href={s.href}
-                        className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                        data-umami-event={s.event}
-                        data-umami-event-post={title}
-                      >
-                        {s.icon}
-                        <div className="mt-0.5 md:mt-0">{s.label}</div>
-                      </Link>
-                    ))}
-                  </div>
-                  {bottomRow.map((s) => (
+      {metaLinks.length > 0 && (
+        <div className="mx-auto mt-6 flex max-w-3xl flex-col gap-2 md:hidden">
+          {metaLinks.map((link, index) =>
+            index % 2 === 0 ? (
+              <div className="flex gap-2" key={link.key}>
+                {[metaLinks[index], metaLinks[index + 1]]
+                  .filter(Boolean)
+                  .map((item) => (
                     <Link
-                      key={s.key}
-                      target="_blank"
-                      href={s.href}
-                      className="flex w-full text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                      data-umami-event={s.event}
+                      className={mobileLinkClass}
+                      data-umami-event={item.event}
                       data-umami-event-post={title}
+                      href={item.href}
+                      key={item.key}
+                      rel="noopener noreferrer"
+                      target="_blank"
                     >
-                      {s.icon}
-                      <div className="mt-0.5 md:mt-0">{s.label}</div>
+                      {item.icon}
+                      {item.label}
                     </Link>
                   ))}
-                </>
-              );
-            }
-            const gridCols = stores.length === 1 ? '' : 'grid-cols-2';
-            return (
-              <div className={`grid ${gridCols} gap-2`}>
-                {stores.map((s) => (
-                  <Link
-                    key={s.key}
-                    target="_blank"
-                    href={s.href}
-                    className="flex text-sm xs:text-base justify-center items-center gap-2 md:px-4 px-2 py-2 rounded-lg bg-secondary"
-                    data-umami-event={s.event}
-                    data-umami-event-post={title}
-                  >
-                    {s.icon}
-                    <div className="mt-0.5 md:mt-0">{s.label}</div>
-                  </Link>
-                ))}
               </div>
-            );
-          })()}
-      </div>
+            ) : null
+          )}
+        </div>
+      )}
 
-      {/* Project Description */}
-      <div
-        id="post"
-        className="space-y-4 max-w-none text-base xs:text-lg prose dark:prose-invert text-left"
-      >
+      <div className="post mx-auto mt-12 max-w-3xl text-left">
         <MarkdownRenderer markdown={String(post[localeKey])} />
       </div>
     </article>

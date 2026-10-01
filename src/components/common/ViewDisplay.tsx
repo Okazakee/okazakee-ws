@@ -88,11 +88,9 @@ export default function ViewDisplay({
   }, [isCard, initialViews, postId, postType, hasIncremented]);
 
   return (
-    <div className="flex items-center text-darktext dark:text-lighttext">
-      <Eye size={20} className={isCard ? 'mr-1' : 'mr-2'} />
-      <span
-        className={`mt-0.5 inline-block shrink-0 tabular-nums ${isCard ?? 'mt-2'}`}
-      >
+    <div className="inline-flex items-center gap-2">
+      <Eye size={14} />
+      <span className="inline-block shrink-0 tabular-nums">
         {displayViews}
       </span>
     </div>
