@@ -96,6 +96,233 @@
 }
 
 
+/* ---------------------------------------------------------------------------
+   Prose, code blocks and the tag row (docs/DESIGN.md §5.2, §5.7). Kept at the
+   top level: element selectors here must win over utility classes.
+   ------------------------------------------------------------------------- */
+.post h2 {
+  font-family: 'White Rabbit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--c-text-white);
+  margin: 3rem 0 1rem;
+}
+.post h3 {
+  font-family: 'White Rabbit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--c-text-white);
+  margin: 2rem 0 0.75rem;
+}
+.post h4 {
+  font-family: 'White Rabbit', sans-serif;
+  font-size: 1rem;
+  color: var(--c-text-white);
+  margin: 1.5rem 0 0.5rem;
+}
+.post p {
+  color: var(--c-text-main);
+  font-size: 0.95rem;
+  line-height: 1.85;
+  margin-bottom: 1.1rem;
+}
+.post ul,
+.post ol {
+  color: var(--c-text-main);
+  font-size: 0.95rem;
+  line-height: 1.85;
+  margin: 0 0 1.25rem 1.25rem;
+}
+.post ul {
+  list-style: disc;
+}
+.post ol {
+  list-style: decimal;
+}
+.post li {
+  margin-bottom: 0.4rem;
+}
+.post li::marker {
+  color: var(--c-accent-violet);
+}
+.post strong {
+  color: var(--c-text-white);
+  font-weight: 600;
+}
+.post em {
+  color: var(--c-accent-violet-light);
+}
+.post a {
+  color: var(--c-accent-violet-light);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.post a:hover {
+  color: var(--c-accent-violet);
+}
+.post code {
+  font-family: 'White Rabbit', monospace;
+  font-size: 0.82rem;
+  color: var(--c-accent-cyan);
+  background: var(--c-surface-card-hover);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+.post hr {
+  border-color: var(--c-border-subtle);
+  margin: 2.5rem 0;
+}
+.post blockquote {
+  border-left: 2px solid var(--c-accent-violet);
+  padding-left: 1rem;
+  color: var(--c-text-main);
+  font-style: italic;
+  margin: 1.25rem 0;
+}
+.post table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.5rem 0;
+  font-size: 0.88rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.post th {
+  background: var(--c-surface-card);
+  color: var(--c-text-white);
+  font-family: 'White Rabbit', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+.post td {
+  color: var(--c-text-main);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+.post th,
+.post td {
+  overflow-wrap: anywhere;
+}
+.post p img {
+  display: block;
+  width: 100%;
+  margin: 2rem 0 0;
+  border-radius: 12px;
+  border: 1px solid var(--c-border-subtle);
+  cursor: pointer;
+}
+.post .fig-caption {
+  display: block;
+  margin: 0.6rem 0 2rem;
+  font-family: 'White Rabbit', monospace;
+  font-size: 0.72rem;
+  color: var(--c-text-dim);
+}
+@media (max-width: 640px) {
+  .post th,
+  .post td {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Privacy document numbering: counters only, no parser work. */
+.legal {
+  counter-reset: section;
+}
+.legal h2 {
+  counter-increment: section;
+  counter-reset: subsection;
+}
+.legal h3 {
+  counter-increment: subsection;
+}
+.legal h2::before {
+  content: counter(section, decimal-leading-zero);
+  margin-right: 0.6rem;
+  font-family: 'White Rabbit', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--c-accent-violet);
+}
+.legal h3::before {
+  content: counter(section) '.' counter(subsection);
+  margin-right: 0.5rem;
+  font-family: 'White Rabbit', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--c-accent-violet);
+}
+
+/* Code blocks (PreCustom) */
+.code-block {
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 12px;
+  background: var(--c-code-bg);
+}
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-surface-card);
+  padding: 8px 14px;
+}
+.code-lang {
+  font-family: 'White Rabbit', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--c-text-dim);
+}
+.code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--c-text-dim);
+}
+.code-copy:hover {
+  color: var(--c-accent-violet-light);
+}
+.code-body {
+  overflow-x: auto;
+  padding: 16px;
+  margin: 0;
+}
+.code-body code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--c-code-fg);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  white-space: pre;
+}
+
+/* Tag row: one line, seamless loop when the chips overflow. The track carries
+   the list twice and slides half its width, so the junction is invisible. */
+@keyframes tags-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-tags {
+  animation: tags-scroll var(--tags-duration, 30s) linear infinite;
+}
+.animate-tags:hover,
+.animate-tags:focus-within {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-tags {
     animation: none;
