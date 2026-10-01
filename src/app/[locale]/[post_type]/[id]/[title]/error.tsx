@@ -11,6 +11,7 @@ export default function ErrorPage() {
   return (
     <StateCard
       code="500"
+      hint={t('errorLabel')}
       label="error.log"
       text={t('postErrorText')}
       title={t('postErrorTitle')}

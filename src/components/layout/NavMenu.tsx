@@ -8,13 +8,33 @@ import { useEffect, useMemo, useState } from 'react';
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
 
-const createMenuItems = (locale: string) => [
-  { href: `/${locale}`, isAnchor: false },
-  { href: 'skills', isAnchor: true },
-  { href: 'career', isAnchor: true },
-  { href: `/${locale}/portfolio`, isAnchor: false },
-  { href: `/${locale}/blog`, isAnchor: false },
-  { href: 'contacts', isAnchor: true },
+type MenuItem = {
+  id: string;
+  /** In-page section id on the home page (`home`, `skills`, ...). */
+  section: string;
+  /** Route used when the section cannot be reached on the current page. */
+  route: string;
+  /** True when the item is its own page (portfolio/blog) off the home page. */
+  page: boolean;
+};
+
+const createMenuItems = (locale: string): MenuItem[] => [
+  { id: 'home', section: 'home', route: `/${locale}`, page: false },
+  { id: 'skills', section: 'skills', route: `/${locale}#skills`, page: false },
+  { id: 'career', section: 'career', route: `/${locale}#career`, page: false },
+  {
+    id: 'portfolio',
+    section: 'portfolio',
+    route: `/${locale}/portfolio`,
+    page: true,
+  },
+  { id: 'blog', section: 'blog', route: `/${locale}/blog`, page: true },
+  {
+    id: 'contacts',
+    section: 'contacts',
+    route: `/${locale}#contacts`,
+    page: false,
+  },
 ];
 
 // Italian labels stay hardcoded here, as they were before the redesign
@@ -29,8 +49,10 @@ const italianLabels = [
 
 /**
  * Navigation (docs/DESIGN.md §4): centred desktop nav from `lg` up, plus the
- * header controls and the mobile drawer. The drawer holds the nav rows, the
- * language switch and the resume action in one list.
+ * header controls and the mobile drawer. On the home page every item is an
+ * in-page anchor and the active one follows the scroll position (the mock's
+ * scroll-spy); on other pages the section items navigate back to their home
+ * anchor while portfolio and blog highlight by route.
  */
 export default function NavMenu({
   locale,
@@ -41,7 +63,7 @@ export default function NavMenu({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string>('home');
   const menuItems = useMemo(() => createMenuItems(locale), [locale]);
   const t = useTranslations('header');
   const pathname = usePathname();
@@ -59,45 +81,50 @@ export default function NavMenu({
     }
   }, [isHomePage, pendingScroll]);
 
+  // Home: every nav item is an anchor; other pages: only the section items
+  // scroll back home, portfolio and blog navigate to their own page.
+  const isAnchor = (item: MenuItem) => !item.page || isHomePage;
+
+  const getHref = (item: MenuItem) => {
+    if (item.page && !isHomePage) return item.route;
+    if (isHomePage) return `#${item.section}`;
+    return `/${locale}`;
+  };
+
   const handleClick = (
     event: React.MouseEvent<HTMLAnchorElement>,
-    href: string,
-    isAnchor: boolean
+    item: MenuItem
   ) => {
-    if (!isAnchor) return;
+    if (!isAnchor(item)) return;
 
     event.preventDefault();
     setIsOpen(false);
 
     if (isHomePage) {
-      document.getElementById(href)?.scrollIntoView({ behavior: 'smooth' });
+      document
+        .getElementById(item.section)
+        ?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
-    setPendingScroll(href);
+    setPendingScroll(item.section);
     router.push(`/${locale}`);
   };
-
-  const getHref = (item: { href: string; isAnchor: boolean }) =>
-    item.isAnchor ? `/${locale}` : item.href;
 
   const label = (index: number) =>
     locale === 'it' ? italianLabels[index] : t(`buttons.${index}`);
 
-  // Anchor sections highlight while scrolling the home page
+  // Scroll-spy over every home section, exactly like the mock: the last
+  // section whose top passed the header threshold wins.
   useEffect(() => {
-    if (!isHomePage) {
-      setActiveSection(null);
-      return;
-    }
+    if (!isHomePage) return;
 
-    const anchors = menuItems.filter((item) => item.isAnchor).map((i) => i.href);
     const onScroll = () => {
-      let current: string | null = null;
-      for (const id of anchors) {
-        const element = document.getElementById(id);
+      let current = 'home';
+      for (const item of menuItems) {
+        const element = document.getElementById(item.section);
         if (element && element.getBoundingClientRect().top <= 140) {
-          current = id;
+          current = item.section;
         }
       }
       setActiveSection(current);
@@ -125,10 +152,10 @@ export default function NavMenu({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const isActive = (item: { href: string; isAnchor: boolean }, index: number) => {
-    if (item.isAnchor) return isHomePage && activeSection === item.href;
-    if (index === 0) return isHomePage;
-    return pathname.startsWith(item.href);
+  const isActive = (item: MenuItem) => {
+    if (isHomePage) return activeSection === item.section;
+    if (!item.page) return false;
+    return pathname === item.route || pathname.startsWith(`${item.route}/`);
   };
 
   const desktopIdle = 'transition-colors hover:text-accent-violet';
@@ -145,15 +172,15 @@ export default function NavMenu({
     <>
       <nav className="col-start-2 hidden items-center gap-6 justify-self-center font-mono text-xs text-text-muted lg:flex">
         {menuItems.map((item, index) => {
-          const active = isActive(item, index);
+          const active = isActive(item);
 
           return (
             <Link
               aria-current={active ? 'page' : undefined}
               className={active ? desktopActive : desktopIdle}
               href={getHref(item)}
-              key={item.href}
-              onClick={(event) => handleClick(event, item.href, item.isAnchor)}
+              key={item.id}
+              onClick={(event) => handleClick(event, item)}
             >
               {label(index)}
             </Link>
@@ -201,15 +228,15 @@ export default function NavMenu({
         <div className="mx-5 rounded-2xl border border-border-subtle bg-surface-card/95 p-4 shadow-2xl backdrop-blur-xl">
           <nav className="flex flex-col gap-1">
             {menuItems.map((item, index) => {
-              const active = isActive(item, index);
+              const active = isActive(item);
 
               return (
                 <Link
                   aria-current={active ? 'page' : undefined}
                   className={active ? rowActive : rowIdle}
                   href={getHref(item)}
-                  key={item.href}
-                  onClick={(event) => handleClick(event, item.href, item.isAnchor)}
+                  key={item.id}
+                  onClick={(event) => handleClick(event, item)}
                 >
                   {label(index)}
                 </Link>

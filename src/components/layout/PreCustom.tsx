@@ -33,27 +33,19 @@ export default function PreCustom({ children }: PreCustomProps) {
     <div className="code-block">
       <div className="code-head">
         <span className="code-lang">Code</span>
-        <span className="code-copy">
-          <span
-            className={`transition-opacity duration-300 ${
-              copied ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            {t('preCopy')}
-          </span>
-          <Copy
-            className={`h-4 w-4 cursor-pointer transition-opacity duration-300 ${
-              copied ? 'opacity-0' : 'opacity-100'
-            }`}
-            onClick={handleCopy}
-          />
-          <Check
-            className={`h-4 w-4 cursor-pointer transition-opacity duration-300 ${
-              copied ? 'opacity-100' : 'opacity-0'
-            }`}
-            onClick={handleCopy}
-          />
-        </span>
+        <button
+          aria-label={t('preCopy')}
+          className="code-copy"
+          onClick={handleCopy}
+          type="button"
+        >
+          {copied && <span>{t('preCopy')}</span>}
+          {copied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </button>
       </div>
       <pre className="code-body">{children}</pre>
     </div>

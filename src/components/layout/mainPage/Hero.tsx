@@ -36,7 +36,10 @@ export default async function Hero({ locale }: { locale: string }) {
 
   return (
     <>
-      <section className="bg-surface-alt/50 pt-24 pb-10 md:pt-36 md:pb-12">
+      <section
+        className="bg-surface-alt/50 pt-24 pb-10 md:pt-36 md:pb-12"
+        id="home"
+      >
         <PebbleClipPath />
         <div className="mx-auto max-w-5xl px-6">
           <div className="flex flex-col items-center xl:flex-row xl:justify-center xl:gap-16">
@@ -89,7 +92,7 @@ export default async function Hero({ locale }: { locale: string }) {
         </div>
       </section>
 
-      <section className="bg-surface-alt/50 py-16">
+      <section className="bg-surface-alt/50 py-16" id="about">
         <div className="mx-auto max-w-3xl px-6">
           <div className="mb-10 text-center">
             <InnerHtml
@@ -100,7 +103,7 @@ export default async function Hero({ locale }: { locale: string }) {
             <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
           </div>
 
-          <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-card p-6 text-sm leading-relaxed text-text-main/90 sm:p-8 md:text-base">
+          <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-card p-6 text-sm leading-relaxed text-text-main/90 sm:p-8 md:text-base md:leading-6">
             {paragraphs.map((paragraph) => (
               <InnerHtml
                 as="p"

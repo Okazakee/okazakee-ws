@@ -17,30 +17,49 @@ export default async function Footer({ locale }: { locale: string }) {
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
         <div>
           {t('left')}{' '}
-          <Link className="text-text-muted transition-colors hover:text-accent-violet-light" href="https://github.com/Okazakee">
+          <Link
+            className="text-text-muted transition-colors hover:text-accent-violet-light"
+            href="https://github.com/Okazakee"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
             Okazakee
           </Link>{' '}
           <span className="text-border-hover">|</span>{' '}
-          <Link className={linkClass} href="https://github.com/Okazakee/okazakee-ws">
+          <Link
+            className={linkClass}
+            href="https://github.com/Okazakee/okazakee-ws"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
             {t('source')}
           </Link>
         </div>
 
-        <CopyLinkButton
-          buttonTitle={t('buttonTitle')}
-          className="transition-colors hover:text-text-muted"
-          copiedLabel={tPosts('preCopy')}
-          copyValue="02863310815"
-        >
-          {t('middle')} - 02863310815
-        </CopyLinkButton>
-
         <div className="flex items-center gap-4">
-          <Link className={linkClass} href={cmsPublicUrl} prefetch={false}>
+          <CopyLinkButton
+            buttonTitle={t('buttonTitle')}
+            className="transition-colors hover:text-text-muted"
+            copiedLabel={tPosts('preCopy')}
+            copyValue="02863310815"
+          >
+            {t('middle')} - 02863310815
+          </CopyLinkButton>
+          <span>•</span>
+          <Link
+            className="underline transition-colors hover:text-text-muted"
+            href={cmsPublicUrl}
+            prefetch={false}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
             CMS
           </Link>
-          <span className="text-border-hover">•</span>
-          <Link className={linkClass} href={`/${locale}/privacy-policy`}>
+          <span>•</span>
+          <Link
+            className="underline transition-colors hover:text-text-muted"
+            href={`/${locale}/privacy-policy`}
+          >
             {t('privacyPolicy')}
           </Link>
         </div>

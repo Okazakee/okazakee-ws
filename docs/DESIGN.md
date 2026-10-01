@@ -204,8 +204,10 @@ redesign.
 
 ### 5.5 Footer
 Left: `Made with ❤️ by` + the name **linked to the GitHub profile**, then `Source Code`
-linking the repo — both with the violet hover. Middle: the VAT value as a
-copy affordance carrying `footer.buttonTitle`. Right: CMS and Privacy Policy links.
+linking the repo — both with the violet hover. Right: the VAT value as a copy
+affordance carrying `footer.buttonTitle`, then CMS and Privacy Policy links — the three
+separated by bullets, the links underlined and hovering to `text-text-muted` (mock at
+`code.html`).
 
 ### 5.6 Back to top
 Fixed bottom-right, inverted fill (`bg-text-main` on `text-surface-base`), `rounded-xl`,

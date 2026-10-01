@@ -11,9 +11,10 @@ export default function GlobalNotFound() {
   return (
     <StateCard
       code={t('code')}
+      hint={t('notFoundLabel')}
       label="not-found.log"
       text={t('notFoundText')}
-      title={t('code')}
+      title={t('notFoundTitle')}
     >
       <button
         className="inline-flex items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs tracking-[0.08em] text-text-main uppercase transition-colors hover:border-accent-violet/50 hover:text-text-white"

@@ -34,12 +34,12 @@ export default function Postcard({
 
   return (
     <Link
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface-card transition-colors hover:border-accent-violet/50 md:flex-row"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface-card transition-all hover:border-accent-violet/50 hover:shadow-xl md:flex-row"
       href={href}
     >
       <div
-        className={`relative aspect-video w-full shrink-0 overflow-hidden bg-surface-raised md:aspect-auto ${
-          postType === 'portfolio' ? 'md:w-80' : 'md:w-72'
+        className={`relative aspect-video w-full shrink-0 overflow-hidden bg-surface-raised ${
+          postType === 'portfolio' ? 'md:w-80' : 'md:aspect-auto md:w-72'
         }`}
       >
         <Image
@@ -51,8 +51,8 @@ export default function Postcard({
           sizes="(min-width: 768px) 320px, 100vw"
           src={post.image}
         />
-        <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded border border-border-subtle bg-surface-base/80 px-2 py-0.5 font-mono text-[11px] text-text-muted backdrop-blur-md">
-          <Eye className="h-3 w-3" />
+        <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded bg-surface-base/80 px-2 py-0.5 font-mono text-[11px] text-text-muted backdrop-blur-md">
+          <Eye className="h-3.5 w-3.5" />
           {post.views}
         </span>
       </div>
@@ -62,7 +62,7 @@ export default function Postcard({
           <h3 className="mb-2 font-heading text-lg font-semibold text-text-white transition-colors group-hover:text-accent-violet-light">
             {title}
           </h3>
-          <p className="line-clamp-3 text-sm font-light leading-relaxed text-text-muted">
+          <p className="text-sm font-light leading-relaxed text-text-muted">
             {description}
           </p>
         </div>

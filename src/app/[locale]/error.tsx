@@ -17,6 +17,7 @@ export default function GlobalError({
   return (
     <StateCard
       code="500"
+      hint={t('errorLabel')}
       label="error.log"
       text={t('errorText')}
       title={t('errorTitle')}

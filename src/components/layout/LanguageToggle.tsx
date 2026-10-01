@@ -58,7 +58,7 @@ export default function LanguageToggle({
   }
 
   if (segmented) {
-    const base = 'rounded px-3 py-2 transition-colors';
+    const base = 'rounded px-3.5 py-2 transition-colors lg:px-2 lg:py-1';
     const active = `${base} bg-accent-violet/20 font-semibold text-accent-violet-light`;
     const idle = `${base} text-text-dim hover:text-text-main`;
 

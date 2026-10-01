@@ -25,6 +25,9 @@ const config: Config = {
       },
       fontFamily: {
         whiterabt: 'var(--font-whiterabt)',
+        body: 'var(--font-whiterabt)',
+        heading: 'var(--font-whiterabt)',
+        mono: 'var(--font-whiterabt)',
       },
       colors: {
         darktext: '#080808',

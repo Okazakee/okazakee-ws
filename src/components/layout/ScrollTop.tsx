@@ -3,7 +3,6 @@
 import { ArrowUpToLine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
-import { scrollToSection } from '@/utils/scrollToSection';
 
 export default function ScrollTop() {
   const [showLink, setShowLink] = useState(false);
@@ -25,7 +24,7 @@ export default function ScrollTop() {
 
     // Adjust button offset when near the bottom
     if (scrollY + viewportHeight >= totalHeight - 200) {
-      setButtonOffset(100 - (totalHeight - (scrollY + viewportHeight)));
+      setButtonOffset(Math.max(16, 100 - (totalHeight - (scrollY + viewportHeight))));
     } else {
       setButtonOffset(16); // Reset to default offset
     }
@@ -45,10 +44,10 @@ export default function ScrollTop() {
           bottom: `${buttonOffset}px`,
           opacity: opacity,
         }}
-        onClick={() => scrollToSection('about')}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
         <span className="hidden md:inline">{t('right')}</span>
-        <ArrowUpToLine className="ml-0 md:ml-2" />
+        <ArrowUpToLine className="h-4 w-4" />
       </button>
     )
   );

@@ -44,7 +44,7 @@ async function LocaleShell({
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
       <Header locale={locale} resumeLink={resumeLink} />
-      {children}
+      <div className="flex min-w-0 flex-1 flex-col [&>*]:min-w-0 [&>*]:w-full">{children}</div>
       <ScrollTop />
       <Footer locale={locale} />
     </NextIntlClientProvider>
@@ -90,8 +90,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        id="about"
-        className={`${whiteRabbit.variable} transition-colors duration-400 ease-in-out font-whiterabt antialiased scroll-smooth relative`}
+        className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased transition-colors duration-400 ease-in-out scroll-smooth`}
       >
         <Providers>
           <Suspense>

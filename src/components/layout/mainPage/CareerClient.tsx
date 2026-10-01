@@ -126,7 +126,7 @@ export function CareerClient({
       </p>
 
       {entry[`description_${locale}`] && (
-        <ClientMarkdown className="mb-5 text-sm font-light leading-relaxed text-text-main/90 [&_li]:mb-1 [&_li::marker]:text-accent-violet [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-4">
+        <ClientMarkdown className="mb-5 text-sm font-light leading-relaxed text-text-main/90 [&_li]:mb-2 [&_li::marker]:text-accent-violet [&_ul]:list-disc [&_ul]:pl-4">
           {entry[`description_${locale}`]}
         </ClientMarkdown>
       )}

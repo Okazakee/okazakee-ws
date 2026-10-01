@@ -16,11 +16,14 @@ export function RequestForm() {
 
   const fieldClass =
     'w-full rounded-lg border border-border-subtle bg-surface-base px-3 py-2.5 font-mono text-xs text-text-main placeholder:text-text-dim focus:border-accent-violet/60 focus:outline-none';
+  // Mock's select: native appearance off, a chevron 8px from the right edge
+  // and a 16px line box (see .request-select in globals.css).
+  const selectClass = `${fieldClass} request-select`;
   const labelClass =
     'mb-2 block font-mono text-[11px] uppercase tracking-[0.08em] text-text-dim';
 
   return (
-    <div className="relative mt-14 overflow-hidden rounded-2xl border border-border-subtle bg-surface-card p-6 text-left sm:p-8">
+    <div className="relative mt-14 overflow-hidden rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-8">
       <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-accent-violet">
         {t('eyebrow')}
       </p>
@@ -84,7 +87,7 @@ export function RequestForm() {
           <label className={labelClass} htmlFor="request-type">
             {t('type')}
           </label>
-          <select className={fieldClass} id="request-type" name="type">
+          <select className={selectClass} id="request-type" name="type">
             {(t.raw('typeOptions') as string[]).map((option) => (
               <option key={option}>{option}</option>
             ))}
@@ -94,7 +97,7 @@ export function RequestForm() {
           <label className={labelClass} htmlFor="request-budget">
             {t('budget')}
           </label>
-          <select className={fieldClass} id="request-budget" name="budget">
+          <select className={selectClass} id="request-budget" name="budget">
             {(t.raw('budgetOptions') as string[]).map((option) => (
               <option key={option}>{option}</option>
             ))}
@@ -104,7 +107,7 @@ export function RequestForm() {
           <label className={labelClass} htmlFor="request-timeline">
             {t('timeline')}
           </label>
-          <select className={fieldClass} id="request-timeline" name="timeline">
+          <select className={selectClass} id="request-timeline" name="timeline">
             {(t.raw('timelineOptions') as string[]).map((option) => (
               <option key={option}>{option}</option>
             ))}
@@ -126,7 +129,7 @@ export function RequestForm() {
         <div className="flex justify-center sm:col-span-2">
           <label className="flex max-w-md items-start gap-2 text-xs leading-relaxed text-text-dim">
             <input
-              className="mt-0.5 h-3.5 w-3.5 rounded border-border-subtle bg-surface-base"
+              className="request-consent mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-border-subtle bg-surface-base"
               name="consent"
               type="checkbox"
             />
