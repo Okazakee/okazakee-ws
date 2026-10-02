@@ -147,13 +147,16 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
   `text-accent-violet-light font-semibold` + 1px `border-accent-violet` underline.
 - Mobile header: logo, theme toggle, hamburger — all right-aligned, 44×44 targets, right
   padding halved (`pr-3`, desktop `pr-6`).
-- Mobile drawer: panel under the header, `rounded-2xl`, `bg-surface-card/95`, backdrop
-  blur; rows 44px tall; active row `bg-surface-raised text-accent-violet-light`;
-  body scroll lock while open; closes on link tap and Escape; `aria-expanded` /
-  `aria-controls` wired. The **Language** row (label + EN/IT switch) and the **Resume**
-  row (violet-tinted) live inside this list, not in a separate footer block.
-- Scroll-spy: the home page highlights the section currently in view, in **both** the
-  desktop nav and the drawer.
+- Mobile menu: fullscreen under the header (`absolute inset-x-0 top-full` in the
+- sticky header, `h-[calc(100dvh-4rem)]`, `bg-surface-base/[0.98]`, backdrop
+- blur, `overflow-y-auto`, safe-area bottom padding); rows are `text-3xl`
+- headings with mono `01`–`06` index prefixes and hairline dividers, active row
+- `font-semibold text-accent-violet-light`, rows stagger in 40ms apart;
+- Language row + violet-tinted Resume live in a `mt-auto` footer block; body
+- scroll lock while open; closes on link tap and Escape; `aria-expanded` /
+- `aria-controls` wired, hidden rows `tabIndex={-1}`.
+- Scroll-spy: the home page highlights the section currently in view, in both the
+  desktop nav and the mobile menu.
 - No settings dropdown: it is dropped by design; language and theme stay as inline
   controls. The language switch is a client navigation with `scroll: false`, so it
   swaps the locale in place and keeps the reader at the same scroll position

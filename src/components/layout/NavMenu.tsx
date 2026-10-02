@@ -64,8 +64,6 @@ export default function NavMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('home');
-  const panelRef = useRef<HTMLDivElement>(null);
-  const toggleRef = useRef<HTMLButtonElement>(null);
   const menuItems = useMemo(() => createMenuItems(locale), [locale]);
   const t = useTranslations('header');
   const pathname = usePathname();
@@ -173,24 +171,6 @@ export default function NavMenu({
     }
   }, [pathname]);
 
-  // Tapping outside the panel (or on the page behind it) closes the drawer
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (
-        !panelRef.current?.contains(target) &&
-        !toggleRef.current?.contains(target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
-  }, [isOpen]);
-
   const isActive = (item: MenuItem) => {
     if (isHomePage) return activeSection === item.section;
     if (!item.page) return false;
@@ -201,9 +181,11 @@ export default function NavMenu({
   const desktopActive =
     'font-semibold text-accent-violet-light border-b border-accent-violet pb-0.5';
   const rowBase =
-    'flex items-center gap-3 rounded-lg px-3 py-3 font-mono text-sm transition-colors';
-  const rowIdle = `${rowBase} text-text-muted hover:bg-surface-raised hover:text-text-main`;
-  const rowActive = `${rowBase} bg-surface-raised text-accent-violet-light`;
+    'flex items-baseline gap-3.5 border-b border-border-subtle/50 px-1 py-3.5 transition-[opacity,translate] duration-200 ease-out';
+  const rowIdle = `${rowBase} text-text-white`;
+  const rowActive = `${rowBase} font-semibold text-accent-violet-light`;
+  const rowHidden = 'translate-y-2 opacity-0';
+  const rowShown = 'translate-y-0 opacity-100';
   const resumeClass =
     'flex items-center gap-1.5 rounded-lg border border-accent-violet/40 bg-accent-violet/10 font-mono text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20';
 
@@ -253,7 +235,6 @@ export default function NavMenu({
             aria-label="Toggle menu"
             className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle bg-surface-card text-text-dim transition-colors hover:border-accent-violet/40 hover:text-accent-violet-light"
             onClick={() => setIsOpen((open) => !open)}
-            ref={toggleRef}
             type="button"
           >
             {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -263,46 +244,61 @@ export default function NavMenu({
 
       <div
         aria-hidden={!isOpen}
-        className={`fixed inset-x-0 top-16 z-40 transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
+        className={`absolute inset-x-0 top-full z-40 h-[calc(100dvh-4rem)] overflow-y-auto bg-surface-base/[0.98] backdrop-blur-xl transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
           isOpen
             ? 'visible translate-y-0 opacity-100'
             : 'invisible -translate-y-2 opacity-0'
         }`}
         id="mobile-nav"
       >
-        <div className="mx-5 rounded-2xl border border-border-subtle bg-surface-card/95 p-4 shadow-2xl backdrop-blur-xl" ref={panelRef}>
-          <nav className="flex flex-col gap-1">
+        <div className="flex min-h-full flex-col px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+          <nav className="flex flex-col">
             {menuItems.map((item, index) => {
               const active = isActive(item);
 
               return (
                 <Link
                   aria-current={active ? 'page' : undefined}
-                  className={active ? rowActive : rowIdle}
+                  className={`${active ? rowActive : rowIdle} ${isOpen ? rowShown : rowHidden}`}
                   href={getHref(item)}
                   key={item.id}
                   onClick={(event) => {
                     handleClick(event, item);
                     setIsOpen(false);
                   }}
+                  style={{
+                    transitionDelay: isOpen ? `${index * 40}ms` : '0ms',
+                  }}
+                  tabIndex={isOpen ? 0 : -1}
                 >
-                  {label(index)}
+                  <span className="min-w-6 font-mono text-[11px] tracking-[0.2em] text-text-dim">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className="font-heading text-3xl tracking-tight">
+                    {label(index)}
+                  </span>
                 </Link>
               );
             })}
+          </nav>
 
-            <div className="flex items-center justify-between rounded-lg px-3 py-3 font-mono text-sm text-text-muted">
+          <div
+            className={`mt-auto flex flex-col gap-3 pt-6 transition-[opacity,translate] duration-200 ease-out ${isOpen ? rowShown : rowHidden}`}
+            style={{ transitionDelay: isOpen ? '240ms' : '0ms' }}
+          >
+            <div className="flex items-center justify-between px-1 py-1 font-mono text-sm text-text-muted">
               <span>{t('language')}</span>
               <LanguageToggle />
             </div>
 
             {resumeLink && (
               <Link
-                className={`${resumeClass} px-3 py-3 text-sm`}
+                className={`${resumeClass} min-h-[52px] items-center justify-center px-3 py-3 text-sm`}
                 data-umami-event="Resume button"
                 href={resumeLink}
                 onClick={() => setIsOpen(false)}
                 rel="noopener noreferrer"
+                tabIndex={isOpen ? 0 : -1}
                 target="_blank"
               >
                 <FileUser className="h-4 w-4 shrink-0" />
@@ -310,7 +306,7 @@ export default function NavMenu({
                 <ExternalLink className="ml-auto h-4 w-4 text-text-dim" />
               </Link>
             )}
-          </nav>
+          </div>
         </div>
       </div>
     </>

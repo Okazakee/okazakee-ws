@@ -20,8 +20,9 @@ const PebbleClipPath = () => (
 );
 
 /**
- * Hero and about block (docs/DESIGN.md §6): one visual band — the pebble propic
- * beside the name and role, then the about card in the section-header pattern.
+ * Hero and about block (docs/DESIGN.md §6): one full-height band — the pebble
+ * propic beside the name and role, then the about card below in the
+ * section-header pattern.
  */
 export default async function Hero({ locale }: { locale: string }) {
   const heroSection = await getHeroSection();
@@ -35,65 +36,64 @@ export default async function Hero({ locale }: { locale: string }) {
     .filter((paragraph) => paragraph.trim());
 
   return (
-    <>
-      <section
-        className="bg-surface-alt/50 pt-24 pb-10 md:pt-36 md:pb-12"
-        id="home"
-      >
-        <PebbleClipPath />
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="flex flex-col items-center xl:flex-row xl:justify-center xl:gap-16">
-            <div className="relative mb-10 aspect-square w-[200px] shrink-0 md:mb-12 md:w-[240px] xl:mb-0 xl:w-[260px]">
-              {/* Pebble border, drawn behind the clipped image */}
-              <svg
-                className="absolute inset-0 z-0"
-                style={{
-                  transform: 'scale(1.15)',
-                  overflow: 'visible',
-                  pointerEvents: 'none',
-                }}
-                viewBox="0 0 500 500"
-              >
-                <title>background svg</title>
-                <path
-                  d="M301.84,388.777C221.246,383.98 159.047,350.918 120.738,280.84 89.77,224.195 98.645,160.863 142.883,107.434 176.789,66.477 220.562,42.488 273.078,34.992c68.402,-9.765 123.5,20.813 155.106,80.125 21.683,40.692 29.902,84.567 29.117,130.129 -0.477,27.418 -5.43,54.246 -19.746,78.402 -19.985,33.723 -50.903,51.606 -88.25,59.106 -16.184,3.246 -32.817,4.23 -47.465,6.023"
-                  fill="var(--c-accent-violet)"
-                  transform="scale(1.22) translate(-80, -10)"
-                />
-              </svg>
-
-              <div className="clip-pebble relative h-full w-full">
-                <Image
-                  alt="Profile picture"
-                  blurDataURL={heroSection.blurhashURL}
-                  className="object-cover"
-                  fill
-                  placeholder="blur"
-                  priority
-                  sizes="(min-width: 1280px) 260px, (min-width: 768px) 240px, 200px"
-                  src={heroSection.propic}
-                />
-              </div>
-            </div>
-
-            <div className="max-w-2xl text-center">
-              <InnerHtml
-                as="h1"
-                className="mb-3 font-heading text-3xl font-semibold tracking-tight text-text-white sm:text-4xl md:text-5xl"
-                html={formatLabels(t('top.name'))}
+    <section
+      className="flex min-h-[calc(100svh-4rem)] items-center bg-surface-alt/50 py-10"
+      id="home"
+    >
+      <PebbleClipPath />
+      <div className="mx-auto w-full max-w-5xl px-6">
+        <div className="flex flex-col items-center xl:flex-row xl:justify-center xl:gap-16">
+          <div className="relative mb-10 aspect-square w-[200px] shrink-0 md:mb-12 md:w-[240px] xl:mb-0 xl:w-[260px]">
+            {/* Pebble border, drawn behind the clipped image */}
+            <svg
+              className="absolute inset-0 z-0"
+              style={{
+                transform: 'scale(1.15)',
+                overflow: 'visible',
+                pointerEvents: 'none',
+              }}
+              viewBox="0 0 500 500"
+            >
+              <title>background svg</title>
+              <path
+                d="M301.84,388.777C221.246,383.98 159.047,350.918 120.738,280.84 89.77,224.195 98.645,160.863 142.883,107.434 176.789,66.477 220.562,42.488 273.078,34.992c68.402,-9.765 123.5,20.813 155.106,80.125 21.683,40.692 29.902,84.567 29.117,130.129 -0.477,27.418 -5.43,54.246 -19.746,78.402 -19.985,33.723 -50.903,51.606 -88.25,59.106 -16.184,3.246 -32.817,4.23 -47.465,6.023"
+                fill="var(--c-accent-violet)"
+                transform="scale(1.22) translate(-80, -10)"
               />
-              <InnerHtml
-                as="p"
-                className="font-mono text-lg tracking-normal text-text-muted md:text-xl"
-                html={formatLabels(t('top.role'))}
+            </svg>
+
+            <div className="clip-pebble relative h-full w-full">
+              <Image
+                alt="Profile picture"
+                blurDataURL={heroSection.blurhashURL}
+                className="object-cover"
+                fill
+                placeholder="blur"
+                priority
+                sizes="(min-width: 1280px) 260px, (min-width: 768px) 240px, 200px"
+                src={heroSection.propic}
               />
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="bg-surface-alt/50 py-16" id="about">
-        <div className="mx-auto max-w-3xl px-6">
+          <div className="max-w-2xl text-center">
+            <InnerHtml
+              as="h1"
+              className="mb-3 font-heading text-3xl font-semibold tracking-tight text-text-white sm:text-4xl md:text-5xl"
+              html={formatLabels(t('top.name'))}
+            />
+            <InnerHtml
+              as="p"
+              className="font-mono text-lg tracking-normal text-text-muted md:text-xl"
+              html={formatLabels(t('top.role'))}
+            />
+          </div>
+        </div>
+
+        <div
+          className="mx-auto mt-12 max-w-3xl scroll-mt-20 md:mt-16"
+          id="about"
+        >
           <div className="mb-10 text-center">
             <InnerHtml
               as="h2"
@@ -113,7 +113,7 @@ export default async function Hero({ locale }: { locale: string }) {
             ))}
           </div>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
