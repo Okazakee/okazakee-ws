@@ -121,8 +121,13 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
   `py-24`, hero `pt-24 md:pt-36`.
 - Hero ground: a transparent matrix-rain canvas behind the untouched hero/about
   content (violet ramp per theme, pixel lead ahead of each drop, magnet-repel
-  pointer at 6 cells, disc-ping clicks, center-out cell reveal, calm under the
-  copy via a radial shade, still frame under reduced-motion, idle off-screen).
+  pointer at 6 cells, disc-ping clicks, steady dim speckle). Padded, feathered
+  ellipses measured from the identity/about boxes dim and freeze ambient rain.
+  The center-out entrance starts at the visible viewport center on tall mobile
+  layouts; its temporary violet highlight is not dimmed by the idle focus zones.
+  Pointer displacement and bright click glyphs also remain live in those zones,
+  then settle back to the calm bed. Still frame under reduced-motion; idle
+  off-screen.
 - **Section header pattern** (used on every section and page): centred title in
   `text-white`, mono subtitle in `accent-violet-light`, then a `40×1px` accent rule.
   The subtitle is always real copy from the CMS translations, never invented.

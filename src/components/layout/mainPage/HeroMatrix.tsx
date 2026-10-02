@@ -70,8 +70,6 @@ interface RainColumn {
   seed: number;
   lead: number;
   born: number;
-  cursor: boolean;
-  cursorFrozen: boolean;
 }
 
 interface Ping {
@@ -123,6 +121,7 @@ export function HeroMatrix() {
     let H = 0;
     let cols = 0;
     let rows = 0;
+    let entranceRow = 0;
     let matCols: RainColumn[] = [];
     const entranceT0 = performance.now();
 
@@ -149,8 +148,6 @@ export function HeroMatrix() {
           seed: Math.floor(rnd() * 97),
           lead: 2 + Math.floor(rnd() * 3),
           born: warmup ? 0 : now,
-          cursor: false,
-          cursorFrozen: false,
         });
       }
     };
@@ -191,6 +188,13 @@ export function HeroMatrix() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       cols = Math.ceil(W / CELL) + 2;
       rows = Math.ceil(H / CELL) + 2;
+      // On tall mobile heroes, start the reveal inside the visible viewport.
+      const visibleTop = Math.max(0, -box.top);
+      const visibleBottom = Math.max(
+        visibleTop,
+        Math.min(H, window.innerHeight - box.top)
+      );
+      entranceRow = (visibleTop + visibleBottom) / (2 * CELL);
       initMatrix();
       measureZones();
     };
@@ -226,15 +230,15 @@ export function HeroMatrix() {
     const gate = (c: number, r: number, now: number) => {
       if (reduced) return null;
       const elapsed = now - entranceT0;
-      const cc = cols / 2;
-      const cr = rows / 2;
+      const cc = W / (2 * CELL);
+      const cr = entranceRow;
       const delay =
         Math.sqrt((c - cc) * (c - cc) + (r - cr) * (r - cr)) * 26 +
         jitter[(r & 63) * 64 + (c & 63)] * 320;
       if (elapsed < delay) return { hidden: true, boost: 0 };
       return {
         hidden: false,
-        boost: Math.exp(-(elapsed - delay) / 140) * 0.3,
+        boost: Math.exp(-(elapsed - delay) / 140),
       };
     };
 
@@ -285,17 +289,16 @@ export function HeroMatrix() {
             focus > SPECKLE_CENTER_LO &&
             focus < SPECKLE_CENTER_HI &&
             jitter[(r * 131 + c * 57) & 4095] < SPECKLE_CENTER_DENSITY;
-          // Frozen cells render from a fixed clock: every time term below
-          // (rain cycle, blink, entrance wavefront) reads this instead, so
-          // the calm truly cannot shimmer.
+          // Only ambient rain freezes in the focus zones. The entrance,
+          // pointer and click ring use live time across the whole field.
           const frozen = focus > 0.3;
           const fstep = frozen ? 0 : step;
-          const fnow = frozen ? entranceT0 + 100000 : now;
 
           // Matrix rain: symbol tail above the head, pixel lead below it.
           let lum = 0;
           let heat = 0;
           let char: string | null = null;
+          let cursor = false;
           {
             const mc = matCols[c];
             // Drops freeze their fall inside the calm: the head position
@@ -317,33 +320,18 @@ export function HeroMatrix() {
               heat = Math.max(heat, inten * (1 - focus * (1 - FOCUS_BRIGHT)));
               char =
                 GLYPHS[(c * 31 + r * 17 + fstep * 7 + mc.seed) % GLYPHS.length];
-            } else if (mc && ahead > 0 && ahead <= mc.lead) {
+            } else if (!frozen && mc && ahead > 0 && ahead <= mc.lead) {
               const k = 1 - ahead / (mc.lead + 1);
               const amp = k * k * 0.55 * dim;
-              // Lead cells inside the zones stay fully dark too: the
-              // pixel-lead would otherwise shimmer where the tip was cut.
-              if (frozen) {
-                lum = Math.max(lum, 0);
-                heat = Math.max(heat, 0);
-                char = null;
-              } else {
-                lum += amp;
-                heat = Math.max(heat, amp * (1 - focus * (1 - FOCUS_BRIGHT)));
-                char =
-                  GLYPHS[
-                    (c * 29 + r * 13 + fstep * 5 + mc.seed) % GLYPHS.length
-                  ];
-              }
+              lum += amp;
+              heat = Math.max(heat, amp * (1 - focus * (1 - FOCUS_BRIGHT)));
+              char =
+                GLYPHS[(c * 29 + r * 13 + fstep * 5 + mc.seed) % GLYPHS.length];
             }
             // Trail cursor: one square riding just below the drop head.
             // Same cell lattice, so it reads as the trail tip.
             const cursorRow = Math.floor(mc.y) + 1;
-            if (frozen) {
-              // Inside the zones the trail ends at its last glyph: no
-              // square at all, so the tip can never shimmer on the calm.
-              mc.cursor = false;
-              mc.cursorFrozen = false;
-            } else if (r === cursorRow && mc.y > -2 && !reduced) {
+            if (!frozen && r === cursorRow && mc.y > -2 && !reduced) {
               const blink =
                 0.5 +
                 0.5 * Math.sin(t * CURSOR_BLINK_HZ * Math.PI * 2 + mc.seed);
@@ -352,11 +340,7 @@ export function HeroMatrix() {
               lum = Math.max(lum, (0.35 + 0.6 * on) * dim);
               heat = Math.max(heat, (0.2 + 0.55 * on) * clamp);
               char = null;
-              mc.cursor = true;
-              mc.cursorFrozen = false;
-            } else {
-              mc.cursor = false;
-              mc.cursorFrozen = false;
+              cursor = true;
             }
           }
           let ox = 0;
@@ -365,7 +349,7 @@ export function HeroMatrix() {
           const dy = py - pointer.y;
           const d = Math.sqrt(dx * dx + dy * dy);
           let pushed = false;
-          if (!frozen && strength > 0.01 && d < reach && d > 0.01) {
+          if (strength > 0.01 && d < reach && d > 0.01) {
             const f = 1 - d / reach;
             const push = f * f * 12 * strength;
             ox = (dx / d) * push;
@@ -375,80 +359,96 @@ export function HeroMatrix() {
             pushed = true;
           }
 
-          // Disc ping stamps. Frozen cells read the fixed clock so a stale
-          // ring can never throb behind the calm.
+          // User-triggered effects stay live even over the calm ambient bed.
           let stamped = false;
-          if (!frozen) {
-            for (const p of pings) {
-              const age = (now - p.born) / 1000 / p.life;
-              const rad = CELL * (1 + age * 9);
-              const pdx = px - p.x;
-              const pdy = py - p.y;
-              const pd = Math.sqrt(pdx * pdx + pdy * pdy);
-              const amp =
-                (1 - age) *
-                (1 - age) *
-                Math.exp(-((pd - rad) * (pd - rad)) / (2 * 24 * 24));
-              if (amp > 0.15) stamped = true;
-              lum += amp * 1.1;
-              heat = Math.max(heat, amp);
-            }
+          for (const p of pings) {
+            const age = (now - p.born) / 1000 / p.life;
+            const rad = CELL * (1 + age * 9);
+            const pdx = px - p.x;
+            const pdy = py - p.y;
+            const pd = Math.sqrt(pdx * pdx + pdy * pdy);
+            const amp =
+              (1 - age) *
+              (1 - age) *
+              Math.exp(-((pd - rad) * (pd - rad)) / (2 * 24 * 24));
+            if (amp > 0.15) stamped = true;
+            lum += amp * 1.1;
+            heat = Math.max(heat, amp);
           }
 
-          const g = gate(c, r, fnow);
+          const g = gate(c, r, now);
           if (g?.hidden) continue;
-          if (g?.boost) {
-            lum += g.boost;
-            heat = Math.max(heat, Math.min(1, g.boost));
-          }
+          const reveal = g?.boost ?? 0;
+          lum += reveal * 0.3;
+          heat = Math.max(heat, reveal);
 
           const threshold =
             0.78 * ((BAYER[(r & 7) * 8 + (c & 7)] + 0.5) / 64) +
             0.22 * jitter[(r & 63) * 64 + (c & 63)];
+          // The entrance flash has its own brightness, independent of the
+          // idle focus dimming that covers most of the mobile layout.
+          const revealed = reveal > threshold;
           // Steady speckle bypasses the dither gate: it must read
           // everywhere, including the calm where lum never climbs.
-          if ((speck || speckCenter) && lum <= threshold && !char) {
+          if (
+            !revealed &&
+            (speck || speckCenter) &&
+            lum <= threshold &&
+            !char
+          ) {
             ctx.globalAlpha = (1 - focus * 0.72) * 0.55;
             ctx.fillStyle = palette.dim;
             ctx.fillRect(x + ox, y + oy, CELL, CELL);
             ctx.globalAlpha = 1;
             continue;
           }
-          if (lum <= threshold && !char) continue;
+          if (!revealed && lum <= threshold && !char) continue;
 
-          if (matCols[c]?.cursor) {
-            // Trail tip: blinking square on the heat ramp. Frozen cells
-            // never set cursor, so this branch always blinks by design.
-            ctx.globalAlpha = 1 - focus * 0.5;
+          if (cursor && !revealed) {
+            // Ambient trail tips blink only outside the frozen focus zones.
+            ctx.globalAlpha = pushed || stamped ? 1 : 1 - focus * 0.5;
             ctx.fillStyle =
-              heat > 0.6
+              pushed || stamped || heat > 0.6
                 ? palette.crest
                 : heat > 0.3
                   ? palette.hover
                   : palette.mid;
             ctx.fillRect(x + ox, y + oy, CELL, CELL);
             ctx.globalAlpha = 1;
-          } else if (char && lum > threshold) {
+          } else if (
+            revealed ||
+            ((char || pushed || stamped) && lum > threshold)
+          ) {
             // Magnet-pushed glyphs and the click ring pop to crest white;
             // whites elsewhere still take the hardest focus cut.
             const tier =
               pushed || stamped
                 ? palette.crest
-                : heat > 0.6
-                  ? focus > 0.3
-                    ? palette.hover
-                    : palette.crest
-                  : heat > 0.3
+                : revealed
+                  ? palette.lit
+                  : heat > 0.6
                     ? focus > 0.3
-                      ? palette.lit
-                      : palette.hover
-                    : heat > 0.12
-                      ? palette.lit
-                      : palette.mid;
+                      ? palette.hover
+                      : palette.crest
+                    : heat > 0.3
+                      ? focus > 0.3
+                        ? palette.lit
+                        : palette.hover
+                      : heat > 0.12
+                        ? palette.lit
+                        : palette.mid;
             ctx.globalAlpha =
-              pushed || stamped ? 1 : 1 - focus * (heat > 0.6 ? 0.9 : 0.72);
+              pushed || stamped
+                ? 1
+                : revealed
+                  ? reveal
+                  : 1 - focus * (heat > 0.6 ? 0.9 : 0.72);
             ctx.fillStyle = tier;
-            ctx.fillText(char, x + CELL / 2 + ox, y + CELL / 2 + 1 + oy);
+            ctx.fillText(
+              char ?? GLYPHS[(c * 17 + r * 41) % GLYPHS.length],
+              x + CELL / 2 + ox,
+              y + CELL / 2 + 1 + oy
+            );
             ctx.globalAlpha = 1;
           } else if (lum > threshold) {
             // Steady speckle (base or center ring): sparse dim pixels,
