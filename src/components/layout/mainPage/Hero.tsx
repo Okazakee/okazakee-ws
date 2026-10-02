@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { getHeroSection } from '@/utils/getData';
+import { HeroMatrix } from './HeroMatrix';
 
 const PebbleClipPath = () => (
   <svg width="0" height="0" viewBox="0 0 500 500" className="absolute">
@@ -37,12 +38,16 @@ export default async function Hero({ locale }: { locale: string }) {
 
   return (
     <section
-      className="flex min-h-[calc(100svh-4rem)] items-center bg-surface-alt/50 py-10"
+      className="relative -mt-16 flex min-h-svh items-center overflow-hidden bg-surface-alt/50 pb-10 pt-24"
       id="home"
     >
+      <HeroMatrix />
       <PebbleClipPath />
-      <div className="mx-auto w-full max-w-5xl px-6">
-        <div className="flex flex-col items-center xl:flex-row xl:justify-center xl:gap-16">
+      <div className="relative z-10 mx-auto w-full max-w-4xl px-6">
+        <div
+          className="flex flex-col items-center xl:flex-row xl:justify-center xl:gap-16"
+          data-hero-zone="identity"
+        >
           <div className="relative mb-10 aspect-square w-[200px] shrink-0 md:mb-12 md:w-[240px] xl:mb-0 xl:w-[260px]">
             {/* Pebble border, drawn behind the clipped image */}
             <svg
@@ -84,7 +89,7 @@ export default async function Hero({ locale }: { locale: string }) {
             />
             <InnerHtml
               as="p"
-              className="font-mono text-lg tracking-normal text-text-muted md:text-xl"
+              className="font-mono text-xl tracking-normal text-text-muted md:text-2xl"
               html={formatLabels(t('top.role'))}
             />
           </div>
@@ -92,6 +97,7 @@ export default async function Hero({ locale }: { locale: string }) {
 
         <div
           className="mx-auto mt-12 max-w-3xl scroll-mt-20 md:mt-16"
+          data-hero-zone="about"
           id="about"
         >
           <div className="mb-10 text-center">
@@ -114,6 +120,15 @@ export default async function Hero({ locale }: { locale: string }) {
           </div>
         </div>
       </div>
+      <span
+        aria-hidden="true"
+        className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 font-mono text-xs uppercase tracking-[0.22em] text-text-muted motion-safe:animate-bounce md:text-sm"
+      >
+        Scroll
+        <span className="text-[11px] leading-none text-accent-violet-light md:text-sm">
+          {'vvv'}
+        </span>
+      </span>
     </section>
   );
 }

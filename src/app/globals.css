@@ -33,9 +33,9 @@
   --c-surface-raised: #181a23;
   --c-border-subtle: #21242b;
   --c-border-hover: #353c4b;
-  --c-accent-violet: #a078ff;
-  --c-accent-violet-light: #c4b5fd;
-  --c-accent-violet-deep: #7c3aed;
+  --c-accent-violet: #9451ff;
+  --c-accent-violet-light: #cdaffd;
+  --c-accent-violet-deep: #7f3bed;
   --c-accent-cyan: #38bdf8;
   --c-text-white: #f8fafc;
   --c-text-main: #e2e8f0;
@@ -64,21 +64,6 @@
     overflow-y: auto;
     margin: 0;
     padding: 0;
-  }
-
-  body::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url("./public/grain.png");
-    background-repeat: repeat;
-    filter: blur(0.7px);
-    z-index: -1;
-  }
-
-  html.dark body::before {
-    background-image: url("./public/grain_dark.png");
-    opacity: 15%;
   }
 
   label {

@@ -203,6 +203,9 @@ export default function NavMenu({
               key={item.id}
               onClick={(event) => handleClick(event, item)}
             >
+              <span className="mr-1 text-[10px] text-text-dim">
+                {String(index + 1).padStart(2, '0')}
+              </span>
               {label(index)}
             </Link>
           );
