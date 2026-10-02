@@ -6,10 +6,10 @@ const CELL = 14;
 const POINTER_CELLS = 6;
 const GLYPHS = '>_/\\{}[]();:+*#$%&01';
 
-// Ambient speckle: sparse static pixels across the whole field, plus the
+// Ambient speckle: sparse steady pixels across the whole field, plus the
 // blinking cursor square that rides at the bottom of each rain trail.
 // Tune density / blink rate here.
-const SPECKLE_DENSITY = 0.006;
+const SPECKLE_DENSITY = 0.014;
 const CURSOR_BLINK_HZ = 1.1;
 
 // Focus/exclusion fields: soft ellipses measured from the live DOM — the
@@ -66,6 +66,7 @@ interface RainColumn {
   lead: number;
   born: number;
   cursor: boolean;
+  cursorFrozen: boolean;
 }
 
 interface Ping {
@@ -129,14 +130,22 @@ export function HeroMatrix() {
         // drops are rarer: long vertical bars stay texture, not columns.
         const warmup = c % 2 === 0;
         const long = rnd() < 0.12;
+        // Idle gaps between drops: ~1 in 7 columns starts empty so the
+        // field breathes instead of filling every lane.
+        const idle = !warmup && rnd() < 0.3;
         matCols.push({
-          y: warmup ? rnd() * (rows + 20) - 10 : -4 - rnd() * 8,
+          y: idle
+            ? -20 - rnd() * rows
+            : warmup
+              ? rnd() * (rows + 20) - 10
+              : -4 - rnd() * 8,
           speed: 5 + rnd() * 7,
           len: long ? 9 + Math.floor(rnd() * 5) : 4 + Math.floor(rnd() * 5),
           seed: Math.floor(rnd() * 97),
           lead: 2 + Math.floor(rnd() * 3),
           born: warmup ? 0 : now,
           cursor: false,
+          cursorFrozen: false,
         });
       }
     };
@@ -264,6 +273,12 @@ export function HeroMatrix() {
           // Ambient speckle: pure function of the cell, no time term —
           // steady pixels, never blinking.
           const speck = jitter[(r * 73 + c * 37) & 4095] < SPECKLE_DENSITY;
+          // Frozen cells render from a fixed clock: every time term below
+          // (rain cycle, blink, entrance wavefront) reads this instead, so
+          // the calm truly cannot shimmer.
+          const frozen = focus > 0.3;
+          const fstep = frozen ? 0 : step;
+          const fnow = frozen ? entranceT0 + 100000 : now;
 
           // Matrix rain: symbol tail above the head, pixel lead below it.
           let lum = 0;
@@ -271,8 +286,12 @@ export function HeroMatrix() {
           let char: string | null = null;
           {
             const mc = matCols[c];
-            const behind = mc.y - r;
-            const ahead = r - mc.y;
+            // Drops freeze their fall inside the calm: the head position
+            // snaps from the drop's own phase instead of the live clock, so
+            // trails cannot crawl across the portrait, name, or card.
+            const headY = frozen ? mc.seed % Math.max(1, rows + 20) : mc.y;
+            const behind = headY - r;
+            const ahead = r - headY;
             const dim = 1 - focus * (1 - FOCUS_OPACITY);
             lum = 0.14 * dim;
             if (
@@ -285,20 +304,34 @@ export function HeroMatrix() {
               lum += inten ** 1.4 * 1.25;
               heat = Math.max(heat, inten * (1 - focus * (1 - FOCUS_BRIGHT)));
               char =
-                GLYPHS[(c * 31 + r * 17 + step * 7 + mc.seed) % GLYPHS.length];
+                GLYPHS[(c * 31 + r * 17 + fstep * 7 + mc.seed) % GLYPHS.length];
             } else if (mc && ahead > 0 && ahead <= mc.lead) {
               const k = 1 - ahead / (mc.lead + 1);
               const amp = k * k * 0.55 * dim;
-              lum += amp;
-              heat = Math.max(heat, amp * (1 - focus * (1 - FOCUS_BRIGHT)));
-              char =
-                GLYPHS[(c * 29 + r * 13 + step * 5 + mc.seed) % GLYPHS.length];
+              // Lead cells inside the zones stay fully dark too: the
+              // pixel-lead would otherwise shimmer where the tip was cut.
+              if (frozen) {
+                lum = Math.max(lum, 0);
+                heat = Math.max(heat, 0);
+                char = null;
+              } else {
+                lum += amp;
+                heat = Math.max(heat, amp * (1 - focus * (1 - FOCUS_BRIGHT)));
+                char =
+                  GLYPHS[
+                    (c * 29 + r * 13 + fstep * 5 + mc.seed) % GLYPHS.length
+                  ];
+              }
             }
-            // Trail cursor: one blinking square riding just below the
-            // drop head. Same cell lattice, so it reads as the trail tip.
-            // Dim tier by default (mid), crest only on the blink peak.
+            // Trail cursor: one square riding just below the drop head.
+            // Same cell lattice, so it reads as the trail tip.
             const cursorRow = Math.floor(mc.y) + 1;
-            if (r === cursorRow && mc.y > -2 && !reduced) {
+            if (frozen) {
+              // Inside the zones the trail ends at its last glyph: no
+              // square at all, so the tip can never shimmer on the calm.
+              mc.cursor = false;
+              mc.cursorFrozen = false;
+            } else if (r === cursorRow && mc.y > -2 && !reduced) {
               const blink =
                 0.5 +
                 0.5 * Math.sin(t * CURSOR_BLINK_HZ * Math.PI * 2 + mc.seed);
@@ -308,42 +341,49 @@ export function HeroMatrix() {
               heat = Math.max(heat, (0.2 + 0.55 * on) * clamp);
               char = null;
               mc.cursor = true;
+              mc.cursorFrozen = false;
             } else {
               mc.cursor = false;
+              mc.cursorFrozen = false;
             }
           }
-
-          // Magnet repel pointer layer.
           let ox = 0;
           let oy = 0;
           const dx = px - pointer.x;
           const dy = py - pointer.y;
           const d = Math.sqrt(dx * dx + dy * dy);
-          if (strength > 0.01 && d < reach && d > 0.01) {
+          let pushed = false;
+          if (!frozen && strength > 0.01 && d < reach && d > 0.01) {
             const f = 1 - d / reach;
             const push = f * f * 12 * strength;
             ox = (dx / d) * push;
             oy = (dy / d) * push;
             lum += f * f * strength * 0.5;
             heat = Math.max(heat, f * f * strength);
+            pushed = true;
           }
 
-          // Disc ping stamps.
-          for (const p of pings) {
-            const age = (now - p.born) / 1000 / p.life;
-            const rad = CELL * (1 + age * 9);
-            const pdx = px - p.x;
-            const pdy = py - p.y;
-            const pd = Math.sqrt(pdx * pdx + pdy * pdy);
-            const amp =
-              (1 - age) *
-              (1 - age) *
-              Math.exp(-((pd - rad) * (pd - rad)) / (2 * 24 * 24));
-            lum += amp * 1.1;
-            heat = Math.max(heat, amp);
+          // Disc ping stamps. Frozen cells read the fixed clock so a stale
+          // ring can never throb behind the calm.
+          let stamped = false;
+          if (!frozen) {
+            for (const p of pings) {
+              const age = (now - p.born) / 1000 / p.life;
+              const rad = CELL * (1 + age * 9);
+              const pdx = px - p.x;
+              const pdy = py - p.y;
+              const pd = Math.sqrt(pdx * pdx + pdy * pdy);
+              const amp =
+                (1 - age) *
+                (1 - age) *
+                Math.exp(-((pd - rad) * (pd - rad)) / (2 * 24 * 24));
+              if (amp > 0.15) stamped = true;
+              lum += amp * 1.1;
+              heat = Math.max(heat, amp);
+            }
           }
 
-          const g = gate(c, r, now);
+          const g = gate(c, r, fnow);
           if (g?.hidden) continue;
           if (g?.boost) {
             lum += g.boost;
@@ -356,28 +396,36 @@ export function HeroMatrix() {
           if (lum <= threshold && !char) continue;
 
           if (matCols[c]?.cursor) {
-            // Trail tip: blinking square on the heat ramp, so it peaks
-            // bright and rests dim instead of flashing white constantly.
+            // Trail tip: blinking square on the heat ramp. Frozen cells
+            // never set cursor, so this branch always blinks by design.
             ctx.globalAlpha = 1 - focus * 0.5;
             ctx.fillStyle =
-              heat > 0.6 ? palette.crest : heat > 0.3 ? palette.hover : palette.mid;
+              heat > 0.6
+                ? palette.crest
+                : heat > 0.3
+                  ? palette.hover
+                  : palette.mid;
             ctx.fillRect(x + ox, y + oy, CELL, CELL);
             ctx.globalAlpha = 1;
           } else if (char && lum > threshold) {
-            // Whites take the hardest cut, saturated tiers step down one.
+            // Magnet-pushed glyphs and the click ring pop to crest white;
+            // whites elsewhere still take the hardest focus cut.
             const tier =
-              heat > 0.6
-                ? focus > 0.3
-                  ? palette.hover
-                  : palette.crest
-                : heat > 0.3
+              pushed || stamped
+                ? palette.crest
+                : heat > 0.6
                   ? focus > 0.3
-                    ? palette.lit
-                    : palette.hover
-                  : heat > 0.12
-                    ? palette.lit
-                    : palette.mid;
-            ctx.globalAlpha = 1 - focus * (heat > 0.6 ? 0.9 : 0.72);
+                    ? palette.hover
+                    : palette.crest
+                  : heat > 0.3
+                    ? focus > 0.3
+                      ? palette.lit
+                      : palette.hover
+                    : heat > 0.12
+                      ? palette.lit
+                      : palette.mid;
+            ctx.globalAlpha =
+              pushed || stamped ? 1 : 1 - focus * (heat > 0.6 ? 0.9 : 0.72);
             ctx.fillStyle = tier;
             ctx.fillText(char, x + CELL / 2 + ox, y + CELL / 2 + 1 + oy);
             ctx.globalAlpha = 1;
@@ -448,7 +496,8 @@ export function HeroMatrix() {
         const grow = Math.min(1, (now - mc.born) / 1200);
         mc.y += mc.speed * grow * dt;
         if (mc.y - mc.len > rows + 2) {
-          mc.y = -4 - rnd() * 8;
+          const rest = rnd() < 0.3;
+          mc.y = rest ? -20 - rnd() * rows : -4 - rnd() * 8;
           mc.speed = 5 + rnd() * 7;
           const again = rnd() < 0.12;
           mc.len = again
