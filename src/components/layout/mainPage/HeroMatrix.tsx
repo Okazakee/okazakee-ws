@@ -11,6 +11,11 @@ const GLYPHS = '>_/\\{}[]();:+*#$%&01';
 // Tune density / blink rate here.
 const SPECKLE_DENSITY = 0.014;
 const CURSOR_BLINK_HZ = 1.1;
+// Center band: extra speckle hugging the calm without entering it — same
+// steady pixels, gated by the focus ring band, not the core.
+const SPECKLE_CENTER_DENSITY = 0.05;
+const SPECKLE_CENTER_LO = 0.25;
+const SPECKLE_CENTER_HI = 0.65;
 
 // Focus/exclusion fields: soft ellipses measured from the live DOM — the
 // identity row (portrait + name + role) and the about block (heading +
@@ -273,6 +278,13 @@ export function HeroMatrix() {
           // Ambient speckle: pure function of the cell, no time term —
           // steady pixels, never blinking.
           const speck = jitter[(r * 73 + c * 37) & 4095] < SPECKLE_DENSITY;
+          // Center ring speckle: extra steady pixels hugging the calm.
+          // Inside the core (focus high) nothing extra; outside the
+          // feather (focus 0) the base density already covers it.
+          const speckCenter =
+            focus > SPECKLE_CENTER_LO &&
+            focus < SPECKLE_CENTER_HI &&
+            jitter[(r * 131 + c * 57) & 4095] < SPECKLE_CENTER_DENSITY;
           // Frozen cells render from a fixed clock: every time term below
           // (rain cycle, blink, entrance wavefront) reads this instead, so
           // the calm truly cannot shimmer.
@@ -393,6 +405,15 @@ export function HeroMatrix() {
           const threshold =
             0.78 * ((BAYER[(r & 7) * 8 + (c & 7)] + 0.5) / 64) +
             0.22 * jitter[(r & 63) * 64 + (c & 63)];
+          // Steady speckle bypasses the dither gate: it must read
+          // everywhere, including the calm where lum never climbs.
+          if ((speck || speckCenter) && lum <= threshold && !char) {
+            ctx.globalAlpha = (1 - focus * 0.72) * 0.55;
+            ctx.fillStyle = palette.dim;
+            ctx.fillRect(x + ox, y + oy, CELL, CELL);
+            ctx.globalAlpha = 1;
+            continue;
+          }
           if (lum <= threshold && !char) continue;
 
           if (matCols[c]?.cursor) {
@@ -430,10 +451,10 @@ export function HeroMatrix() {
             ctx.fillText(char, x + CELL / 2 + ox, y + CELL / 2 + 1 + oy);
             ctx.globalAlpha = 1;
           } else if (lum > threshold) {
-            // Ambient speckle: sparse steady pixels, dim tier, same focus
-            // fade as the bed glyphs. Never glyphs, never bright, never
-            // blinking — `speck` is a pure function of the cell.
-            if (speck) {
+            // Steady speckle (base or center ring): sparse dim pixels,
+            // same focus fade as the bed glyphs. Never bright, never
+            // blinking — both flags are pure functions of the cell.
+            if (speck || speckCenter) {
               ctx.globalAlpha = (1 - focus * 0.72) * 0.55;
               ctx.fillStyle = palette.dim;
               ctx.fillRect(x + ox, y + oy, CELL, CELL);
