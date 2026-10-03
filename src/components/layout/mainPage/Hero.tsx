@@ -97,7 +97,7 @@ export default async function Hero({ locale }: { locale: string }) {
         </div>
 
         <div
-          className="mx-auto mt-6 max-w-3xl scroll-mt-20 md:mt-8"
+          className="mx-auto mt-6 max-w-3xl scroll-mt-20 md:mt-12"
           data-hero-zone="about"
           id="about"
         >
