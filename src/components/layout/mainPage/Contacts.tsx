@@ -37,7 +37,7 @@ export default async function Contacts({ locale }: { locale: string }) {
   };
 
   return (
-    <section className="mx-auto max-w-4xl px-6 py-24 text-center" id="contacts">
+    <section className="mx-auto max-w-4xl px-6 py-24 text-center lg:mb-16" id="contacts">
       <div className="mb-14 text-center">
         <div className="mb-2 flex items-baseline justify-center gap-2.5">
           <SectionNumber index={6} />
