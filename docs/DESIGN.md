@@ -65,9 +65,9 @@ Rules:
 | `surface-raised` | chips, pills, inset rows | `#181a23` | `#eceef4` |
 | `border-subtle` | default 1px border | `#21242b` | `#d9dce6` |
 | `border-hover` | border on interaction | `#353c4b` | `#b6bdcd` |
-| `accent-violet` | primary accent | `#a078ff` | `#7c3aed` |
-| `accent-violet-light` | accent text / links | `#c4b5fd` | `#6d28d9` |
-| `accent-violet-deep` | fills, selection | `#7c3aed` | `#6d28d9` |
+| `accent-violet` | primary accent | `#9451ff` | `#7c3aed` |
+| `accent-violet-light` | accent text / links | `#cdaffd` | `#6d28d9` |
+| `accent-violet-deep` | fills, selection | `#7f3bed` | `#6d28d9` |
 | `accent-cyan` | data / tech highlight | `#38bdf8` | `#0369a1` |
 | `text-white` | headings | `#f8fafc` | `#0b0e14` |
 | `text-main` | body copy | `#e2e8f0` | `#141822` |
@@ -117,9 +117,31 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
 ---
 
 ## 3. Layout, surfaces, motion
-
 - Containers: sections `max-w-5xl mx-auto px-6`; prose `max-w-3xl`; page padding
   `py-24`, hero `pt-24 md:pt-36`.
+- Hero ground: a transparent matrix-rain canvas behind the untouched hero/about
+  content (violet ramp per theme, pixel lead ahead of each drop, magnet-repel
+  pointer at 6 cells, disc-ping clicks, steady dim speckle). Padded, feathered
+  ellipses measured from the identity/about boxes dim and freeze ambient rain.
+  Below 768px, their horizontal radii are capped to leave three live rain lanes
+  (42px) per side outside the focus feather. Mobile trails remain visible while
+  the center stays calm; desktop focus geometry is unchanged.
+  The center-out entrance starts at the visible viewport center on tall mobile
+  layouts; its temporary violet highlight is not dimmed by the idle focus zones.
+  Pointer displacement and bright click glyphs also remain live in those zones,
+  then settle back to the calm bed. Still frame under reduced-motion; idle
+  off-screen.
+- Hero rendering performance: `HeroMatrix.tsx` caches double-precision focus,
+  dither and reveal geometry on layout changes, and distances at click creation.
+  `matrixCanvasRenderer.ts` retains native Canvas2D draw packets and repaints
+  changed 32-backing-pixel regions, including overlapping glyphs in their
+  original order. Buffers are reused; neither DPR, 30Hz cadence, trail density
+  nor native glyph rasterization is reduced. Exponential tails are skipped
+  only below a proven floating-point/output threshold, not an arbitrary radius.
+  Verification compares original/optimized RGBA bytes at fixed clocks in native
+  Firefox and Chromium across entrance, pointer/rings, themes, fractional DPR,
+  mobile gutters, resizing and column recycling; live scrolling confirms that
+  off-screen painting stops.
 - **Section header pattern** (used on every section and page): centred title in
   `text-white`, mono subtitle in `accent-violet-light`, then a `40×1px` accent rule.
   The subtitle is always real copy from the CMS translations, never invented.
@@ -129,9 +151,6 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
   buttons `rounded-lg` (8px), chips `rounded` (4px).
 - Borders: always 1px `border-subtle`; interaction raises the border to
   `accent-violet/40–/50`, optionally with a tinted shadow. **No image zoom on hover.**
-- Grain: `body::before`, repeating asset, `blur(0.7px)`, `z-index: -1`, dark asset at
-  **15%** under `html.dark`, light asset otherwise. It must never sit above content —
-  verified that tiles and opaque bands are untouched by it.
 - Motion: `transition-colors` ~300ms; nothing decorative. `prefers-reduced-motion`
   disables smooth scroll and transitions (mirrors the repo's existing rule).
 
@@ -297,8 +316,6 @@ Invented copy is a defect, not a placeholder.
 
 - Fixed: `GitHubStars` now ignores profile/organisation links (`source_link` for
   MinePanel is an org URL, which used to fetch a repo that 404s and render ★ 0).
-- Fixed: the grain rule matched `body.dark` while the theme class lives on `<html>`, so
-  dark mode had no grain at all.
 - Fixed: the dev-mode instant validation used to log `Could not validate 'instant' …`
   for every 404 path, because unknown single-segment paths land on `/[post_type]`
   (and unknown posts on `/[post_type]/[id]/[title]`) and call `notFound()`. Both
@@ -340,5 +357,4 @@ DB reads. Nothing from the mocks' plumbing ships — only their structure, token
 behaviour.
 
 Still undesigned: search result states, the blog list page mock, detail-page
-interactions (lightbox, share, view increment), blur-up placeholder states, and the
-light-mode grain calibration.
+  interactions (lightbox, share, view increment) and blur-up placeholder states.
