@@ -3,13 +3,18 @@
 @config "../../tailwind.config.ts";
 
 /* Design tokens — docs/DESIGN.md §1. Light on :root, dark under the
-   .dark class that themeStore toggles on <html>. */
+   .dark class that themeStore toggles on <html>.
+
+   The light ramp is one cool hue (OKLCH ~260°, C 0.010) walked down in small
+   luminance steps, so canvas, band, chip and card read as stacked planes
+   instead of one white sheet. Ink, borders and accents are the dark-side set
+   and stay put; measured floors live in docs/DESIGN.md §1.3. */
 :root {
-  --c-surface-base: #f4f5f9;
-  --c-surface-alt: #eceef5;
-  --c-surface-card: #ffffff;
-  --c-surface-card-hover: #f7f8fc;
-  --c-surface-raised: #eceef4;
+  --c-surface-base: #ebeff6;
+  --c-surface-alt: #e4e8ef;
+  --c-surface-card: #f6f9fe;
+  --c-surface-card-hover: #e8ecf3;
+  --c-surface-raised: #e6eaf1;
   --c-border-subtle: #d9dce6;
   --c-border-hover: #b6bdcd;
   --c-accent-violet: #7c3aed;
@@ -21,7 +26,7 @@
   --c-text-muted: #3a4254;
   --c-text-dim: #55606f;
   --c-status-active: #047857;
-  --c-code-bg: #f3f4f9;
+  --c-code-bg: #ecf0f7;
   --c-code-fg: #1b2030;
 }
 
