@@ -1,12 +1,15 @@
 'use client';
 
-import { Tag } from 'lucide-react';
+import { ArrowUpRight, Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { ChipRow } from '@components/common/ChipRow';
 import { ClientMarkdown } from '@components/common/ClientMarkdown';
-import { InnerHtml } from '@components/common/InnerHtml';
+import { SectionNumber } from '@components/common/SectionNumber';
+import { InnerHtml } from '@/components/common/InnerHtml';
 import { diffMonths, formatMonthYear } from '@/utils/formatDate';
 import { formatLabels } from '@/utils/formatLabels';
+
+const separator = '//';
 
 interface CareerEntry {
   id: string;
@@ -21,7 +24,6 @@ interface CareerEntry {
   website_url: string;
   [key: `location_${string}`]: string;
   [key: `description_${string}`]: string;
-  [key: `company_description_${string}`]: string;
 }
 
 interface CompanyGroup {
@@ -57,8 +59,8 @@ const parseSkills = (skills: string): string[] =>
 /**
  * Career timeline (docs/DESIGN.md §5.3): one card per company, newest role
  * featured with older roles nested beneath it. The line is drawn per entry so
- * it starts at the first dot's centre and ends at the last, and each card links
- * to the company site.
+ * it starts at the first dot's centre and ends at the last; only the company
+ * name links out to the company site.
  */
 export function CareerClient({
   careerEntries,
@@ -84,7 +86,7 @@ export function CareerClient({
   const dates = (entry: CareerEntry) =>
     `${formatMonthYear(entry.startDate)} - ${
       entry.endDate ? formatMonthYear(entry.endDate) : t('present')
-    } • ${duration(entry.startDate, entry.endDate)}`;
+    } ${separator} ${duration(entry.startDate, entry.endDate)}`;
 
   const pill = (entry: CareerEntry) => (
     <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle bg-surface-raised px-2.5 py-1 font-mono text-xs text-text-muted">
@@ -122,12 +124,15 @@ export function CareerClient({
         {nested && pill(entry)}
       </div>
 
-      <p className="mb-4 text-xs text-text-dim">
-        {entry[`location_${locale}`]} • {t(`remote.${entry.remote}`)}
-      </p>
+      {nested && (
+        <p className="mb-4 text-xs text-text-dim">
+          {entry[`location_${locale}`]} {separator}{' '}
+          {t(`remote.${entry.remote}`)}
+        </p>
+      )}
 
       {entry[`description_${locale}`] && (
-        <ClientMarkdown className="mb-5 text-sm font-light leading-relaxed text-text-main/90 [&_li]:mb-2 [&_li::marker]:text-accent-violet [&_ul]:list-disc [&_ul]:pl-4">
+        <ClientMarkdown className="career-list mb-5 text-sm font-light leading-relaxed text-text-main/90 [&_li]:mb-2">
           {entry[`description_${locale}`]}
         </ClientMarkdown>
       )}
@@ -143,11 +148,14 @@ export function CareerClient({
     >
       <div className="mx-auto max-w-4xl px-6">
         <div className="mb-16 text-center">
-          <InnerHtml
-            as="h2"
-            className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
-            html={t('title')}
-          />
+          <div className="mb-2 flex items-baseline justify-center gap-2.5">
+            <SectionNumber index={3} />
+            <InnerHtml
+              as="h2"
+              className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
+              html={t('title')}
+            />
+          </div>
           <InnerHtml
             as="p"
             className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"
@@ -159,7 +167,6 @@ export function CareerClient({
         <div className="relative space-y-12 pl-6 sm:pl-8">
           {groups.map((group, index) => {
             const [latest, ...older] = group.positions;
-            const companyDescription = latest[`company_description_${locale}`];
 
             return (
               <div className="group relative" key={group.company}>
@@ -169,35 +176,49 @@ export function CareerClient({
                     className="absolute -bottom-[61px] left-[-24.5px] top-[13px] w-px bg-accent-violet/30 sm:left-[-32.5px]"
                   />
                 )}
-                <div className="absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full border-4 border-surface-alt bg-accent-violet shadow-lg shadow-accent-violet/40 sm:-left-[39px]" />
-
-                <a
-                  className="block rounded-2xl border border-border-subtle bg-surface-card p-6 transition-colors hover:border-accent-violet/40 sm:p-7"
-                  href={latest.website_url}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <div className="mb-5 flex flex-wrap items-start gap-3">
-                    {/* biome-ignore lint/performance/noImgElement: brand marks arrive in arbitrary aspect ratios, so the height is capped rather than fixed */}
-                    <img
-                      alt={group.company}
-                      className="max-h-10 w-auto shrink-0 object-contain"
-                      loading="lazy"
-                      src={latest.logo}
+                <span className="absolute -left-[32px] top-[5px] flex h-4 w-4 items-center justify-center sm:-left-[40px]">
+                  {index === 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-full bg-accent-violet/60 motion-safe:[animation:ping_2s_cubic-bezier(0,0,0.2,1)_infinite]"
                     />
+                  )}
+                  <span
+                    aria-hidden="true"
+                    className={`block rounded-full border-4 border-surface-alt bg-accent-violet shadow-lg shadow-accent-violet/40 ${
+                      index === 0 ? 'h-4 w-4' : 'h-3.5 w-3.5'
+                    }`}
+                  />
+                </span>
+
+                <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-7">
+                  <div className="mb-5 flex flex-wrap items-start gap-3">
+                    <span className="flex shrink-0 items-center rounded-lg border border-border-subtle bg-surface-raised p-1.5">
+                      {/* biome-ignore lint/performance/noImgElement: brand marks arrive in arbitrary aspect ratios, so the height is capped rather than fixed */}
+                      <img
+                        alt={group.company}
+                        className="max-h-10 w-auto object-contain"
+                        loading="lazy"
+                        src={latest.logo}
+                      />
+                    </span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-heading text-base font-semibold text-text-white">
+                      <a
+                        className="inline-flex items-center gap-1 font-heading text-base font-semibold text-text-white transition-colors hover:text-accent-violet-light hover:underline hover:underline-offset-2"
+                        href={latest.website_url}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
                         {group.company}
+                        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim" />
+                      </a>
+                      <p className="mt-1 text-xs text-text-dim">
+                        {latest[`location_${locale}`]} {separator}{' '}
+                        {t(`remote.${latest.remote}`)}
                       </p>
                     </div>
                     {pill(latest)}
                   </div>
-
-                  {companyDescription && (
-                    <p className="mb-5 text-xs font-light leading-relaxed text-text-dim">
-                      {companyDescription}
-                    </p>
-                  )}
 
                   {position(latest, false)}
 
@@ -208,7 +229,7 @@ export function CareerClient({
                       ))}
                     </div>
                   )}
-                </a>
+                </div>
               </div>
             );
           })}

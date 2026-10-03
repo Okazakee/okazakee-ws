@@ -12,6 +12,8 @@ export default async function Footer({ locale }: { locale: string }) {
 
   const linkClass = 'transition-colors hover:text-accent-violet-light';
 
+  const separator = '//';
+
   return (
     <footer className="border-t border-border-subtle bg-surface-base py-8 font-mono text-xs text-text-dim">
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
@@ -25,7 +27,7 @@ export default async function Footer({ locale }: { locale: string }) {
           >
             Okazakee
           </Link>{' '}
-          <span className="text-border-hover">|</span>{' '}
+          <span>{separator}</span>{' '}
           <Link
             className={linkClass}
             href="https://github.com/Okazakee/okazakee-ws"
@@ -45,7 +47,7 @@ export default async function Footer({ locale }: { locale: string }) {
           >
             {t('middle')} - 02863310815
           </CopyLinkButton>
-          <span>•</span>
+          <span>{separator}</span>
           <Link
             className="underline transition-colors hover:text-text-muted"
             href={cmsPublicUrl}
@@ -55,7 +57,7 @@ export default async function Footer({ locale }: { locale: string }) {
           >
             CMS
           </Link>
-          <span>•</span>
+          <span>{separator}</span>
           <Link
             className="underline transition-colors hover:text-text-muted"
             href={`/${locale}/privacy-policy`}
