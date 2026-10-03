@@ -15,7 +15,7 @@ export default async function Footer({ locale }: { locale: string }) {
   const separator = '//';
 
   return (
-    <footer className="border-t border-border-subtle bg-surface-base py-8 font-mono text-xs text-text-dim">
+    <footer className="border-t border-border-subtle bg-surface-alt py-8 font-mono text-xs text-text-dim">
       <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
         <div>
           {t('left')}{' '}

@@ -208,7 +208,7 @@ export function RequestForm() {
             <span
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[11px] transition-colors ${
                 index < step
-                  ? 'border-accent-violet bg-accent-violet text-surface-base'
+                  ? 'border-accent-violet bg-accent-violet text-text-on-accent'
                   : index === step
                     ? 'border-accent-violet text-accent-violet-light'
                     : 'border-border-subtle text-text-dim'

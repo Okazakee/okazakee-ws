@@ -26,7 +26,8 @@
   --c-text-white: #0b0e14;
   --c-text-main: #141822;
   --c-text-muted: #343c4e;
-  --c-text-dim: #4e5968;
+  --c-text-dim: #4b5664;
+  --c-text-on-accent: #f4f7fc;
   --c-status-active: #047857;
   --c-code-bg: #dde1e7;
   --c-code-fg: #1b2030;
@@ -48,6 +49,7 @@
   --c-text-main: #e2e8f0;
   --c-text-muted: #a3aec0;
   --c-text-dim: #808d9f;
+  --c-text-on-accent: #0a0a0a;
   --c-status-active: #10b981;
   --c-code-bg: #08090d;
   --c-code-fg: #e2e8f0;
