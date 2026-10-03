@@ -25,7 +25,7 @@ export default function ErrorPage() {
         {t('goBack')}
       </button>
       <Link
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-violet px-5 py-2.5 font-mono text-xs tracking-[0.08em] text-surface-base uppercase transition-colors hover:bg-accent-violet-light"
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-violet px-5 py-2.5 font-mono text-xs tracking-[0.08em] text-text-on-accent uppercase transition-colors hover:bg-accent-violet-light"
         href="/"
       >
         <Home className="h-4 w-4" />

@@ -96,9 +96,11 @@ interface Ping {
  * pixel lead, the pointer repels cells (magnet, 6 cells), clicks stamp a
  * disc ping, and the field resolves center-out on mount. Transparent so the
  * section band and both themes show through; static frame under
- * prefers-reduced-motion; idle when off-screen.
+ * prefers-reduced-motion; idle when off-screen. `interactive={false}` drops
+ * the pointer magnet and click pings — the error screens use it as a plain
+ * ambient background behind their card.
  */
-export function HeroMatrix() {
+export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -642,9 +644,11 @@ export function HeroMatrix() {
       attributes: true,
       attributeFilter: ['class'],
     });
-    hero.addEventListener('pointermove', onMove);
-    hero.addEventListener('pointerleave', onLeave);
-    hero.addEventListener('pointerdown', onDown);
+    if (interactive) {
+      hero.addEventListener('pointermove', onMove);
+      hero.addEventListener('pointerleave', onLeave);
+      hero.addEventListener('pointerdown', onDown);
+    }
 
     return () => {
       cancelAnimationFrame(raf);
@@ -653,11 +657,13 @@ export function HeroMatrix() {
       ro.disconnect();
       io.disconnect();
       mo.disconnect();
-      hero.removeEventListener('pointermove', onMove);
-      hero.removeEventListener('pointerleave', onLeave);
-      hero.removeEventListener('pointerdown', onDown);
+      if (interactive) {
+        hero.removeEventListener('pointermove', onMove);
+        hero.removeEventListener('pointerleave', onLeave);
+        hero.removeEventListener('pointerdown', onDown);
+      }
     };
-  }, []);
+  }, [interactive]);
 
   return (
     <canvas

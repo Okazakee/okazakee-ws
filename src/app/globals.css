@@ -3,25 +3,33 @@
 @config "../../tailwind.config.ts";
 
 /* Design tokens — docs/DESIGN.md §1. Light on :root, dark under the
-   .dark class that themeStore toggles on <html>. */
+   .dark class that themeStore toggles on <html>.
+
+   The light ramp is one cool hue (OKLCH ~260°, C ~0.010) walked down in small
+   luminance steps: band, chip, hover, canvas, card are five distinct planes,
+   never five names for the same white. Card is the only near-white surface,
+   and nothing reaches #ffffff. Accents and borders are the dark-side set and
+   stay put; `text-muted` / `text-dim` step down with the canvas so the
+   contrast floors in docs/DESIGN.md §1.3 still hold. */
 :root {
-  --c-surface-base: #f4f5f9;
-  --c-surface-alt: #eceef5;
-  --c-surface-card: #ffffff;
-  --c-surface-card-hover: #f7f8fc;
-  --c-surface-raised: #eceef4;
+  --c-surface-base: #e4e7ee;
+  --c-surface-alt: #dadee4;
+  --c-surface-card: #f4f7fc;
+  --c-surface-card-hover: #e0e4eb;
+  --c-surface-raised: #dee2e9;
   --c-border-subtle: #d9dce6;
   --c-border-hover: #b6bdcd;
   --c-accent-violet: #7c3aed;
   --c-accent-violet-light: #6d28d9;
-  --c-accent-violet-deep: #6d28d9;
+  --c-accent-violet-deep: #6831c0;
   --c-accent-cyan: #0369a1;
   --c-text-white: #0b0e14;
   --c-text-main: #141822;
-  --c-text-muted: #3a4254;
-  --c-text-dim: #55606f;
+  --c-text-muted: #343c4e;
+  --c-text-dim: #4b5664;
+  --c-text-on-accent: #f4f7fc;
   --c-status-active: #047857;
-  --c-code-bg: #f3f4f9;
+  --c-code-bg: #dde1e7;
   --c-code-fg: #1b2030;
 }
 
@@ -35,12 +43,13 @@
   --c-border-hover: #353c4b;
   --c-accent-violet: #9451ff;
   --c-accent-violet-light: #cdaffd;
-  --c-accent-violet-deep: #7f3bed;
+  --c-accent-violet-deep: #6831c0;
   --c-accent-cyan: #38bdf8;
   --c-text-white: #f8fafc;
   --c-text-main: #e2e8f0;
   --c-text-muted: #a3aec0;
   --c-text-dim: #808d9f;
+  --c-text-on-accent: #0a0a0a;
   --c-status-active: #10b981;
   --c-code-bg: #08090d;
   --c-code-fg: #e2e8f0;
@@ -77,9 +86,7 @@
   button {
     @apply cursor-pointer;
   }
-
 }
-
 
 /* ---------------------------------------------------------------------------
    Prose, code blocks and the tag row (docs/DESIGN.md §5.2, §5.7). Kept at the
@@ -238,7 +245,7 @@
   color: var(--c-accent-violet);
 }
 .legal h3::before {
-  content: counter(section) '.' counter(subsection);
+  content: counter(section) "." counter(subsection);
   margin-right: 0.5rem;
   font-family: var(--font-whiterabt), monospace;
   font-size: 0.7rem;
@@ -305,16 +312,18 @@
   background-size: 18px 18px;
 }
 
-/* Request form consent checkbox (canon §5.4): the mock pairs
-   `appearance: none` with a 1px subtle border and the forms-plugin
-   checkmark, so the native control is replaced. */
-.request-consent {
+/* Consent checkbox (canon §5.4): the mock pairs `appearance: none` with a
+   1px subtle border and the forms-plugin checkmark, so the native control is
+   replaced. Accent-driven, so both themes stay on brand. */
+input[type="checkbox"].request-consent,
+input[type="checkbox"]:not([class*="request-"]) {
   appearance: none;
   border-width: 1px;
 }
-.request-consent:checked {
+input[type="checkbox"].request-consent:checked,
+input[type="checkbox"]:not([class*="request-"]):checked {
   border-color: transparent;
-  background-color: #2563eb;
+  background-color: var(--c-accent-violet);
   background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
   background-position: center;
   background-repeat: no-repeat;
@@ -335,6 +344,32 @@
 .animate-tags:hover,
 .animate-tags:focus-within {
   animation-play-state: paused;
+}
+
+/* Career description bullets: the disc marker is swapped for the lucide
+   chevron-right glyph, painted with the accent via an inline SVG mask. */
+.career-list ul {
+  list-style: none;
+  padding-left: 0;
+}
+.career-list li {
+  position: relative;
+  padding-left: 1.15rem;
+}
+.career-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  width: 0.85rem;
+  height: 0.85rem;
+  background-color: var(--c-accent-violet);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
 }
 
 @media (prefers-reduced-motion: reduce) {

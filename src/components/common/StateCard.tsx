@@ -1,8 +1,15 @@
 import type React from 'react';
+import { HeroMatrix } from '@layout/mainPage/HeroMatrix';
 
 /**
  * Full-page state card (docs/DESIGN.md §6): the terminal-window frame used by
- * the 404 and error screens, centred between the header and the footer.
+ * the 404 and error screens, centred between the header and the footer, over
+ * the non-interactive matrix ground.
+ *
+ * The root grows to fill the layout's content wrapper (`flex-1` in that flex
+ * column), so the absolutely positioned canvas covers the whole area between
+ * header and footer. The footer is a sibling of that wrapper and paints its
+ * own opaque background, so the rain never bleeds under it.
  */
 export function StateCard({
   label,
@@ -20,8 +27,10 @@ export function StateCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mx-auto my-auto w-full max-w-5xl px-6 py-24">
-      <div className="mx-auto w-full max-w-xl">
+    <section className="relative flex w-full grow flex-col justify-center px-6 py-24">
+      <HeroMatrix interactive={false} />
+
+      <div className="relative z-10 mx-auto w-full max-w-xl">
         <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-card">
           <div className="flex items-center gap-1.5 border-b border-border-subtle bg-surface-alt/60 px-4 py-2.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />

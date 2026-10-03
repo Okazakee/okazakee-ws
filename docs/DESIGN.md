@@ -58,36 +58,66 @@ Rules:
 
 | token | role | dark | light |
 |---|---|---|---|
-| `surface-base` | page canvas | `#0a0a0a` | `#f4f5f9` |
-| `surface-alt` | band / tinted section | `#0c0d0d` | `#eceef5` |
-| `surface-card` | cards, panels | `#111215` | `#ffffff` |
-| `surface-card-hover` | card hover | `#15171e` | `#f7f8fc` |
-| `surface-raised` | chips, pills, inset rows | `#181a23` | `#eceef4` |
+| `surface-base` | page canvas, header | `#0a0a0a` | `#e4e7ee` |
+| `surface-alt` | band / tinted section | `#0c0d0d` | `#dadee4` |
+| `surface-card` | cards, panels | `#111215` | `#f4f7fc` |
+| `surface-card-hover` | card hover, inline `code` | `#15171e` | `#e0e4eb` |
+| `surface-raised` | chips, pills, secondary buttons | `#181a23` | `#dee2e9` |
 | `border-subtle` | default 1px border | `#21242b` | `#d9dce6` |
 | `border-hover` | border on interaction | `#353c4b` | `#b6bdcd` |
 | `accent-violet` | primary accent | `#9451ff` | `#7c3aed` |
 | `accent-violet-light` | accent text / links | `#cdaffd` | `#6d28d9` |
-| `accent-violet-deep` | fills, selection | `#7f3bed` | `#6d28d9` |
+| `accent-violet-deep` | fills, selection | `#7f3bed` | `#6831c0` |
 | `accent-cyan` | data / tech highlight | `#38bdf8` | `#0369a1` |
 | `text-white` | headings | `#f8fafc` | `#0b0e14` |
 | `text-main` | body copy | `#e2e8f0` | `#141822` |
-| `text-muted` | secondary copy | `#a3aec0` | `#3a4254` |
-| `text-dim` | captions, footnotes, footer | `#808d9f` | `#55606f` |
+| `text-muted` | secondary copy | `#a3aec0` | `#343c4e` |
+| `text-dim` | captions, footnotes, footer | `#808d9f` | `#4b5664` |
+| `text-on-accent` | ink on an accent fill | `#0a0a0a` | `#f4f7fc` |
 | `status-active` | "current" pip only | `#10b981` | `#047857` |
-| `code-bg` / `code-fg` | code surfaces | `#08090d` / `#e2e8f0` | `#f3f4f9` / `#1b2030` |
+| `code-bg` / `code-fg` | code surfaces | `#08090d` / `#e2e8f0` | `#dde1e7` / `#1b2030` |
+
+The light surfaces are one hue (OKLCH ~260°, C ~0.010) stepped down in small
+luminance steps, so band / chip / hover / canvas / card are five distinct planes
+rather than five names for the same white. Card is the only near-white surface
+and nothing reaches `#ffffff`. Elevation in light mode is *lighter*, so a hover
+or a chip darkens from its card; the same classes on dark step lighter. `text-muted`
+and `text-dim` step down with the canvas — deepening a canvas without deepening
+the ink is what drops captions below their floor.
+
+`text-on-accent` is the one ink that does *not* move with the canvas: it stays at
+the card tone in light, because a fill's label must not dim every time the canvas
+is retuned. Using `surface-base` for that ink (as the accent-filled buttons did)
+coupled the two — retuning the canvas silently cost the label ~0.6:1.
 
 ### 1.3 Contrast floor (measured, must not regress)
 
 | content | dark | light |
 |---|---|---|
-| body text | 16.1 | 16.3 |
-| paragraphs | 5.9 – 10.7 | 5.7 – 9.2 |
-| headings | 17.9 – 18.9 | 16.7 – 19.3 |
-| tag chips | 7.7 | 8.7 |
-| footer / captions (`text-dim`) | 5.9 | 5.9 |
+| body text — `text-main` on canvas | 16.1 | 14.3 |
+| paragraphs — `text-main`, canvas → card | 15.2 – 16.1 | 14.3 – 16.5 |
+| headings — `text-white`, band → card | 17.9 – 18.6 | 14.3 – 18.0 |
+| tag chips — `text-muted` on `surface-raised` | 7.7 | 8.5 |
+| footer / captions — `text-dim` on canvas | 5.9 | 6.0 |
+| footer — `text-dim` on `surface-alt` | 5.8 | 5.5 |
+| captions on card — `text-dim` on `surface-card` | 5.6 | 6.9 |
+| accent link — `accent-violet-light` on canvas | 10.5 | 5.7 |
+| accent marker — `accent-violet` on card | 4.4 | 5.3 |
+| inline code — `accent-cyan` on `surface-card-hover` | 8.4 | 4.7 |
+| ink on accent fill — `text-on-accent` on `accent-violet` | 4.6 | 5.3 |
+| terminal bar — `text-dim` on `surface-alt/60` over card | 5.7 | 6.1 |
 
 `text-dim` used to sit at 4.2 in both themes — below AA. Treat ~5.5:1 as its floor and
 `text-muted` ~8:1. If a new surface makes one fail, fix the token, never the one-off.
+`surface-base` is the canvas and `surface-alt` the band; the footer rides the band, so
+that pair is floored at 5.5 and pins `text-dim` from both sides. `surface-raised` and
+`surface-card-hover` are the only surfaces allowed under that floor: chips carry
+`text-muted` (8.5) and copy there is `text-main`. The state card's terminal bar is
+alpha-composited (`surface-alt/60` over `surface-card`), so it counts as a real
+`text-dim` surface whenever the band moves. Two floors bind the canvas from below:
+`text-surface-base` on an `accent-violet` fill (4.6) and `accent-cyan` on
+`surface-card-hover` (4.7) both sit on AA — a darker canvas has to bring them up,
+not down.
 
 ### 1.4 Off-limits colour
 

@@ -15,7 +15,6 @@ interface CareerEntry {
   website_url: string;
   [key: `location_${string}`]: string;
   [key: `description_${string}`]: string;
-  [key: `company_description_${string}`]: string;
 }
 
 export default async function Career({ locale }: { locale: string }) {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
 
@@ -62,8 +63,16 @@ export default function NavMenu({
   resumeLink: string | null;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('home');
+
+  // The drawer portals to <body>, outside the header's backdrop root —
+  // backdrop-filter blurs the backdrop, so it must not nest under another
+  // backdrop-filter. Gate it on mount so SSR markup matches hydration.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const menuItems = useMemo(() => createMenuItems(locale), [locale]);
   const t = useTranslations('header');
   const pathname = usePathname();
@@ -245,73 +254,77 @@ export default function NavMenu({
         </div>
       </div>
 
-      <div
-        aria-hidden={!isOpen}
-        className={`absolute inset-x-0 top-full z-40 h-[calc(100dvh-4rem)] overflow-y-auto bg-surface-base/[0.98] backdrop-blur-xl transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
-          isOpen
-            ? 'visible translate-y-0 opacity-100'
-            : 'invisible -translate-y-2 opacity-0'
-        }`}
-        id="mobile-nav"
-      >
-        <div className="flex min-h-full flex-col px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-          <nav className="flex flex-col">
-            {menuItems.map((item, index) => {
-              const active = isActive(item);
-
-              return (
-                <Link
-                  aria-current={active ? 'page' : undefined}
-                  className={`${active ? rowActive : rowIdle} ${isOpen ? rowShown : rowHidden}`}
-                  href={getHref(item)}
-                  key={item.id}
-                  onClick={(event) => {
-                    handleClick(event, item);
-                    setIsOpen(false);
-                  }}
-                  style={{
-                    transitionDelay: isOpen ? `${index * 40}ms` : '0ms',
-                  }}
-                  tabIndex={isOpen ? 0 : -1}
-                >
-                  <span className="min-w-6 font-mono text-[11px] tracking-[0.2em] text-text-dim">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <span className="font-heading text-3xl tracking-tight">
-                    {label(index)}
-                  </span>
-                </Link>
-              );
-            })}
-          </nav>
-
+      {mounted &&
+        createPortal(
           <div
-            className={`mt-auto flex flex-col gap-3 pt-6 transition-[opacity,translate] duration-200 ease-out ${isOpen ? rowShown : rowHidden}`}
-            style={{ transitionDelay: isOpen ? '240ms' : '0ms' }}
+            aria-hidden={!isOpen}
+            className={`fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-surface-base/70 backdrop-blur-md transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
+              isOpen
+                ? 'visible translate-y-0 opacity-100'
+                : 'invisible -translate-y-2 opacity-0'
+            }`}
+            id="mobile-nav"
           >
-            <div className="flex items-center justify-between px-1 py-1 font-mono text-sm text-text-muted">
-              <span>{t('language')}</span>
-              <LanguageToggle />
-            </div>
+            <div className="flex min-h-full flex-col px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+              <nav className="flex flex-col">
+                {menuItems.map((item, index) => {
+                  const active = isActive(item);
 
-            {resumeLink && (
-              <Link
-                className={`${resumeClass} min-h-[52px] items-center justify-center px-3 py-3 text-sm`}
-                data-umami-event="Resume button"
-                href={resumeLink}
-                onClick={() => setIsOpen(false)}
-                rel="noopener noreferrer"
-                tabIndex={isOpen ? 0 : -1}
-                target="_blank"
+                  return (
+                    <Link
+                      aria-current={active ? 'page' : undefined}
+                      className={`${active ? rowActive : rowIdle} ${isOpen ? rowShown : rowHidden}`}
+                      href={getHref(item)}
+                      key={item.id}
+                      onClick={(event) => {
+                        handleClick(event, item);
+                        setIsOpen(false);
+                      }}
+                      style={{
+                        transitionDelay: isOpen ? `${index * 40}ms` : '0ms',
+                      }}
+                      tabIndex={isOpen ? 0 : -1}
+                    >
+                      <span className="min-w-6 font-mono text-[11px] tracking-[0.2em] text-text-dim">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span className="font-heading text-3xl tracking-tight">
+                        {label(index)}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div
+                className={`mt-auto flex flex-col gap-3 pt-6 transition-[opacity,translate] duration-200 ease-out ${isOpen ? rowShown : rowHidden}`}
+                style={{ transitionDelay: isOpen ? '240ms' : '0ms' }}
               >
-                <FileUser className="h-4 w-4 shrink-0" />
-                {locale === 'it' ? 'Curriculum' : 'Resume'}
-                <ExternalLink className="ml-auto h-4 w-4 text-text-dim" />
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+                <div className="flex items-center justify-between px-1 py-1 font-mono text-sm text-text-muted">
+                  <span>{t('language')}</span>
+                  <LanguageToggle />
+                </div>
+
+                {resumeLink && (
+                  <Link
+                    className={`${resumeClass} min-h-[52px] items-center justify-center px-3 py-3 text-sm`}
+                    data-umami-event="Resume button"
+                    href={resumeLink}
+                    onClick={() => setIsOpen(false)}
+                    rel="noopener noreferrer"
+                    tabIndex={isOpen ? 0 : -1}
+                    target="_blank"
+                  >
+                    <FileUser className="h-4 w-4 shrink-0" />
+                    {locale === 'it' ? 'Curriculum' : 'Resume'}
+                    <ExternalLink className="ml-auto h-4 w-4 text-text-dim" />
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </>
   );
 }

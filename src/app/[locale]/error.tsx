@@ -23,7 +23,7 @@ export default function GlobalError({
       title={t('errorTitle')}
     >
       <button
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-violet px-5 py-2.5 font-mono text-xs tracking-[0.08em] text-surface-base uppercase transition-colors hover:bg-accent-violet-light"
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-violet px-5 py-2.5 font-mono text-xs tracking-[0.08em] text-text-on-accent uppercase transition-colors hover:bg-accent-violet-light"
         onClick={reset}
         type="button"
       >

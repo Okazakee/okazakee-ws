@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
+import { SectionNumber } from '@components/common/SectionNumber';
 import { getSkillsCategories } from '@/utils/getData';
 
 /**
@@ -19,11 +20,14 @@ export default async function Skills({ locale }: { locale: string }) {
   return (
     <section className="mx-auto max-w-5xl px-6 py-24" id="skills">
       <div className="mb-16 text-center">
-        <InnerHtml
-          as="h2"
-          className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
-          html={formatLabels(t('title'))}
-        />
+        <div className="mb-2 flex items-baseline justify-center gap-2.5">
+          <SectionNumber index={2} />
+          <InnerHtml
+            as="h2"
+            className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
+            html={formatLabels(t('title'))}
+          />
+        </div>
         <InnerHtml
           as="p"
           className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"

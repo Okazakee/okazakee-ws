@@ -3,6 +3,7 @@ import PostCard from '@components/common/PostCard';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { SectionNumber } from '@components/common/SectionNumber';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { getBlogPosts, getPortfolioPosts } from '@/utils/getData';
@@ -26,6 +27,7 @@ export default async function PostsSection({ locale }: { locale: string }) {
     <div>
       {sections.map((section) => {
         const isBlog = section === 'blog';
+        const sectionIndex = isBlog ? 5 : 4;
         const posts = isBlog ? blogPosts : portfolioPosts;
 
         return (
@@ -39,11 +41,14 @@ export default async function PostsSection({ locale }: { locale: string }) {
             >
               <div className="mx-auto max-w-5xl px-6">
                 <div className="mb-14 text-center">
-                  <InnerHtml
-                    as="h2"
-                    className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
-                    html={formatLabels(t(isBlog ? 'title2' : 'title1'))}
-                  />
+                  <div className="mb-2 flex items-baseline justify-center gap-2.5">
+                    <SectionNumber index={sectionIndex} />
+                    <InnerHtml
+                      as="h2"
+                      className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
+                      html={formatLabels(t(isBlog ? 'title2' : 'title1'))}
+                    />
+                  </div>
                   <InnerHtml
                     as="p"
                     className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"

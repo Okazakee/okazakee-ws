@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import React from 'react';
 import { AppleIcon, GithubIcon, LinkedinIcon } from '@/components/common/BrandIcons';
 import { InnerHtml } from '@/components/common/InnerHtml';
+import { SectionNumber } from '@components/common/SectionNumber';
 import { formatLabels } from '@/utils/formatLabels';
 import { getContacts } from '@/utils/getData';
 import { RequestForm } from './RequestForm';
@@ -36,13 +37,16 @@ export default async function Contacts({ locale }: { locale: string }) {
   };
 
   return (
-    <section className="mx-auto max-w-4xl px-6 py-24 text-center" id="contacts">
+    <section className="mx-auto max-w-4xl px-6 py-24 text-center lg:mb-16" id="contacts">
       <div className="mb-14 text-center">
-        <InnerHtml
-          as="h2"
-          className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
-          html={formatLabels(t('title'))}
-        />
+        <div className="mb-2 flex items-baseline justify-center gap-2.5">
+          <SectionNumber index={6} />
+          <InnerHtml
+            as="h2"
+            className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
+            html={formatLabels(t('title'))}
+          />
+        </div>
         <InnerHtml
           as="p"
           className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"
