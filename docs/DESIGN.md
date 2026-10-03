@@ -123,6 +123,9 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
   content (violet ramp per theme, pixel lead ahead of each drop, magnet-repel
   pointer at 6 cells, disc-ping clicks, steady dim speckle). Padded, feathered
   ellipses measured from the identity/about boxes dim and freeze ambient rain.
+  Below 768px, their horizontal radii are capped to leave three live rain lanes
+  (42px) per side outside the focus feather. Mobile trails remain visible while
+  the center stays calm; desktop focus geometry is unchanged.
   The center-out entrance starts at the visible viewport center on tall mobile
   layouts; its temporary violet highlight is not dimmed by the idle focus zones.
   Pointer displacement and bright click glyphs also remain live in those zones,

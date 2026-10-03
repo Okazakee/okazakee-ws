@@ -26,6 +26,8 @@ const ABOUT_PAD_X = 40;
 const ABOUT_PAD_Y = 40;
 // Softness of the zone edges: larger = wider feather, no visible boundary.
 const FOCUS_FEATHER = 0.55;
+// Leave three live rain lanes per side on mobile, outside the focus feather.
+const MOBILE_RAIN_GUTTER = CELL * 3;
 // Strongest-point floors: opacity, brightness, and tail keep fraction
 // (0.5 keep ≈ 50% fewer drops at the core). Speed is never touched.
 const FOCUS_OPACITY = 0.28;
@@ -158,6 +160,10 @@ export function HeroMatrix() {
     let zones: Array<[number, number, number, number]> = [];
     const measureZones = () => {
       const heroBox = hero.getBoundingClientRect();
+      const maxRadiusX =
+        W < 768
+          ? Math.max(CELL, (W / 2 - MOBILE_RAIN_GUTTER) / (1 + FOCUS_FEATHER))
+          : null;
       const zone = (name: string, padX: number, padY: number) => {
         const el = hero.querySelector(`[data-hero-zone="${name}"]`);
         if (!el) return null;
@@ -165,12 +171,13 @@ export function HeroMatrix() {
         if (b.width < 1 || b.height < 1) return null;
         const cx = b.left - heroBox.left + b.width / 2;
         const cy = b.top - heroBox.top + b.height / 2;
-        return [cx, cy, b.width / 2 + padX, b.height / 2 + padY] as [
-          number,
-          number,
-          number,
-          number,
-        ];
+        const radiusX = b.width / 2 + padX;
+        return [
+          cx,
+          cy,
+          maxRadiusX === null ? radiusX : Math.min(radiusX, maxRadiusX),
+          b.height / 2 + padY,
+        ] as [number, number, number, number];
       };
       zones = [
         zone('identity', ZONE_PAD_X, ZONE_PAD_Y),
