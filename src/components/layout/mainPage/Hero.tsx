@@ -1,4 +1,5 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
+import { FingerprintPattern, Mouse } from 'lucide-react';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
@@ -48,7 +49,7 @@ export default async function Hero({ locale }: { locale: string }) {
           className="flex flex-col items-center xl:flex-row xl:justify-center xl:gap-16"
           data-hero-zone="identity"
         >
-          <div className="relative mb-10 aspect-square w-[200px] shrink-0 md:mb-12 md:w-[240px] xl:mb-0 xl:w-[260px]">
+          <div className="relative mb-10 aspect-square w-[190px] shrink-0 md:mb-12 md:w-[240px] xl:mb-0 xl:w-[260px]">
             {/* Pebble border, drawn behind the clipped image */}
             <svg
               className="absolute inset-0 z-0"
@@ -75,7 +76,7 @@ export default async function Hero({ locale }: { locale: string }) {
                 fill
                 placeholder="blur"
                 priority
-                sizes="(min-width: 1280px) 260px, (min-width: 768px) 240px, 200px"
+                sizes="(min-width: 1280px) 260px, (min-width: 768px) 240px, 190px"
                 src={heroSection.propic}
               />
             </div>
@@ -96,20 +97,11 @@ export default async function Hero({ locale }: { locale: string }) {
         </div>
 
         <div
-          className="mx-auto mt-12 max-w-3xl scroll-mt-20 md:mt-16"
+          className="mx-auto mt-6 max-w-3xl scroll-mt-20 md:mt-8"
           data-hero-zone="about"
           id="about"
         >
-          <div className="mb-10 text-center">
-            <InnerHtml
-              as="h2"
-              className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
-              html={formatLabels(t('aboutme.title'))}
-            />
-            <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
-          </div>
-
-          <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface-card p-6 text-sm leading-relaxed text-text-main/90 sm:p-8 md:text-base md:leading-6">
+          <div className="space-y-4 rounded-2xl bg-surface-base/40 p-2 text-left text-sm leading-relaxed text-text-main/90 backdrop-blur-sm md:text-base md:leading-6">
             {paragraphs.map((paragraph) => (
               <InnerHtml
                 as="p"
@@ -124,10 +116,12 @@ export default async function Hero({ locale }: { locale: string }) {
         aria-hidden="true"
         className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 font-mono text-xs uppercase tracking-[0.22em] text-text-muted motion-safe:animate-bounce md:text-sm"
       >
-        Scroll
-        <span className="text-[11px] leading-none text-accent-violet-light md:text-sm">
-          {'vvv'}
-        </span>
+        <span className="text-text-white">Scroll!</span>
+        <FingerprintPattern
+          className="hidden h-4 w-3 text-accent-violet-light pointer-coarse:block"
+          preserveAspectRatio="none"
+        />
+        <Mouse className="h-4 w-4 text-accent-violet-light pointer-coarse:hidden" />
       </span>
     </section>
   );
