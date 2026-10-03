@@ -131,6 +131,17 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
   Pointer displacement and bright click glyphs also remain live in those zones,
   then settle back to the calm bed. Still frame under reduced-motion; idle
   off-screen.
+- Hero rendering performance: `HeroMatrix.tsx` caches double-precision focus,
+  dither and reveal geometry on layout changes, and distances at click creation.
+  `matrixCanvasRenderer.ts` retains native Canvas2D draw packets and repaints
+  changed 32-backing-pixel regions, including overlapping glyphs in their
+  original order. Buffers are reused; neither DPR, 30Hz cadence, trail density
+  nor native glyph rasterization is reduced. Exponential tails are skipped
+  only below a proven floating-point/output threshold, not an arbitrary radius.
+  Verification compares original/optimized RGBA bytes at fixed clocks in native
+  Firefox and Chromium across entrance, pointer/rings, themes, fractional DPR,
+  mobile gutters, resizing and column recycling; live scrolling confirms that
+  off-screen painting stops.
 - **Section header pattern** (used on every section and page): centred title in
   `text-white`, mono subtitle in `accent-violet-light`, then a `40×1px` accent rule.
   The subtitle is always real copy from the CMS translations, never invented.

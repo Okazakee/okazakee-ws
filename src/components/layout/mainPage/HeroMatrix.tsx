@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { createMatrixCanvasRenderer } from './matrixCanvasRenderer';
 
 const CELL = 14;
 const POINTER_CELLS = 6;
@@ -28,11 +29,16 @@ const ABOUT_PAD_Y = 40;
 const FOCUS_FEATHER = 0.55;
 // Leave three live rain lanes per side on mobile, outside the focus feather.
 const MOBILE_RAIN_GUTTER = CELL * 3;
-// Strongest-point floors: opacity, brightness, and tail keep fraction
-// (0.5 keep ≈ 50% fewer drops at the core). Speed is never touched.
+// Strongest-point floors: opacity and brightness. Speed is never touched.
 const FOCUS_OPACITY = 0.28;
 const FOCUS_BRIGHT = 0.55;
-const FOCUS_DENSITY = 0.5;
+
+// These bounds are below a quarter ULP of the dimmest luminosity and
+// every heat/stamp cutoff: skipped tails cannot change a draw command.
+const invisibleLum = (Number.EPSILON * (0.14 * FOCUS_OPACITY)) / 8;
+const pingTailDistance =
+  Math.sqrt(-2 * 24 * 24 * Math.log(invisibleLum / 2.2)) + 1;
+const entranceTailTime = -140 * Math.log(invisibleLum / 0.3) + 140;
 
 const BAYER = [
   0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36,
@@ -79,6 +85,9 @@ interface Ping {
   y: number;
   born: number;
   life: number;
+  distances: Float64Array;
+  radius: number;
+  fade: number;
 }
 
 /**
@@ -98,6 +107,7 @@ export function HeroMatrix() {
     if (!canvas || !hero) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    const renderer = createMatrixCanvasRenderer(ctx, CELL, GLYPHS);
 
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
@@ -126,9 +136,21 @@ export function HeroMatrix() {
     let entranceRow = 0;
     let matCols: RainColumn[] = [];
     const entranceT0 = performance.now();
+    const pointer = { x: -1e4, y: -1e4 };
+    let strength = 0;
+    let target = 0;
+    const pings: Ping[] = [];
+    let fieldSize = 0;
+    let fieldFocus: Float64Array;
+    let fieldDim: Float64Array;
+    let fieldThreshold: Float64Array;
+    let fieldDelay: Float64Array;
+    let fieldFlags: Uint8Array;
+    let frozenHeads: Float64Array;
 
     const initMatrix = () => {
       matCols = [];
+      frozenHeads = new Float64Array(cols);
       const now = performance.now();
       for (let c = 0; c < cols; c++) {
         // Fresh columns start above the fold and fall in staggered, so the
@@ -151,6 +173,7 @@ export function HeroMatrix() {
           lead: 2 + Math.floor(rnd() * 3),
           born: warmup ? 0 : now,
         });
+        frozenHeads[c] = matCols[c].seed % Math.max(1, rows + 20);
       }
     };
 
@@ -158,6 +181,71 @@ export function HeroMatrix() {
     // and about are tagged with data-hero-zone; padded, feathered, and
     // re-measured on resize so they track layout instead of hardcoding.
     let zones: Array<[number, number, number, number]> = [];
+    // 0 outside the zones, up to 1 at the strongest overlap. Elliptical
+    // distance with a smoothstep feather: no visible boundary by design.
+    const focusAt = (px: number, py: number) => {
+      let focus = 0;
+      for (const [cx, cy, rx, ry] of zones) {
+        const ex = (px - cx) / Math.max(1, rx);
+        const ey = (py - cy) / Math.max(1, ry);
+        const d = Math.sqrt(ex * ex + ey * ey);
+        const edge = 1 + FOCUS_FEATHER;
+        const t = Math.min(1, Math.max(0, (edge - d) / FOCUS_FEATHER));
+        const s = t * t * (3 - 2 * t);
+        if (s > focus) focus = s;
+      }
+      return focus;
+    };
+
+    const cachePingDistances = (ping: Ping) => {
+      const count = rows * cols;
+      if (ping.distances.length !== count) {
+        ping.distances = new Float64Array(count);
+      }
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const dx = c * CELL + CELL / 2 - ping.x;
+          const dy = r * CELL + CELL / 2 - ping.y;
+          ping.distances[r * cols + c] = Math.sqrt(dx * dx + dy * dy);
+        }
+      }
+    };
+
+    const cacheField = () => {
+      const count = rows * cols;
+      if (fieldSize !== count) {
+        fieldSize = count;
+        fieldFocus = new Float64Array(count);
+        fieldDim = new Float64Array(count);
+        fieldThreshold = new Float64Array(count);
+        fieldDelay = new Float64Array(count);
+        fieldFlags = new Uint8Array(count);
+      }
+      const cc = W / (2 * CELL);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const index = r * cols + c;
+          const focus = focusAt(c * CELL + CELL / 2, r * CELL + CELL / 2);
+          const noise = jitter[(r & 63) * 64 + (c & 63)];
+          const dx = c - cc;
+          const dy = r - entranceRow;
+          fieldFocus[index] = focus;
+          fieldDim[index] = 1 - focus * (1 - FOCUS_OPACITY);
+          fieldThreshold[index] =
+            0.78 * ((BAYER[(r & 7) * 8 + (c & 7)] + 0.5) / 64) + 0.22 * noise;
+          fieldDelay[index] = Math.sqrt(dx * dx + dy * dy) * 26 + noise * 320;
+          fieldFlags[index] =
+            (focus > 0.3 ? 1 : 0) |
+            (jitter[(r * 73 + c * 37) & 4095] < SPECKLE_DENSITY ? 2 : 0) |
+            (focus > SPECKLE_CENTER_LO &&
+            focus < SPECKLE_CENTER_HI &&
+            jitter[(r * 131 + c * 57) & 4095] < SPECKLE_CENTER_DENSITY
+              ? 4
+              : 0);
+        }
+      }
+      for (let i = 0; i < pings.length; i++) cachePingDistances(pings[i]);
+    };
     const measureZones = () => {
       const heroBox = hero.getBoundingClientRect();
       const maxRadiusX =
@@ -183,6 +271,7 @@ export function HeroMatrix() {
         zone('identity', ZONE_PAD_X, ZONE_PAD_Y),
         zone('about', ABOUT_PAD_X, ABOUT_PAD_Y),
       ].filter((z): z is [number, number, number, number] => z !== null);
+      cacheField();
     };
 
     const measure = () => {
@@ -193,8 +282,12 @@ export function HeroMatrix() {
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.font = `${CELL - 2}px ui-monospace, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       cols = Math.ceil(W / CELL) + 2;
       rows = Math.ceil(H / CELL) + 2;
+      renderer.resize(W, H, dpr, cols, rows);
       // On tall mobile heroes, start the reveal inside the visible viewport.
       const visibleTop = Math.max(0, -box.top);
       const visibleBottom = Math.max(
@@ -207,11 +300,6 @@ export function HeroMatrix() {
     };
     measure();
 
-    const pointer = { x: -1e4, y: -1e4 };
-    let strength = 0;
-    let target = 0;
-    let pings: Ping[] = [];
-
     const onMove = (event: PointerEvent) => {
       const box = canvas.getBoundingClientRect();
       pointer.x = event.clientX - box.left;
@@ -223,82 +311,49 @@ export function HeroMatrix() {
     };
     const onDown = (event: PointerEvent) => {
       const box = canvas.getBoundingClientRect();
-      pings = [
-        ...pings.slice(-4),
-        {
-          x: event.clientX - box.left,
-          y: event.clientY - box.top,
-          born: performance.now(),
-          life: 0.9,
-        },
-      ];
-    };
-
-    const gate = (c: number, r: number, now: number) => {
-      if (reduced) return null;
-      const elapsed = now - entranceT0;
-      const cc = W / (2 * CELL);
-      const cr = entranceRow;
-      const delay =
-        Math.sqrt((c - cc) * (c - cc) + (r - cr) * (r - cr)) * 26 +
-        jitter[(r & 63) * 64 + (c & 63)] * 320;
-      if (elapsed < delay) return { hidden: true, boost: 0 };
-      return {
-        hidden: false,
-        boost: Math.exp(-(elapsed - delay) / 140),
+      const ping = (pings.length === 5 ? pings.shift() : null) ?? {
+        x: 0,
+        y: 0,
+        born: 0,
+        life: 0.9,
+        distances: new Float64Array(rows * cols),
+        radius: CELL,
+        fade: 1,
       };
-    };
-
-    // 0 outside the zones, up to 1 at the strongest overlap. Elliptical
-    // distance with a smoothstep feather: no visible boundary by design.
-    const focusAt = (px: number, py: number) => {
-      let focus = 0;
-      for (const [cx, cy, rx, ry] of zones) {
-        const ex = (px - cx) / Math.max(1, rx);
-        const ey = (py - cy) / Math.max(1, ry);
-        const d = Math.sqrt(ex * ex + ey * ey);
-        const edge = 1 + FOCUS_FEATHER;
-        const t = Math.min(1, Math.max(0, (edge - d) / FOCUS_FEATHER));
-        const s = t * t * (3 - 2 * t);
-        if (s > focus) focus = s;
-      }
-      return focus;
+      ping.x = event.clientX - box.left;
+      ping.y = event.clientY - box.top;
+      ping.born = performance.now();
+      cachePingDistances(ping);
+      pings.push(ping);
     };
 
     const paint = (now: number, t: number) => {
-      ctx.clearRect(0, 0, W, H);
-      ctx.font = `${CELL - 2}px ui-monospace, monospace`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      renderer.beginFrame();
 
       const reach = POINTER_CELLS * CELL;
       const step = reduced ? 0 : Math.floor(t * 7);
+      const elapsed = now - entranceT0;
+      for (let i = 0; i < pings.length; i++) {
+        const ping = pings[i];
+        const age = (now - ping.born) / 1000 / ping.life;
+        ping.radius = CELL * (1 + age * 9);
+        ping.fade = (1 - age) * (1 - age);
+      }
 
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
+          const index = r * cols + c;
+          const delay = fieldDelay[index];
+          if (!reduced && elapsed < delay) continue;
           const x = c * CELL;
           const y = r * CELL;
           const px = x + CELL / 2;
           const py = y + CELL / 2;
-          // Focus fields: the rain recedes around the identity and about
-          // content. Opacity and brightness fall with focus; whites dim
-          // hardest, saturated purples step down, density thins by spawn
-          // skip. Speed and motion are untouched.
-          const focus = focusAt(px, py);
-          const calm = focus * (0.5 + 0.5 * jitter[(r & 63) * 64 + (c & 63)]);
-          // Ambient speckle: pure function of the cell, no time term —
-          // steady pixels, never blinking.
-          const speck = jitter[(r * 73 + c * 37) & 4095] < SPECKLE_DENSITY;
-          // Center ring speckle: extra steady pixels hugging the calm.
-          // Inside the core (focus high) nothing extra; outside the
-          // feather (focus 0) the base density already covers it.
-          const speckCenter =
-            focus > SPECKLE_CENTER_LO &&
-            focus < SPECKLE_CENTER_HI &&
-            jitter[(r * 131 + c * 57) & 4095] < SPECKLE_CENTER_DENSITY;
-          // Only ambient rain freezes in the focus zones. The entrance,
-          // pointer and click ring use live time across the whole field.
-          const frozen = focus > 0.3;
+          const focus = fieldFocus[index];
+          const flags = fieldFlags[index];
+          const speck = (flags & 2) !== 0;
+          const speckCenter = (flags & 4) !== 0;
+          const frozen = (flags & 1) !== 0;
           const fstep = frozen ? 0 : step;
 
           // Matrix rain: symbol tail above the head, pixel lead below it.
@@ -311,17 +366,12 @@ export function HeroMatrix() {
             // Drops freeze their fall inside the calm: the head position
             // snaps from the drop's own phase instead of the live clock, so
             // trails cannot crawl across the portrait, name, or card.
-            const headY = frozen ? mc.seed % Math.max(1, rows + 20) : mc.y;
+            const headY = frozen ? frozenHeads[c] : mc.y;
             const behind = headY - r;
             const ahead = r - headY;
-            const dim = 1 - focus * (1 - FOCUS_OPACITY);
+            const dim = fieldDim[index];
             lum = 0.14 * dim;
-            if (
-              mc &&
-              behind >= 0 &&
-              behind < mc.len &&
-              calm < FOCUS_DENSITY + focus * 0.6
-            ) {
+            if (mc && behind >= 0 && behind < mc.len) {
               const inten = (1 - behind / mc.len) * dim;
               lum += inten ** 1.4 * 1.25;
               heat = Math.max(heat, inten * (1 - focus * (1 - FOCUS_BRIGHT)));
@@ -352,46 +402,49 @@ export function HeroMatrix() {
           }
           let ox = 0;
           let oy = 0;
-          const dx = px - pointer.x;
-          const dy = py - pointer.y;
-          const d = Math.sqrt(dx * dx + dy * dy);
           let pushed = false;
-          if (strength > 0.01 && d < reach && d > 0.01) {
-            const f = 1 - d / reach;
-            const push = f * f * 12 * strength;
-            ox = (dx / d) * push;
-            oy = (dy / d) * push;
-            lum += f * f * strength * 0.5;
-            heat = Math.max(heat, f * f * strength);
-            pushed = true;
+          if (strength > 0.01) {
+            const dx = px - pointer.x;
+            const dy = py - pointer.y;
+            if (Math.abs(dx) < reach && Math.abs(dy) < reach) {
+              const d = Math.sqrt(dx * dx + dy * dy);
+              if (d < reach && d > 0.01) {
+                const f = 1 - d / reach;
+                const push = f * f * 12 * strength;
+                ox = (dx / d) * push;
+                oy = (dy / d) * push;
+                lum += f * f * strength * 0.5;
+                heat = Math.max(heat, f * f * strength);
+                pushed = true;
+              }
+            }
           }
 
           // User-triggered effects stay live even over the calm ambient bed.
           let stamped = false;
-          for (const p of pings) {
-            const age = (now - p.born) / 1000 / p.life;
-            const rad = CELL * (1 + age * 9);
-            const pdx = px - p.x;
-            const pdy = py - p.y;
-            const pd = Math.sqrt(pdx * pdx + pdy * pdy);
+          for (let i = 0; i < pings.length; i++) {
+            const p = pings[i];
+            const pd = p.distances[index];
+            const rad = p.radius;
+            if (p.fade <= 2 && Math.abs(pd - rad) > pingTailDistance) {
+              continue;
+            }
             const amp =
-              (1 - age) *
-              (1 - age) *
-              Math.exp(-((pd - rad) * (pd - rad)) / (2 * 24 * 24));
+              p.fade * Math.exp(-((pd - rad) * (pd - rad)) / (2 * 24 * 24));
             if (amp > 0.15) stamped = true;
             lum += amp * 1.1;
             heat = Math.max(heat, amp);
           }
 
-          const g = gate(c, r, now);
-          if (g?.hidden) continue;
-          const reveal = g?.boost ?? 0;
+          const revealAge = elapsed - delay;
+          const reveal =
+            reduced || revealAge > entranceTailTime
+              ? 0
+              : Math.exp(-revealAge / 140);
           lum += reveal * 0.3;
           heat = Math.max(heat, reveal);
 
-          const threshold =
-            0.78 * ((BAYER[(r & 7) * 8 + (c & 7)] + 0.5) / 64) +
-            0.22 * jitter[(r & 63) * 64 + (c & 63)];
+          const threshold = fieldThreshold[index];
           // The entrance flash has its own brightness, independent of the
           // idle focus dimming that covers most of the mobile layout.
           const revealed = reveal > threshold;
@@ -403,25 +456,29 @@ export function HeroMatrix() {
             lum <= threshold &&
             !char
           ) {
-            ctx.globalAlpha = (1 - focus * 0.72) * 0.55;
-            ctx.fillStyle = palette.dim;
-            ctx.fillRect(x + ox, y + oy, CELL, CELL);
-            ctx.globalAlpha = 1;
+            renderer.draw(
+              index,
+              '',
+              palette.dim,
+              (1 - focus * 0.72) * 0.55,
+              ox,
+              oy,
+              true
+            );
             continue;
           }
           if (!revealed && lum <= threshold && !char) continue;
 
           if (cursor && !revealed) {
             // Ambient trail tips blink only outside the frozen focus zones.
-            ctx.globalAlpha = pushed || stamped ? 1 : 1 - focus * 0.5;
-            ctx.fillStyle =
+            const alpha = pushed || stamped ? 1 : 1 - focus * 0.5;
+            const color =
               pushed || stamped || heat > 0.6
                 ? palette.crest
                 : heat > 0.3
                   ? palette.hover
                   : palette.mid;
-            ctx.fillRect(x + ox, y + oy, CELL, CELL);
-            ctx.globalAlpha = 1;
+            renderer.draw(index, '', color, alpha, ox, oy, true);
           } else if (
             revealed ||
             ((char || pushed || stamped) && lum > threshold)
@@ -444,52 +501,66 @@ export function HeroMatrix() {
                       : heat > 0.12
                         ? palette.lit
                         : palette.mid;
-            ctx.globalAlpha =
+            const alpha =
               pushed || stamped
                 ? 1
                 : revealed
                   ? reveal
                   : 1 - focus * (heat > 0.6 ? 0.9 : 0.72);
-            ctx.fillStyle = tier;
-            ctx.fillText(
+            renderer.draw(
+              index,
               char ?? GLYPHS[(c * 17 + r * 41) % GLYPHS.length],
-              x + CELL / 2 + ox,
-              y + CELL / 2 + 1 + oy
+              tier,
+              alpha,
+              ox,
+              oy,
+              false
             );
-            ctx.globalAlpha = 1;
           } else if (lum > threshold) {
             // Steady speckle (base or center ring): sparse dim pixels,
             // same focus fade as the bed glyphs. Never bright, never
             // blinking — both flags are pure functions of the cell.
             if (speck || speckCenter) {
-              ctx.globalAlpha = (1 - focus * 0.72) * 0.55;
-              ctx.fillStyle = palette.dim;
-              ctx.fillRect(x + ox, y + oy, CELL, CELL);
-              ctx.globalAlpha = 1;
+              renderer.draw(
+                index,
+                '',
+                palette.dim,
+                (1 - focus * 0.72) * 0.55,
+                ox,
+                oy,
+                true
+              );
             } else {
               // Ambient bed or boosted empty cell: dim glyph, never a square,
               // so trails read as text throughout. Stable per-cell char keeps
               // the bed calm while rain tails cycle.
-              ctx.globalAlpha = (1 - focus * 0.72) * 0.8;
-              ctx.fillStyle = heat > 0.25 ? palette.mid : palette.dim;
-              ctx.fillText(
+              renderer.draw(
+                index,
                 GLYPHS[(c * 17 + r * 41) % GLYPHS.length],
-                x + CELL / 2 + ox,
-                y + CELL / 2 + 1 + oy
+                heat > 0.25 ? palette.mid : palette.dim,
+                (1 - focus * 0.72) * 0.8,
+                ox,
+                oy,
+                false
               );
-              ctx.globalAlpha = 1;
             }
           } else if (char) {
             // Dim tail/lead cells keep their glyph instead of collapsing to
             // a square, so trails read as text throughout. Same focus fade
             // as lit glyphs, dimmest tier.
-            ctx.globalAlpha = (1 - focus * 0.72) * 0.8;
-            ctx.fillStyle = palette.dim;
-            ctx.fillText(char, x + CELL / 2 + ox, y + CELL / 2 + 1 + oy);
-            ctx.globalAlpha = 1;
+            renderer.draw(
+              index,
+              char,
+              palette.dim,
+              (1 - focus * 0.72) * 0.8,
+              ox,
+              oy,
+              false
+            );
           }
         }
       }
+      renderer.endFrame();
     };
 
     if (reduced) {
@@ -517,7 +588,14 @@ export function HeroMatrix() {
       last = now;
 
       strength += (target - strength) * 0.18;
-      pings = pings.filter((p) => (now - p.born) / 1000 < p.life);
+      let livePings = 0;
+      for (let i = 0; i < pings.length; i++) {
+        const ping = pings[i];
+        if ((now - ping.born) / 1000 < ping.life) {
+          pings[livePings++] = ping;
+        }
+      }
+      pings.length = livePings;
 
       for (let c = 0; c < cols; c++) {
         const mc = matCols[c];
@@ -543,10 +621,12 @@ export function HeroMatrix() {
     const ro = new ResizeObserver(measure);
     ro.observe(hero);
     // Layout shifts after webfonts/images settle; re-measure once idle.
+    let idleCallback: number | null = null;
+    let idleTimeout: number | null = null;
     if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(() => measureZones());
+      idleCallback = requestIdleCallback(() => measureZones());
     } else {
-      setTimeout(() => measureZones(), 1500);
+      idleTimeout = window.setTimeout(() => measureZones(), 1500);
     }
     const io = new IntersectionObserver(
       (entries) => {
@@ -568,6 +648,8 @@ export function HeroMatrix() {
 
     return () => {
       cancelAnimationFrame(raf);
+      if (idleCallback !== null) cancelIdleCallback(idleCallback);
+      if (idleTimeout !== null) window.clearTimeout(idleTimeout);
       ro.disconnect();
       io.disconnect();
       mo.disconnect();
