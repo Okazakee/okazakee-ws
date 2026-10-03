@@ -58,11 +58,11 @@ Rules:
 
 | token | role | dark | light |
 |---|---|---|---|
-| `surface-base` | page canvas | `#0a0a0a` | `#ebeff6` |
-| `surface-alt` | band / tinted section | `#0c0d0d` | `#e4e8ef` |
-| `surface-card` | cards, panels | `#111215` | `#f6f9fe` |
-| `surface-card-hover` | card hover, inline `code` | `#15171e` | `#e8ecf3` |
-| `surface-raised` | chips, pills, inset rows | `#181a23` | `#e6eaf1` |
+| `surface-base` | page canvas, header | `#0a0a0a` | `#e4e7ee` |
+| `surface-alt` | band / tinted section | `#0c0d0d` | `#dadee4` |
+| `surface-card` | cards, panels | `#111215` | `#f4f7fc` |
+| `surface-card-hover` | card hover, inline `code` | `#15171e` | `#e0e4eb` |
+| `surface-raised` | chips, pills, secondary buttons | `#181a23` | `#dee2e9` |
 | `border-subtle` | default 1px border | `#21242b` | `#d9dce6` |
 | `border-hover` | border on interaction | `#353c4b` | `#b6bdcd` |
 | `accent-violet` | primary accent | `#9451ff` | `#7c3aed` |
@@ -71,40 +71,45 @@ Rules:
 | `accent-cyan` | data / tech highlight | `#38bdf8` | `#0369a1` |
 | `text-white` | headings | `#f8fafc` | `#0b0e14` |
 | `text-main` | body copy | `#e2e8f0` | `#141822` |
-| `text-muted` | secondary copy | `#a3aec0` | `#3a4254` |
-| `text-dim` | captions, footnotes, footer | `#808d9f` | `#55606f` |
+| `text-muted` | secondary copy | `#a3aec0` | `#343c4e` |
+| `text-dim` | captions, footnotes, footer | `#808d9f` | `#4e5968` |
 | `status-active` | "current" pip only | `#10b981` | `#047857` |
-| `code-bg` / `code-fg` | code surfaces | `#08090d` / `#e2e8f0` | `#ecf0f7` / `#1b2030` |
+| `code-bg` / `code-fg` | code surfaces | `#08090d` / `#e2e8f0` | `#dde1e7` / `#1b2030` |
 
-The light surfaces are one hue (OKLCH ~260°, C 0.010) stepped down by a few
-points of luminance each — canvas, band, chip, card are distinct planes, not
-four names for the same white. Elevation in light mode is *lighter*, so a
-hover or a chip darkens from its card; the same classes on dark steps lighter.
-Cards never reach `#ffffff`: pure white against a tinted canvas is what made
-the light theme read as a blank sheet.
+The light surfaces are one hue (OKLCH ~260°, C ~0.010) stepped down in small
+luminance steps, so band / chip / hover / canvas / card are five distinct planes
+rather than five names for the same white. Card is the only near-white surface
+and nothing reaches `#ffffff`. Elevation in light mode is *lighter*, so a hover
+or a chip darkens from its card; the same classes on dark step lighter. `text-muted`
+and `text-dim` step down with the canvas — deepening a canvas without deepening
+the ink is what drops captions below their floor.
 
 ### 1.3 Contrast floor (measured, must not regress)
 
 | content | dark | light |
 |---|---|---|
-| body text — `text-main` on canvas | 16.1 | 15.4 |
-| paragraphs — `text-main`, canvas → card | 15.2 – 16.1 | 15.4 – 16.8 |
-| headings — `text-white`, band → card | 17.9 – 18.6 | 15.9 – 18.3 |
-| tag chips — `text-muted` on `surface-raised` | 7.7 | 8.3 |
-| footer / captions — `text-dim` on canvas | 5.9 | 5.5 |
-| captions on card — `text-dim` on `surface-card` | 5.6 | 6.1 |
-| accent link — `accent-violet-light` on canvas | 10.5 | 6.2 |
-| accent marker — `accent-violet` on band | 4.5 | 4.7 |
-| inline code — `accent-cyan` on `surface-card-hover` | 8.4 | 5.0 |
-| ink on accent fill — `surface-base` on `accent-violet` | 4.6 | 4.9 |
+| body text — `text-main` on canvas | 16.1 | 14.3 |
+| paragraphs — `text-main`, canvas → card | 15.2 – 16.1 | 14.3 – 16.5 |
+| headings — `text-white`, band → card | 17.9 – 18.6 | 14.3 – 18.0 |
+| tag chips — `text-muted` on `surface-raised` | 7.7 | 8.5 |
+| footer / captions — `text-dim` on canvas | 5.9 | 5.7 |
+| captions on card — `text-dim` on `surface-card` | 5.6 | 6.6 |
+| accent link — `accent-violet-light` on canvas | 10.5 | 5.7 |
+| accent marker — `accent-violet` on card | 4.4 | 5.3 |
+| inline code — `accent-cyan` on `surface-card-hover` | 8.4 | 4.7 |
+| ink on accent fill — `surface-base` on `accent-violet` | 4.6 | 4.6 |
+| terminal bar — `text-dim` on `surface-alt/60` over card | 5.7 | 5.8 |
 
 `text-dim` used to sit at 4.2 in both themes — below AA. Treat ~5.5:1 as its floor and
 `text-muted` ~8:1. If a new surface makes one fail, fix the token, never the one-off.
 That floor pins the light canvas: `surface-base` is the deepest tone `text-dim` may sit
 on, and `surface-alt` / `surface-raised` / `surface-card-hover` may go below it only
-because nothing renders `text-dim` there — chips carry `text-muted` (8.1+), and copy on
-those surfaces is `text-main`. If `text-dim` ever lands on a band, deepen that token
-first.
+because nothing renders `text-dim` there — chips carry `text-muted` (8.5), and copy on
+those surfaces is `text-main`. The state card's terminal bar is alpha-composited
+(`surface-alt/60` over `surface-card`), so it counts as a real `text-dim` surface when
+the band moves. Two more floors bind the canvas from below: `text-surface-base` on an
+`accent-violet` fill (4.6) and `accent-cyan` on `surface-card-hover` (4.7) both sit on
+AA — a darker canvas has to bring them up, not down.
 
 ### 1.4 Off-limits colour
 
