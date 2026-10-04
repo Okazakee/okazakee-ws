@@ -24,16 +24,24 @@ export async function generateMetadata({
 
   const pageDesc =
     locale === 'en'
-      ? 'Personal website with portfolio and blog'
-      : 'Sito personale con portfolio e blog';
+      ? 'Full-stack and mobile developer working across web, mobile, Bitcoin, Lightning, Nostr and wallet/payment infrastructure.'
+      : 'Sviluppatore full-stack e mobile attivo su web, mobile, Bitcoin, Lightning, Nostr e infrastrutture wallet e pagamenti.';
+
+  const pageTitle = 'Home - Okazakee WS';
 
   return {
-    title: 'Home - Okazakee WS',
+    title: pageTitle,
     description: pageDesc,
     openGraph: {
       type: 'website',
       siteName: SITE_NAME,
-      title: 'Home - Okazakee WS',
+      title: pageTitle,
+      description: pageDesc,
+      images: [SITE_OG_IMAGE],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
       description: pageDesc,
       images: [SITE_OG_IMAGE],
     },

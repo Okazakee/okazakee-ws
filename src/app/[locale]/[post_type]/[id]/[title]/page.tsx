@@ -421,8 +421,18 @@ export async function generateMetadata({
     title: itTitle,
   })}`;
 
+  const pageTitle = `${post[postTitle]} - Okazakee WS`;
+  const postImages = [
+    {
+      url: post.image,
+      width: 1200,
+      height: 630,
+      alt: post[postTitle],
+    },
+  ];
+
   return {
-    title: `${post[postTitle]} - Okazakee WS`,
+    title: pageTitle,
     description: post[postDescription],
     alternates: {
       canonical: normalizedLocale === 'en' ? enUrl : itUrl,
@@ -435,7 +445,7 @@ export async function generateMetadata({
     openGraph: {
       type: post_type === 'blog' ? 'article' : 'website',
       siteName: SITE_NAME,
-      title: `${post[postTitle]} - Okazakee WS`,
+      title: pageTitle,
       description: post[postDescription],
       ...(post_type === 'blog'
         ? {
@@ -443,14 +453,13 @@ export async function generateMetadata({
             authors: [`${baseUrl}/#person`],
           }
         : {}),
-      images: [
-        {
-          url: post.image,
-          width: 1200,
-          height: 630,
-          alt: post[postTitle],
-        },
-      ],
+      images: postImages,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: post[postDescription],
+      images: postImages,
     },
   };
 }

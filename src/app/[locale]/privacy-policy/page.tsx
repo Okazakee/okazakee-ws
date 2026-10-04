@@ -30,13 +30,21 @@ export async function generateMetadata({
   const title = titles[locale] ?? titles.en;
   const description = descriptions[locale] ?? descriptions.en;
 
+  const pageTitle = `${title} - Okazakee WS`;
+
   return {
-    title: `${title} | Okazakee`,
+    title: pageTitle,
     description,
     openGraph: {
       type: 'website',
       siteName: SITE_NAME,
-      title: `${title} | Okazakee`,
+      title: pageTitle,
+      description,
+      images: [SITE_OG_IMAGE],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
       description,
       images: [SITE_OG_IMAGE],
     },

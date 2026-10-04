@@ -37,24 +37,28 @@ export async function generateMetadata({
 
   const tagDesc =
     normalizedLocale === 'en'
-      ? `My ${post_type} showcasing ${
-          post_type === 'portfolio'
-            ? 'projects i worked on'
-            : 'my thoughts and experiences'
-        }`
-      : `Il mio ${post_type} mostra ${
-          post_type === 'portfolio'
-            ? 'progetti a cui ho lavorato'
-            : 'le mie riflessioni ed esperienze'
-        }`;
+      ? post_type === 'portfolio'
+        ? 'Selected software projects, open-source work and technical experiments.'
+        : 'Articles, notes and personal writing about software, technology and other topics.'
+      : post_type === 'portfolio'
+        ? 'Una selezione di progetti software, lavori open-source ed esperimenti tecnici.'
+        : 'Articoli, note e scritti personali su software, tecnologia e altri argomenti.';
+
+  const pageTitle = `${title} - Okazakee WS`;
 
   return {
-    title: `${title} - Okazakee WS`,
+    title: pageTitle,
     description: tagDesc,
     openGraph: {
       type: 'website',
       siteName: SITE_NAME,
-      title: `${title} - Okazakee WS`,
+      title: pageTitle,
+      description: tagDesc,
+      images: [SITE_OG_IMAGE],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
       description: tagDesc,
       images: [SITE_OG_IMAGE],
     },
