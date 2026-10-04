@@ -27,8 +27,9 @@ interface HeroPortraitProps {
  * the browser goes idle. The animated WebP is ~185 KB and `next/image` passes
  * animated sources through untouched, so shipping it as the LCP candidate costs
  * the whole payload; the poster is frame 0 of the same file, so the swap is
- * invisible. If the poster cannot be produced, the component falls back to the
- * animated file.
+ * invisible. Only the poster skips the optimizer: routing the animation through
+ * it buys `images.minimumCacheTTL` (31 days) instead of Supabase's one hour. If
+ * the poster cannot be produced, the component falls back to the animated file.
  */
 export function HeroPortrait({
   alt,
@@ -66,8 +67,8 @@ export function HeroPortrait({
         alt={alt}
         className="object-cover"
         fill
+        sizes={sizes}
         src={animatedSrc}
-        unoptimized
       />
     );
   }
@@ -119,8 +120,8 @@ export function HeroPortrait({
         className={`object-cover ${animationReady ? 'opacity-100' : 'opacity-0'}`}
         fill
         onLoad={() => setAnimationReady(true)}
+        sizes={sizes}
         src={animatedSrc}
-        unoptimized
       />
     </>
   );
