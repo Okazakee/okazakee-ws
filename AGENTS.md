@@ -24,10 +24,16 @@ src/
       incrementViews.ts             # View count incrementer
       search.ts                     # Search action
     providers.tsx                   # Client providers (ThemeProvider)
+    api/internal/                   # content-revalidate route (signed CMS events)
+    globals.css                     # Design tokens (§1) + prose/code/counters
+    robots.ts                       # robots.txt
+    sitemap.ts                      # Sitemap; slugs via utils/postHref
   components/
     common/                         # Reusable public components (PostCard, Searchbar, ImageModal, etc.)
     layout/                         # Layout components (Header, Footer, NavMenu, ThemeToggle, LanguageToggle, NextImage, MarkdownRenderer)
     layout/mainPage/                # Page-specific sections (Hero, Skills, Career, Contacts, PostSections)
+  config/                           # Env + runtime config (public, shared)
+  hooks/                            # Client hooks (useZoom)
   i18n/                             # next-intl config (routing, request) + public messages
   libs/content/                     # Public cache-tag vocabulary + revalidation contract
   store/                            # Zustand stores (themeStore)
@@ -41,6 +47,9 @@ src/
 ## 5. Commands and Workflows
 
 - Install: `bun install`
+- Post-install patch: `node src/utils/patchNextTypeScript7.mjs` (runs
+  automatically via the `postinstall` script; teaches Next's internal
+  type-check loader about the TypeScript 7 package layout)
 - Dev server: `bun run dev`
 - Build: `bun run build`
 - Start production: `bun run start`
@@ -56,7 +65,7 @@ test → build → typecheck (build before typecheck: fresh checkouts need
 
 ## 6. Code Formatting
 
-> **Repo-wide:** Biome 2.4 is the formatter and linter. Config lives at `biome.json`. The editorconfig at `.editorconfig` mirrors indent/line-ending settings.
+> **Repo-wide:** Biome 2.5 is the formatter and linter. Config lives at `biome.json`. The editorconfig at `.editorconfig` mirrors indent/line-ending settings.
 
 ### TypeScript / TSX
 
@@ -129,7 +138,7 @@ export function SectionHeader({
 - **Section action files:** `{section}Actions.ts`. `blogActions.ts`, `careerActions.ts`
 - **Component files:** PascalCase matching component name. `SectionHeader.tsx`, `TranslationField.tsx`
 - **Hook files:** `use{HookName}.ts`. `useDraft.ts`, `useFileUpload.ts`
-- **Utility files:** camelCase. `getData.ts`, `rateLimiters.ts`, `imageProcessor.ts`
+- **Utility files:** camelCase. `getData.ts`, `rateLimiters.ts`, `postHref.ts`
 - **Constants at module level:** camelCase (not SCREAMING_SNAKE_CASE). `const production = ...`, `const revalTime = ...`
 
 ## 8. Type Annotations
@@ -163,21 +172,28 @@ export async function getPosts(): Promise<BlogPost[] | null> {
 - **Side-effect imports** (like `import '../globals.css'`) go at the top.
 - **Path aliases** defined in `tsconfig.json`:
 
-| Alias | Maps to |
-|---|---|
-| `@/*` | `./src/*` |
-| `@components/*` | `./src/components/*` |
-| `@store/*` | `./src/store/*` |
-| `@utils/*` | `./src/utils/*` |
-| `@types/*` | `./src/types/*` |
-| `@libs/*` | `./src/libs/*` |
-| `@app/*` | `./src/app/*` |
-| `@layout/*` | `./src/components/layout/*` |
+| Alias | Maps to | Used |
+|---|---|---|
+| `@/*` | `./src/*` | yes |
+| `@components/*` | `./src/components/*` | yes |
+| `@layout/*` | `./src/components/layout/*` | yes |
+| `@utils/*` | `./src/utils/*` | yes |
+| `@public/*` | `./src/app/public/*` | yes (logos, fonts) |
+| `@libs/*` | `./src/libs/*` | no — import via `@/libs/*` |
+| `@types/*` | `./src/types/*` | no — import via `@/types/*` |
+| `@store/*` | `./src/store/*` | no — import via `@/store/*` |
+| `@app/*` | `./src/app/*` | no — import via `@/app/*` |
+| `@api/*` | `./src/app/api/*` | no |
+| `@config/*` | `./*config.ts` | no — **dead**, resolves to the repo root; config lives in `src/config/`, import via `@/config/*` |
+| `@blog/*` `@portfolio/*` `@fonts/*` `@styles/*` | `./src/blog/*` etc. | no — no matching directories exist |
 
-- **Supabase clients:** The public site is read-only and uses ONE stateless
-  client created in `src/utils/getData.ts` with the publishable key
-  (`@supabase/supabase-js`). There is no server/client/admin Supabase client
-  in this repo — the CMS owns all writes. Never add elevated keys here.
+- **Supabase clients:** The public site is read-only and every client is
+  stateless, built from `publicConfig` with the publishable key
+  (`@supabase/supabase-js`). There are three module-level instances — the read
+  layer (`src/utils/getData.ts`) and the two view-counter server actions
+  (`src/app/actions/getCurrentViews.ts`, `src/app/actions/incrementViews.ts`).
+  There is no server/client/admin Supabase client in this repo — the CMS owns
+  all writes. Never add elevated keys here.
 - **Never use relative imports** for anything outside the immediate sibling directory. Always use `@/` aliases.
 
 ```typescript
@@ -189,8 +205,8 @@ import { headers } from 'next/headers';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { Suspense } from 'react';
-import ConditionalFooter from '@/components/layout/ConditionalFooter';
-import ConditionalHeader from '@/components/layout/ConditionalHeader';
+import Footer from '@/components/layout/Footer';
+import Header from '@/components/layout/Header';
 import ScrollTop from '@/components/layout/ScrollTop';
 import { getTranslationsSupabase } from '@/utils/getData';
 ```
@@ -202,7 +218,7 @@ import { getTranslationsSupabase } from '@/utils/getData';
 ```typescript
 export async function getCurrentViews(postId: string, postType: 'blog' | 'portfolio') {
   try {
-    const supabase = await createClient();
+    const supabase = createClient(url, publishableKey);
     // ...
     if (error) {
       console.error('Error fetching current views:', error);
@@ -219,7 +235,7 @@ export async function getCurrentViews(postId: string, postType: 'blog' | 'portfo
 }
 ```
 
-- **Client components** catch errors from server action calls and display via UI state (often `ErrorBanner` component).
+- **Client components** catch errors from server action calls and display via UI state (often the `ErrorDiv` component).
 - **Supabase `PGRST116`** (zero rows from `.single()`) is handled as a non-error: return `null`.
 - **Bare `catch`** (without error variable) is used when the error is intentionally ignored (e.g., Supabase `setAll` in server component cookie handler).
 - **No global error boundary** is configured. Each route handles its own error state.
@@ -227,7 +243,7 @@ export async function getCurrentViews(postId: string, postType: 'blog' | 'portfo
 
 ## 11. Comments and Docstrings
 
-- **Docstrings:** Not used systematically. A single JSDoc block in `login.ts` for the function description.
+- **Docstrings:** Not used systematically. Module doc comments appear only where a module's contract needs stating (e.g. `src/libs/content/cacheTags.ts`, `src/libs/content/revalidation.ts`); components carry a one-line pointer to their `docs/DESIGN.md` section.
 - **Inline comments:** `//` style, used sparingly to explain intent or document edge cases, not what the code does.
 - **No module-level docstrings.**
 - **No commented-out code** in observed files. Biome linter likely prevents dead code.
@@ -240,9 +256,11 @@ const numericId = postId.trim() !== '' && /^\d+$/.test(postId);
 
 ## 12. Testing
 
-Vitest is configured (`vitest.config.ts`, node environment). Tests live next
-to sources as `*.test.ts` (currently: cache-tag vocabulary, the revalidation
-contract and legacy-CMS route matching). Run with
+Vitest is configured (`vitest.config.ts`, node environment; a file opts into
+`happy-dom` with a `@vitest-environment` docblock, as `themeStore.test.ts`
+does). Tests live next to sources as `*.test.ts` (currently: cache-tag
+vocabulary, the revalidation contract, legacy-CMS route matching, post href /
+title slugging, JSON-LD structured data and the theme store). Run with
 `bun run test` (`vitest run`). CI (`.github/workflows/ci.yml`) runs lint,
 test, build, then typecheck (build first: fresh checkouts need `.next/types`
 for image/route module resolution). When tests are added, follow existing
@@ -300,11 +318,11 @@ urgent it feels.
 
 ## 14. Dependencies and Tooling
 
-- **Package manager:** bun (`packageManager: "bun@1.3.7"` in `package.json`). Always use `bun` not `npm`/`yarn`/`pnpm`.
+- **Package manager:** bun (`packageManager: "bun@1.3.14"` in `package.json`). Always use `bun` not `npm`/`yarn`/`pnpm`.
 - **Lockfile:** `bun.lock` — committed to the repo.
 - **Add dependency:** `bun add <package>` (prod) or `bun add -d <package>` (dev).
-- **Linter/Formatter:** Biome 2.4. Config: `biome.json`.
-- **Type checker:** `tsc` with `strict: true`. Config: `tsconfig.json`.
+- **Linter/Formatter:** Biome 2.5. Config: `biome.json`.
+- **Type checker:** TypeScript 7 with `strict: true`. Config: `tsconfig.json`. `next build` skips its internal type check on TS 7 (patched by the `postinstall` script), so `bunx tsc --noEmit` is the only typecheck that runs — CI relies on it.
 - **CSS:** Tailwind CSS 4 with `@tailwindcss/postcss`. Config: `postcss.config.mjs`, `tailwind.config.ts`.
 - **Runtime:** Next.js 16 with Turbopack dev server. Config: `next.config.ts`.
 - **Environment variables:** Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `DOMAIN_URL`. Full list in `.env.local.example`.
@@ -322,7 +340,7 @@ urgent it feels.
 - **Never open a PR, or merge one, without the owner's go-ahead.** A pushed branch is not a PR request; wait for confirmation (§13.1).
 - **Never add a `'use server'` directive inside a file that also has `'use client'`.** These directives are mutually exclusive at the file level.
 - **Never import server-only modules (like `next/headers`, `next/cache`) into client components.** Keep server and client code separated.
-- **Never use `console.log` in production paths.** Use `console.error` for server-side error logging.
+- **Never use `console.log` in production paths.** Use `console.error` for server-side error logging. The one documented exception is the revalidation route's `[content-revalidate]` success event log.
 - **Never define React component state inline in the JSX render path.** Use Zustand stores for shared state, `useState`/`useReducer` for local state.
 - **Never add a dependency with npm/yarn/pnpm** — always use `bun add`.
 - **Never export a component as default** unless it is a Next.js page or layout file. Use named exports.

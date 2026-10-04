@@ -253,21 +253,20 @@ export function RequestForm() {
           </button>
           {step < pages.length - 1 ? (
             <button
-              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet-deep px-6 py-2.5 font-mono text-xs uppercase tracking-[0.08em] text-white transition-colors hover:bg-accent-violet"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs uppercase tracking-[0.08em] text-text-on-accent transition-colors hover:bg-accent-violet-light"
               onClick={() =>
                 setStep((current) => Math.min(pages.length - 1, current + 1))
               }
-              type="button"
             >
               {copy.next}
-              <ArrowRight className="h-4 w-4 text-white" />
+              <ArrowRight className="h-4 w-4" />
             </button>
           ) : (
             <button
-              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet-deep px-6 py-2.5 font-mono text-xs uppercase tracking-[0.08em] text-white transition-colors hover:bg-accent-violet"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs uppercase tracking-[0.08em] text-text-on-accent transition-colors hover:bg-accent-violet-light"
               type="submit"
             >
-              <Send className="h-4 w-4 text-white" />
+              <Send className="h-4 w-4" />
               {copy.submit}
             </button>
           )}

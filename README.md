@@ -14,7 +14,7 @@
 ## Overview
 
 A Next.js 16 application that renders the public face of Okazakee: hero
-section, skills carousel, career timeline, portfolio projects, blog with
+section, skills grid, career timeline, portfolio projects, blog with
 full-text search, and a privacy policy — all in English and Italian with
 dark/light/auto theming.
 
@@ -36,8 +36,9 @@ public caches through a signed revalidation endpoint
 - **Cache invalidation** — HMAC-signed, replay-protected revalidation events
   from the CMS (`cacheTag` / `cacheLife`, `revalidateTag(tag, 'max')`)
 - **Performance** — Server Components for data and SEO, client islands only
-  where interactivity demands it; WebP-only image pipeline (`next/image`
-  serves an animated WebP propic in its original format, keeping it animated)
+  where interactivity demands it; WebP-only image pipeline (uploads arrive as
+  WebP from the CMS, and the animated propic goes through the `next/image`
+  optimizer, cached for 31 days)
 - **Quality** — TypeScript strict mode, Biome formatting/linting, Vitest
   suites, CI on every pull request
 
@@ -67,8 +68,9 @@ okazakee-cms ───────▶ Supabase ◀──────── okaza
   `/{locale}/cms*` URLs 307-redirect to the standalone CMS.
 - **Components:** Server Components for data and metadata; Client Components
   for interactivity (menu, theme, search).
-- **Supabase:** one stateless client with the publishable key for reads and
-  RPCs (view counters). No elevated credentials live in this repository.
+- **Supabase:** stateless clients — the read layer plus the two view-counter
+  actions — all built on the publishable key. No elevated credentials live in
+  this repository.
 - **Caching:** public reads use `cacheTag`/`cacheLife` with the vocabulary in
   `src/libs/content/cacheTags.ts`. The signed revalidation endpoint accepts
   content-change events from the CMS (HMAC-SHA256, replay window, hard-coded
@@ -81,7 +83,7 @@ okazakee-cms ───────▶ Supabase ◀──────── okaza
 
 ### Prerequisites
 
-- Bun 1.3+ (`packageManager: "bun@1.3.7"`)
+- Bun 1.3+ (`packageManager: "bun@1.3.14"`)
 - A Supabase project — the content schema is owned by the CMS repository; the
   public site only reads it
 
@@ -130,6 +132,7 @@ bun run lint      # Biome lint
 bun run lint-fix  # Biome lint + autofix
 bun run format    # Biome format
 bun run test      # Vitest test suite
+bun run postinstall  # Re-apply the Next + TypeScript 7 patch (runs on install)
 ```
 
 ## Deployment
@@ -141,7 +144,9 @@ bun run test      # Vitest test suite
    repo), the view-counter RPCs (`increment_blog_post_views_bigint`,
    `increment_portfolio_post_views_bigint`) and the `website` storage bucket
    with public read policies
-4. Deploy (Vercel: push to `master`/`beta` or trigger a manual deployment)
+4. Deploy (Vercel: merging into `master` — production — or `beta` — preview —
+   triggers a build; direct pushes to those branches are not the release path,
+   see AGENTS.md §13.1):
 
 **Vercel preset:** Framework Next.js, build command `bun run build`, output
 `.next`.
@@ -152,7 +157,8 @@ bun run test      # Vitest test suite
 ## Testing & CI
 
 - **Unit tests:** `bun run test` (Vitest, `src/**/*.test.ts`) — covers the
-  cache-tag vocabulary, the signed revalidation contract, and routing rules.
+  cache-tag vocabulary, the signed revalidation contract, legacy-CMS and
+  post-slug routing, JSON-LD structured data and the theme store.
 - **CI** (`.github/workflows/ci.yml`, on `master`/`beta` and pull requests):
   install → lint → test → build → typecheck. Build runs before typecheck
   because a fresh checkout needs `.next/types` for route and image module

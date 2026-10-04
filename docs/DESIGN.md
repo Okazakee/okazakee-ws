@@ -123,8 +123,8 @@ not down.
 
 Brand/identity colours that arrive as data stay as they are: contact `bg_color` values
 from the DB (LinkedIn `#0A66C2`, Telegram `#27A7E7`, GitHub `#333333`, Email `#8B53FB`),
-the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selection`
-(`accent-violet-deep` on white). Do not "tokenise" these.
+the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
+"tokenise" these. `::selection` is unstyled in the repo today — no rule ships.
 
 ---
 
@@ -138,17 +138,21 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
   family so the "hybrid TUI" reading holds.
 - Label convention: uppercase, `tracking-[0.08em]` (controls) to `[0.2em]` (eyebrows),
   `text-[11px]` for the micro tier.
-- Scale in use: post/page titles `text-3xl md:text-4xl`; section titles
-  `text-2xl sm:text-3xl`; card titles `text-xl`; drawer role titles `text-base`;
-  body `0.95rem` at `1.85` line-height; prose captions `0.72rem`.
+- Scale in use: post detail titles `text-3xl md:text-4xl`, the hero h1
+  `text-3xl sm:text-4xl md:text-5xl`; section titles `text-2xl sm:text-3xl`;
+  card titles `text-lg`; body `0.95rem` at `1.85` line-height; prose captions
+  `0.72rem`. Eyebrows run `tracking-[0.2em]`, controls `tracking-[0.08em]`, the
+  micro tier `text-[11px]`; mobile menu rows are `text-3xl`.
 - No third-party display faces. Material Symbols exists only in the mockups and must be
   replaced by the repo's `lucide-react` + brand SVGs when ported.
 
 ---
 
 ## 3. Layout, surfaces, motion
-- Containers: sections `max-w-5xl mx-auto px-6`; prose `max-w-3xl`; page padding
-  `py-24`, hero `pt-24 md:pt-36`.
+- Containers: `mx-auto px-6` throughout — `max-w-5xl` for the skills grid, the
+  post shell and the footer, `max-w-4xl` for hero, career and contacts; prose
+  `max-w-3xl`. Page padding `py-24`; the hero opens at `pt-24` (no taller tier)
+  and post detail at `pt-12 pb-24 md:pt-24`.
 - Hero ground: a transparent matrix-rain canvas behind the untouched hero/about
   content (violet ramp per theme, pixel lead ahead of each drop, magnet-repel
   pointer at 6 cells, disc-ping clicks, steady dim speckle). Padded, feathered
@@ -173,8 +177,9 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
   mobile gutters, resizing and column recycling; live scrolling confirms that
   off-screen painting stops.
 - **Section header pattern** (used on every section and page): centred title in
-  `text-white`, mono subtitle in `accent-violet-light`, then a `40×1px` accent rule.
-  The subtitle is always real copy from the CMS translations, never invented.
+  `text-white`, mono subtitle in `accent-violet-light`, then a `40×2px` accent
+  rule (`h-0.5 w-10`, `rounded-full`). The subtitle is always real copy from the
+  CMS translations, never invented.
   The `01`–`06` index sits in the left column of a `1fr auto 1fr` grid (badge
   right-aligned, `pr-2.5`) with an empty spacer third column, so the badge hangs
   beside the title without pulling the title text off the centre line.
@@ -193,17 +198,21 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
 
 - Grid `grid-cols-[1fr_auto_1fr]` with **explicit `col-start-1/2/3`**. Hiding the nav on
   mobile otherwise drops it from the flow and the controls slide into the middle column.
-- Logo: 1809×320 asset, `h-6 w-auto max-w-none shrink-0 object-contain` (136×24 at every
-  width), **no hover treatment**, links to the locale home.
+- Logo: two source PNGs swapped by theme — `title-ws.png` (1809×320, dark) and
+  `title-ws-lightmode.png` (1815×325, light) — both rendered
+  `h-6 w-auto max-w-none shrink-0 object-contain` (136×24 at every width),
+  **no hover treatment**, linking to the locale home.
 - Desktop nav: appears at **`lg`**, centred, mono `text-xs`; active item =
   `text-accent-violet-light font-semibold` + 1px `border-accent-violet` underline.
 - Mobile header: logo, theme toggle, hamburger — all right-aligned, 44×44 targets, right
   padding halved (`pr-3`, desktop `pr-6`).
-- Mobile menu: fullscreen under the header (`absolute inset-x-0 top-full` in the
-- sticky header, `h-[calc(100dvh-4rem)]`, `bg-surface-base/[0.98]`, backdrop
-- blur, `overflow-y-auto`, safe-area bottom padding); rows are `text-3xl`
-- headings with mono `01`–`06` index prefixes and hairline dividers, active row
-- `font-semibold text-accent-violet-light`, rows stagger in 40ms apart;
+- Mobile menu: fullscreen under the header. It is **portalled to `<body>`** as
+  `fixed inset-x-0 top-16 bottom-0` (`z-40`, `lg:hidden`) rather than nested in
+  the sticky header, because a `backdrop-filter` element cannot sit inside
+  another one; `bg-surface-base/70`, backdrop blur, `overflow-y-auto` and
+  safe-area bottom padding; rows are `text-3xl` headings with mono `01`–`06` index
+  prefixes and hairline dividers, active row `font-semibold
+  text-accent-violet-light`, rows stagger in 40ms apart;
 - Language row + violet-tinted Resume live in a `mt-auto` footer block; body
 - scroll lock while open; closes on link tap and Escape; `aria-expanded` /
 - `aria-controls` wired, hidden rows `tabIndex={-1}`.
@@ -222,10 +231,11 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
 ## 5. Components
 
 ### 5.1 Cards (posts and projects)
-Poster (4:3-ish, `md:w-72`/`md:w-80`, full-bleed), then body: title (`group-hover` →
-`accent-violet-light`), 2–3 line description, then chips. Floating badges: view count
-(eye + real `views`) bottom-right; star count only where a public repo exists. The whole
-card is a link to `/{locale}/{type}/{id}/{slug}`; no hover zoom.
+Poster (4:3-ish, `md:w-72` for blog, `md:w-80` for portfolio, full-bleed), then
+body: title (`group-hover` → `accent-violet-light`), description, then chips. The
+only floating badge is the view count (eye + real `views`) bottom-right — cards
+carry no star badge, `GitHubStars` renders on the post detail page only. The
+whole card is a link to `/{locale}/{type}/{id}/{slug}`; no hover zoom.
 
 ### 5.2 Chips / tags
 `inline-flex items-center gap-1 rounded border border-border-subtle bg-surface-raised
@@ -252,25 +262,30 @@ horizontal scroll under `prefers-reduced-motion`).
 ### 5.4 Contacts and the project request form
 - Contacts are the four real rows (Email, LinkedIn, GitHub, Telegram) with the DB
   `bg_color` as the tile accent, plus the resume action from `hero_section.resume_en`.
-- The request form is mock-only for now and will be built on `precall` (a library where
-  the consumer owns the form and each field carries policy metadata such as
-  `sendToAI`; email is the obvious not-to-AI field). Fields: Name, Email, Company,
-  existing website/repo, Project type, Budget range, Desired timeline, "What are you
-  building?", consent checkbox linking the privacy page, submit.
-- Form header block, consent row and submit button are **centred, each on its own row**.
-- A diagonal "Coming soon!" band overlays the card, translucent enough to read the form
-  and applied with `aria-hidden`.
+- The request form is **built**: a three-step wizard (contact → project → details)
+  carrying Name, Email, Company, existing website/repo, Project type, Budget
+  range, Desired timeline, "What are you building?", a consent checkbox linking
+  the privacy page, and submit. Only the submit is inert (`preventDefault`) — it
+  will be wired to `precall` (a library where the consumer owns the form and each
+  field carries policy metadata such as `sendToAI`; email is the obvious
+  not-to-AI field). Its copy is hardcoded English inside the component, which
+  breaks §8 — see the defect list there.
+- Form header block and consent row are **centred, each on its own row**; the
+  submit sits right-aligned in the Back / Next row rather than centred.
+- A diagonal "Coming soon" band overlays the card, translucent enough to read the
+  form and applied with `aria-hidden` — on **production builds only**, so testers
+  can click through the wizard on every other environment.
 
 ### 5.5 Footer
 Left: `Made with ❤️ by` + the name **linked to the GitHub profile**, then `Source Code`
 linking the repo — both with the violet hover. Right: the VAT value as a copy
 affordance carrying `footer.buttonTitle`, then CMS and Privacy Policy links — the three
-separated by bullets, the links underlined and hovering to `text-text-muted` (mock at
+separated by `//`, the links underlined and hovering to `text-text-muted` (mock at
 `code.html`).
 
 ### 5.6 Back to top
 Fixed bottom-right, inverted fill (`bg-text-main` on `text-surface-base`), `rounded-xl`,
-mono `Top` label (kept for clarity over the live "Go back up"), fades in on scroll and
+mono label read from `footer.right` (the `Top` string in the CMS), fades in on scroll and
 lifts near the page end.
 
 ### 5.7 Code blocks and prose
@@ -284,10 +299,13 @@ captions and the blurhash as the placeholder background.
 
 ## 6. Page patterns
 
-- **Home**: hero → about → skills → career → portfolio → blog → contacts (+ request
-  form). Nav anchors map to these.
-- **List pages**: section header, search field, then cards. Search states (empty,
-  rate-limited) still need designing.
+- **Home**: hero (with the about card inside it, `#about`) → skills → career →
+  portfolio → blog → contacts (+ request form). The six nav anchors are `home`,
+  `skills`, `career`, `portfolio`, `blog` and `contacts`; about is part of the
+  hero, not a section of its own.
+- **List pages**: section header, search field, then cards. The empty
+  (`posts-section.no-posts`) and rate-limited (`posts-section.ratelimit`) states
+  are designed and implemented in `PostList`.
 - **Post detail** (one route, both post types, blocks rendered conditionally):
   - desktop: title → description → tags → poster → meta row (quick links for portfolio,
     author for blog, date, stars, views, share pushed right) → prose.
@@ -304,28 +322,29 @@ captions and the blurhash as the placeholder background.
 ## 7. Responsive canon
 
 - **Standard Tailwind tiers only** (sm 640 / md 768 / lg 1024 / xl 1280 / 2xl 1536).
-  The repo's bespoke `xs:` (400–1100px) and `tablet:` (768–1279px) utilities and the
-  height-based media queries are **retired** — they existed to paper over edge cases the
-  redesign removes. Porting therefore means remapping ~22 `xs:`/`tablet:` usages onto the
-  standard tiers.
+  The bespoke `xs:` (400–1100px), `tablet:` (768–1279px) and `mdh:` utilities and
+  the height-based media queries are **retired**: `tailwind.config.ts` declares no
+  custom screens and no `xs:` / `tablet:` / `mdh:` class survives in `src/`.
 - Breakpoint decisions: desktop nav at `lg`; cards switch to their horizontal layout at
   `md`; prose stays single-column at every width.
 - Mobile specifics: tap targets ≥ 44px, header right padding 12px, logo 136×24, skill
   tiles 96px (three per row), drawer rows 44px, no horizontal overflow at 390.
-- Verified clean at 390 / 768 / 1024 / 1440 in both themes.
+- The 390 / 768 / 1024 / 1440 checks were done by hand against the mockups; no
+  visual-regression test or script in the repo backs them.
 
 ---
 
 ## 8. Data fidelity rules
 
 Every string and value in the UI comes from the database or an existing translation key.
-Invented copy is a defect, not a placeholder.
+Invented copy is a defect, not a placeholder. The request form and the Italian nav labels
+are the known exceptions still open — listed with the quirks below.
 
 **Sources of truth**
 
 | UI | source |
 |---|---|
-| all copy | `i18n_translations.translations` (namespaces: `header`, `hero-section`, `skills-section`, `career-section`, `contacts-section`, `posts-section`, `footer`, `privacyPolicy`, `request-form`, `errors`) |
+| all copy | `i18n_translations.translations` (namespaces: `header`, `hero-section`, `skills-section`, `career-section`, `contacts-section`, `posts-section`, `footer`, `privacyPolicy`, `errors`) — the privacy body is the `privacy_policy` **column**, not a namespace, and no `request-form` namespace exists yet |
 | hero name/role/about | `hero-section.top.*`, `hero-section.aboutme.*` |
 | skills | `skills_categories` + nested `skills` (`icon` URL, `invert`) |
 | career | `career_entries` (`logo`, `website_url`, `location_*`, `remote`, `startDate`/`endDate`, `description_*`, `skills`) |
@@ -354,21 +373,29 @@ Invented copy is a defect, not a placeholder.
   (and unknown posts on `/[post_type]/[id]/[title]`) and call `notFound()`. Both
   segments now set `instant = false` — the pages are cached and still navigate
   instantly, the flag only opts out of the validation feedback.
-- Open: the 404 routes answer **HTTP 200** (soft 404), which predates the redesign.
+- Unverified: the 404 routes are said to answer **HTTP 200** (soft 404), which predates the redesign. Nothing in the source sets a status; confirm against a running server before relying on it.
 - Dev-only: React logs `Encountered a script tag …` when a client-side language switch
   re-renders the `[locale]` layout, because the blocking theme-init script lives there.
   It must stay inline to apply the stored theme before first paint (a
   `beforeInteractive` Script lost that guarantee), so the warning is accepted.
-- Open: `sitemap.ts` slugs posts differently from the card link helper, so it advertises
-  `/blog/12/dear-mom...` while the card links `/blog/12/dear-mom`.
+- Fixed: `sitemap.ts` slugged posts differently from the card link helper. Both
+  now share `getPostHref` from `src/utils/postHref.ts`, and `next.config.ts`
+  answers the legacy wrong-slug URLs with a permanent 308.
+- Open: shipped UI copy that breaks the rule above. `RequestForm.tsx` holds its
+  whole English `copy` object in-component (no IT variant, not in the CMS);
+  `NavMenu.tsx` hardcodes the Italian labels; `Curriculum` / `Resume`, the
+  drawer's `Toggle menu` aria-label and the post page's share-tooltip strings are
+  literals; the home, list and privacy page titles and descriptions are literals.
+  Each needs a CMS translation key.
 
 **Writing CMS copy:** read the current `translations` object, merge the change and patch
 it back. Patching from an older snapshot silently reverts whatever was added in between —
 that already cost the `request-form` namespace and the `Top` label once.
 
-**New copy that will need i18n keys** when the request form and drawer land: the form
-labels and options, `Project request` / `Send me a request` / `Send request`, the consent
-sentence, and the drawer's `Language` label (`header.language` already exists).
+**New copy that still needs i18n keys.** The request form and the drawer have landed,
+so these are now live English-only strings (see the defect list above): the form labels
+and options, `Project request` / `Send me a request` / `Send request`, and the consent
+sentence. `header.language` already exists and is wired in both navs.
 
 ---
 
@@ -389,5 +416,7 @@ JS Tailwind config, `lucide-react` + brand SVGs, `next/font/local`, client compo
 DB reads. Nothing from the mocks' plumbing ships — only their structure, tokens and
 behaviour.
 
-Still undesigned: search result states, the blog list page mock, detail-page
-  interactions (lightbox, share, view increment) and blur-up placeholder states.
+Still undesigned: nothing structural. The lightbox (`ImageModal`), share (`ShareButton`),
+view counter (`ViewDisplay` plus the `incrementViews` action), the search empty and
+rate-limited states, and the blur-up placeholders are all built. What remains is the §8
+defect list — shipped copy that still has to move to the CMS.
