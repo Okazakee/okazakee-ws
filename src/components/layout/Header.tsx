@@ -1,5 +1,6 @@
 import logoLight from '@public/title-ws-lightmode.png';
 import logo from '@public/title-ws.png';
+import Image from 'next/image';
 import Link from 'next/link';
 import NavMenu from './NavMenu';
 
@@ -22,21 +23,26 @@ export default function Header({
           className="col-start-1 flex items-center justify-self-start"
           href={`/${locale}`}
         >
-          {/* biome-ignore lint/performance/noImgElement: static logo asset does not benefit from next/image and avoids a Next 16 runtime warning */}
-          <img
+          {/* Sized to the rendered 24px box: the source PNGs are 1809x320 and
+              1815x325 (59 KB + 72 KB), which shipped whole on every load.
+              `max-w-none` keeps next/image from capping the width. */}
+          <Image
             alt="logo"
             className="hidden h-6 w-auto max-w-none shrink-0 object-contain dark:block"
-            height={320}
+            height={24}
+            priority
+            sizes="136px"
             src={logo.src}
-            width={1809}
+            width={136}
           />
-          {/* biome-ignore lint/performance/noImgElement: static logo asset does not benefit from next/image and avoids a Next 16 runtime warning */}
-          <img
+          <Image
             alt="logo"
             className="block h-6 w-auto max-w-none shrink-0 object-contain dark:hidden"
-            height={325}
+            height={24}
+            priority
+            sizes="136px"
             src={logoLight.src}
-            width={1815}
+            width={136}
           />
         </Link>
         <NavMenu locale={locale} resumeLink={resumeLink} />
