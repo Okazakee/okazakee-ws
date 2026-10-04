@@ -36,7 +36,7 @@ export function HeroPortrait({
     const requestIdle = window.requestIdleCallback;
 
     if (typeof requestIdle === 'function') {
-      const handle = requestIdle(swap, { timeout: 2000 });
+      const handle = requestIdle(swap, { timeout: 1500 });
       return () => window.cancelIdleCallback(handle);
     }
 
