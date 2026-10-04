@@ -15,8 +15,10 @@ export default async function Footer({ locale }: { locale: string }) {
   const separator = '//';
 
   return (
-    <footer className="border-t border-border-subtle bg-surface-alt py-8 font-mono text-xs text-text-dim">
-      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
+    <footer className="border-t border-border-subtle bg-surface-alt py-8 font-mono text-xs text-text-dim sm:py-0">
+      {/* Desktop band mirrors the header's h-16 (same 4rem + 1px hairline);
+          below sm the footer keeps its original py-8 rhythm. */}
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-6 sm:min-h-16 sm:flex-row">
         <div>
           {t('left')}{' '}
           <Link

@@ -1,11 +1,12 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
 import { FingerprintPattern, Mouse } from 'lucide-react';
-import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
+import { avatarPosterUrl } from '@/libs/media/avatarPoster';
 import { formatLabels } from '@/utils/formatLabels';
 import { getHeroSection } from '@/utils/getData';
 import { HeroMatrix } from './HeroMatrix';
+import { HeroPortrait } from './HeroPortrait';
 
 const PebbleClipPath = () => (
   <svg width="0" height="0" viewBox="0 0 500 500" className="absolute">
@@ -69,15 +70,12 @@ export default async function Hero({ locale }: { locale: string }) {
             </svg>
 
             <div className="clip-pebble relative h-full w-full">
-              <Image
+              <HeroPortrait
                 alt="Profile picture"
+                animatedSrc={heroSection.propic}
                 blurDataURL={heroSection.blurhashURL}
-                className="object-cover"
-                fill
-                placeholder="blur"
-                priority
+                posterSrc={avatarPosterUrl(heroSection.propic, 384)}
                 sizes="(min-width: 1280px) 260px, (min-width: 768px) 240px, 190px"
-                src={heroSection.propic}
               />
             </div>
           </div>
