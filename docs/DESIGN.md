@@ -175,6 +175,9 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`) and `::selec
 - **Section header pattern** (used on every section and page): centred title in
   `text-white`, mono subtitle in `accent-violet-light`, then a `40×1px` accent rule.
   The subtitle is always real copy from the CMS translations, never invented.
+  The `01`–`06` index sits in the left column of a `1fr auto 1fr` grid (badge
+  right-aligned, `pr-2.5`) with an empty spacer third column, so the badge hangs
+  beside the title without pulling the title text off the centre line.
 - Bands: hero and about share `bg-surface-alt/50` and read as one block; career and blog
   use full `bg-surface-alt`; portfolio, skills and contacts are transparent.
 - Radii: cards and panels `rounded-2xl` (16px), inner media `rounded-xl` (12px),

@@ -37,15 +37,16 @@ export default async function Contacts({ locale }: { locale: string }) {
   };
 
   return (
-    <section className="mx-auto max-w-4xl px-6 py-24 text-center lg:mb-16" id="contacts">
+    <section className="mx-auto max-w-4xl px-6 py-24 text-center lg:mb-32" id="contacts">
       <div className="mb-14 text-center">
-        <div className="mb-2 flex items-baseline justify-center gap-2.5">
-          <SectionNumber index={6} />
+        <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-baseline">
+          <SectionNumber className="justify-self-end pr-2.5" index={6} />
           <InnerHtml
             as="h2"
             className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
             html={formatLabels(t('title'))}
           />
+          <span aria-hidden="true" />
         </div>
         <InnerHtml
           as="p"

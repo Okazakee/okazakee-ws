@@ -148,13 +148,14 @@ export function CareerClient({
     >
       <div className="mx-auto max-w-4xl px-6">
         <div className="mb-16 text-center">
-          <div className="mb-2 flex items-baseline justify-center gap-2.5">
-            <SectionNumber index={3} />
+          <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-baseline">
+            <SectionNumber className="justify-self-end pr-2.5" index={3} />
             <InnerHtml
               as="h2"
               className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
               html={t('title')}
             />
+            <span aria-hidden="true" />
           </div>
           <InnerHtml
             as="p"
