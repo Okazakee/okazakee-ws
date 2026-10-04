@@ -62,6 +62,10 @@ const handleI18n = createMiddleware({
   locales: LOCALES,
   defaultLocale: DEFAULT_LOCALE,
   localeDetection: true,
+  // Hreflang is emitted per page from metadata (with the real localized
+  // slugs); disable the middleware's locale-swap Link headers to keep a
+  // single source of truth.
+  alternateLinks: false,
 });
 
 function isValidLocale(locale: string | null | undefined): locale is string {
@@ -138,16 +142,6 @@ function createRedirectResponse(
   const response = NextResponse.redirect(url);
   response.headers.set(REDIRECT_HEADER, 'true');
   return response;
-}
-
-function createRewriteResponse(
-  request: NextRequest,
-  pathname: string,
-  locale: string
-): NextResponse {
-  const url = request.nextUrl.clone();
-  url.pathname = validatePathname(`/${locale}${pathname}`);
-  return NextResponse.rewrite(url);
 }
 
 function handleMiddlewareError(
@@ -253,10 +247,6 @@ export default async function proxy(request: NextRequest) {
     }
 
     const locale = getPreferredLocale(request);
-
-    if (pathname === '/') {
-      return createRewriteResponse(request, pathname, locale);
-    }
 
     return createRedirectResponse(request, pathname, locale);
   } catch (error) {

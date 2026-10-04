@@ -24,12 +24,22 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const normalizedLocale = locale === 'it' ? 'it' : 'en';
+  const baseUrl = process.env.DOMAIN_URL;
   const title = titles[locale] ?? titles.en;
   const description = descriptions[locale] ?? descriptions.en;
 
   return {
     title: `${title} | Okazakee`,
     description,
+    alternates: {
+      canonical: `${baseUrl}/${normalizedLocale}/privacy-policy`,
+      languages: {
+        en: `${baseUrl}/en/privacy-policy`,
+        it: `${baseUrl}/it/privacy-policy`,
+        'x-default': `${baseUrl}/en/privacy-policy`,
+      },
+    },
   };
 }
 

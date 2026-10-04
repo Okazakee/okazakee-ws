@@ -52,6 +52,34 @@ const nextConfig: NextConfig = {
   // Ensure sharp is bundled correctly for serverless
   serverExternalPackages: ['sharp'],
   cacheComponents: true,
+  // Permanent 308s for the legacy wrong-slug URLs previously advertised in the
+  // sitemap; other malformed slugs keep the page-level soft redirect fallback.
+  async redirects() {
+    return [
+      {
+        source: '/en/blog/12/dear-mom...',
+        destination: '/en/blog/12/dear-mom',
+        permanent: true,
+      },
+      {
+        source: '/it/blog/12/cara-mamma...',
+        destination: '/it/blog/12/cara-mamma',
+        permanent: true,
+      },
+      {
+        source: "/it/blog/8/la-mia-folle-avventura-all'hackathon-hackforhire",
+        destination:
+          '/it/blog/8/la-mia-folle-avventura-allhackathon-hackforhire',
+        permanent: true,
+      },
+      {
+        source: '/it/blog/8/la-mia-folle-avventura-all%27hackathon-hackforhire',
+        destination:
+          '/it/blog/8/la-mia-folle-avventura-allhackathon-hackforhire',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
