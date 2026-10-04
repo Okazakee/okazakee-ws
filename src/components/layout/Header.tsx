@@ -32,6 +32,9 @@ export default function Header({
             height={24}
             priority
             sizes="136px"
+            // next/image checks inline styles for an auto dimension when CSS
+            // resizes the image; `w-auto` alone is invisible to that check.
+            style={{ width: 'auto' }}
             src={logo.src}
             width={136}
           />
@@ -41,6 +44,7 @@ export default function Header({
             height={24}
             priority
             sizes="136px"
+            style={{ width: 'auto' }}
             src={logoLight.src}
             width={136}
           />

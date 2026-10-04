@@ -77,7 +77,7 @@ export function HeroPortrait({
   // animated file there and the poster node is never fetched.
   if (!swapIn || isDesktop) {
     return (
-      <picture>
+      <picture className="absolute inset-0">
         <source media={desktopMedia} srcSet={animatedSrc} />
         <Image
           alt={alt}
