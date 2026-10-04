@@ -67,7 +67,7 @@ Rules:
 | `border-hover` | border on interaction | `#353c4b` | `#b6bdcd` |
 | `accent-violet` | primary accent | `#9451ff` | `#7c3aed` |
 | `accent-violet-light` | accent text / links | `#cdaffd` | `#6d28d9` |
-| `accent-violet-deep` | fills, selection | `#7f3bed` | `#6831c0` |
+| `accent-violet-deep` | fills, selection (theme-invariant) | `#6831c0` | `#6831c0` |
 | `accent-cyan` | data / tech highlight | `#38bdf8` | `#0369a1` |
 | `text-white` | headings | `#f8fafc` | `#0b0e14` |
 | `text-main` | body copy | `#e2e8f0` | `#141822` |
