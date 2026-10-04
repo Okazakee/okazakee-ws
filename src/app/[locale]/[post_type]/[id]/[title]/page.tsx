@@ -12,6 +12,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
 import GitHubStars from '@/components/common/GitHubStars';
+import { JsonLd } from '@/components/common/JsonLd';
 import FormattedDate from '@/components/common/FormattedDate';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
@@ -19,6 +20,11 @@ import ViewDisplay from '@/components/common/ViewDisplay';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPostHref, slugifyTitle } from '@/utils/postHref';
+import {
+  buildBlogPostingNode,
+  buildProjectNode,
+  SITE_NAME,
+} from '@/utils/structuredData';
 
 // Unknown ids/slugs reach this segment and call notFound(), which the dev-mode
 // instant validation reports as an unrenderable target. The page is cached and
@@ -175,8 +181,36 @@ export default async function Page({
     </>
   ) : null;
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    ...(post_type === 'blog'
+      ? buildBlogPostingNode({
+          baseUrl: process.env.DOMAIN_URL ?? '',
+          canonicalUrl: postURL,
+          locale,
+          title: initTitle,
+          description: String(post[postDescription]),
+          image: post.image,
+          datePublished: post.created_at,
+        })
+      : buildProjectNode({
+          baseUrl: process.env.DOMAIN_URL ?? '',
+          canonicalUrl: postURL,
+          id: post.id,
+          name: post.title_en,
+          description: String(post[postDescription]),
+          links: {
+            website: 'website' in post ? post.website : null,
+            demo: 'demo_link' in post ? post.demo_link : null,
+            store: 'store_link' in post ? post.store_link : null,
+            source: 'source_link' in post ? post.source_link : null,
+          },
+        })),
+  };
+
   return (
     <article className="mx-auto max-w-5xl px-6 pt-12 pb-24 md:pt-24">
+      <JsonLd data={jsonLd} />
       <div className="mx-auto max-w-3xl">
         <h1 className="font-heading text-3xl font-semibold tracking-tight text-text-white md:text-4xl">
           {initTitle}
@@ -399,8 +433,16 @@ export async function generateMetadata({
       },
     },
     openGraph: {
+      type: post_type === 'blog' ? 'article' : 'website',
+      siteName: SITE_NAME,
       title: `${post[postTitle]} - Okazakee WS`,
       description: post[postDescription],
+      ...(post_type === 'blog'
+        ? {
+            publishedTime: post.created_at,
+            authors: [`${baseUrl}/#person`],
+          }
+        : {}),
       images: [
         {
           url: post.image,
