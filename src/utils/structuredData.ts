@@ -299,15 +299,18 @@ export function buildProjectNode({
     author: personRef(baseUrl),
   };
 
-  const primaryLink = links.website || links.demo || links.store || null;
-  if (primaryLink) {
-    if (kind.linkAs === 'installUrl' && links.store) {
-      node.installUrl = primaryLink;
-    } else {
-      node.url = primaryLink;
-    }
+  const webLink = links.website || links.demo || null;
+  if (webLink) {
+    node.url = webLink;
+  } else if (links.store && kind.linkAs !== 'installUrl') {
+    node.url = links.store;
   }
-  if (links.source) node.codeRepository = links.source;
+  if (kind.linkAs === 'installUrl' && links.store) {
+    node.installUrl = links.store;
+  }
+  if (links.source && kind.type === 'SoftwareSourceCode') {
+    node.codeRepository = links.source;
+  }
   if (kind.applicationCategory) {
     node.applicationCategory = kind.applicationCategory;
   }

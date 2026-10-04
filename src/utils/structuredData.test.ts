@@ -154,7 +154,7 @@ describe('buildProjectNode', () => {
     expect(node['@type']).toBe('WebApplication');
     expect(node.applicationCategory).toBe('GameApplication');
     expect(node.url).toBe('https://minepanel.xyz/');
-    expect(node.codeRepository).toBe('https://github.com/MinePanelProject');
+    expect('codeRepository' in node).toBe(false);
     expect(node.author['@id']).toBe(personEntityId(BASE));
   });
 
@@ -173,6 +173,7 @@ describe('buildProjectNode', () => {
     expect(node['@type']).toBe('MobileApplication');
     expect(node.installUrl).toContain('play.google.com');
     expect('url' in node).toBe(false);
+    expect('codeRepository' in node).toBe(false);
   });
 
   it('falls back safely for ids without an override', () => {
@@ -192,5 +193,36 @@ describe('buildProjectNode', () => {
       expect(Number.isInteger(Number(id))).toBe(true);
     }
     expect(PORTFOLIO_OVERRIDES[26].type).toBe('WebApplication');
+  });
+
+  it('keeps codeRepository only for source-code projects (DockerCraft, id 2)', () => {
+    const node = buildProjectNode({
+      baseUrl: BASE,
+      canonicalUrl: 'https://okazakee.dev/en/portfolio/2/dockercraft',
+      id: 2,
+      name: 'DockerCraft',
+      description: 'Minecraft in Docker',
+      links: { source: 'https://github.com/Okazakee/DockerCraft' },
+    });
+    expect(node['@type']).toBe('SoftwareSourceCode');
+    expect(node.codeRepository).toBe('https://github.com/Okazakee/DockerCraft');
+    expect('url' in node).toBe(false);
+  });
+
+  it('keeps the website as url and the store as installUrl when both exist (id 22)', () => {
+    const node = buildProjectNode({
+      baseUrl: BASE,
+      canonicalUrl: 'https://okazakee.dev/en/portfolio/22/spendr',
+      id: 22,
+      name: 'Spendr',
+      description: 'Personal finance tracker',
+      links: {
+        website: 'https://spendr.example.com',
+        store:
+          'https://play.google.com/store/apps/details?id=com.okazakee.spendr',
+      },
+    });
+    expect(node.url).toBe('https://spendr.example.com');
+    expect(node.installUrl).toContain('play.google.com');
   });
 });
