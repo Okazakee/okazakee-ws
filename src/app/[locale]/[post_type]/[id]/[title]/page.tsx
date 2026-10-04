@@ -315,7 +315,7 @@ export async function generateStaticParams() {
       locale,
       post_type: 'portfolio',
       id: post.id.toString(),
-      title: post.title_en.toLowerCase().replace(/\s+/g, '-'),
+      title: slugifyTitle(post.title_en),
     }))
   );
 
@@ -324,10 +324,7 @@ export async function generateStaticParams() {
       locale,
       post_type: 'blog',
       id: post.id.toString(),
-      title:
-        locale === 'en'
-          ? post.title_en.toLowerCase().replace(/\s+/g, '-')
-          : post.title_it.toLowerCase().replace(/\s+/g, '-'),
+      title: slugifyTitle(locale === 'en' ? post.title_en : post.title_it),
     }))
   );
 

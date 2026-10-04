@@ -1,4 +1,5 @@
 import { getPosts } from '@utils/getData';
+import { getPostHref } from '@utils/postHref';
 import type { MetadataRoute } from 'next';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 
@@ -24,7 +25,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const portfolioUrls =
     portfolioPosts?.flatMap((post) =>
       locales.map((locale) => ({
-        url: `${baseUrl}/${locale}/portfolio/${post.id}/${post[`title_${locale === 'en' ? 'en' : 'it'}`]?.toLowerCase().replace(/\s+/g, '-') || post.title_en.toLowerCase().replace(/\s+/g, '-')}`,
+        url: `${baseUrl}${getPostHref({
+          locale,
+          postType: 'portfolio',
+          id: post.id,
+          title: post.title_en,
+        })}`,
         lastModified: post.created_at,
         changeFrequency: 'monthly' as const,
         priority: 0.8,
@@ -34,7 +40,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogUrls =
     blogPosts?.flatMap((post) =>
       locales.map((locale) => ({
-        url: `${baseUrl}/${locale}/blog/${post.id}/${post[`title_${locale === 'en' ? 'en' : 'it'}`]?.toLowerCase().replace(/\s+/g, '-') || post.title_en.toLowerCase().replace(/\s+/g, '-')}`,
+        url: `${baseUrl}${getPostHref({
+          locale,
+          postType: 'blog',
+          id: post.id,
+          title: locale === 'en' ? post.title_en : post.title_it,
+        })}`,
         lastModified: post.created_at,
         changeFrequency: 'monthly' as const,
         priority: 0.8,
