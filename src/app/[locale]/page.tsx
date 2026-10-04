@@ -10,6 +10,8 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const normalizedLocale = locale === 'it' ? 'it' : 'en';
+  const baseUrl = process.env.DOMAIN_URL;
 
   const pageDesc =
     locale === 'en'
@@ -19,6 +21,14 @@ export async function generateMetadata({
   return {
     title: 'Home - Okazakee WS',
     description: pageDesc,
+    alternates: {
+      canonical: `${baseUrl}/${normalizedLocale}`,
+      languages: {
+        en: `${baseUrl}/en`,
+        it: `${baseUrl}/it`,
+        'x-default': `${baseUrl}/en`,
+      },
+    },
   };
 }
 

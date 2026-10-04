@@ -18,7 +18,7 @@ import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
-import { slugifyTitle } from '@/utils/postHref';
+import { getPostHref, slugifyTitle } from '@/utils/postHref';
 
 // Unknown ids/slugs reach this segment and call notFound(), which the dev-mode
 // instant validation reports as an unrenderable target. The page is cached and
@@ -372,9 +372,32 @@ export async function generateMetadata({
       ? (`title_${normalizedLocale}` as keyof typeof post)
       : 'title_en';
 
+  const baseUrl = process.env.DOMAIN_URL;
+  const itTitle = post_type === 'portfolio' ? post.title_en : post.title_it;
+  const enUrl = `${baseUrl}${getPostHref({
+    locale: 'en',
+    postType: post_type,
+    id,
+    title: post.title_en,
+  })}`;
+  const itUrl = `${baseUrl}${getPostHref({
+    locale: 'it',
+    postType: post_type,
+    id,
+    title: itTitle,
+  })}`;
+
   return {
     title: `${post[postTitle]} - Okazakee WS`,
     description: post[postDescription],
+    alternates: {
+      canonical: normalizedLocale === 'en' ? enUrl : itUrl,
+      languages: {
+        en: enUrl,
+        it: itUrl,
+        'x-default': enUrl,
+      },
+    },
     openGraph: {
       title: `${post[postTitle]} - Okazakee WS`,
       description: post[postDescription],

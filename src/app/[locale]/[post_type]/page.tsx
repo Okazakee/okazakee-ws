@@ -20,6 +20,7 @@ export async function generateMetadata({
 }) {
   const { post_type, locale } = await params;
   const normalizedLocale = locale === 'it' ? 'it' : 'en';
+  const baseUrl = process.env.DOMAIN_URL;
 
   if (!validPostTypes.includes(post_type)) {
     return {
@@ -49,6 +50,14 @@ export async function generateMetadata({
   return {
     title: `${title} - Okazakee WS`,
     description: tagDesc,
+    alternates: {
+      canonical: `${baseUrl}/${normalizedLocale}/${post_type}`,
+      languages: {
+        en: `${baseUrl}/en/${post_type}`,
+        it: `${baseUrl}/it/${post_type}`,
+        'x-default': `${baseUrl}/en/${post_type}`,
+      },
+    },
   };
 }
 
