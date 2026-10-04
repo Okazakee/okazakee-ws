@@ -6,6 +6,7 @@ import PostList from '@/components/common/PostList';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { formatLabels } from '@/utils/formatLabels';
 import { getPosts } from '@/utils/getData';
+import { SITE_NAME, SITE_OG_IMAGE } from '@/utils/structuredData';
 
 // Unknown single-segment paths land here and call notFound(), which the
 // dev-mode instant validation reports as an unrenderable target. The page is
@@ -50,6 +51,13 @@ export async function generateMetadata({
   return {
     title: `${title} - Okazakee WS`,
     description: tagDesc,
+    openGraph: {
+      type: 'website',
+      siteName: SITE_NAME,
+      title: `${title} - Okazakee WS`,
+      description: tagDesc,
+      images: [SITE_OG_IMAGE],
+    },
     alternates: {
       canonical: `${baseUrl}/${normalizedLocale}/${post_type}`,
       languages: {

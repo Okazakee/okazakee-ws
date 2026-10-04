@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import { getPrivacyPolicy } from '@/utils/getData';
+import { SITE_NAME, SITE_OG_IMAGE } from '@/utils/structuredData';
 
 export function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'it' }];
@@ -32,6 +33,13 @@ export async function generateMetadata({
   return {
     title: `${title} | Okazakee`,
     description,
+    openGraph: {
+      type: 'website',
+      siteName: SITE_NAME,
+      title: `${title} | Okazakee`,
+      description,
+      images: [SITE_OG_IMAGE],
+    },
     alternates: {
       canonical: `${baseUrl}/${normalizedLocale}/privacy-policy`,
       languages: {
