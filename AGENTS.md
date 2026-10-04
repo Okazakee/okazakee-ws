@@ -187,13 +187,18 @@ export async function getPosts(): Promise<BlogPost[] | null> {
 | `@config/*` | `./*config.ts` | no — **dead**, resolves to the repo root; config lives in `src/config/`, import via `@/config/*` |
 | `@blog/*` `@portfolio/*` `@fonts/*` `@styles/*` | `./src/blog/*` etc. | no — no matching directories exist |
 
-- **Supabase clients:** The public site is read-only and every client is
-  stateless, built from `publicConfig` with the publishable key
-  (`@supabase/supabase-js`). There are three module-level instances — the read
-  layer (`src/utils/getData.ts`) and the two view-counter server actions
+- **Supabase clients:** the public site is read-only for CONTENT, and every
+  read client is stateless, built from `publicConfig` with the publishable
+  key (`@supabase/supabase-js`). There are three module-level instances — the
+  read layer (`src/utils/getData.ts`) and the two view-counter server actions
   (`src/app/actions/getCurrentViews.ts`, `src/app/actions/incrementViews.ts`).
-  There is no server/client/admin Supabase client in this repo — the CMS owns
-  all writes. Never add elevated keys here.
+  The single exception is the **project-request intake**
+  (`src/libs/requests/store.ts` via `src/config/requests.ts`): it holds a
+  server-only secret key because `project_requests` has no anon/authenticated
+  grant — it holds a visitor's name, email and free text, so the public form
+  is the only writer that can accept an anonymous submission. That key is
+  server-only (never `NEXT_PUBLIC_`, never in a client import graph) and the
+  CMS still owns every content write.
 - **Never use relative imports** for anything outside the immediate sibling directory. Always use `@/` aliases.
 
 ```typescript

@@ -1,15 +1,24 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
 import Image from 'next/image';
+import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
 import { SectionNumber } from '@components/common/SectionNumber';
 import { getSkillsCategories } from '@/utils/getData';
+import { sortSkillsByPosition } from '@/utils/skillOrder';
+
+const tileClass =
+  'group flex aspect-square w-24 flex-col items-center justify-center gap-2 rounded-xl border border-border-subtle bg-surface-card p-3 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:w-32 md:w-[150px]';
 
 /**
  * Skills grid (docs/DESIGN.md §6): centred square tiles per category, three per
  * row on mobile and six from `md` up, with the real icon URLs from the DB and
  * no hover zoom — the tile itself is the hover target.
+ *
+ * Skills render in the canonical order (`utils/skillOrder`), and a skill with a
+ * `link` renders its tile as an external anchor; without one the tile is the
+ * plain `<div>` it has always been.
  */
 export default async function Skills({ locale }: { locale: string }) {
   const skillsCategories = await getSkillsCategories();
@@ -44,28 +53,44 @@ export default async function Skills({ locale }: { locale: string }) {
               {category.name}
             </h3>
             <div className="flex flex-wrap justify-center gap-3">
-              {category.skills.map((skill) => (
-                <div
-                  className="group flex aspect-square w-24 flex-col items-center justify-center gap-2 rounded-xl border border-border-subtle bg-surface-card p-3 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:w-32 md:w-[150px]"
-                  key={skill.id}
-                >
-                  <Image
-                    alt={skill.title}
-                    blurDataURL={skill.blurhashURL || undefined}
-                    className={`h-10 w-10 object-contain ${
-                      skill.invert ? 'dark:invert' : ''
-                    }`}
-                    height={80}
-                    placeholder={skill.blurhashURL ? 'blur' : 'empty'}
-                    sizes="40px"
-                    src={skill.icon}
-                    width={80}
-                  />
-                  <span className="text-center font-mono text-[11px] text-text-main transition-colors group-hover:text-text-white">
-                    {skill.title}
-                  </span>
-                </div>
-              ))}
+              {sortSkillsByPosition(category.skills).map((skill) => {
+                const href = skill.link?.trim() ? skill.link.trim() : null;
+                const content = (
+                  <>
+                    <Image
+                      alt={skill.title}
+                      blurDataURL={skill.blurhashURL || undefined}
+                      className={`h-10 w-10 object-contain ${
+                        skill.invert ? 'dark:invert' : ''
+                      }`}
+                      height={80}
+                      placeholder={skill.blurhashURL ? 'blur' : 'empty'}
+                      sizes="40px"
+                      src={skill.icon}
+                      width={80}
+                    />
+                    <span className="text-center font-mono text-[11px] text-text-main transition-colors group-hover:text-text-white">
+                      {skill.title}
+                    </span>
+                  </>
+                );
+
+                return href ? (
+                  <Link
+                    className={tileClass}
+                    href={href}
+                    key={skill.id}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div className={tileClass} key={skill.id}>
+                    {content}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}

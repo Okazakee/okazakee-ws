@@ -189,8 +189,28 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   buttons `rounded-lg` (8px), chips `rounded` (4px).
 - Borders: always 1px `border-subtle`; interaction raises the border to
   `accent-violet/40–/50`, optionally with a tinted shadow. **No image zoom on hover.**
-- Motion: `transition-colors` ~300ms; nothing decorative. `prefers-reduced-motion`
-  disables smooth scroll and transitions (mirrors the repo's existing rule).
+- Motion: `transition-colors` ~300ms; nothing decorative outside the hero
+  typewriter. `prefers-reduced-motion` disables smooth scroll and transitions
+  (mirrors the repo's existing rule) and also keeps the hero typewriter static.
+- **Hero portrait shape** (`hero_section.shape`): `pebble` (default), `square`,
+  `rounded` (`rounded-xl` — the inner-media radius above) and `squircle`. Pebble
+  and squircle are `clip-path` utilities over an inline `clipPath` in
+  `objectBoundingBox` units (`clip-pebble` / `clip-squircle`), so the shape
+  scales with the portrait at every breakpoint; the squircle path is a sampled
+  superellipse (`|x|⁴ + |y|⁴ = 1`). The accent plate behind the portrait is the
+  pebble path for `pebble` and a `bg-accent-violet` shape plate otherwise. An
+  absent or unknown stored value renders `pebble`.
+- **Hero roles** are an ordered list: `hero-section.top.roles.0…` (a numeric index
+  map) when the CMS list exists, otherwise the singular `top.role`, which stays
+  as the live fallback for copy written before the list — content is never
+  migrated behind the editor's back. A single role renders exactly the old lone
+  line; several roles stack in the same mono style with `space-y-1`.
+- **Hero typewriter** (`hero_section.typewriter` with `typewriter_target` =
+  `role1` | `role2` | `all`): only the chosen line types out, holds and erases on
+  a loop. It is a leaf client component (`RoleTypewriter`), so the rest of the
+  hero stays a server component. The line is always painted complete first, so
+  server output, hydration and reduced-motion visitors all read today's static
+  markup; the reveal only starts when motion is allowed.
 
 ---
 
@@ -201,7 +221,21 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - Logo: two source PNGs swapped by theme — `title-ws.png` (1809×320, dark) and
   `title-ws-lightmode.png` (1815×325, light) — both rendered
   `h-6 w-auto max-w-none shrink-0 object-contain` (136×24 at every width),
-  **no hover treatment**, linking to the locale home.
+  **no hover treatment**, linking to the locale home. Both variants are
+  CMS-editable per theme via `site_settings.header_logo_dark` /
+  `header_logo_light`, and they resolve **per theme**: a row with only one
+  variant renders the stored logo for that theme and the bundled asset for the
+  other. With neither stored (or no row at all) the markup is byte-identical to
+  the bundled-assets version.
+- Nav anchors: the six destinations and the sections' `id=` attributes are
+  site-side and not editable. What an editor owns is the *anchor* each link
+  points at (`site_settings.nav_anchors`, an ordered `[{ id, anchor }]` array,
+  written index-aligned with `header.buttons.N` and read by `id`). `anchor` is
+  a fragment-safe element id with no leading `#`; a missing/blank anchor falls
+  back to the item id, which reproduces the href this header has always
+  rendered. The scroll-spy and the click handler keep reading `item.section`, so
+  an edited anchor moves the href without ever breaking in-page navigation or
+  the mobile drawer.
 - Desktop nav: appears at **`lg`**, centred, mono `text-xs`; active item =
   `text-accent-violet-light font-semibold` + 1px `border-accent-violet` underline.
 - Mobile header: logo, theme toggle, hamburger — all right-aligned, 44×44 targets, right
@@ -262,19 +296,30 @@ horizontal scroll under `prefers-reduced-motion`).
 ### 5.4 Contacts and the project request form
 - Contacts are the four real rows (Email, LinkedIn, GitHub, Telegram) with the DB
   `bg_color` as the tile accent, plus the resume action from `hero_section.resume_en`.
-- The request form is **built**: a three-step wizard (contact → project → details)
-  carrying Name, Email, Company, existing website/repo, Project type, Budget
-  range, Desired timeline, "What are you building?", a consent checkbox linking
-  the privacy page, and submit. Only the submit is inert (`preventDefault`) — it
-  will be wired to `precall` (a library where the consumer owns the form and each
-  field carries policy metadata such as `sendToAI`; email is the obvious
-  not-to-AI field). Its copy is hardcoded English inside the component, which
-  breaks §8 — see the defect list there.
+- The request form is **built and live**: a three-step wizard (contact →
+  project → details) carrying Name, Email, Company, existing website/repo,
+  Project type, Budget range, Desired timeline, "What are you building?", a
+  consent checkbox linking the privacy page, and submit. Submit POSTs JSON to
+  `/api/requests`, which re-validates every field server-side (length caps,
+  `URL` parsing with an http/https scheme allowlist, required consent) and
+  writes through the **service-role** client, because `project_requests` holds
+  personal data and carries no anon/authenticated grant. Success replaces the
+  form with a confirmation; a failure renders the endpoint's stable error code
+  in the visitor's own locale. The browser never holds a key.
+- Intake is bounded: a hard 8 KB body cap checked before parsing, and a
+  per-IP token bucket (3 requests, refilling one every 30 minutes). That
+  throttle is per-instance and an abuse/cost bound, not a security control —
+  the service-role key staying server-side is.
 - Form header block and consent row are **centred, each on its own row**; the
   submit sits right-aligned in the Back / Next row rather than centred.
-- A diagonal "Coming soon" band overlays the card, translucent enough to read the
-  form and applied with `aria-hidden` — on **production builds only**, so testers
-  can click through the wizard on every other environment.
+- The diagonal "Coming soon" band now keys off `REQUEST_INTAKE_ENABLED`, not
+  off the production build: unset, intake is **on** everywhere except
+  production, where it defaults **off**, the band shows, and the endpoint
+  answers 503. Setting the variable to `true` in production makes the band
+  disappear and the endpoint accept submissions, so the visitor's view and the
+  endpoint's behaviour are always driven by the same flag and can never
+  disagree. It is still `aria-hidden` and translucent enough to read the form
+  underneath.
 
 ### 5.5 Footer
 Left: `Made with ❤️ by` + the name **linked to the GitHub profile**, then `Source Code`
@@ -312,6 +357,20 @@ captions and the blurhash as the placeholder background.
   - mobile: same down to the poster, meta row shows date/views/share, and the
     conditional blocks move **below** it — portfolio quick links as rows of two
     full-width buttons, blog author as its own row. This mirrors the live page exactly.
+  - quick links are resolved by `utils/postButtons.ts`: `resolvePostButtons` reads
+    `buttons` when it is non-empty and otherwise falls back to the six legacy link
+    columns in the order website, source, demo, store, fdroid, ios — so a row written
+    before the column existed renders exactly as it always did. Entries are dropped
+    unless the kind is known and `url` is an absolute http(s) URL; a `custom` button
+    without a label is dropped too.
+  - icons are per-kind and site-owned (globe, GitHub, external link, play, phone,
+    Apple, generic link for `custom`); labels come from `i18n/postButtons.ts`, where
+    `website` deliberately has none because the globe button has always been
+    icon-only. The `data-umami-event` names are per-kind and unchanged from the
+    six-column era, so analytics continuity holds; `custom` reports as
+    `Custom link button`.
+  - JSON-LD `codeRepository` and the `GitHubStars` widget both read the resolved
+    `source` button rather than the `source_link` column.
 - **Privacy**: numbered sections (`01`, `4.1`) via CSS counters — free, no parser work —
   long-form prose, no table of contents. `Last updated` sits under the title.
 - **Error**: terminal-window card, vertically centred in the space between header and
@@ -345,13 +404,19 @@ are the known exceptions still open — listed with the quirks below.
 | UI | source |
 |---|---|
 | all copy | `i18n_translations.translations` (namespaces: `header`, `hero-section`, `skills-section`, `career-section`, `contacts-section`, `posts-section`, `footer`, `privacyPolicy`, `errors`) — the privacy body is the `privacy_policy` **column**, not a namespace, and no `request-form` namespace exists yet |
-| hero name/role/about | `hero-section.top.*`, `hero-section.aboutme.*` |
-| skills | `skills_categories` + nested `skills` (`icon` URL, `invert`) |
+| hero name/about | `hero-section.top.name`, `hero-section.aboutme.*` |
+| hero roles | `hero-section.top.roles.0…` when the list exists, else the singular `hero-section.top.role` (kept as the fallback, never migrated) |
+| hero portrait/animation | `hero_section.shape` (`pebble` default), `hero_section.typewriter` + `hero_section.typewriter_target` (`role1` \| `role2` \| `all`) |
+| skills | `skills_categories` (ordered by `position`) + nested `skills` (`icon` URL, `invert`, optional `link` URL rendered as an external tile anchor, `position` inside its category; `position` NULL sorts last with an id tiebreak) |
 | career | `career_entries` (`logo`, `website_url`, `location_*`, `remote`, `startDate`/`endDate`, `description_*`, `skills`) |
 | contacts | `contacts` rows (`label`, `link`, `icon`, `bg_color`) |
-| posts | `blog_posts` / `portfolio_posts` (`title_en` + `title_${locale}`, `description_*`, `body_*`, `image` + `blurhashURL`, `post_tags`, `views`, optional `source_link` / `demo_link` / `store_link` / `fdroid_link` / `website` / `ios_store_link`) |
+| posts | `blog_posts` / `portfolio_posts` (`title_en` + `title_${locale}`, `description_*`, `body_*`, `image` + `blurhashURL`, `post_tags`, `views`); project quick links come from `portfolio_posts.buttons` (see §6) |
+| post buttons | `portfolio_posts.buttons` — an ordered jsonb array of `{ kind, url, label? }` where `kind` is `website` \| `source` \| `demo` \| `store` \| `fdroid` \| `ios` \| `custom`. Array order IS render order. The label and icon of a preset belong to the site (`src/i18n/messages/postButtons.{en,it}.json` + the icon map in the page), so `label` is only read for `custom`. Null/empty `buttons` falls back to the legacy `source_link` / `demo_link` / `store_link` / `fdroid_link` / `website` / `ios_store_link` columns in that order |
+| post button copy | static per-locale messages, NOT `posts-section` translations — these are site invariants, so an editor cannot retitle "Source code" |
 | author | `user_profiles` via `author_id` (`display_name`, `avatar_url`) |
-| resume | `hero_section.resume_en` / `resume_it` |
+| resume | `hero_section.resume_en` / `resume_it`
+| header logos | `site_settings.header_logo_dark` / `header_logo_light` — absolute URLs; NULL falls back to the bundled `title-ws*.png` for that theme, independently per theme |
+| nav anchors | `site_settings.nav_anchors` — ordered `[{ id, anchor }]`, written index-aligned with `header.buttons.N`, read by `id`; a missing/blank `anchor` falls back to the item id | |
 
 **Custom formatting to honour**
 
@@ -381,21 +446,27 @@ are the known exceptions still open — listed with the quirks below.
 - Fixed: `sitemap.ts` slugged posts differently from the card link helper. Both
   now share `getPostHref` from `src/utils/postHref.ts`, and `next.config.ts`
   answers the legacy wrong-slug URLs with a permanent 308.
-- Open: shipped UI copy that breaks the rule above. `RequestForm.tsx` holds its
-  whole English `copy` object in-component (no IT variant, not in the CMS);
-  `NavMenu.tsx` hardcodes the Italian labels; `Curriculum` / `Resume`, the
-  drawer's `Toggle menu` aria-label and the post page's share-tooltip strings are
-  literals; the home, list and privacy page titles and descriptions are literals.
-  Each needs a CMS translation key.
+- Partly fixed: `RequestForm.tsx` no longer holds a hardcoded English `copy`
+  object — its copy (labels, options, step titles, consent sentence, success
+  and error messages) is static per-locale data in
+  `src/i18n/messages/requestForm.{en,it}.json`, read through
+  `src/i18n/requestForm.ts`, like the post-button labels. Like those, it is a
+  **site invariant** and deliberately NOT CMS-editable: an editor must not be
+  able to retitle a validation message. The option VALUES are storage, not
+  copy, and stay identical in both locales.
+- Open: shipped UI copy that breaks the rule above. `NavMenu.tsx` hardcodes the
+  Italian labels; `Curriculum` / `Resume`, the drawer's `Toggle menu` aria-label
+  and the post page's share-tooltip strings are literals; the home, list and
+  privacy page titles and descriptions are literals. Each needs a CMS
+  translation key.
 
 **Writing CMS copy:** read the current `translations` object, merge the change and patch
 it back. Patching from an older snapshot silently reverts whatever was added in between —
 that already cost the `request-form` namespace and the `Top` label once.
 
-**New copy that still needs i18n keys.** The request form and the drawer have landed,
-so these are now live English-only strings (see the defect list above): the form labels
-and options, `Project request` / `Send me a request` / `Send request`, and the consent
-sentence. `header.language` already exists and is wired in both navs.
+**New copy that still needs i18n keys.** The drawer's `Language` label is the
+remaining English-only string from that batch; `header.language` already exists
+and is wired in both navs.
 
 ---
 

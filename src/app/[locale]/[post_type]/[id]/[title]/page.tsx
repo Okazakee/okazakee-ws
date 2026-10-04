@@ -4,12 +4,12 @@ import {
   Clock,
   ExternalLink,
   Globe,
+  Link2,
   Smartphone,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
 import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
 import GitHubStars from '@/components/common/GitHubStars';
 import { JsonLd } from '@/components/common/JsonLd';
@@ -18,8 +18,15 @@ import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
+import { postButtonLabel } from '@/i18n/postButtons';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPostHref, slugifyTitle } from '@/utils/postHref';
+import {
+  type PostButtonKind,
+  postButtonEvents,
+  postButtonUrl,
+  resolvePostButtons,
+} from '@/utils/postButtons';
 import {
   buildBlogPostingNode,
   buildProjectNode,
@@ -54,8 +61,6 @@ export default async function Page({
 
   const post: PostWithAuthor | null = await getPost(id, post_type);
 
-  const t = await getTranslations({ locale, namespace: 'posts-section' });
-
   // checks
   if (!post) {
     notFound();
@@ -86,77 +91,36 @@ export default async function Page({
   const mobileLinkClass =
     'flex flex-1 items-center justify-center gap-2 rounded-lg border border-accent-violet/40 bg-accent-violet/10 px-3 py-3 font-mono text-xs text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20';
 
+  // `buttons` is a portfolio_posts-only column, so its presence is what
+  // discriminates a project row from a blog row (blog_posts has no buttons).
+  const buttons = 'buttons' in post ? resolvePostButtons(post) : [];
+  const sourceUrl = postButtonUrl(buttons, 'source');
+  const buttonIcons: Record<PostButtonKind, React.ReactNode> = {
+    website: <Globe size={14} />,
+    source: <GithubIcon size={14} />,
+    demo: <ExternalLink size={14} />,
+    store: <CirclePlay size={14} />,
+    fdroid: <Smartphone size={14} />,
+    ios: <AppleIcon size={14} />,
+    custom: <Link2 size={14} />,
+  };
+
   const metaLinks: {
     key: string;
     href: string;
     label: string | null;
     icon: React.ReactNode;
     event: string;
-  }[] = [];
-
-  if (post_type === 'portfolio' && 'website' in post && post.website) {
-    metaLinks.push({
-      key: 'website',
-      href: post.website,
-      label: null,
-      icon: <Globe size={14} />,
-      event: 'Website button',
-    });
-  }
-
-  if (post_type === 'portfolio' && 'source_link' in post && post.source_link) {
-    metaLinks.push({
-      key: 'source',
-      href: post.source_link,
-      label: t('source'),
-      icon: <GithubIcon size={14} />,
-      event: 'View Source Code button',
-    });
-  }
-
-  if (post_type === 'portfolio' && 'demo_link' in post && post.demo_link) {
-    metaLinks.push({
-      key: 'demo',
-      href: post.demo_link,
-      label: t('demo'),
-      icon: <ExternalLink size={14} />,
-      event: 'View Demo button',
-    });
-  }
-
-  if (post_type === 'portfolio' && 'store_link' in post && post.store_link) {
-    metaLinks.push({
-      key: 'store',
-      href: post.store_link,
-      label: t('store'),
-      icon: <CirclePlay size={14} />,
-      event: 'Play Store button',
-    });
-  }
-
-  if (post_type === 'portfolio' && 'fdroid_link' in post && post.fdroid_link) {
-    metaLinks.push({
-      key: 'fdroid',
-      href: post.fdroid_link,
-      label: t('fdroid'),
-      icon: <Smartphone size={14} />,
-      event: 'F-Droid button',
-    });
-  }
-
-  if (
-    post_type === 'portfolio' &&
-    'ios_store_link' in post &&
-    post.ios_store_link
-  ) {
-    metaLinks.push({
-      key: 'ios',
-      href: post.ios_store_link,
-      label: t('ios'),
-      icon: <AppleIcon size={14} />,
-      event: 'iOS Store button',
-    });
-  }
+  }[] = buttons.map((button, index) => ({
+    key: `${button.kind}-${index}`,
+    href: button.url,
+    label:
+      button.kind === 'custom'
+        ? (button.label ?? postButtonLabel('custom', locale))
+        : postButtonLabel(button.kind, locale),
+    icon: buttonIcons[button.kind],
+    event: postButtonEvents[button.kind],
+  }));
 
   const authorBlock = post.author ? (
     <>
@@ -175,9 +139,7 @@ export default async function Page({
           </span>
         )}
       </span>
-      <span className="text-sm text-text-main">
-        {post.author.display_name}
-      </span>
+      <span className="text-sm text-text-main">{post.author.display_name}</span>
     </>
   ) : null;
 
@@ -200,10 +162,10 @@ export default async function Page({
           name: post.title_en,
           description: String(post[postDescription]),
           links: {
-            website: 'website' in post ? post.website : null,
-            demo: 'demo_link' in post ? post.demo_link : null,
-            store: 'store_link' in post ? post.store_link : null,
-            source: 'source_link' in post ? post.source_link : null,
+            website: postButtonUrl(buttons, 'website'),
+            demo: postButtonUrl(buttons, 'demo'),
+            store: postButtonUrl(buttons, 'store'),
+            source: postButtonUrl(buttons, 'source'),
           },
         })),
   };
@@ -260,9 +222,7 @@ export default async function Page({
         )}
 
         {post_type !== 'portfolio' && authorBlock && (
-          <div className="hidden items-center gap-3 md:flex">
-            {authorBlock}
-          </div>
+          <div className="hidden items-center gap-3 md:flex">{authorBlock}</div>
         )}
 
         <span className="inline-flex items-center gap-2">
@@ -270,10 +230,7 @@ export default async function Page({
           <FormattedDate date={post?.created_at} />
         </span>
 
-        {post_type === 'portfolio' &&
-          post &&
-          'source_link' in post &&
-          post.source_link && <GitHubStars sourceLink={post.source_link} />}
+        {sourceUrl && <GitHubStars sourceLink={sourceUrl} />}
 
         <ViewDisplay
           initialViews={post.views ?? 0}
@@ -400,7 +357,8 @@ export async function generateMetadata({
     };
   }
 
-  const postDescription = `description_${normalizedLocale}` as keyof typeof post;
+  const postDescription =
+    `description_${normalizedLocale}` as keyof typeof post;
   const postTitle =
     post_type === 'blog'
       ? (`title_${normalizedLocale}` as keyof typeof post)

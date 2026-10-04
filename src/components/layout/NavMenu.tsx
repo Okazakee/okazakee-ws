@@ -6,37 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import {
+  createMenuItems,
+  navItemHref,
+  type NavMenuItem,
+} from '@/utils/navAnchors';
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
-
-type MenuItem = {
-  id: string;
-  /** In-page section id on the home page (`home`, `skills`, ...). */
-  section: string;
-  /** Route used when the section cannot be reached on the current page. */
-  route: string;
-  /** True when the item is its own page (portfolio/blog) off the home page. */
-  page: boolean;
-};
-
-const createMenuItems = (locale: string): MenuItem[] => [
-  { id: 'home', section: 'home', route: `/${locale}`, page: false },
-  { id: 'skills', section: 'skills', route: `/${locale}#skills`, page: false },
-  { id: 'career', section: 'career', route: `/${locale}#career`, page: false },
-  {
-    id: 'portfolio',
-    section: 'portfolio',
-    route: `/${locale}/portfolio`,
-    page: true,
-  },
-  { id: 'blog', section: 'blog', route: `/${locale}/blog`, page: true },
-  {
-    id: 'contacts',
-    section: 'contacts',
-    route: `/${locale}#contacts`,
-    page: false,
-  },
-];
 
 // Italian labels stay hardcoded here, as they were before the redesign
 const italianLabels = [
@@ -54,11 +30,19 @@ const italianLabels = [
  * in-page anchor and the active one follows the scroll position (the mock's
  * scroll-spy); on other pages the section items navigate back to their home
  * anchor while portfolio and blog highlight by route.
+ *
+ * The anchor each item points at is CMS-editable; the section id it scrolls
+ * to is not. The scroll-spy and the click handler keep reading `item.section`,
+ * so an edited anchor moves the href without breaking in-page navigation or
+ * the drawer.
  */
 export default function NavMenu({
+  anchors,
   locale,
   resumeLink,
 }: {
+  /** Per-item anchors from `site_settings`; computed defaults when absent. */
+  anchors: readonly string[];
   locale: string;
   resumeLink: string | null;
 }) {
@@ -73,8 +57,19 @@ export default function NavMenu({
   useEffect(() => {
     setMounted(true);
   }, []);
-  const menuItems = useMemo(() => createMenuItems(locale), [locale]);
+  const menuItems = useMemo(
+    () => createMenuItems(locale, anchors),
+    [locale, anchors]
+  );
   const t = useTranslations('header');
+  // `header.resume` is CMS-editable but absent from every row written before
+  // the key existed; next-intl throws on a missing key, so fall back to the
+  // string this component used to hardcode until an editor saves one.
+  const resumeLabel = t.has('resume')
+    ? t('resume')
+    : locale === 'it'
+      ? 'Curriculum'
+      : 'Resume';
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === '/' || pathname === `/${locale}`;
@@ -99,17 +94,13 @@ export default function NavMenu({
 
   // Home: every nav item is an anchor; other pages: only the section items
   // scroll back home, portfolio and blog navigate to their own page.
-  const isAnchor = (item: MenuItem) => !item.page || isHomePage;
+  const isAnchor = (item: NavMenuItem) => !item.page || isHomePage;
 
-  const getHref = (item: MenuItem) => {
-    if (item.page && !isHomePage) return item.route;
-    if (isHomePage) return `#${item.section}`;
-    return `/${locale}`;
-  };
+  const getHref = (item: NavMenuItem) => navItemHref(item, locale, isHomePage);
 
   const handleClick = (
     event: React.MouseEvent<HTMLAnchorElement>,
-    item: MenuItem
+    item: NavMenuItem
   ) => {
     if (!isAnchor(item)) return;
 
@@ -180,7 +171,7 @@ export default function NavMenu({
     }
   }, [pathname]);
 
-  const isActive = (item: MenuItem) => {
+  const isActive = (item: NavMenuItem) => {
     if (isHomePage) return activeSection === item.section;
     if (!item.page) return false;
     return pathname === item.route || pathname.startsWith(`${item.route}/`);
@@ -234,7 +225,7 @@ export default function NavMenu({
               target="_blank"
             >
               <FileUser className="h-[15px] w-[15px]" />
-              {locale === 'it' ? 'Curriculum' : 'Resume'}
+              {resumeLabel}
             </Link>
           )}
         </div>
@@ -316,7 +307,7 @@ export default function NavMenu({
                     target="_blank"
                   >
                     <FileUser className="h-4 w-4 shrink-0" />
-                    {locale === 'it' ? 'Curriculum' : 'Resume'}
+                    {resumeLabel}
                     <ExternalLink className="ml-auto h-4 w-4 text-text-dim" />
                   </Link>
                 )}

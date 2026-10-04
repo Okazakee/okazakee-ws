@@ -9,7 +9,9 @@ export default function GitHubStars({ sourceLink }: { sourceLink: string }) {
   useEffect(() => {
     // Only owner/repo links resolve to a repository: some posts store an
     // organisation or profile URL, which would 404 and render a bogus 0.
-    const path = sourceLink.replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, '');
+    const path = sourceLink
+      .replace(/^https?:\/\/github\.com\//, '')
+      .replace(/\/+$/, '');
     const [owner, repoName] = path.split('/');
     if (!owner || !repoName) return;
 

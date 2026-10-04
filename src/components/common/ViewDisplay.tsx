@@ -90,9 +90,7 @@ export default function ViewDisplay({
   return (
     <div className="inline-flex items-center gap-2">
       <Eye size={14} />
-      <span className="inline-block shrink-0 tabular-nums">
-        {displayViews}
-      </span>
+      <span className="inline-block shrink-0 tabular-nums">{displayViews}</span>
     </div>
   );
 }

@@ -24,7 +24,9 @@ export default function ScrollTop() {
 
     // Adjust button offset when near the bottom
     if (scrollY + viewportHeight >= totalHeight - 200) {
-      setButtonOffset(Math.max(16, 100 - (totalHeight - (scrollY + viewportHeight))));
+      setButtonOffset(
+        Math.max(16, 100 - (totalHeight - (scrollY + viewportHeight)))
+      );
     } else {
       setButtonOffset(16); // Reset to default offset
     }

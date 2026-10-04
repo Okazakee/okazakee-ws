@@ -9,13 +9,15 @@ import type {
   HeroSection,
   PortfolioPost,
   ResumeData,
+  SiteSettings,
   SkillsCategory,
 } from '@/types/fetchedData.types';
 
 // Initialize Supabase client
 const supabase = createClient(
   publicConfig.supabaseUrl,
-  publicConfig.supabasePublishableKey
+  publicConfig.supabasePublishableKey,
+  { db: { schema: publicConfig.supabaseSchema } }
 );
 
 const isDevEnv = process.env.NODE_ENV === 'development';
@@ -87,7 +89,7 @@ export async function getHeroSection(): Promise<HeroSection | null> {
 
   const { data, error } = await supabase
     .from('hero_section')
-    .select('id, propic, blurhashURL')
+    .select('id, propic, blurhashURL, shape, typewriter, typewriter_target')
     .single();
 
   if (error?.code === 'PGRST116') {
@@ -119,7 +121,9 @@ export async function getSkillsCategories(): Promise<SkillsCategory[] | null> {
         icon,
         invert,
         category_id,
-        blurhashURL
+        blurhashURL,
+        link,
+        position
       )
     `)
     .order('position', { ascending: true });
@@ -340,6 +344,32 @@ export async function getResumeLink(
   }
 
   return data;
+}
+
+/**
+ * The single `site_settings` row: header logos and the ordered nav anchors.
+ * Returns null when the row has never been written — the header then renders
+ * exactly the bundled assets and computed hrefs it rendered before the CMS
+ * could edit them.
+ */
+export async function getSiteSettings(): Promise<SiteSettings | null> {
+  'use cache';
+  cacheTag(cacheTags.siteSettings);
+  applySupabaseCacheLife();
+
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('header_logo_dark, header_logo_light, nav_anchors')
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching site settings:', error);
+    throw error;
+  }
+
+  return data as SiteSettings | null;
 }
 
 export async function getCareerEntries(): Promise<CareerEntry[] | null> {

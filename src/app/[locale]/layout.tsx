@@ -11,7 +11,11 @@ import Header from '@/components/layout/Header';
 import ScrollTop from '@/components/layout/ScrollTop';
 import { isValidLocale, locales } from '@/i18n/routing';
 import type { ResumeData } from '@/types/fetchedData.types';
-import { getResumeLink, getTranslationsSupabase } from '@/utils/getData';
+import {
+  getResumeLink,
+  getSiteSettings,
+  getTranslationsSupabase,
+} from '@/utils/getData';
 import { Providers } from '../providers';
 
 const umamiEnabled = process.env.UMAMI_ENABLED === 'true';
@@ -41,10 +45,22 @@ async function LocaleShell({
     ? resumeData[`resume_${locale}` as keyof ResumeData]
     : null;
 
+  // Null while the CMS has never written the row: the header then renders
+  // the bundled logos and the computed nav hrefs it always rendered.
+  const settings = await getSiteSettings();
+
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <Header locale={locale} resumeLink={resumeLink} />
-      <div className="flex min-w-0 flex-1 flex-col [&>*]:min-w-0 [&>*]:w-full">{children}</div>
+      <Header
+        locale={locale}
+        resumeLink={resumeLink}
+        logoDark={settings?.header_logo_dark ?? null}
+        logoLight={settings?.header_logo_light ?? null}
+        navAnchors={settings?.nav_anchors ?? null}
+      />
+      <div className="flex min-w-0 flex-1 flex-col [&>*]:min-w-0 [&>*]:w-full">
+        {children}
+      </div>
       <ScrollTop />
       <Footer locale={locale} />
     </NextIntlClientProvider>

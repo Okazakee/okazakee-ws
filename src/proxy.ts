@@ -229,15 +229,10 @@ export default async function proxy(request: NextRequest) {
           const url = request.nextUrl.clone();
           url.protocol = target.protocol;
           url.host = target.host;
-          url.pathname = validatePathname(
-            stripLegacyCmsSegment(pathname)
-          );
+          url.pathname = validatePathname(stripLegacyCmsSegment(pathname));
           return NextResponse.redirect(url, 307);
         } catch {
-          console.error(
-            'Invalid LEGACY_CMS_REDIRECT_HOST:',
-            legacyCmsHost
-          );
+          console.error('Invalid LEGACY_CMS_REDIRECT_HOST:', legacyCmsHost);
         }
       }
     }

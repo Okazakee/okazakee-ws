@@ -62,6 +62,13 @@
   overflow: visible;
 }
 
+@utility clip-squircle {
+  clip-path: url(#squircle-clip);
+  -webkit-clip-path: url(#squircle-clip);
+  position: relative;
+  overflow: visible;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

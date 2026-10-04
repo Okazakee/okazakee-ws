@@ -3,7 +3,11 @@ import type { LucideProps } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import React from 'react';
-import { AppleIcon, GithubIcon, LinkedinIcon } from '@/components/common/BrandIcons';
+import {
+  AppleIcon,
+  GithubIcon,
+  LinkedinIcon,
+} from '@/components/common/BrandIcons';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { SectionNumber } from '@components/common/SectionNumber';
 import { formatLabels } from '@/utils/formatLabels';
@@ -11,7 +15,9 @@ import { getContacts } from '@/utils/getData';
 import { RequestForm } from './RequestForm';
 
 export default async function Contacts({ locale }: { locale: string }) {
-  const contacts = (await getContacts())?.sort((a, b) => a.position - b.position);
+  const contacts = (await getContacts())?.sort(
+    (a, b) => a.position - b.position
+  );
 
   if (!contacts) return <ErrorDiv>Error loading Contacts data</ErrorDiv>;
 
@@ -37,7 +43,10 @@ export default async function Contacts({ locale }: { locale: string }) {
   };
 
   return (
-    <section className="mx-auto max-w-4xl px-6 py-24 text-center lg:mb-32" id="contacts">
+    <section
+      className="mx-auto max-w-4xl px-6 py-24 text-center lg:mb-32"
+      id="contacts"
+    >
       <div className="mb-14 text-center">
         <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-baseline">
           <SectionNumber className="justify-self-end pr-2.5" index={6} />
