@@ -122,6 +122,23 @@ bun run dev
 | `NEXT_PUBLIC_LOCALES` | Comma-separated locales (default `en,it`) |
 | `NEXT_PUBLIC_DEFAULT_LOCALE` | Default locale (default `en`) |
 
+**`NEXT_PUBLIC_SUPABASE_DB_SCHEMA` must be set for local work.** `public` holds
+production content; local development reads `dev_staging`, a cloned schema in the
+same Supabase project. The variable defaults to `public` when unset, and that
+fallback is not survivable here: `site_settings` and `project_requests` exist
+only in `dev_staging`, so a build against `public` dies on
+`PGRST205 — Could not find the table 'public.site_settings'` while prerendering
+every post page.
+
+```bash
+# .env.local
+NEXT_PUBLIC_SUPABASE_DB_SCHEMA=dev_staging
+```
+
+Storage is the exception: buckets are project-level, so uploads still hit the
+live bucket. Set `SUPABASE_BUCKET` to a development bucket when you need them to
+land somewhere else.
+
 ### Scripts
 
 ```bash

@@ -454,19 +454,28 @@ are the known exceptions still open — listed with the quirks below.
   **site invariant** and deliberately NOT CMS-editable: an editor must not be
   able to retitle a validation message. The option VALUES are storage, not
   copy, and stay identical in both locales.
-- Open: shipped UI copy that breaks the rule above. `NavMenu.tsx` hardcodes the
-  Italian labels; `Curriculum` / `Resume`, the drawer's `Toggle menu` aria-label
-  and the post page's share-tooltip strings are literals; the home, list and
-  privacy page titles and descriptions are literals. Each needs a CMS
-  translation key.
+- Frozen: `errors`, `header`, `footer` and the `posts-section` chrome (post
+  link labels, empty states, search placeholder, copy-to-clipboard feedback) are
+  no longer CMS-editable. They are **site invariants**: an editor retitling
+  "Page not found" or reordering the nav breaks the product, not the words.
+  They live in `src/i18n/messages/site.{en,it}.json` and are merged over the
+  database by `src/i18n/siteCopy.ts`, one namespace deep, **local winning** —
+  so a stale row can never shadow a frozen key. Same rule and same shape as
+  `requestForm` and `postButtons`.
+- `header.buttons` is index-aligned with `navAnchors` and must hold one order in
+  both locales. The stored Italian array had Career and Portfolio transposed,
+  which is what the hardcoded `italianLabels` array in `NavMenu` existed to
+  paper over. Both the array and the transcription are gone; the pair is now
+  only ever edited together, in one file.
+- Still open: the drawer's `Toggle menu` aria-label and the post page's
+  share-tooltip strings are literals.
 
 **Writing CMS copy:** read the current `translations` object, merge the change and patch
 it back. Patching from an older snapshot silently reverts whatever was added in between —
 that already cost the `request-form` namespace and the `Top` label once.
 
-**New copy that still needs i18n keys.** The drawer's `Language` label is the
-remaining English-only string from that batch; `header.language` already exists
-and is wired in both navs.
+**New copy that still needs i18n keys.** `header.language` is frozen in the site
+copy and wired in both navs; nothing is English-only in the drawer any more.
 
 ---
 

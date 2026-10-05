@@ -14,16 +14,6 @@ import {
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
 
-// Italian labels stay hardcoded here, as they were before the redesign
-const italianLabels = [
-  'Home',
-  'Skills',
-  'Carriera',
-  'Portfolio',
-  'Blog',
-  'Contatti',
-];
-
 /**
  * Navigation (docs/DESIGN.md §4): centred desktop nav from `lg` up, plus the
  * header controls and the mobile drawer. On the home page every item is an
@@ -62,14 +52,7 @@ export default function NavMenu({
     [locale, anchors]
   );
   const t = useTranslations('header');
-  // `header.resume` is CMS-editable but absent from every row written before
-  // the key existed; next-intl throws on a missing key, so fall back to the
-  // string this component used to hardcode until an editor saves one.
-  const resumeLabel = t.has('resume')
-    ? t('resume')
-    : locale === 'it'
-      ? 'Curriculum'
-      : 'Resume';
+  const resumeLabel = t('resume');
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === '/' || pathname === `/${locale}`;
@@ -122,8 +105,7 @@ export default function NavMenu({
     router.push(`/${locale}`);
   };
 
-  const label = (index: number) =>
-    locale === 'it' ? italianLabels[index] : t(`buttons.${index}`);
+  const label = (index: number) => t(`buttons.${index}`);
 
   // Scroll-spy over every home section, exactly like the mock: the last
   // section whose top passed the header threshold wins.

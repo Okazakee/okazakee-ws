@@ -1,0 +1,58 @@
+{
+  "errors": {
+    "code": "404",
+    "home": "Home",
+    "retry": "Riprova",
+    "goBack": "Indietro",
+    "errorText": "Si è verificato un errore inatteso. Riprova.",
+    "errorLabel": "Errore di runtime",
+    "errorTitle": "Qualcosa è andato storto",
+    "notFoundText": "La pagina che stai cercando non esiste.",
+    "notFoundLabel": "404 non trovata",
+    "notFoundTitle": "Pagina non trovata",
+    "postErrorText": "Qualcosa è andato storto durante il caricamento di questo post.",
+    "postErrorTitle": "Ops!",
+    "postNotFoundText": "Il post che stai cercando non esiste."
+  },
+  "header": {
+    "buttons": [
+      "Home",
+      "Skills",
+      "Carriera",
+      "Portfolio",
+      "Blog",
+      "Contatti",
+      "Curriculum"
+    ],
+    "language": "Lingua",
+    "resume": "Curriculum",
+    "theme": "Tema"
+  },
+  "footer": {
+    "left": "Creato con ❤️ da",
+    "right": "Torna su",
+    "middle": "P.IVA",
+    "source": "Codice Sorgente",
+    "darkmode": "Tema Scuro",
+    "lightmode": "Tema Chiaro",
+    "buttonTitle": "Clicca per copiare la P.IVA",
+    "privacyPolicy": "Informativa sulla Privacy"
+  },
+  "posts-section": {
+    "website": "Sito web",
+    "source": "Codice Sorgente",
+    "ios": "iOS",
+    "store": "Play Store",
+    "fdroid": "FDroid",
+    "demo": "Live Demo",
+    "button": "Scopri di più",
+    "copyButton": "Copia link del post",
+    "preCopy": "Copiato!",
+    "no-posts": "Non ci sono post disponibili!",
+    "ratelimit": "Troppe richieste! Attendere e riprovare.",
+    "searchbar": "Cerca post dal titolo, desc o tag..."
+  },
+  "privacyPolicy": {
+    "title": "Informativa sulla Privacy"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "errors": {
+    "code": "404",
+    "home": "Home",
+    "retry": "Try Again",
+    "goBack": "Go Back",
+    "errorText": "An unexpected error occurred. Please try again.",
+    "errorLabel": "Runtime error",
+    "errorTitle": "Something went wrong",
+    "notFoundText": "The page you're looking for doesn't exist.",
+    "notFoundLabel": "404 not found",
+    "notFoundTitle": "Page not found",
+    "postErrorText": "Something went wrong while loading this post.",
+    "postErrorTitle": "Oops!",
+    "postNotFoundText": "The post you're looking for doesn't exist."
+  },
+  "header": {
+    "buttons": [
+      "Home",
+      "Skills",
+      "Career",
+      "Portfolio",
+      "Blog",
+      "Contacts",
+      "Resume"
+    ],
+    "language": "Language",
+    "resume": "Resume",
+    "theme": "Theme"
+  },
+  "footer": {
+    "left": "Made with ❤️ by",
+    "right": "Top",
+    "middle": "VAT IT",
+    "source": "Source Code",
+    "darkmode": "Dark Mode",
+    "lightmode": "Light Mode",
+    "buttonTitle": "Click to copy VAT number",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "posts-section": {
+    "website": "Website",
+    "source": "Source Code",
+    "ios": "iOS",
+    "store": "Play Store",
+    "fdroid": "FDroid",
+    "demo": "Live Demo",
+    "button": "Explore more",
+    "copyButton": "Copy post link",
+    "preCopy": "Copied!",
+    "no-posts": "There are no posts available!",
+    "ratelimit": "Too many requests! Please wait and retry.",
+    "searchbar": "Search posts by title, desc or tag..."
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy"
+  }
+}

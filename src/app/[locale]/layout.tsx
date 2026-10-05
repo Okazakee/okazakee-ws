@@ -11,11 +11,7 @@ import Header from '@/components/layout/Header';
 import ScrollTop from '@/components/layout/ScrollTop';
 import { isValidLocale, locales } from '@/i18n/routing';
 import type { ResumeData } from '@/types/fetchedData.types';
-import {
-  getResumeLink,
-  getSiteSettings,
-  getTranslationsSupabase,
-} from '@/utils/getData';
+import { getResumeLink, getSiteSettings } from '@/utils/getData';
 import { Providers } from '../providers';
 
 const umamiEnabled = process.env.UMAMI_ENABLED === 'true';
@@ -38,7 +34,6 @@ async function LocaleShell({
   children: React.ReactNode;
 }) {
   const { locale } = await params;
-  const messages = await getTranslationsSupabase(locale);
 
   const resumeData = (await getResumeLink()) as ResumeData;
   const resumeLink = resumeData
@@ -50,7 +45,7 @@ async function LocaleShell({
   const settings = await getSiteSettings();
 
   return (
-    <NextIntlClientProvider messages={messages} locale={locale}>
+    <NextIntlClientProvider locale={locale}>
       <Header
         locale={locale}
         resumeLink={resumeLink}
