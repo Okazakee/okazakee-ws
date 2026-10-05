@@ -77,7 +77,43 @@ okazakee-cms ───────▶ Supabase ◀──────── okaza
   tag allowlist) and calls `revalidateTag(tag, 'max')`.
 - **i18n:** translations are stored in the Supabase `i18n_translations` table
   and served through `getTranslationsSupabase` (server) or `next-intl`
-  clients (browser). Edited from the CMS, rendered here.
+  clients (browser). Edited from the CMS, rendered here — except the header and
+  footer chrome, which is frozen locally and wins over the database (see
+  [Site Chrome & Footer Identity](#site-chrome--footer-identity)).
+
+## Site Chrome & Footer Identity
+
+Everything structural about the header and footer is **frozen in this
+repository**, not stored in `i18n_translations`:
+
+- `src/i18n/messages/site.{en,it}.json` hold the `header` and `footer`
+  namespaces: nav labels, theme and language controls, credit, source,
+  back-to-top and privacy-policy labels.
+- `src/i18n/siteCopy.ts` (`withSiteCopy`, wired in `src/i18n/request.ts`) merges
+  them **over** the database messages, one namespace deep, so a stale
+  `i18n_translations` row can never override them. `posts-section` and
+  `privacyPolicy` stay mergeable only because the CMS still edits a few keys in
+  them.
+
+The CMS **Layout** section owns what is left of the chrome:
+
+| Owned here | Source | Notes |
+| --- | --- | --- |
+| Dark/light header logos, navigation anchors | `site_settings` | Single row; unchanged |
+| Résumé PDFs (EN/IT) | `hero_section.resume_en` / `resume_it` | Moved out of Contacts in the CMS; persistence unchanged |
+| Footer display name, VAT number | `site_settings.footer_name` / `footer_vat_number` | Nullable `TEXT`; `NULL` renders the defaults below |
+
+Both footer fields are optional, and a blank input is stored as `NULL` — which
+keeps the values this repository renders today: the name `Okazakee` and the VAT
+number `02863310815`. The displayed VAT and the value written to the clipboard
+are the same string, so the Italian leading zero survives; the value is never
+parsed, and the footer's own links stay fixed.
+
+`site_settings` exists only in `dev_staging`, so the footer identity does too.
+`okazakee-cms/supabase/migrations/20261005145655_add_site_settings_footer_identity.sql`
+is explicitly `dev_staging.`-qualified and only adds nullable columns with no
+backfill, so it is a no-op for the rendered footer and **`public` stays
+unchanged** until that file is deliberately promoted.
 
 ## Getting Started
 
@@ -139,6 +175,11 @@ Storage is the exception: buckets are project-level, so uploads still hit the
 live bucket. Set `SUPABASE_BUCKET` to a development bucket when you need them to
 land somewhere else.
 
+The CMS Layout editors (logos, anchors, résumé PDFs, footer identity) therefore
+only exist in `dev_staging` as well — a `public` build renders the frozen
+defaults described in
+[Site Chrome & Footer Identity](#site-chrome--footer-identity).
+
 ### Scripts
 
 ```bash
@@ -149,7 +190,6 @@ bun run lint      # Biome lint
 bun run lint-fix  # Biome lint + autofix
 bun run format    # Biome format
 bun run test      # Vitest test suite
-bun run postinstall  # Re-apply the Next + TypeScript 7 patch (runs on install)
 ```
 
 ## Deployment

@@ -57,7 +57,11 @@ async function LocaleShell({
         {children}
       </div>
       <ScrollTop />
-      <Footer locale={locale} />
+      <Footer
+        locale={locale}
+        name={settings?.footer_name ?? null}
+        vatNumber={settings?.footer_vat_number ?? null}
+      />
     </NextIntlClientProvider>
   );
 }

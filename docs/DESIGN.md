@@ -226,7 +226,10 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   `header_logo_light`, and they resolve **per theme**: a row with only one
   variant renders the stored logo for that theme and the bundled asset for the
   other. With neither stored (or no row at all) the markup is byte-identical to
-  the bundled-assets version.
+  the bundled-assets version. Every editable value in this section is owned by one
+  CMS section — **Layout** — which also holds the résumé PDFs and the footer
+  identity; the wording around them is frozen here (§8), so that editor has no
+  translation surface at all.
 - Nav anchors: the six destinations and the sections' `id=` attributes are
   site-side and not editable. What an editor owns is the *anchor* each link
   points at (`site_settings.nav_anchors`, an ordered `[{ id, anchor }]` array,
@@ -295,7 +298,10 @@ horizontal scroll under `prefers-reduced-motion`).
 
 ### 5.4 Contacts and the project request form
 - Contacts are the four real rows (Email, LinkedIn, GitHub, Telegram) with the DB
-  `bg_color` as the tile accent, plus the resume action from `hero_section.resume_en`.
+  `bg_color` as the tile accent. The résumé is **not** a contact action: the header
+  renders it (desktop row and the mobile drawer's pinned block) from
+  `hero_section.resume_${locale}`, and the CMS edits both PDFs from its single
+  Layout section.
 - The request form is **built and live**: a three-step wizard (contact →
   project → details) carrying Name, Email, Company, existing website/repo,
   Project type, Budget range, Desired timeline, "What are you building?", a
@@ -328,9 +334,19 @@ affordance carrying `footer.buttonTitle`, then CMS and Privacy Policy links — 
 separated by `//`, the links underlined and hovering to `text-text-muted` (mock at
 `code.html`).
 
+Only the **two identity values** behind that chrome are data
+(`site_settings.footer_name` / `site_settings.footer_vat_number` — §8). The wording,
+the `//` separators and the links themselves stay frozen site copy: a stored name is
+still linked to the same GitHub profile, and the GitHub, repo, CMS and privacy hrefs
+are site-owned. Each value is nullable and a null *or blank* one renders the literal
+this repo shipped with (`Okazakee`, `02863310815`), so an unconfigured row is
+byte-identical to the footer before the CMS existed. The VAT is resolved once and
+used twice — printed and copied — so a stored value keeps its leading zero; it is
+displayed verbatim and never parsed.
+
 ### 5.6 Back to top
 Fixed bottom-right, inverted fill (`bg-text-main` on `text-surface-base`), `rounded-xl`,
-mono label read from `footer.right` (the `Top` string in the CMS), fades in on scroll and
+mono label read from `footer.right` (the frozen `Top` string, §8), fades in on scroll and
 lifts near the page end.
 
 ### 5.7 Code blocks and prose
@@ -403,7 +419,7 @@ are the known exceptions still open — listed with the quirks below.
 
 | UI | source |
 |---|---|
-| all copy | `i18n_translations.translations` (namespaces: `header`, `hero-section`, `skills-section`, `career-section`, `contacts-section`, `posts-section`, `footer`, `privacyPolicy`, `errors`) — the privacy body is the `privacy_policy` **column**, not a namespace, and no `request-form` namespace exists yet |
+| all copy | `i18n_translations.translations` (editable namespaces: `hero-section`, `skills-section`, `career-section`, `contacts-section`, `posts-section`, `privacyPolicy`; the privacy body is the `privacy_policy` **column**, not a namespace, and no `request-form` namespace exists yet). `header`, `footer`, `errors` and the `posts-section` chrome are no longer read from here at all — they are frozen site files merged over this object, local winning (§8 quirk list) |
 | hero name/about | `hero-section.top.name`, `hero-section.aboutme.*` |
 | hero roles | `hero-section.top.roles.0…` when the list exists, else the singular `hero-section.top.role` (kept as the fallback, never migrated) |
 | hero portrait/animation | `hero_section.shape` (`pebble` default), `hero_section.typewriter` + `hero_section.typewriter_target` (`role1` \| `role2` \| `all`) |
@@ -414,9 +430,10 @@ are the known exceptions still open — listed with the quirks below.
 | post buttons | `portfolio_posts.buttons` — an ordered jsonb array of `{ kind, url, label? }` where `kind` is `website` \| `source` \| `demo` \| `store` \| `fdroid` \| `ios` \| `custom`. Array order IS render order. The label and icon of a preset belong to the site (`src/i18n/messages/postButtons.{en,it}.json` + the icon map in the page), so `label` is only read for `custom`. Null/empty `buttons` falls back to the legacy `source_link` / `demo_link` / `store_link` / `fdroid_link` / `website` / `ios_store_link` columns in that order |
 | post button copy | static per-locale messages, NOT `posts-section` translations — these are site invariants, so an editor cannot retitle "Source code" |
 | author | `user_profiles` via `author_id` (`display_name`, `avatar_url`) |
-| resume | `hero_section.resume_en` / `resume_it`
+| resume | `hero_section.resume_en` / `resume_it` — the columns are unchanged, but the CMS edits them from the Layout section: the résumé left Contacts, which now owns contact rows and its translations only |
 | header logos | `site_settings.header_logo_dark` / `header_logo_light` — absolute URLs; NULL falls back to the bundled `title-ws*.png` for that theme, independently per theme |
 | nav anchors | `site_settings.nav_anchors` — ordered `[{ id, anchor }]`, written index-aligned with `header.buttons.N`, read by `id`; a missing/blank `anchor` falls back to the item id | |
+| footer identity | `site_settings.footer_name` / `footer_vat_number` — nullable `TEXT`: the leading zero of an Italian VAT number is part of the identifier, so it is never numeric, and the value is printed and copied verbatim, never parsed. Null or blank renders this repo's literals (`Okazakee`, `02863310815`) |
 
 **Custom formatting to honour**
 
@@ -462,6 +479,15 @@ are the known exceptions still open — listed with the quirks below.
   database by `src/i18n/siteCopy.ts`, one namespace deep, **local winning** —
   so a stale row can never shadow a frozen key. Same rule and same shape as
   `requestForm` and `postButtons`.
+- Staging-only: `site_settings` and the two footer identity columns live in
+  `dev_staging`, so a `public` build keeps rendering the footer's shipped
+  defaults. `getSiteSettings` therefore selects `*` rather than naming the
+  footer columns — a database that never ran
+  `20261005145655_add_site_settings_footer_identity.sql` (dev_staging-qualified,
+  nullable columns, no backfill) must keep serving the header — and it
+  normalises blank to null so the footer falls back instead of rendering a gap.
+  `public` is untouched until that file is deliberately promoted; nothing here
+  asserts it has been.
 - `header.buttons` is index-aligned with `navAnchors` and must hold one order in
   both locales. The stored Italian array had Career and Portfolio transposed,
   which is what the hardcoded `italianLabels` array in `NavMenu` existed to

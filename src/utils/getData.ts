@@ -347,19 +347,22 @@ export async function getResumeLink(
 }
 
 /**
- * The single `site_settings` row: header logos and the ordered nav anchors.
- * Returns null when the row has never been written — the header then renders
- * exactly the bundled assets and computed hrefs it rendered before the CMS
- * could edit them.
+ * The single `site_settings` row: header logos, the ordered nav anchors and
+ * the footer identity. Returns null when the row has never been written — the
+ * header then renders exactly the bundled assets and computed hrefs it
+ * rendered before the CMS could edit them, and the footer its defaults.
  */
 export async function getSiteSettings(): Promise<SiteSettings | null> {
   'use cache';
   cacheTag(cacheTags.siteSettings);
   applySupabaseCacheLife();
 
+  // `*` rather than a column list: the footer identity columns only exist on
+  // databases that ran the Layout migration, and naming them here would make
+  // every read on the others fail with a missing-column error.
   const { data, error } = await supabase
     .from('site_settings')
-    .select('header_logo_dark, header_logo_light, nav_anchors')
+    .select('*')
     .order('id', { ascending: true })
     .limit(1)
     .maybeSingle();
@@ -369,7 +372,19 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
     throw error;
   }
 
-  return data as SiteSettings | null;
+  if (!data) {
+    return null;
+  }
+
+  const row = data as SiteSettings;
+
+  // Absent (pre-migration row) and blank both read as "unconfigured", so the
+  // footer falls back to the values it shipped with instead of a gap.
+  return {
+    ...row,
+    footer_name: row.footer_name?.trim() || null,
+    footer_vat_number: row.footer_vat_number?.trim() || null,
+  };
 }
 
 export async function getCareerEntries(): Promise<CareerEntry[] | null> {

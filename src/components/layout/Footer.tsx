@@ -2,7 +2,22 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import CopyLinkButton from '../common/CopyButton';
 
-export default async function Footer({ locale }: { locale: string }) {
+// Identity the footer showed before the CMS could edit it; a null/blank stored
+// value keeps these (module-level constants are camelCase per AGENTS.md §7).
+const defaultName = 'Okazakee';
+const defaultVatNumber = '02863310815';
+
+export default async function Footer({
+  locale,
+  name,
+  vatNumber,
+}: {
+  locale: string;
+  /** Stored `site_settings.footer_name`; null keeps the default. */
+  name?: string | null;
+  /** Stored `site_settings.footer_vat_number`; null keeps the default. */
+  vatNumber?: string | null;
+}) {
   const t = await getTranslations({ locale, namespace: 'footer' });
   const tPosts = await getTranslations({ locale, namespace: 'posts-section' });
 
@@ -13,6 +28,11 @@ export default async function Footer({ locale }: { locale: string }) {
   const linkClass = 'transition-colors hover:text-accent-violet-light';
 
   const separator = '//';
+
+  // Resolved once and used twice: the label and the clipboard value stay the
+  // same string, so a stored VAT keeps its zeroes instead of diverging.
+  const displayName = name?.trim() || defaultName;
+  const vat = vatNumber?.trim() || defaultVatNumber;
 
   return (
     <footer className="border-t border-border-subtle bg-surface-alt py-8 font-mono text-xs text-text-dim sm:py-0">
@@ -27,7 +47,7 @@ export default async function Footer({ locale }: { locale: string }) {
             rel="noopener noreferrer"
             target="_blank"
           >
-            Okazakee
+            {displayName}
           </Link>{' '}
           <span>{separator}</span>{' '}
           <Link
@@ -45,9 +65,9 @@ export default async function Footer({ locale }: { locale: string }) {
             buttonTitle={t('buttonTitle')}
             className="transition-colors hover:text-text-muted"
             copiedLabel={tPosts('preCopy')}
-            copyValue="02863310815"
+            copyValue={vat}
           >
-            {t('middle')} - 02863310815
+            {t('middle')} - {vat}
           </CopyLinkButton>
           <span>{separator}</span>
           <Link

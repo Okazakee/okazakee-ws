@@ -15,9 +15,10 @@ export type HeroShape = 'pebble' | 'square' | 'rounded' | 'squircle';
 export type TypewriterTarget = 'role1' | 'role2' | 'all';
 
 /**
- * The single `site_settings` row: header chrome the CMS owns. Every field is
- * nullable — a null logo means "keep the bundled asset", and a null anchor
- * array means every nav link keeps the href it has always rendered.
+ * The single `site_settings` row: the header chrome and footer identity the
+ * CMS owns. Every field is nullable — a null logo means "keep the bundled
+ * asset", a null anchor array means every nav link keeps the href it has
+ * always rendered, and null footer identity keeps the shipped default.
  */
 export type SiteSettings = {
   /** Logo shown in dark theme; null falls back to the bundled asset. */
@@ -26,6 +27,10 @@ export type SiteSettings = {
   header_logo_light: string | null;
   /** Ordered `[{ id, anchor }]`, index-aligned with the six nav items. */
   nav_anchors: unknown;
+  /** Footer display name; null keeps the bundled default. */
+  footer_name: string | null;
+  /** Footer VAT number (TEXT, zeroes matter); null keeps the default. */
+  footer_vat_number: string | null;
 };
 
 export type SkillsCategory = {
