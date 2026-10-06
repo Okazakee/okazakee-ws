@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { claimHeroEntrance } from './heroEntrance';
 import { createMatrixCanvasRenderer } from './matrixCanvasRenderer';
 
 const CELL = 14;
@@ -39,7 +40,6 @@ const invisibleLum = (Number.EPSILON * (0.14 * FOCUS_OPACITY)) / 8;
 const pingTailDistance =
   Math.sqrt(-2 * 24 * 24 * Math.log(invisibleLum / 2.2)) + 1;
 const entranceTailTime = -140 * Math.log(invisibleLum / 0.3) + 140;
-
 const BAYER = [
   0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36,
   14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54, 22, 3, 35, 11, 43, 1, 33, 9, 41,
@@ -137,7 +137,11 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
     let rows = 0;
     let entranceRow = 0;
     let matCols: RainColumn[] = [];
-    const entranceT0 = performance.now();
+    // One-shot per tab session: the first mount plays the center-out
+    // reveal, every later mount (locale switches, back/forward) starts
+    // with the field revealed. Shared with RoleTypewriter so same-commit
+    // mounts agree on who plays.
+    const entranceT0 = claimHeroEntrance() ? performance.now() : -1e12;
     const pointer = { x: -1e4, y: -1e4 };
     let strength = 0;
     let target = 0;

@@ -2,7 +2,7 @@
 
 import { ArrowUpToLine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 export default function ScrollTop() {
   const [showLink, setShowLink] = useState(false);
@@ -32,10 +32,21 @@ export default function ScrollTop() {
     }
   }, []);
 
+  // A locale switch remounts this subtree with fresh state, so derive the
+  // initial state from the live scroll position instead of waiting for the
+  // next scroll event: the layout pass covers a position the browser kept
+  // across the switch, and the effect below re-runs after
+  // LocaleScrollRestore (rendered earlier, same commit) has restored its
+  // captured position.
+  useLayoutEffect(() => {
+    handleScroll();
+  }, [handleScroll]);
+
   useEffect(() => {
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [handleScroll]);
 
   return (
     showLink && (

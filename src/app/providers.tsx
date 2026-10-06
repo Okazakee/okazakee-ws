@@ -1,7 +1,7 @@
 'use client';
 
 import { useServerInsertedHTML } from 'next/navigation';
-import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { type ReactNode, useLayoutEffect, useRef } from 'react';
 import useThemeStore from '@/store/themeStore';
 
 export function Providers({
@@ -14,33 +14,43 @@ export function Providers({
   const initializeTheme = useThemeStore((state) => state.initializeTheme);
   const themeInserted = useRef(false);
 
-  // Insert only into the server-rendered head before paint, once across
-  // stream flushes; ordinary client renders never return this script.
+  // SSR-only injection: runs during the server render, never re-renders on
+  // client navigation, so React never sees a client-rendered <script>.
+  // First paint on document loads; SPA locale switches keep <html> as-is
+  // and the layout effect below re-applies the saved theme.
   useServerInsertedHTML(() => {
     if (themeInserted.current) return null;
     themeInserted.current = true;
 
     return (
       <script
-        id="theme-init"
         dangerouslySetInnerHTML={{
           __html: `(() => {
   try {
-    var m = localStorage.getItem('themeMode');
+    var c = {};
+    document.cookie.split(';').forEach(function (p) {
+      var i = p.indexOf('=');
+      if (i > 0) c[p.slice(0, i).trim()] = p.slice(i + 1).trim();
+    });
+    var m = null;
+    try {
+      m = localStorage.getItem('themeMode');
+    } catch (e) {}
+    m = m || c.themeMode;
     var isDark =
       m === 'dark' ||
       (m !== 'light' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches);
+        (c.resolvedTheme === 'dark' ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches));
     document.documentElement.classList.toggle('dark', isDark);
   } catch (e) {}
 })();`,
         }}
+        id="theme-init"
       />
     );
   });
 
-  // Locale navigation can remount the document shell. Restore the saved
-  // theme before paint rather than leaving light styles visible until idle.
   useLayoutEffect(() => {
     initializeTheme();
   }, [initializeTheme, locale]);

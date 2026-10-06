@@ -80,7 +80,8 @@ export const useLocaleSwitchStore = create<LocaleSwitchState>((set, get) => ({
   clearSwitch: () => {
     const { handoff } = get();
     if (!handoff) return;
-    document.documentElement.style.minHeight = handoff.previousMinHeight;
+    const root = document.documentElement;
+    root.style.minHeight = handoff.previousMinHeight;
     set({ handoff: null });
   },
 }));

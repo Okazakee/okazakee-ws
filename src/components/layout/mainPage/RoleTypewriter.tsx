@@ -7,6 +7,7 @@ import {
   typewriterHtml,
   typewriterLength,
 } from '@/utils/heroDisplay';
+import { claimHeroEntrance } from './heroEntrance';
 
 const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
 const startDelayMs = 400;
@@ -39,6 +40,8 @@ export function RoleTypewriter({
   useLayoutEffect(() => {
     if (total === 0) return;
     if (window.matchMedia(reducedMotionQuery).matches) return;
+    // Same one-shot as HeroMatrix: later mounts keep the complete line.
+    if (!claimHeroEntrance()) return;
 
     let typed = 0;
     let erasing = false;

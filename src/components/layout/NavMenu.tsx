@@ -4,7 +4,7 @@ import { ExternalLink, FileUser, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
 	createMenuItems,
@@ -33,14 +33,25 @@ function ResumeLabel({ label }: { label: string }) {
   // Shrink long labels to the space left inside the fixed-width button. The
   // outer span already excludes padding, icon and gap, so its width is the
   // usable budget — no further subtraction. 1px tolerance avoids sub-pixel
-  // shrink on labels that already fit (e.g. "Resume").
-  useEffect(() => {
+  // shrink on labels that already fit (e.g. "Resume"). Re-measures once the
+  // webfont arrives: fallback metrics fit, then the wider font overflows.
+  useLayoutEffect(() => {
     const node = textRef.current;
     const outer = node?.parentElement;
     if (!node || !outer) return;
-    const usable = outer.clientWidth;
-    const needed = node.scrollWidth;
-    setScale(usable > 0 && needed > usable + 1 ? usable / needed : 1);
+    const measure = () => {
+      const usable = outer.clientWidth;
+      const needed = node.scrollWidth;
+      setScale(usable > 0 && needed > usable + 1 ? usable / needed : 1);
+    };
+    measure();
+    let cancelled = false;
+    document.fonts?.ready.then(() => {
+      if (!cancelled) measure();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [label]);
 
   return (
@@ -200,11 +211,11 @@ export default function NavMenu({
 	const rowHidden = "translate-y-2 opacity-0";
 	const rowShown = "translate-y-0 opacity-100";
 	const resumeClass =
-		"flex items-center gap-1.5 rounded-lg border border-accent-violet/40 bg-accent-violet/10 font-mono text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20";
+		"flex items-center gap-1 rounded-lg border border-accent-violet/40 bg-accent-violet/10 font-mono text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20";
 
 	return (
 		<>
-			<nav className="col-start-2 hidden items-center gap-6 justify-self-center font-mono text-xs text-text-muted lg:flex">
+			<nav className="col-start-2 hidden items-center gap-5 justify-self-center font-mono text-xs text-text-muted lg:flex">
 				{menuItems.map((item, index) => {
 					const active = isActive(item);
 
@@ -225,13 +236,13 @@ export default function NavMenu({
 				})}
 			</nav>
 
-			<div className="col-start-3 flex items-center gap-2 justify-self-end lg:gap-3">
-				<div className="hidden items-center gap-3 lg:flex">
+			<div className="col-start-3 flex items-center gap-2 justify-self-end lg:gap-2">
+				<div className="hidden items-center gap-2 lg:flex">
 					<LanguageToggle />
 					<ThemeToggle ariaLabel={t("theme")} />
           {resumeLink && (
             <Link
-              className={`${resumeClass} w-[88px] justify-center overflow-hidden px-3 py-1.5 text-xs`}
+              className={`${resumeClass} w-[100px] overflow-hidden px-2 py-1.5 text-xs`}
               data-umami-event="Resume button"
               href={resumeLink}
               rel="noopener noreferrer"

@@ -74,7 +74,7 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-surface-base text-text-main transition-all duration-400;
+    @apply bg-surface-base text-text-main;
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;

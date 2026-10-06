@@ -13,6 +13,13 @@ import {
   SITE_OG_IMAGE,
 } from '@/utils/structuredData';
 
+// The home page's data access runs through `'use cache'` fetchers; on the
+// first cold render in dev the cache fill trips the instant validation and
+// reports the route as not instantly navigable. Later renders are cached and
+// instant, so this only opts the segment out of that validation feedback
+// (same opt-out as the post page).
+export const instant = false;
+
 export async function generateMetadata({
   params,
 }: {

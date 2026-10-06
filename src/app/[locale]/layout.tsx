@@ -101,7 +101,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://umami.okazakee.dev" />
       </head>
       <body
-        className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased transition-colors duration-400 ease-in-out scroll-smooth`}
+        className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased scroll-smooth`}
       >
         <Providers locale={locale}>
           <Suspense>
