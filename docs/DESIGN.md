@@ -249,7 +249,9 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   another one; `bg-surface-base/70`, backdrop blur, `overflow-y-auto` and
   safe-area bottom padding; rows are `text-3xl` headings with mono `01`–`06` index
   prefixes and hairline dividers, active row `font-semibold
-  text-accent-violet-light`, rows stagger in 40ms apart;
+  text-accent-violet-light`, rows stagger in 40ms apart and the panel closes
+  by replaying that cascade **backwards** (footer first, rows last-to-first,
+  the panel fading over the tail) so the exit mirrors the entrance;
 - Language row + violet-tinted Resume live in a `mt-auto` footer block; body
 - scroll lock while open; closes on link tap and Escape; `aria-expanded` /
 - `aria-controls` wired, hidden rows `tabIndex={-1}`.

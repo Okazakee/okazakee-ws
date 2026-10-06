@@ -26,6 +26,14 @@ import ThemeToggle from './ThemeToggle';
 let drawerOpenBeforeLocaleSwitch = false;
 
 /**
+ * Drawer cascade step (docs/DESIGN.md §4): rows enter 40ms apart and the
+ * footer lands one step after the last row. Closing replays that same
+ * timeline backwards — footer first, rows last-to-first, panel over the tail
+ * — so the exit is the entrance mirrored and lasts exactly as long.
+ */
+const rowStaggerMs = 40;
+
+/**
  * Navigation (docs/DESIGN.md §4): centred desktop nav from `lg` up, plus the
  * header controls and the mobile drawer. On the home page every item is an
  * in-page anchor and the active one follows the scroll position (the mock's
@@ -299,6 +307,11 @@ export default function NavMenu({
                 : 'invisible -translate-y-2 opacity-0'
             }`}
             id="mobile-nav"
+            style={{
+              transitionDelay: isOpen
+                ? '0ms'
+                : `${menuItems.length * rowStaggerMs}ms`,
+            }}
           >
             <div className="flex min-h-full flex-col px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
               <nav className="flex flex-col">
@@ -316,7 +329,11 @@ export default function NavMenu({
                         setIsOpen(false);
                       }}
                       style={{
-                        transitionDelay: isOpen ? `${index * 40}ms` : '0ms',
+                        transitionDelay: `${
+                          (isOpen
+                            ? index
+                            : menuItems.length - index) * rowStaggerMs
+                        }ms`,
                       }}
                       tabIndex={isOpen ? 0 : -1}
                     >
@@ -333,7 +350,11 @@ export default function NavMenu({
 
               <div
                 className={`mt-auto flex flex-col gap-3 pt-6 transition-[opacity,translate] duration-200 ease-out ${isOpen ? rowShown : rowHidden}`}
-                style={{ transitionDelay: isOpen ? '240ms' : '0ms' }}
+                style={{
+                  transitionDelay: `${
+                    (isOpen ? menuItems.length : 0) * rowStaggerMs
+                  }ms`,
+                }}
               >
                 <div className="flex items-center justify-between px-1 py-1 font-mono text-sm text-text-muted">
                   <span>{t('language')}</span>
