@@ -110,10 +110,12 @@ are the same string, so the Italian leading zero survives; the value is never
 parsed, and the footer's own links stay fixed.
 
 `site_settings` exists only in `dev_staging`, so the footer identity does too.
-`okazakee-cms/supabase/migrations/20261005145655_add_site_settings_footer_identity.sql`
+`okazakee-cms/supabase/migrations/20261005150208_add_site_settings_footer_identity.sql`
 is explicitly `dev_staging.`-qualified and only adds nullable columns with no
 backfill, so it is a no-op for the rendered footer and **`public` stays
-unchanged** until that file is deliberately promoted.
+unchanged**. There is no automatic apply: any future database change stays
+explicitly reviewed/manual, and the historical public/unqualified sources must
+never be replayed against shared `public`.
 
 ## Getting Started
 
