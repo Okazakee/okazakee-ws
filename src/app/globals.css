@@ -340,6 +340,30 @@ input[type="checkbox"]:not([class*="request-"]):checked {
   background-size: 100% 100%;
 }
 
+/* Hero typewriter cursor (docs/DESIGN.md §3): a terminal block at the
+   insertion point, painted with the accent token so dark/light theming
+   follows automatically. Rendered only while a line animates — a single-role
+   line drops it once typing finishes. */
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.typewriter-cursor {
+  display: inline-block;
+  width: 0.5ch;
+  height: 1em;
+  margin-left: 0.15em;
+  vertical-align: -0.1em;
+  background-color: var(--c-accent-violet);
+  animation: cursor-blink 1s step-end infinite;
+}
+
 /* Tag row: one line, seamless loop when the chips overflow. The track carries
    the list twice while looping and slides half its width, so the junction is
    invisible. The second copy only exists while looping. */

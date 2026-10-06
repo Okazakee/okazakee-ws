@@ -89,6 +89,25 @@ describe('RoleTypewriter', () => {
     expect('Developer'.startsWith(container.textContent ?? '')).toBe(true);
   });
 
+  it('types a single-role line once and drops the cursor', async () => {
+    setReducedMotion(false);
+    await render(
+      createElement(RoleTypewriter, { once: true, slot: 4, text: 'Developer' })
+    );
+
+    await advance(400 + 55);
+    expect(container.innerHTML).toContain('typewriter-cursor');
+    expect(container.textContent).toBe('De');
+
+    await advance(55 * 7 + 50);
+    expect(container.textContent).toBe('Developer');
+
+    await advance(20_000);
+    expect(container.textContent).toBe('Developer');
+    expect(container.innerHTML).not.toContain('typewriter-cursor');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('stops its timer on unmount', async () => {
     setReducedMotion(false);
     await render(createElement(RoleTypewriter, { slot: 3, text: 'Developer' }));

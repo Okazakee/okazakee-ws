@@ -118,11 +118,13 @@ export function typewriterLength(runs: TypewriterRun[]): number {
 /**
  * Markup for the first `revealed` characters. A full reveal is byte-identical
  * to `formatLabels(text)`, so a finished line renders exactly like the static
- * one.
+ * one. `cursorClass` appends a terminal cursor element while the line is
+ * animating; omitted, the output is plain text (SSR and finished states).
  */
 export function typewriterHtml(
   runs: TypewriterRun[],
-  revealed: number
+  revealed: number,
+  cursorClass?: string
 ): string {
   let remaining = Math.max(0, revealed);
   let html = '';
@@ -134,7 +136,9 @@ export function typewriterHtml(
     html += run.labeled ? `<label>${slice}</label>` : slice;
   }
 
-  return html;
+  return cursorClass
+    ? `${html}<span class="${cursorClass}" aria-hidden="true"></span>`
+    : html;
 }
 
 /** True when the role line at `index` is the configured typewriter target. */

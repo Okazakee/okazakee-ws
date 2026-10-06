@@ -41,12 +41,7 @@ const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
         <span className="fig-caption block text-center">{alt}</span>
       ) : null}
       {isModalOpen && (
-        <ImageModal
-          alt={alt}
-          blurDataURL={blurhash}
-          onClose={() => setIsModalOpen(false)}
-          src={src}
-        />
+        <ImageModal alt={alt} onClose={() => setIsModalOpen(false)} src={src} />
       )}
     </>
   );
