@@ -7,13 +7,10 @@ import {
   type SetStateAction,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
-import validator from 'validator';
 import { searchPosts } from '@/app/actions/search';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
-import { TokenBucket } from '@/utils/tokenBucket';
 
 export default function Searchbar({
   post_type,
@@ -29,22 +26,26 @@ export default function Searchbar({
   locale: string;
 }) {
   const [searchFilter, setSearchFilter] = useState('');
-  const tokenBucketRef = useRef(new TokenBucket(5, 1)); // 5 tokens, refill 1 token per second
 
   const debouncedSearch = useMemo(
     () =>
       debounce(async (searchQuery: string) => {
-        if (tokenBucketRef.current.tryConsume()) {
-          SetIsRateLimited(false);
-          try {
-            const newPosts = await searchPosts(post_type, searchQuery, locale);
-            SetPosts(newPosts.posts || []);
-          } catch (error) {
-            console.error('Search error:', error);
-            // Handle error (e.g., show error message to user)
+        try {
+          const result = await searchPosts(post_type, searchQuery, locale);
+          if ('error' in result) {
+            SetIsRateLimited(false);
+            SetPosts([]);
+            return;
           }
-        } else {
-          SetIsRateLimited(true);
+          if ('rateLimited' in result && result.rateLimited) {
+            SetIsRateLimited(true);
+            SetPosts([]);
+            return;
+          }
+          SetIsRateLimited(false);
+          SetPosts(result.posts);
+        } catch (error) {
+          console.error('Search error:', error);
         }
       }, 300),
     [SetIsRateLimited, SetPosts, post_type, locale]
@@ -52,16 +53,16 @@ export default function Searchbar({
 
   useEffect(() => {
     if (searchFilter.length > 2 && searchFilter.length < 40) {
-      debouncedSearch(validator.escape(searchFilter));
+      debouncedSearch(searchFilter);
     } else if (searchFilter.length === 0) {
+      SetIsRateLimited(false);
       SetPosts(initialPosts);
     }
 
-    // Cleanup function to cancel any pending debounced calls
     return () => {
       debouncedSearch.cancel();
     };
-  }, [searchFilter, debouncedSearch, SetPosts, initialPosts]);
+  }, [searchFilter, debouncedSearch, SetPosts, SetIsRateLimited, initialPosts]);
 
   const t = useTranslations('posts-section');
 

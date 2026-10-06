@@ -254,9 +254,10 @@ export async function getPosts(
 export async function searchPostsData(
   type: string,
   searchQuery: string,
-  locale: string
+  locale: string,
+  limit: number
 ): Promise<BlogPost[] | PortfolioPost[] | null> {
-  return queryPosts(type, searchQuery, locale);
+  return queryPosts(type, searchQuery, locale, limit);
 }
 
 export type PostAuthor = {

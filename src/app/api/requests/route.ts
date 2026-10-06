@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { publicConfig } from '@/config/public';
 import { MAX_REQUEST_BODY_BYTES } from '@/config/requests';
+import { clientKeyFromHeaders } from '@/libs/clientKey';
 import {
   type RequestIntakeErrorCode,
   type RequestIntakeField,
   validateRequestIntake,
 } from '@/libs/requests/intake';
-import { allowRequest } from '@/libs/requests/rateLimit';
+import { requestThrottle } from '@/libs/requests/rateLimit';
 import { storeRequest } from '@/libs/requests/store';
 
 /**
@@ -48,18 +49,6 @@ function fail(
   return NextResponse.json({ code, field }, { status });
 }
 
-/**
- * The submitter's IP as the platform reports it. `x-forwarded-for` is a
- * comma-separated chain whose first entry is the original client; it is only
- * a throttle key, never an authorization input.
- */
-function clientKey(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const first = forwarded?.split(',')[0]?.trim();
-  if (first) return first;
-  return request.headers.get('x-real-ip') ?? 'unknown';
-}
-
 export async function POST(request: Request) {
   if (!publicConfig.requestIntakeEnabled) {
     return fail(503, 'intakeDisabled', 'locale');
@@ -76,7 +65,7 @@ export async function POST(request: Request) {
     return fail(413, 'bodyTooLarge', 'request');
   }
 
-  if (!allowRequest(clientKey(request))) {
+  if (!requestThrottle.allow(clientKeyFromHeaders(request.headers))) {
     return fail(429, 'tooManyRequests', 'locale');
   }
 

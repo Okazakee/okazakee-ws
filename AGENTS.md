@@ -35,10 +35,10 @@ src/
   config/                           # Env + runtime config (public, shared)
   hooks/                            # Client hooks (useZoom)
   i18n/                             # next-intl config (routing, request) + public messages
-  libs/content/                     # Public cache-tag vocabulary + revalidation contract
+  libs/                           # Shared libs (requests intake, search, throttle, content contract)
   store/                            # Zustand stores (themeStore)
   types/                            # Shared domain types (fetchedData.types)
-  utils/                            # Utilities (getData, tokenBucket, formatDate, Supabase stateless client)
+  utils/                            # Utilities (getData, debounce, formatDate, Supabase stateless client)
   proxy.ts                          # Proxy handler for Vercel deployment (not app code)
 ```
 
