@@ -17,8 +17,10 @@ import FormattedDate from '@/components/common/FormattedDate';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
+import { PublishLocaleAlternates } from '@/components/layout/PublishLocaleAlternates';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import { postButtonLabel } from '@/i18n/postButtons';
+import { locales } from '@/i18n/routing';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPostHref, slugifyTitle } from '@/utils/postHref';
 import {
@@ -79,6 +81,19 @@ export default async function Page({
   if (title !== slugifiedTitle) {
     redirect(`/${locale}/${post_type}/${id}/${slugifiedTitle}`);
   }
+
+  // Canonical per-locale destinations for the language switch: blog slugs are
+  // localized, portfolio keeps the shared English slug — same rule as
+  // generateStaticParams/generateMetadata below.
+  const enTitle = post.title_en;
+  const itTitle = post_type === 'portfolio' ? post.title_en : post.title_it;
+  const alternates = {
+    key: `${post_type}:${id}`,
+    href: {
+      en: getPostHref({ locale: 'en', postType: post_type, id, title: enTitle }),
+      it: getPostHref({ locale: 'it', postType: post_type, id, title: itTitle }),
+    },
+  };
 
   const localeKey = `body_${locale}` as keyof typeof post;
 
@@ -171,19 +186,21 @@ export default async function Page({
   };
 
   return (
-    <article className="mx-auto max-w-5xl px-6 pt-12 pb-24 md:pt-24">
-      <JsonLd data={jsonLd} />
-      <div className="mx-auto max-w-3xl">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight text-text-white md:text-4xl">
-          {initTitle}
-        </h1>
-        <p className="mt-5 text-base leading-relaxed text-text-muted">
-          {String(post[postDescription])}
-        </p>
-        <div className="mt-7">
-          <Tags tags={post.post_tags} />
+    <>
+      <PublishLocaleAlternates alternates={alternates} />
+      <article className="mx-auto max-w-5xl px-6 pt-12 pb-24 md:pt-24">
+        <JsonLd data={jsonLd} />
+        <div className="mx-auto max-w-[60rem]">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight text-text-white md:text-4xl">
+            {initTitle}
+          </h1>
+          <p className="mt-5 text-base leading-relaxed text-text-muted">
+            {String(post[postDescription])}
+          </p>
+          <div className="mt-7">
+            <Tags tags={post.post_tags} />
+          </div>
         </div>
-      </div>
 
       <div className="relative mt-10 h-56 w-full overflow-hidden rounded-2xl border border-accent-violet bg-surface-raised md:h-96">
         <Image
@@ -200,8 +217,7 @@ export default async function Page({
           src={post.image}
         />
       </div>
-
-      <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center gap-4 font-mono text-xs">
+      <div className="mx-auto mt-8 flex max-w-[60rem] flex-wrap items-center gap-4 font-mono text-xs">
         {metaLinks.length > 0 && (
           <div className="hidden items-center gap-3 md:flex">
             {metaLinks.map((link) => (
@@ -247,13 +263,13 @@ export default async function Page({
       </div>
 
       {post_type !== 'portfolio' && authorBlock && (
-        <div className="mx-auto mt-5 flex max-w-3xl items-center gap-3 md:hidden">
+        <div className="mx-auto mt-5 flex max-w-[60rem] items-center gap-3 md:hidden">
           {authorBlock}
         </div>
       )}
 
       {metaLinks.length > 0 && (
-        <div className="mx-auto mt-6 flex max-w-3xl flex-col gap-2 md:hidden">
+        <div className="mx-auto mt-6 flex max-w-[60rem] flex-col gap-2 md:hidden">
           {metaLinks.map((link, index) =>
             index % 2 === 0 ? (
               <div className="flex gap-2" key={link.key}>
@@ -279,15 +295,15 @@ export default async function Page({
         </div>
       )}
 
-      <div className="post mx-auto mt-12 max-w-3xl text-left">
+      <div className="post mx-auto mt-12 max-w-[60rem] text-left">
         <MarkdownRenderer markdown={String(post[localeKey])} />
       </div>
     </article>
+    </>
   );
 }
 
 export async function generateStaticParams() {
-  const locales = ['en', 'it'];
   const portfolioPosts = (await getPosts(
     'portfolio',
     undefined,

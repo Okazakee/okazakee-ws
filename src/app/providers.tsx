@@ -1,44 +1,49 @@
 'use client';
 
-import type React from 'react';
-import { useEffect } from 'react';
-import useThemeStore from '../store/themeStore';
+import { useServerInsertedHTML } from 'next/navigation';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import useThemeStore from '@/store/themeStore';
 
-type IdleHandle = number | ReturnType<typeof setTimeout>;
-type IdleWindow = Window & {
-  requestIdleCallback?: (callback: IdleRequestCallback) => IdleHandle;
-  cancelIdleCallback?: (handle: IdleHandle) => void;
-};
-
-const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+export function Providers({
   children,
-}) => {
-  const { initializeTheme } = useThemeStore();
+  locale,
+}: {
+  children: ReactNode;
+  locale: string;
+}) {
+  const initializeTheme = useThemeStore((state) => state.initializeTheme);
+  const themeInserted = useRef(false);
 
-  useEffect(() => {
-    const idleWindow = window as IdleWindow;
-    let idleHandle: IdleHandle;
+  // Insert only into the server-rendered head before paint, once across
+  // stream flushes; ordinary client renders never return this script.
+  useServerInsertedHTML(() => {
+    if (themeInserted.current) return null;
+    themeInserted.current = true;
 
-    if (typeof idleWindow.requestIdleCallback === 'function') {
-      idleHandle = idleWindow.requestIdleCallback(() => initializeTheme());
+    return (
+      <script
+        id="theme-init"
+        dangerouslySetInnerHTML={{
+          __html: `(() => {
+  try {
+    var m = localStorage.getItem('themeMode');
+    var isDark =
+      m === 'dark' ||
+      (m !== 'light' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('dark', isDark);
+  } catch (e) {}
+})();`,
+        }}
+      />
+    );
+  });
 
-      return () => idleWindow.cancelIdleCallback?.(idleHandle);
-    }
-
-    idleHandle = globalThis.setTimeout(() => initializeTheme(), 1);
-    return () => globalThis.clearTimeout(idleHandle);
-  }, [initializeTheme]);
-
-  useEffect(() => {
-    const pathLocale = window.location.pathname.split('/')[1];
-    if (['en', 'it'].includes(pathLocale)) {
-      document.documentElement.lang = pathLocale;
-    }
-  }, []);
+  // Locale navigation can remount the document shell. Restore the saved
+  // theme before paint rather than leaving light styles visible until idle.
+  useLayoutEffect(() => {
+    initializeTheme();
+  }, [initializeTheme, locale]);
 
   return <>{children}</>;
-};
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return <ThemeProvider>{children}</ThemeProvider>;
 }

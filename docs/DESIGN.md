@@ -256,9 +256,14 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - Scroll-spy: the home page highlights the section currently in view, in both the
   desktop nav and the mobile menu.
 - No settings dropdown: it is dropped by design; language and theme stay as inline
-  controls. The language switch is a client navigation with `scroll: false`, so it
-  swaps the locale in place and keeps the reader at the same scroll position
-  instead of hard-reloading.
+  controls. Language switching navigates directly to the canonical target slug
+  with `scroll: false`, retaining query parameters and fragments. A one-shot
+  scroll handoff preserves the reader's position during the locale commit.
+  Portfolio titles/slugs stay English; blog slugs use the target language.
+- Theme starts in auto and follows system changes until the visitor saves a
+  choice. The blocking first-load script and locale-dependent layout effect
+  apply the resolved theme before paint; no idle initialization or forced dark
+  default. Explicit light/dark preferences survive locale changes and reloads.
 - The bespoke `xs:` / `tablet:` / `mdh:` utilities are retired: standard Tailwind tiers
   cover every case. `SkillsCarousel` and the old `ResumeButton` card went with them,
   replaced by the canon chips and the header's resume action.
@@ -456,10 +461,15 @@ are the known exceptions still open — listed with the quirks below.
   segments now set `instant = false` — the pages are cached and still navigate
   instantly, the flag only opts out of the validation feedback.
 - Unverified: the 404 routes are said to answer **HTTP 200** (soft 404), which predates the redesign. Nothing in the source sets a status; confirm against a running server before relying on it.
-- Dev-only: React logs `Encountered a script tag …` when a client-side language switch
-  re-renders the `[locale]` layout, because the blocking theme-init script lives there.
-  It must stay inline to apply the stored theme before first paint (a
-  `beforeInteractive` Script lost that guarantee), so the warning is accepted.
+- Fixed: language switches after a hard refresh no longer recreate the theme
+  `<script>` in React's client render path. `Providers` registers the inline
+  bootstrap with `useServerInsertedHTML`, with a per-instance guard against
+  repeated stream flushes. Next inserts it into the initial `<head>` stream,
+  so the saved or system theme is applied before body content paints,
+  independently of hydration.
+  The locale-keyed layout effect still restores the theme on navigation.
+  `[locale]` remains the root layout; no extra layout or theme dependency is
+  needed. The obsolete external bootstrap and its Biome exclusion were removed.
 - Fixed: `sitemap.ts` slugged posts differently from the card link helper. Both
   now share `getPostHref` from `src/utils/postHref.ts`, and `next.config.ts`
   answers the legacy wrong-slug URLs with a permanent 308.

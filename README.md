@@ -30,7 +30,8 @@ public caches through a signed revalidation endpoint
 
 - **Bilingual routing** — EN/IT via `next-intl`, locale-aware
   `/[locale]/[post_type]/[id]/[title]` URLs
-- **Theming** — dark / light / auto with a flash-free bootstrap script
+- **Theming** — auto by default; saved light/dark choices override the system.
+  Initial loads and language switches apply the theme before paint.
 - **Search** — portfolio and blog content with a debounced search action
 - **View tracking** — per-post counters backed by Supabase RPCs
 - **Cache invalidation** — HMAC-signed, replay-protected revalidation events
@@ -66,6 +67,16 @@ okazakee-cms ───────▶ Supabase ◀──────── okaza
 
 - **Routing:** `/[locale]/[post_type]/[id]/[title]` with i18n; legacy
   `/{locale}/cms*` URLs 307-redirect to the standalone CMS.
+- **Locale configuration:** `src/i18n/routing.ts` owns EN/IT, the English
+  default and prefix policy. The proxy delegates negotiation to next-intl;
+  server messages use `next/root-params` rather than request headers.
+- **Language switches:** navigate directly to each post's canonical localized
+  slug, retaining query parameters, fragments and a one-shot scroll handoff.
+  Portfolio titles and slugs remain English in both locales.
+- **Theme preferences:** `themeMode` is saved only after an explicit selection.
+  Without a saved choice, auto follows live system changes. The blocking
+  first-load script and locale-dependent layout effect restore the theme
+  before paint without making the root layout request-bound.
 - **Components:** Server Components for data and metadata; Client Components
   for interactivity (menu, theme, search).
 - **Supabase:** stateless clients — the read layer plus the two view-counter
@@ -157,8 +168,6 @@ bun run dev
 | `CONTENT_REVALIDATION_SECRET` | Shared secret authenticating content-change events from the CMS |
 | `UMAMI_ENABLED` | Enable Umami analytics (`true`/`false`) |
 | `ISR_REVALIDATION` | Cache lifetime in seconds (content caches + GitHub stars fetch); default `86400` in production, `600` otherwise |
-| `NEXT_PUBLIC_LOCALES` | Comma-separated locales (default `en,it`) |
-| `NEXT_PUBLIC_DEFAULT_LOCALE` | Default locale (default `en`) |
 
 **`NEXT_PUBLIC_SUPABASE_DB_SCHEMA` must be set for local work.** `public` holds
 production content; local development reads `dev_staging`, a cloned schema in the

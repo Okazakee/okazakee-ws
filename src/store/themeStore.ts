@@ -69,22 +69,13 @@ const useThemeStore = create<ThemeState>((set, get) => {
     initializeTheme: () => {
       if (typeof window === 'undefined') return;
 
-      // Get stored mode or default to 'auto'
-      const storedMode = localStorage.getItem('themeMode') as ThemeMode;
-      let mode: ThemeMode;
-
-      if (storedMode && ['auto', 'light', 'dark'].includes(storedMode)) {
-        // User has a saved preference
-        mode = storedMode;
-      } else {
-        // First-time user - detect system preference
-        const systemPrefersDark = window.matchMedia(
-          '(prefers-color-scheme: dark)'
-        ).matches;
-        mode = systemPrefersDark ? 'dark' : 'light';
-        // Save system preference to localStorage
-        localStorage.setItem('themeMode', mode);
-      }
+      // Only explicit choices are stored. With no saved choice, keep auto
+      // active so later system-theme changes still apply.
+      const storedMode = localStorage.getItem('themeMode');
+      const mode: ThemeMode =
+        storedMode === 'light' || storedMode === 'dark'
+          ? storedMode
+          : 'auto';
 
       const isDark = isDarkActive(mode);
       set({ mode, isDark });

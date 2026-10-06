@@ -209,17 +209,20 @@
 .post td {
   overflow-wrap: anywhere;
 }
-.post p img {
+.post .post-figure {
+  margin: 2rem auto;
+}
+.post .post-figure img {
   display: block;
   width: 100%;
-  margin: 2rem 0 0;
+  margin: 0 auto;
   border-radius: 12px;
   border: 1px solid var(--c-border-subtle);
   cursor: pointer;
 }
 .post .fig-caption {
   display: block;
-  margin: 0.6rem 0 2rem;
+  margin: 0.6rem 0 0;
   font-family: var(--font-whiterabt), monospace;
   font-size: 0.72rem;
   color: var(--c-text-dim);

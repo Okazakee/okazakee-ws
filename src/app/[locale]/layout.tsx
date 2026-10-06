@@ -8,6 +8,7 @@ import { Suspense } from 'react';
 import { publicConfig } from '@/config/public';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
+import { LocaleScrollRestore } from '@/components/layout/LocaleScrollRestore';
 import ScrollTop from '@/components/layout/ScrollTop';
 import { isValidLocale, locales } from '@/i18n/routing';
 import type { ResumeData } from '@/types/fetchedData.types';
@@ -46,6 +47,7 @@ async function LocaleShell({
 
   return (
     <NextIntlClientProvider locale={locale}>
+      <LocaleScrollRestore />
       <Header
         locale={locale}
         resumeLink={resumeLink}
@@ -97,17 +99,11 @@ export default async function RootLayout({
           </>
         )}
         <link rel="preconnect" href="https://umami.okazakee.dev" />
-        {/* Blocking theme script — runs before paint to avoid flash */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=localStorage.getItem('themeMode');var isDark=m==='dark'||(m!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',isDark);}catch(e){}})();`,
-          }}
-        />
       </head>
       <body
         className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased transition-colors duration-400 ease-in-out scroll-smooth`}
       >
-        <Providers>
+        <Providers locale={locale}>
           <Suspense>
             <LocaleShell params={params}>{children}</LocaleShell>
           </Suspense>
