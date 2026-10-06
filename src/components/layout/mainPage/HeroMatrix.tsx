@@ -1,7 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { claimHeroEntrance } from './heroEntrance';
+import { useLayoutEffect, useRef } from 'react';
+import {
+  createHeroMatrixState,
+  HERO_SEED,
+  heroMatrixState,
+  type Ping,
+  type RainColumn,
+} from './heroAnimationState';
 import { createMatrixCanvasRenderer } from './matrixCanvasRenderer';
 
 const CELL = 14;
@@ -71,25 +77,6 @@ const LIGHT: Ramp = {
   crest: '#5b21b6',
 };
 
-interface RainColumn {
-  y: number;
-  speed: number;
-  len: number;
-  seed: number;
-  lead: number;
-  born: number;
-}
-
-interface Ping {
-  x: number;
-  y: number;
-  born: number;
-  life: number;
-  distances: Float64Array;
-  radius: number;
-  fade: number;
-}
-
 /**
  * Matrix-rain ground for the hero (docs/DESIGN.md §6): a transparent canvas
  * behind the untouched hero/about content. Symbol drops fall with a short
@@ -103,13 +90,18 @@ interface Ping {
 export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
+  // Layout effect: the first frame is drawn before the browser paints the
+  // swapped tree, so a locale switch never shows a blank canvas.
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const hero = canvas?.parentElement;
     if (!canvas || !hero) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const renderer = createMatrixCanvasRenderer(ctx, CELL, GLYPHS);
+    // Tracks the renderer's buffer allocation, which is independent of the
+    // canvas bitmap size (see measure).
+    let rendererSized = false;
 
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
@@ -123,29 +115,35 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
         : LIGHT;
     };
 
-    let seed = 0x9451ff;
+    // Document-scoped session (heroAnimationState.ts): a locale switch
+    // remounts this component, and adopting the running state keeps the
+    // rain and the entrance wave uninterrupted. `interactive={false}`
+    // instances (error screens) keep a private state and never publish.
+    const state = interactive ? heroMatrixState() : createHeroMatrixState();
+    // Respawn randomness continues from the session cursor; the jitter table
+    // uses its own stream so a remount cannot advance that cursor.
     const rnd = () => {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 4294967296;
+      state.seed = (state.seed * 1664525 + 1013904223) >>> 0;
+      return state.seed / 4294967296;
     };
     const jitter = new Float32Array(64 * 64);
-    for (let i = 0; i < jitter.length; i++) jitter[i] = rnd();
+    let jitterSeed = HERO_SEED;
+    for (let i = 0; i < jitter.length; i++) {
+      jitterSeed = (jitterSeed * 1664525 + 1013904223) >>> 0;
+      jitter[i] = jitterSeed / 4294967296;
+    }
 
     let W = 0;
     let H = 0;
     let cols = 0;
     let rows = 0;
     let entranceRow = 0;
-    let matCols: RainColumn[] = [];
-    // One-shot per tab session: the first mount plays the center-out
-    // reveal, every later mount (locale switches, back/forward) starts
-    // with the field revealed. Shared with RoleTypewriter so same-commit
-    // mounts agree on who plays.
-    const entranceT0 = claimHeroEntrance() ? performance.now() : -1e12;
+    let matCols: RainColumn[] = state.matCols;
+    const entranceT0 = state.entranceT0;
     const pointer = { x: -1e4, y: -1e4 };
     let strength = 0;
     let target = 0;
-    const pings: Ping[] = [];
+    const pings: Ping[] = state.pings;
     let fieldSize = 0;
     let fieldFocus: Float64Array;
     let fieldDim: Float64Array;
@@ -154,9 +152,15 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
     let fieldFlags: Uint8Array;
     let frozenHeads: Float64Array;
 
-    const initMatrix = () => {
-      matCols = [];
+    const seedFrozenHeads = () => {
       frozenHeads = new Float64Array(cols);
+      for (let c = 0; c < cols; c++) {
+        frozenHeads[c] = matCols[c].seed % Math.max(1, rows + 20);
+      }
+    };
+
+    const initMatrix = () => {
+      const columns: RainColumn[] = [];
       const now = performance.now();
       for (let c = 0; c < cols; c++) {
         // Fresh columns start above the fold and fall in staggered, so the
@@ -167,7 +171,7 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
         // Idle gaps between drops: ~1 in 7 columns starts empty so the
         // field breathes instead of filling every lane.
         const idle = !warmup && rnd() < 0.3;
-        matCols.push({
+        columns.push({
           y: idle
             ? -20 - rnd() * rows
             : warmup
@@ -179,8 +183,9 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
           lead: 2 + Math.floor(rnd() * 3),
           born: warmup ? 0 : now,
         });
-        frozenHeads[c] = matCols[c].seed % Math.max(1, rows + 20);
       }
+      state.matCols = matCols = columns;
+      seedFrozenHeads();
     };
 
     // Ellipse zones from the rendered content boxes, in canvas px. Identity
@@ -285,15 +290,28 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = Math.max(1, Math.round(box.width));
       H = Math.max(1, Math.round(box.height));
-      canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(H * dpr);
+      cols = Math.ceil(W / CELL) + 2;
+      rows = Math.ceil(H / CELL) + 2;
+      const bitmapW = Math.round(W * dpr);
+      const bitmapH = Math.round(H * dpr);
+      // Assigning width/height clears the bitmap; resize only on an actual
+      // change so a same-size re-measure keeps the painted frame.
+      if (canvas.width !== bitmapW || canvas.height !== bitmapH) {
+        canvas.width = bitmapW;
+        canvas.height = bitmapH;
+        rendererSized = false;
+      }
+      // `renderer.resize` allocates the renderer's cell buffers and must run
+      // once per renderer before any frame — including when the bitmap was
+      // already sized by a previous effect run over the same canvas node.
+      if (!rendererSized) {
+        renderer.resize(W, H, dpr, cols, rows);
+        rendererSized = true;
+      }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.font = `${CELL - 2}px ui-monospace, monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      cols = Math.ceil(W / CELL) + 2;
-      rows = Math.ceil(H / CELL) + 2;
-      renderer.resize(W, H, dpr, cols, rows);
       // On tall mobile heroes, start the reveal inside the visible viewport.
       const visibleTop = Math.max(0, -box.top);
       const visibleBottom = Math.max(
@@ -301,7 +319,16 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
         Math.min(H, window.innerHeight - box.top)
       );
       entranceRow = (visibleTop + visibleBottom) / (2 * CELL);
-      initMatrix();
+      // Field continuity: a locale switch remounts with the same grid, and
+      // the adopted columns keep falling from their positions. Only a real
+      // grid change (first mount, resize, zoom) re-seeds them.
+      if (state.cols !== cols || state.rows !== rows) {
+        state.cols = cols;
+        state.rows = rows;
+        initMatrix();
+      } else {
+        seedFrozenHeads();
+      }
       measureZones();
     };
     measure();

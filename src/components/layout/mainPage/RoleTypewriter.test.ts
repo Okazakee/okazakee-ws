@@ -52,13 +52,15 @@ afterEach(async () => {
 describe('RoleTypewriter', () => {
   it('serves the finished line, so server output and hydration are complete', () => {
     expect(
-      renderToStaticMarkup(createElement(RoleTypewriter, { text: role }))
+      renderToStaticMarkup(
+        createElement(RoleTypewriter, { slot: 0, text: role })
+      )
     ).toBe(`<p>${formatLabels(role)}</p>`);
   });
 
   it('stays static for the whole session under reduced motion', async () => {
     setReducedMotion(true);
-    await render(createElement(RoleTypewriter, { text: role }));
+    await render(createElement(RoleTypewriter, { slot: 1, text: role }));
 
     await advance(60_000);
 
@@ -69,7 +71,7 @@ describe('RoleTypewriter', () => {
 
   it('types, holds and erases the line when motion is allowed', async () => {
     setReducedMotion(false);
-    await render(createElement(RoleTypewriter, { text: 'Developer' }));
+    await render(createElement(RoleTypewriter, { slot: 2, text: 'Developer' }));
 
     await advance(400);
     expect(container.textContent).toBe('D');
@@ -89,7 +91,7 @@ describe('RoleTypewriter', () => {
 
   it('stops its timer on unmount', async () => {
     setReducedMotion(false);
-    await render(createElement(RoleTypewriter, { text: 'Developer' }));
+    await render(createElement(RoleTypewriter, { slot: 3, text: 'Developer' }));
 
     await advance(400 + 55 * 2);
     await act(async () => root.unmount());

@@ -136,6 +136,7 @@ export default async function Hero({ locale }: { locale: string }) {
                   as="p"
                   className="font-mono text-xl tracking-normal text-text-muted md:text-2xl"
                   key={role}
+                  slot={index}
                   text={role}
                 />
               ) : (

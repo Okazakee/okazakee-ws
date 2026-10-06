@@ -7,7 +7,7 @@ import {
   typewriterHtml,
   typewriterLength,
 } from '@/utils/heroDisplay';
-import { claimHeroEntrance } from './heroEntrance';
+import { typewriterPhases } from './heroAnimationState';
 
 const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
 const startDelayMs = 400;
@@ -17,6 +17,8 @@ const holdMs = 1600;
 
 interface RoleTypewriterProps {
   text: string;
+  /** Stable position in the role list; keys the resumable reveal phase. */
+  slot: number;
   as?: 'p' | 'span' | 'div';
   className?: string;
 }
@@ -26,9 +28,14 @@ interface RoleTypewriterProps {
  * is the complete line, so server output, hydration and visitors who ask for
  * reduced motion all get today's static markup; only the typed reveal runs as
  * an effect, and it never starts while motion is reduced.
+ *
+ * The reveal phase lives in the document-scoped hero session: a locale switch
+ * remounts this line with the other locale's text, and the reveal continues
+ * from the same character index instead of restarting or cutting ahead.
  */
 export function RoleTypewriter({
   text,
+  slot,
   as = 'p',
   className,
 }: RoleTypewriterProps) {
@@ -40,11 +47,10 @@ export function RoleTypewriter({
   useLayoutEffect(() => {
     if (total === 0) return;
     if (window.matchMedia(reducedMotionQuery).matches) return;
-    // Same one-shot as HeroMatrix: later mounts keep the complete line.
-    if (!claimHeroEntrance()) return;
 
-    let typed = 0;
-    let erasing = false;
+    const resume = typewriterPhases.get(slot) ?? null;
+    let typed = Math.min(resume?.typed ?? 0, total);
+    let erasing = resume?.erasing ?? false;
 
     const tick = () => {
       if (!erasing) {
@@ -68,11 +74,17 @@ export function RoleTypewriter({
       timer.current = window.setTimeout(tick, eraseDelayMs);
     };
 
-    setRevealed(0);
-    timer.current = window.setTimeout(tick, startDelayMs);
+    setRevealed(typed);
+    timer.current = window.setTimeout(
+      tick,
+      resume ? typeDelayMs : startDelayMs
+    );
 
-    return () => clearTimeout(timer.current);
-  }, [total]);
+    return () => {
+      clearTimeout(timer.current);
+      typewriterPhases.set(slot, { typed, erasing });
+    };
+  }, [slot, total]);
 
   return (
     <InnerHtml
