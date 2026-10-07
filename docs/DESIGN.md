@@ -208,13 +208,22 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   map) when the CMS list exists, otherwise the singular `top.role`, which stays
   as the live fallback for copy written before the list — content is never
   migrated behind the editor's back. A single role renders exactly the old lone
-  line; several roles stack in the same mono style with `space-y-1`.
+  line; several roles stack in the same mono style with `space-y-1` — unless the
+  typewriter animates more than one of them, which collapses them into the single
+  line the animation is on (the rest stay in the document, see below).
 - **Hero typewriter** (`hero_section.typewriter` with `typewriter_target` =
-  `role1` | `role2` | `all`): only the chosen line types out, holds and erases on
-  a loop. It is a leaf client component (`RoleTypewriter`), so the rest of the
-  hero stays a server component. The line is always painted complete first, so
-  server output, hydration and reduced-motion visitors all read today's static
-  markup; the reveal only starts when motion is allowed.
+  `role1` | `role2` | `all`): the chosen roles type out with a human keystroke
+  rhythm — every delay is drawn from a seeded generator (a floor plus jitter, a
+  beat after a space or punctuation, short bursts, the occasional hesitation),
+  never a constant interval. A lone chosen role types once and settles; two or
+  more cycle: type the role, hold four seconds, backspace it away on its own
+  faster rhythm, type the next. It is a leaf client component
+  (`RoleTypewriter`), so the rest of the hero stays a server component. The line
+  is always painted complete first, so server output, hydration and
+  reduced-motion visitors all read static markup; the reveal only starts when
+  motion is allowed, and the roles after the animated one are held by
+  `.hero-role-rest` — the reduced-motion rule in `globals.css` reveals them, so a
+  motionless visitor still reads the stacked list.
 
 ---
 

@@ -360,6 +360,30 @@ input[type="checkbox"]:not([class*="request-"]):checked {
   animation: cursor-blink 1s step-end infinite;
 }
 
+/* Roles the typewriter is not currently cycling through (docs/DESIGN.md §3):
+   the live line carries the animated text, these stay in the document for
+   crawlers, and the reduced-motion rule below turns them back into the stacked
+   list a motionless visitor reads. Out of flow while hidden, so the live line
+   never moves. */
+.hero-role-rest {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-role-rest {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+}
+
 /* Tag row: one line, seamless loop when the chips overflow. The track carries
    the list twice while looping and slides half its width, so the junction is
    invisible. The second copy only exists while looping. */

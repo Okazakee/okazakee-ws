@@ -7,118 +7,190 @@ import {
   typewriterHtml,
   typewriterLength,
 } from '@/utils/heroDisplay';
+import {
+  createKeystrokePacer,
+  typewriterHoldMs,
+  typewriterStartMs,
+} from '@/utils/typewriterPacing';
 import { typewriterPhases } from './heroAnimationState';
 
 const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
-const startDelayMs = 400;
-const typeDelayMs = 55;
-const eraseDelayMs = 28;
-const holdMs = 1600;
 
 interface RoleTypewriterProps {
-  text: string;
-  /** Stable position in the role list; keys the resumable reveal phase. */
+  /**
+   * The roles this line carries. A single role types once and settles; several
+   * cycle — type, hold, backspace away, type the next.
+   */
+  roles: string[];
+  /** Key of this line in the hero role list; keys the resumable phase. */
   slot: number;
-  /** Single-role hero: type once, keep the line, drop the cursor. Loops otherwise. */
-  once?: boolean;
   as?: 'p' | 'span' | 'div';
   className?: string;
 }
 
+type Phase = 'typing' | 'erasing';
+
 /**
- * One hero role line typed out on a loop (docs/DESIGN.md §3). The first paint
- * is the complete line, so server output, hydration and visitors who ask for
- * reduced motion all get today's static markup; only the typed reveal runs as
- * an effect, and it never starts while motion is reduced.
+ * The hero role line (docs/DESIGN.md §3). One role types out and stays; a list
+ * cycles: each role is typed with a human keystroke rhythm, holds, is
+ * backspaced away and replaced by the next one, on a loop.
  *
- * A blinking terminal cursor rides at the insertion point, in the accent tone
- * that follows the theme tokens, while the line animates. With `once` (a
- * single role) the line types once and settles without it; otherwise it keeps
- * typing and erasing.
+ * The first paint is the complete line, so server output, hydration and
+ * visitors who ask for reduced motion all get static markup; only the typed
+ * reveal runs as an effect, and it never starts while motion is reduced. When
+ * the line cycles, the roles after the animated one stay in the document
+ * (hidden by `.hero-role-rest`, revealed again by the reduced-motion rule in
+ * globals.css), so a motionless visitor still reads the stacked list.
  *
  * The reveal phase lives in the document-scoped hero session: a locale switch
- * remounts this line with the other locale's text, and the reveal continues
- * from the same character index instead of restarting or cutting ahead.
+ * remounts this line with the other locale's text and resumes at the same role
+ * and character instead of restarting.
  */
 export function RoleTypewriter({
-  text,
+  roles,
   slot,
-  once = false,
   as = 'p',
   className,
 }: RoleTypewriterProps) {
-  const runs = useMemo(() => parseTypewriterRuns(text), [text]);
-  const total = typewriterLength(runs);
-  const [revealed, setRevealed] = useState(total);
+  const cycles = roles.length > 1;
+  const lines = useMemo(
+    () =>
+      roles.map((role) => {
+        const runs = parseTypewriterRuns(role);
+        return {
+          runs,
+          text: runs.map((run) => run.text).join(''),
+          length: typewriterLength(runs),
+        };
+      }),
+    [roles]
+  );
+  const rolesKey = roles.join('\u0000');
+
+  const [active, setActive] = useState(0);
+  const [revealed, setRevealed] = useState(lines[0]?.length ?? 0);
   const [cursorVisible, setCursorVisible] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
   useLayoutEffect(() => {
-    if (total === 0) return;
+    if (roles.length === 0) return;
     if (window.matchMedia(reducedMotionQuery).matches) return;
 
-    const resume = typewriterPhases.get(slot) ?? null;
-    let typed = Math.min(resume?.typed ?? 0, total);
-    let erasing = resume?.erasing ?? false;
+    const line = (index: number) => {
+      const runs = parseTypewriterRuns(roles[index]);
+      return { runs, text: runs.map((run) => run.text).join('') };
+    };
 
-    // A single-role line that already finished in this document stays
-    // finished: full text, no cursor, no timers.
-    if (once && resume && typed >= total && !erasing) {
-      setRevealed(total);
+    const resume = typewriterPhases.get(slot) ?? null;
+    let index = resume ? Math.min(resume.index, roles.length - 1) : 0;
+    let current = line(index);
+    let typed = Math.min(resume?.typed ?? 0, current.text.length);
+    let phase: Phase = resume?.erasing ? 'erasing' : 'typing';
+
+    // A line that already finished in this document stays finished: full text,
+    // no cursor, no timers.
+    if (!cycles && typed >= current.text.length) {
+      setActive(index);
+      setRevealed(current.text.length);
       return;
     }
 
+    const persist = () =>
+      typewriterPhases.set(slot, {
+        index,
+        typed,
+        erasing: phase === 'erasing',
+      });
+    const pacer = createKeystrokePacer();
+
+    setActive(index);
     setRevealed(typed);
     setCursorVisible(true);
+    persist();
 
     const tick = () => {
-      if (!erasing) {
-        if (typed < total) {
-          typed += 1;
+      if (phase === 'erasing') {
+        if (typed > 0) {
+          typed -= 1;
           setRevealed(typed);
-          timer.current = window.setTimeout(tick, typeDelayMs);
+          persist();
+          timer.current = window.setTimeout(tick, pacer.backspaceDelay());
           return;
         }
-        if (once) {
-          // Done: the cursor goes with the animation, the line stays.
-          typewriterPhases.set(slot, { typed, erasing });
-          setCursorVisible(false);
+        // Erased: the next role starts after a breath.
+        index = (index + 1) % roles.length;
+        current = line(index);
+        typed = 0;
+        phase = 'typing';
+        setActive(index);
+        setRevealed(0);
+        persist();
+        timer.current = window.setTimeout(tick, pacer.nextRoleDelay());
+        return;
+      }
+
+      if (typed < current.text.length) {
+        const char = current.text[typed];
+        typed += 1;
+        setRevealed(typed);
+        persist();
+
+        if (typed === current.text.length) {
+          if (!cycles) {
+            // Done: the cursor goes with the animation, the line stays.
+            setCursorVisible(false);
+            return;
+          }
+          // A finished role holds, then the hand reaches back for the key.
+          phase = 'erasing';
+          persist();
+          timer.current = window.setTimeout(
+            tick,
+            typewriterHoldMs + pacer.backspaceReachDelay()
+          );
           return;
         }
-        erasing = true;
-        timer.current = window.setTimeout(tick, holdMs);
-        return;
+        timer.current = window.setTimeout(tick, pacer.typingDelay(char));
       }
-      if (typed === 0) {
-        erasing = false;
-        timer.current = window.setTimeout(tick, typeDelayMs);
-        return;
-      }
-      typed -= 1;
-      setRevealed(typed);
-      timer.current = window.setTimeout(tick, eraseDelayMs);
     };
 
     timer.current = window.setTimeout(
       tick,
-      resume ? typeDelayMs : startDelayMs
+      resume ? pacer.typingDelay('') : typewriterStartMs
     );
 
     return () => {
       clearTimeout(timer.current);
-      typewriterPhases.set(slot, { typed, erasing });
+      persist();
     };
-  }, [slot, total, once]);
+  }, [slot, cycles, rolesKey, roles]);
+
+  const line = lines[Math.min(active, lines.length - 1)];
 
   return (
-    <InnerHtml
-      as={as}
-      className={className}
-      html={typewriterHtml(
-        runs,
-        revealed,
-        cursorVisible ? 'typewriter-cursor' : undefined
-      )}
-    />
+    <>
+      <InnerHtml
+        as={as}
+        className={className}
+        html={
+          line
+            ? typewriterHtml(
+                line.runs,
+                revealed,
+                cursorVisible ? 'typewriter-cursor' : undefined
+              )
+            : ''
+        }
+      />
+      {cycles &&
+        lines.slice(1).map((rest, offset) => (
+          <InnerHtml
+            as={as}
+            className={`${className ?? ''} hero-role-rest`.trim()}
+            html={typewriterHtml(rest.runs, rest.length)}
+            key={roles[offset + 1]}
+          />
+        ))}
+    </>
   );
 }

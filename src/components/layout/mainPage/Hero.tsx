@@ -42,6 +42,9 @@ const SquircleClipPath = () => (
   </svg>
 );
 
+const roleLineClass =
+  'font-mono text-xl tracking-normal text-text-muted md:text-2xl';
+
 /**
  * Hero and about block (docs/DESIGN.md §6): one full-height band — the portrait
  * beside the name and role(s), then the about card below in the section-header
@@ -60,6 +63,13 @@ export default async function Hero({ locale }: { locale: string }) {
   const target = heroSection.typewriter
     ? normalizeTypewriterTarget(heroSection.typewriter_target)
     : null;
+
+  // The roles the typewriter animates. More than one cycles inside a single
+  // line, so those collapse to the line the animation is on; a lone animated
+  // role keeps its place in the stack.
+  const animatedRoles = target
+    ? roles.filter((_, index) => typewritesRole(target, index))
+    : [];
 
   // The paragraph arrives as separate blocks separated by blank lines
   const paragraphs = t('aboutme.paragraph')
@@ -110,23 +120,32 @@ export default async function Hero({ locale }: { locale: string }) {
               className="mb-3 font-heading text-3xl font-semibold tracking-tight text-text-white sm:text-4xl md:text-5xl"
               html={formatLabels(t('top.name'))}
             />
-            {roles.map((role, index) =>
-              target && typewritesRole(target, index) ? (
-                <RoleTypewriter
-                  as="p"
-                  className="font-mono text-xl tracking-normal text-text-muted md:text-2xl"
-                  key={role}
-                  once={roles.length === 1}
-                  slot={index}
-                  text={role}
-                />
-              ) : (
-                <InnerHtml
-                  as="p"
-                  className="font-mono text-xl tracking-normal text-text-muted md:text-2xl"
-                  html={formatLabels(role)}
-                  key={role}
-                />
+            {animatedRoles.length > 1 ? (
+              <RoleTypewriter
+                as="p"
+                className={roleLineClass}
+                key="animated-roles"
+                roles={animatedRoles}
+                slot={0}
+              />
+            ) : (
+              roles.map((role, index) =>
+                target && typewritesRole(target, index) ? (
+                  <RoleTypewriter
+                    as="p"
+                    className={roleLineClass}
+                    key={role}
+                    roles={[role]}
+                    slot={index}
+                  />
+                ) : (
+                  <InnerHtml
+                    as="p"
+                    className={roleLineClass}
+                    html={formatLabels(role)}
+                    key={role}
+                  />
+                )
               )
             )}
           </div>

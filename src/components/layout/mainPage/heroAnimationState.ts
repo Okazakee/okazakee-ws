@@ -48,6 +48,8 @@ export interface HeroMatrixState {
 }
 
 export interface TypewriterPhase {
+  /** Active role inside the line's role list; the cycling line advances it. */
+  index: number;
   typed: number;
   erasing: boolean;
 }
@@ -57,8 +59,8 @@ export const HERO_SEED = 0x9451ff;
 
 /**
  * Reveal phase per role-line slot (the line's index in the hero role list).
- * Present means a remount continues from that character; absent plays from
- * the start.
+ * Present means a remount continues at that role and character; absent plays
+ * from the start.
  */
 export const typewriterPhases = new Map<number, TypewriterPhase>();
 
