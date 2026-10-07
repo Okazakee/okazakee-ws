@@ -155,7 +155,11 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   and post detail at `pt-12 pb-24 md:pt-24`.
 - Hero ground: a transparent matrix-rain canvas behind the untouched hero/about
   content (violet ramp per theme, pixel lead ahead of each drop, magnet-repel
-  pointer at 6 cells, disc-ping clicks, steady dim speckle). Padded, feathered
+  pointer at 6 cells, disc-ping clicks, steady dim speckle). The two ramps are
+  matched perceptually rather than by hex: the ambient `dim` tier — the steady
+  speckle squares and the bed glyphs — steps the same ~8 L* and ~+13 chroma off
+  its own band either way (`#c4afe0` on the light band, `#2e2a4a` on the dark),
+  so the field reads equally present in both themes. Padded, feathered
   ellipses measured from the identity/about boxes dim and freeze ambient rain.
   Below 768px, their horizontal radii are capped to leave three live rain lanes
   (42px) per side outside the focus feather. Mobile trails remain visible while

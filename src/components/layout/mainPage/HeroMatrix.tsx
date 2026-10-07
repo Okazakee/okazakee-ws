@@ -70,7 +70,13 @@ const DARK: Ramp = {
 };
 
 const LIGHT: Ramp = {
-  dim: '#d9cdf9',
+  // `dim` carries the steady speckle squares (0.55 alpha) and the ambient bed
+  // glyphs (0.8). Against the light band (#dfe2e9) the old pale lavender
+  // (#d9cdf9) composited to a −2.9 L* step — invisible — while dark's #2e2a4a
+  // steps +8.2 L* / +12.6 chroma off its own band. This value matches both
+  // steps on the light band (−8.3 L* / +12.6 chroma, measured from the canvas
+  // ink), so the field reads the same in either theme.
+  dim: '#c4afe0',
   mid: '#a582f5',
   lit: '#7c3aed',
   hover: '#6d28d9',
