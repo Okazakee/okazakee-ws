@@ -41,15 +41,132 @@
   --matrix-warp: 18;
   --matrix-warp-reach: 9;
 
-  /* Custom cursors (docs/DESIGN.md §3): the art is in public/cursors/ and the
-     machinery below is live, but the site ships the SYSTEM cursors for now —
-     recognised by everyone, and the art is still being decided. Switch a kind
-     over by replacing its keyword with the url() form in the comment. */
+  /* Custom cursors (docs/DESIGN.md §3): the Windows "Blue" scheme, ported from
+     the .cur resources in public/cursors/blue/ — the cursor format is a raster
+     container (BMP/PNG entries, no vectors), so the unsuffixed files are the
+     native 64px PNG payloads, unpacked without re-encoding, and `-48` / `-60`
+     are LANCZOS resamples of them. A cursor draws at intrinsic ÷ descriptor,
+     and the compositor resamples any non-integer ratio — mush at the near-1:1
+     ones — so each kind carries one candidate per device pixel ratio and every
+     display draws its own bitmap 1:1 at 48 CSS px: 48px @ 1x, 60px @ 1.25x,
+     64px @ 1.3333x. That descriptor and the matching variant are the knob for
+     the size. Hotspots are in that drawn space, i.e. the metadata's 64px values
+     × 0.75; where a 64px entry declared a corner (Unavailable, Verticle resize,
+     Diagonal resize 1 — their 32px entries say "centre"), the 32px value is
+     used instead. Replacing a whole image-set() with the keyword alone returns
+     that kind to the system cursor. */
   --cursor-default:
-    default; /* url('/cursors/default.svg') 1 1, default */
+    image-set(
+      url("/cursors/blue/default-48.png") 1x,
+      url("/cursors/blue/default-60.png") 1.25x,
+      url("/cursors/blue/default.png") 1.3333x
+    )
+    15 14,
+    default;
   --cursor-pointer:
-    pointer; /* url('/cursors/pointer.svg') 15 2, pointer */
-  --cursor-text: text; /* url('/cursors/text.svg') 16 16, text */
+    image-set(
+      url("/cursors/blue/pointer-48.png") 1x,
+      url("/cursors/blue/pointer-60.png") 1.25x,
+      url("/cursors/blue/pointer.png") 1.3333x
+    )
+    11 11,
+    pointer;
+  --cursor-text:
+    image-set(
+      url("/cursors/blue/text-48.png") 1x,
+      url("/cursors/blue/text-60.png") 1.25x,
+      url("/cursors/blue/text.png") 1.3333x
+    )
+    23 23,
+    text;
+  --cursor-not-allowed:
+    image-set(
+      url("/cursors/blue/not-allowed-48.png") 1x,
+      url("/cursors/blue/not-allowed-60.png") 1.25x,
+      url("/cursors/blue/not-allowed.png") 1.3333x
+    )
+    23 24,
+    not-allowed;
+  --cursor-wait:
+    image-set(
+      url("/cursors/blue/wait-48.png") 1x,
+      url("/cursors/blue/wait-60.png") 1.25x,
+      url("/cursors/blue/wait.png") 1.3333x
+    )
+    24 25,
+    wait;
+  --cursor-progress:
+    image-set(
+      url("/cursors/blue/progress-48.png") 1x,
+      url("/cursors/blue/progress-60.png") 1.25x,
+      url("/cursors/blue/progress.png") 1.3333x
+    )
+    6 4,
+    progress;
+  --cursor-crosshair:
+    image-set(
+      url("/cursors/blue/crosshair-48.png") 1x,
+      url("/cursors/blue/crosshair-60.png") 1.25x,
+      url("/cursors/blue/crosshair.png") 1.3333x
+    )
+    25 23,
+    crosshair;
+  --cursor-help:
+    image-set(
+      url("/cursors/blue/help-48.png") 1x,
+      url("/cursors/blue/help-60.png") 1.25x,
+      url("/cursors/blue/help.png") 1.3333x
+    )
+    7 5,
+    help;
+  --cursor-move:
+    image-set(
+      url("/cursors/blue/move-48.png") 1x,
+      url("/cursors/blue/move-60.png") 1.25x,
+      url("/cursors/blue/move.png") 1.3333x
+    )
+    23 23,
+    move;
+  --cursor-ew-resize:
+    image-set(
+      url("/cursors/blue/ew-resize-48.png") 1x,
+      url("/cursors/blue/ew-resize-60.png") 1.25x,
+      url("/cursors/blue/ew-resize.png") 1.3333x
+    )
+    23 23,
+    ew-resize;
+  --cursor-ns-resize:
+    image-set(
+      url("/cursors/blue/ns-resize-48.png") 1x,
+      url("/cursors/blue/ns-resize-60.png") 1.25x,
+      url("/cursors/blue/ns-resize.png") 1.3333x
+    )
+    23 24,
+    ns-resize;
+  --cursor-nwse-resize:
+    image-set(
+      url("/cursors/blue/nwse-resize-48.png") 1x,
+      url("/cursors/blue/nwse-resize-60.png") 1.25x,
+      url("/cursors/blue/nwse-resize.png") 1.3333x
+    )
+    24 24,
+    nwse-resize;
+  --cursor-nesw-resize:
+    image-set(
+      url("/cursors/blue/nesw-resize-48.png") 1x,
+      url("/cursors/blue/nesw-resize-60.png") 1.25x,
+      url("/cursors/blue/nesw-resize.png") 1.3333x
+    )
+    24 24,
+    nesw-resize;
+  --cursor-copy:
+    image-set(
+      url("/cursors/blue/copy-48.png") 1x,
+      url("/cursors/blue/copy-60.png") 1.25x,
+      url("/cursors/blue/copy.png") 1.3333x
+    )
+    23 22,
+    copy;
 }
 
 .dark {
@@ -102,20 +219,191 @@
     cursor: var(--cursor-pointer);
   }
 
-  p,
-  li,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  blockquote,
-  td,
-  th,
-  pre,
-  code,
-  textarea,
+  /* Text cursor for prose and text fields — but never inside something
+     interactive: a card that is a link owns its whole area, so its heading and
+     description keep the pointer instead of turning into a caret. */
+  p:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  li:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h1:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h2:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h3:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h4:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h5:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h6:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  blockquote:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  td:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  th:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  pre:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  code:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  textarea:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
   input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not(
     [type="button"]
   ):not([type="reset"]):not([type="file"]) {
@@ -133,7 +421,7 @@
 
   :disabled,
   [aria-disabled="true"] {
-    cursor: var(--cursor-default);
+    cursor: var(--cursor-not-allowed);
   }
   body {
     @apply bg-surface-base text-text-main;

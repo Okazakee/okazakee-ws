@@ -204,11 +204,32 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   knob, so retuning it moves every frosted surface together.
 - Borders: always 1px `border-subtle`; interaction raises the border to
   `accent-violet/40–/50`, optionally with a tinted shadow. **No image zoom on hover.**
-- Cursors: the three kinds are wired through `--cursor-default` / `-pointer` /
-  `-text` (`globals.css`, remapped onto Tailwind's `cursor-*` utilities), and the
-  site currently ships the **system** cursors for each kind. The custom
-  pixel-grid art is in `public/cursors/` — switching a kind over is replacing its
-  keyword in the token with the `url(…) hotspot` form noted beside it.
+- Cursors: the **Windows "Blue" scheme**, ported from its `.cur` resources into
+  `public/cursors/blue/`. `.cur` is a raster container (BMP or PNG entries, no
+  vectors), so the unsuffixed files are the native 64px PNG payloads unpacked
+  without re-encoding, and `-48` / `-60` are LANCZOS resamples of them. A cursor
+  draws at intrinsic ÷ descriptor, and the compositor resamples any non-integer
+  ratio — mush at the near-1:1 ones, which is what a 64px art at 60 device px
+  looks like. So each kind carries one candidate per device pixel ratio,
+  `image-set(… 48px 1x, … 60px 1.25x, … 64px 1.3333x)`: every display draws its
+  own bitmap 1:1 at **48 CSS px** (1.5× the 32px MDN recommends and Windows
+  shows at 100% DPI, short of the full 64). That descriptor plus the matching
+  variant is the knob for the size; 1.3333x is also the ceiling of the scheme's
+  art, so coarser displays get that one resampled. Hotspots are in the drawn
+  space, the metadata's 64px values × 0.75; three 64px entries declared a corner
+  (`Unavailable`, `Verticle resize`, `Diagonal resize 1`) where their own 32px
+  entries say "centre", so those use the 32px value. Fourteen kinds are wired as
+  `--cursor-*` tokens and remapped onto Tailwind's `cursor-*` utilities, so any
+  `cursor-not-allowed` / `cursor-progress` / … class picks up the art with no
+  sweep. Attached today: `default` (the page), `pointer` (links, buttons and
+  everything inside them — a card's title and description keep the hand instead
+  of turning into a caret), `text` (prose and text fields) and `not-allowed`
+  (`:disabled`, `[aria-disabled]`). The rest (`wait`, `progress`, `crosshair`,
+  `help`, `move`, the three resizes, `copy`) are ready but unattached: the site
+  has no drag, resize, move or zoom affordance to hang them on. `Link select`,
+  `Person select` and `Handwritting` have no CSS counterpart and stay unported.
+  Replacing a whole `image-set()` with the keyword alone returns that kind to the
+  system cursor.
 - Choice controls render through `Dropdown`: the trigger wears the field canon
   (`rounded-lg`, 1px `border-subtle`, `bg-surface-base`, mono type) so it is
   indistinguishable from the inputs beside it, and the menu is a **portalled**

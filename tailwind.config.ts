@@ -17,14 +17,25 @@ const config: Config = {
       backdropBlur: {
         surface: '3px',
       },
-      // The three cursor kinds resolve to the custom art in globals.css, so
-      // every `cursor-pointer` / `cursor-text` / `cursor-default` class in the
-      // codebase (and the `@apply`s in the base layer) uses it without a
-      // sweep. `cursor-not-allowed` and friends stay the system cursors.
+      // The cursor kinds resolve to the ported "Blue" art in globals.css, so
+      // every `cursor-*` class in the codebase (and the `@apply`s in the base
+      // layer) uses it without a sweep. Kinds the scheme has no art for
+      // (`cursor-grab`, `zoom-in`, …) stay the system cursors.
       cursor: {
         default: 'var(--cursor-default)',
         pointer: 'var(--cursor-pointer)',
         text: 'var(--cursor-text)',
+        'not-allowed': 'var(--cursor-not-allowed)',
+        wait: 'var(--cursor-wait)',
+        progress: 'var(--cursor-progress)',
+        crosshair: 'var(--cursor-crosshair)',
+        help: 'var(--cursor-help)',
+        move: 'var(--cursor-move)',
+        'ew-resize': 'var(--cursor-ew-resize)',
+        'ns-resize': 'var(--cursor-ns-resize)',
+        'nwse-resize': 'var(--cursor-nwse-resize)',
+        'nesw-resize': 'var(--cursor-nesw-resize)',
+        copy: 'var(--cursor-copy)',
       },
       fontFamily: {
         whiterabt: 'var(--font-whiterabt)',
