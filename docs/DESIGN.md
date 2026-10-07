@@ -205,9 +205,11 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - Borders: always 1px `border-subtle`; interaction raises the border to
   `accent-violet/40–/50`, optionally with a tinted shadow. **No image zoom on hover.**
 - Cursors: the **Windows "Blue" scheme**, ported from its `.cur` resources into
-  `public/cursors/blue/`. `.cur` is a raster container (BMP or PNG entries, no
-  vectors), so the unsuffixed files are the native 64px PNG payloads unpacked
-  without re-encoding, and `-48` / `-60` are LANCZOS resamples of them. A cursor
+  `public/cursors/` and recoloured to `accent-violet` (`#9451ff`; `not-allowed`
+  keeps the scheme's red, which is the point of it). `.cur` is a raster
+  container (BMP or PNG entries, no vectors), so the unsuffixed files are the
+  native 64px PNG payloads unpacked without re-encoding, and `-48` / `-60` are
+  LANCZOS resamples of them. A cursor
   draws at intrinsic ÷ descriptor, and the compositor resamples any non-integer
   ratio — mush at the near-1:1 ones, which is what a 64px art at 60 device px
   looks like. So each kind carries one candidate per device pixel ratio,
