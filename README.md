@@ -35,7 +35,7 @@ public caches through a signed revalidation endpoint
 - **Search** — portfolio and blog content with a debounced search action
 - **View tracking** — per-post counters backed by Supabase RPCs
 - **Cache invalidation** — HMAC-signed, replay-protected revalidation events
-  from the CMS (`cacheTag` / `cacheLife`, `revalidateTag(tag, 'max')`)
+  from the CMS (`cacheTag` / `cacheLife`, `revalidateTag(tag, { expire: 0 })`)
 - **Performance** — Server Components for data and SEO, client islands only
   where interactivity demands it; WebP-only image pipeline (uploads arrive as
   WebP from the CMS, and the animated propic goes through the `next/image`
@@ -85,7 +85,8 @@ okazakee-cms ───────▶ Supabase ◀──────── okaza
 - **Caching:** public reads use `cacheTag`/`cacheLife` with the vocabulary in
   `src/libs/content/cacheTags.ts`. The signed revalidation endpoint accepts
   content-change events from the CMS (HMAC-SHA256, replay window, hard-coded
-  tag allowlist) and calls `revalidateTag(tag, 'max')`.
+  tag allowlist) and calls `revalidateTag(tag, { expire: 0 })` — immediate
+  expiry, because a request arriving from another app cannot use `updateTag`.
 - **i18n:** translations are stored in the Supabase `i18n_translations` table
   and served through `getTranslationsSupabase` (server) or `next-intl`
   clients (browser). Edited from the CMS, rendered here — except the header and

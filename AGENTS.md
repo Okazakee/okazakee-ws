@@ -8,7 +8,9 @@ Next.js 16 personal portfolio and blog. TypeScript throughout, React 19, Supabas
 > credentials. The public cache vocabulary lives in
 > `src/libs/content/cacheTags.ts`; the CMS sends signed content-change events
 > to `/api/internal/content-revalidate`, which validates them (HMAC, replay
-> window, hard-coded tag allowlist) and calls `revalidateTag(tag, 'max')`.
+> window, hard-coded tag allowlist) and calls `revalidateTag(tag, { expire: 0 })`
+> — immediate expiry, so a committed CMS edit can never keep being served the
+> previous render.
 > Legacy `/{locale}/cms*` URLs redirect to the CMS via
 > `LEGACY_CMS_REDIRECT_HOST` in `src/proxy.ts`.
 
