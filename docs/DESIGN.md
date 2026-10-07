@@ -254,15 +254,14 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   CMS section — **Layout** — which also holds the résumé PDFs and the footer
   identity; the wording around them is frozen here (§8), so that editor has no
   translation surface at all.
-- Nav anchors: the six destinations and the sections' `id=` attributes are
-  site-side and not editable. What an editor owns is the *anchor* each link
-  points at (`site_settings.nav_anchors`, an ordered `[{ id, anchor }]` array,
-  written index-aligned with `header.buttons.N` and read by `id`). `anchor` is
-  a fragment-safe element id with no leading `#`; a missing/blank anchor falls
-  back to the item id, which reproduces the href this header has always
-  rendered. The scroll-spy and the click handler keep reading `item.section`, so
-  an edited anchor moves the href without ever breaking in-page navigation or
-  the mobile drawer.
+- Nav buttons: the six destinations, their labels and the anchor each link
+  points at are all site-side. `header.buttons` (the labels) is frozen copy in
+  this repo — the CMS has no surface for it — and every link points at its own
+  section id (`navItemIds`: `home`, `skills`, `career`, `portfolio`, `blog`,
+  `contacts`), which is also what the scroll-spy and the click handler read, so
+  the href, the active highlight and the scroll can never disagree. Nothing
+  about the nav lives in `site_settings`, and nothing about it is editable from
+  the CMS.
 - Desktop nav: appears at **`lg`**, centred, mono `text-xs`; active item =
   `text-accent-violet-light font-semibold` + 1px `border-accent-violet` underline.
 - Mobile header: logo, theme toggle, hamburger — all right-aligned, 44×44 targets, right
@@ -463,7 +462,7 @@ are the known exceptions still open — listed with the quirks below.
 | author | `user_profiles` via `author_id` (`display_name`, `avatar_url`) |
 | resume | `hero_section.resume_en` / `resume_it` — the columns are unchanged, but the CMS edits them from the Layout section: the résumé left Contacts, which now owns contact rows and its translations only |
 | header logos | `site_settings.header_logo_dark` / `header_logo_light` — absolute URLs; NULL falls back to the bundled `title-ws*.png` for that theme, independently per theme |
-| nav anchors | `site_settings.nav_anchors` — ordered `[{ id, anchor }]`, written index-aligned with `header.buttons.N`, read by `id`; a missing/blank `anchor` falls back to the item id | |
+|nav buttons|site-side constants (`src/utils/navAnchors.ts`): six items whose label comes from the frozen `header.buttons` copy and whose anchor is the item's own section id — nothing stored, nothing CMS-editable||
 | footer identity | `site_settings.footer_name` / `footer_vat_number` — nullable `TEXT`: the leading zero of an Italian VAT number is part of the identifier, so it is never numeric, and the value is printed and copied verbatim, never parsed. Null or blank renders this repo's literals (`Okazakee`, `02863310815`) |
 
 **Custom formatting to honour**
@@ -524,11 +523,11 @@ are the known exceptions still open — listed with the quirks below.
   normalises blank to null so the footer falls back instead of rendering a gap.
   `public` is untouched until that file is deliberately promoted; nothing here
   asserts it has been.
-- `header.buttons` is index-aligned with `navAnchors` and must hold one order in
-  both locales. The stored Italian array had Career and Portfolio transposed,
-  which is what the hardcoded `italianLabels` array in `NavMenu` existed to
-  paper over. Both the array and the transcription are gone; the pair is now
-  only ever edited together, in one file.
+- `header.buttons` is index-aligned with the nav's render order (`navItemIds`)
+  and must hold one order in both locales. The stored Italian array had Career
+  and Portfolio transposed, which is what the hardcoded `italianLabels` array in
+  `NavMenu` existed to paper over; both the array and the transcription are gone,
+  so the labels and their order live in one file.
 - Still open: the drawer's `Toggle menu` aria-label and the post page's
   share-tooltip strings are literals.
 

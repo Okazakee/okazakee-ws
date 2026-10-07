@@ -17,16 +17,14 @@ export type TypewriterTarget = 'role1' | 'role2' | 'all';
 /**
  * The single `site_settings` row: the header chrome and footer identity the
  * CMS owns. Every field is nullable — a null logo means "keep the bundled
- * asset", a null anchor array means every nav link keeps the href it has
- * always rendered, and null footer identity keeps the shipped default.
+ * asset" and null footer identity keeps the shipped default. Nav anchors are
+ * not stored: every nav link points at its own section.
  */
 export type SiteSettings = {
   /** Logo shown in dark theme; null falls back to the bundled asset. */
   header_logo_dark: string | null;
   /** Logo shown in light theme; null falls back to the bundled asset. */
   header_logo_light: string | null;
-  /** Ordered `[{ id, anchor }]`, index-aligned with the six nav items. */
-  nav_anchors: unknown;
   /** Footer display name; null keeps the bundled default. */
   footer_name: string | null;
   /** Footer VAT number (TEXT, zeroes matter); null keeps the default. */

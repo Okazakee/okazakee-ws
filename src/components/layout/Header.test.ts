@@ -29,8 +29,7 @@ vi.mock('next/link', async () => {
 vi.mock('./NavMenu', async () => {
   const { createElement } = await import('react');
   return {
-    default: (props: { anchors: readonly string[] }) =>
-      createElement('nav', { 'data-anchors': props.anchors.join(',') }),
+    default: () => createElement('nav'),
   };
 });
 
@@ -44,7 +43,6 @@ const LIGHT_VARIANT =
 function render(settings: {
   logoDark: string | null;
   logoLight: string | null;
-  navAnchors: unknown;
 }) {
   return renderToStaticMarkup(
     Header({
@@ -52,7 +50,6 @@ function render(settings: {
       resumeLink: null,
       logoDark: settings.logoDark,
       logoLight: settings.logoLight,
-      navAnchors: settings.navAnchors,
     })
   );
 }
@@ -68,11 +65,7 @@ function logoSources(markup: string): { dark: string; light: string } {
 
 describe('Header logos', () => {
   it('falls back to the bundled assets when neither logo is stored', () => {
-    const markup = render({
-      logoDark: null,
-      logoLight: null,
-      navAnchors: null,
-    });
+    const markup = render({ logoDark: null, logoLight: null });
     expect(logoSources(markup)).toEqual({
       dark: '/bundled-dark.png',
       light: '/bundled-light.png',
@@ -84,9 +77,10 @@ describe('Header logos', () => {
   });
 
   it('treats an empty stored URL as unconfigured', () => {
-    expect(
-      logoSources(render({ logoDark: '   ', logoLight: '', navAnchors: null }))
-    ).toEqual({ dark: '/bundled-dark.png', light: '/bundled-light.png' });
+    expect(logoSources(render({ logoDark: '   ', logoLight: '' }))).toEqual({
+      dark: '/bundled-dark.png',
+      light: '/bundled-light.png',
+    });
   });
 
   it('renders a stored dark logo and still falls back on the light theme', () => {
@@ -95,7 +89,6 @@ describe('Header logos', () => {
         render({
           logoDark: 'https://cdn.example.test/dark.webp',
           logoLight: null,
-          navAnchors: null,
         })
       )
     ).toEqual({
@@ -110,23 +103,11 @@ describe('Header logos', () => {
         render({
           logoDark: null,
           logoLight: 'https://cdn.example.test/light.webp',
-          navAnchors: null,
         })
       )
     ).toEqual({
       dark: '/bundled-dark.png',
       light: 'https://cdn.example.test/light.webp',
     });
-  });
-
-  it('passes the resolved anchors to the navigation', () => {
-    const markup = render({
-      logoDark: null,
-      logoLight: null,
-      navAnchors: [{ id: 'blog', anchor: 'writing' }],
-    });
-    expect(markup).toContain(
-      'data-anchors="home,skills,career,portfolio,writing,contacts"'
-    );
   });
 });

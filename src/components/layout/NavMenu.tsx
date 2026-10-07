@@ -40,10 +40,9 @@ const rowStaggerMs = 40;
  * scroll-spy); on other pages the section items navigate back to their home
  * anchor while portfolio and blog highlight by route.
  *
- * The anchor each item points at is CMS-editable; the section id it scrolls
- * to is not. The scroll-spy and the click handler keep reading `item.section`,
- * so an edited anchor moves the href without breaking in-page navigation or
- * the drawer.
+ * Every item points at its own section: the anchor is the section id, which is
+ * site-side data and not edited anywhere, so the href, the scroll-spy and the
+ * click handler can never disagree.
  */
 function ResumeLabel({ label }: { label: string }) {
   const textRef = useRef<HTMLSpanElement>(null);
@@ -87,12 +86,9 @@ function ResumeLabel({ label }: { label: string }) {
 }
 
 export default function NavMenu({
-  anchors,
   locale,
   resumeLink,
 }: {
-  /** Per-item anchors from `site_settings`; computed defaults when absent. */
-  anchors: readonly string[];
   locale: string;
   resumeLink: string | null;
 }) {
@@ -116,10 +112,7 @@ export default function NavMenu({
   useEffect(() => {
     drawerOpenBeforeLocaleSwitch = isOpen;
   }, [isOpen]);
-  const menuItems = useMemo(
-    () => createMenuItems(locale, anchors),
-    [locale, anchors]
-  );
+  const menuItems = useMemo(() => createMenuItems(locale), [locale]);
   const t = useTranslations('header');
   const resumeLabel = t('resume');
   const pathname = usePathname();
@@ -330,9 +323,8 @@ export default function NavMenu({
                       }}
                       style={{
                         transitionDelay: `${
-                          (isOpen
-                            ? index
-                            : menuItems.length - index) * rowStaggerMs
+                          (isOpen ? index : menuItems.length - index) *
+                          rowStaggerMs
                         }ms`,
                       }}
                       tabIndex={isOpen ? 0 : -1}

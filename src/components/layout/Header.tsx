@@ -1,8 +1,7 @@
-import logoLight from '@public/title-ws-lightmode.png';
 import logo from '@public/title-ws.png';
+import logoLight from '@public/title-ws-lightmode.png';
 import Image from 'next/image';
 import Link from 'next/link';
-import { parseNavAnchors } from '@/utils/navAnchors';
 import NavMenu from './NavMenu';
 
 /**
@@ -20,7 +19,6 @@ export default function Header({
   resumeLink,
   logoDark,
   logoLight: logoLightUrl,
-  navAnchors,
 }: {
   locale: string;
   resumeLink: string | null;
@@ -28,12 +26,9 @@ export default function Header({
   logoDark: string | null;
   /** Stored light-theme logo URL, or null for the bundled asset. */
   logoLight: string | null;
-  /** Ordered `[{ id, anchor }]` from `site_settings`; null keeps the defaults. */
-  navAnchors: unknown;
 }) {
   const darkSrc = logoDark?.trim() ? logoDark : logo.src;
   const lightSrc = logoLightUrl?.trim() ? logoLightUrl : logoLight.src;
-  const anchors = parseNavAnchors(navAnchors);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border-subtle bg-surface-base/70 backdrop-blur-md">
@@ -68,7 +63,7 @@ export default function Header({
             width={136}
           />
         </Link>
-        <NavMenu anchors={anchors} locale={locale} resumeLink={resumeLink} />
+        <NavMenu locale={locale} resumeLink={resumeLink} />
       </div>
     </header>
   );

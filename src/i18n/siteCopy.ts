@@ -10,8 +10,8 @@ import siteIt from '@/i18n/messages/site.it.json';
  * breaks the product rather than the words. Same rule as
  * `i18n/postButtons.ts` and `i18n/requestForm.ts`.
  *
- * `header.buttons` is index-aligned with `navAnchors` and MUST stay in the same
- * order in both locales. The stored Italian array had Career and Portfolio
+ * `header.buttons` is index-aligned with the nav's render order
+ * (`navItemIds`) and MUST stay in the same order in both locales. The stored Italian array had Career and Portfolio
  * transposed, which is why `NavMenu` used to carry a hardcoded Italian label
  * list; that workaround is gone, and the pair is only ever edited together here.
  *

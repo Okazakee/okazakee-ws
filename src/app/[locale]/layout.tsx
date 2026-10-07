@@ -5,11 +5,11 @@ import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { Suspense } from 'react';
-import { publicConfig } from '@/config/public';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
 import { LocaleScrollRestore } from '@/components/layout/LocaleScrollRestore';
 import ScrollTop from '@/components/layout/ScrollTop';
+import { publicConfig } from '@/config/public';
 import { isValidLocale, locales } from '@/i18n/routing';
 import type { ResumeData } from '@/types/fetchedData.types';
 import { getResumeLink, getSiteSettings } from '@/utils/getData';
@@ -53,7 +53,6 @@ async function LocaleShell({
         resumeLink={resumeLink}
         logoDark={settings?.header_logo_dark ?? null}
         logoLight={settings?.header_logo_light ?? null}
-        navAnchors={settings?.nav_anchors ?? null}
       />
       <div className="flex min-w-0 flex-1 flex-col [&>*]:min-w-0 [&>*]:w-full">
         {children}
