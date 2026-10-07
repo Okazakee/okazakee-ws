@@ -51,7 +51,7 @@ export default function Postcard({
           sizes="(min-width: 768px) 320px, 100vw"
           src={post.image}
         />
-        <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded bg-surface-base/80 px-2 py-0.5 font-mono text-[11px] text-text-muted backdrop-blur-md">
+        <span className="absolute right-2 bottom-2 flex items-center gap-1 rounded bg-surface-base/80 px-2 py-0.5 font-mono text-[11px] text-text-muted backdrop-blur-surface">
           <Eye className="h-3.5 w-3.5" />
           {post.views}
         </span>

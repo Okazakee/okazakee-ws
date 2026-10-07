@@ -31,6 +31,25 @@
   --c-status-active: #047857;
   --c-code-bg: #dde1e7;
   --c-code-fg: #1b2030;
+
+  /* Hero matrix pointer warp (docs/DESIGN.md §6): two values the effect reads
+     once per mount, each with its own fallback — how far a cell is displaced
+     (`--matrix-warp`, canvas px) and how far that displacement reaches
+     (`--matrix-warp-reach`, grid cells). The BRIGHT cluster is not here: its
+     radius is the fixed POINTER_CELLS in HeroMatrix.tsx, so widening the reach
+     can never light up a wider area. */
+  --matrix-warp: 18;
+  --matrix-warp-reach: 9;
+
+  /* Custom cursors (docs/DESIGN.md §3): the art is in public/cursors/ and the
+     machinery below is live, but the site ships the SYSTEM cursors for now —
+     recognised by everyone, and the art is still being decided. Switch a kind
+     over by replacing its keyword with the url() form in the comment. */
+  --cursor-default:
+    default; /* url('/cursors/default.svg') 1 1, default */
+  --cursor-pointer:
+    pointer; /* url('/cursors/pointer.svg') 15 2, pointer */
+  --cursor-text: text; /* url('/cursors/text.svg') 16 16, text */
 }
 
 .dark {
@@ -68,6 +87,53 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Custom cursors (docs/DESIGN.md §3), inherited by everything; the kinds
+       below hand the matching art to elements that get none from a class. */
+    cursor: var(--cursor-default);
+  }
+
+  a,
+  summary,
+  select,
+  [role="button"],
+  [role="combobox"],
+  [role="option"],
+  [role="tab"] {
+    cursor: var(--cursor-pointer);
+  }
+
+  p,
+  li,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  blockquote,
+  td,
+  th,
+  pre,
+  code,
+  textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not(
+    [type="button"]
+  ):not([type="reset"]):not([type="file"]) {
+    cursor: var(--cursor-text);
+  }
+
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  input[type="file"] {
+    cursor: var(--cursor-pointer);
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: var(--cursor-default);
   }
   body {
     @apply bg-surface-base text-text-main;

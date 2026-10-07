@@ -86,7 +86,7 @@ export default async function Hero({ locale }: { locale: string }) {
       {shape === 'squircle' && <SquircleClipPath />}
       <div className="relative z-10 mx-auto w-full max-w-4xl px-6">
         <div
-          className="flex flex-col items-center xl:flex-row xl:justify-center xl:gap-16"
+          className="pointer-events-none flex flex-col items-center xl:flex-row xl:justify-center xl:gap-16"
           data-hero-zone="identity"
         >
           <div className="relative mb-10 aspect-square w-[190px] shrink-0 md:mb-12 md:w-[240px] xl:mb-0 xl:w-[260px]">
@@ -152,11 +152,11 @@ export default async function Hero({ locale }: { locale: string }) {
         </div>
 
         <div
-          className="mx-auto mt-6 max-w-3xl scroll-mt-20 md:mt-12"
+          className="pointer-events-none mx-auto mt-6 max-w-3xl scroll-mt-20 md:mt-12"
           data-hero-zone="about"
           id="about"
         >
-          <div className="space-y-4 rounded-2xl bg-surface-base/40 p-2 text-left text-sm leading-relaxed text-text-main/90 backdrop-blur-sm md:text-base md:leading-6">
+          <div className="space-y-4 rounded-2xl bg-surface-base/40 p-2 text-left text-sm leading-relaxed text-text-main/90 md:text-base md:leading-6">
             {paragraphs.map((paragraph) => (
               <InnerHtml
                 as="p"

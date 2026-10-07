@@ -11,8 +11,26 @@ import {
 import { createMatrixCanvasRenderer } from './matrixCanvasRenderer';
 
 const CELL = 14;
+// The pointer's magnet has TWO radii, deliberately separate:
+//  - POINTER_CELLS is the bright cluster: the cells that pop to the crest tier
+//    with extra light and heat. Fixed, so widening the warp can never light up a
+//    wider area.
+//  - the warp's own reach is `--matrix-warp-reach` (grid cells), so the
+//    displacement can reach further out than that cluster.
 const POINTER_CELLS = 6;
+// Fallbacks for the two tokens when they are missing or unusable.
+const FALLBACK_WARP_PX = 12;
+const FALLBACK_WARP_CELLS = 6;
 const GLYPHS = '>_/\\{}[]();:+*#$%&01';
+
+/** A positive number from a CSS token, with `fallback` for an odd value. */
+export function resolveNumericToken(
+  raw: string | null | undefined,
+  fallback: number
+): number {
+  const value = Number.parseFloat((raw ?? '').trim());
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
 
 // Ambient speckle: sparse steady pixels across the whole field, plus the
 // blinking cursor square that rides at the bottom of each rain trail.
@@ -108,6 +126,20 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
     // Tracks the renderer's buffer allocation, which is independent of the
     // canvas bitmap size (see measure).
     let rendererSized = false;
+
+    // Two tokens, read once per mount: how far the pointer's warp reaches
+    // (`--matrix-warp-reach`, grid cells) and how hard it displaces a cell
+    // (`--matrix-warp`, canvas px). The bright cluster's radius is the fixed
+    // POINTER_CELLS, so neither token can brighten a wider area.
+    const rootStyle = getComputedStyle(document.documentElement);
+    const warpCells = resolveNumericToken(
+      rootStyle.getPropertyValue('--matrix-warp-reach'),
+      FALLBACK_WARP_CELLS
+    );
+    const magnetWarp = resolveNumericToken(
+      rootStyle.getPropertyValue('--matrix-warp'),
+      FALLBACK_WARP_PX
+    );
 
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
@@ -370,6 +402,7 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
       renderer.beginFrame();
 
       const reach = POINTER_CELLS * CELL;
+      const warpReach = warpCells * CELL;
       const step = reduced ? 0 : Math.floor(t * 7);
       const elapsed = now - entranceT0;
       for (let i = 0; i < pings.length; i++) {
@@ -445,16 +478,20 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
           if (strength > 0.01) {
             const dx = px - pointer.x;
             const dy = py - pointer.y;
-            if (Math.abs(dx) < reach && Math.abs(dy) < reach) {
+            if (Math.abs(dx) < warpReach && Math.abs(dy) < warpReach) {
               const d = Math.sqrt(dx * dx + dy * dy);
-              if (d < reach && d > 0.01) {
-                const f = 1 - d / reach;
-                const push = f * f * 12 * strength;
+              if (d < warpReach && d > 0.01) {
+                const f = 1 - d / warpReach;
+                const push = f * f * magnetWarp * strength;
                 ox = (dx / d) * push;
                 oy = (dy / d) * push;
-                lum += f * f * strength * 0.5;
-                heat = Math.max(heat, f * f * strength);
-                pushed = true;
+                // Only the displacement follows the wider reach: the bright
+                // cluster keeps its fixed radius, so no extra area lights up.
+                if (d < reach) {
+                  lum += f * f * strength * 0.5;
+                  heat = Math.max(heat, f * f * strength);
+                  pushed = true;
+                }
               }
             }
           }

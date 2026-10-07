@@ -9,6 +9,23 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // One backdrop blur for every translucent surface in the site: the
+      // sticky header, the mobile drawer, the image-modal overlay, a post
+      // card's badge and the request band's overlay all use
+      // `backdrop-blur-surface`, so the value is tuned in one place
+      // (docs/DESIGN.md §3). Per-element blur values are not used.
+      backdropBlur: {
+        surface: '3px',
+      },
+      // The three cursor kinds resolve to the custom art in globals.css, so
+      // every `cursor-pointer` / `cursor-text` / `cursor-default` class in the
+      // codebase (and the `@apply`s in the base layer) uses it without a
+      // sweep. `cursor-not-allowed` and friends stay the system cursors.
+      cursor: {
+        default: 'var(--cursor-default)',
+        pointer: 'var(--cursor-pointer)',
+        text: 'var(--cursor-text)',
+      },
       fontFamily: {
         whiterabt: 'var(--font-whiterabt)',
         body: 'var(--font-whiterabt)',

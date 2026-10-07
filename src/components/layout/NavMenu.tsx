@@ -294,7 +294,7 @@ export default function NavMenu({
         createPortal(
           <div
             aria-hidden={!isOpen}
-            className={`fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-surface-base/70 backdrop-blur-md transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
+            className={`fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-surface-base/70 backdrop-blur-surface transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
               isOpen
                 ? 'visible translate-y-0 opacity-100'
                 : 'invisible -translate-y-2 opacity-0'

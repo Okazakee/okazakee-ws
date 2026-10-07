@@ -155,7 +155,13 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   and post detail at `pt-12 pb-24 md:pt-24`.
 - Hero ground: a transparent matrix-rain canvas behind the untouched hero/about
   content (violet ramp per theme, pixel lead ahead of each drop, magnet-repel
-  pointer at 6 cells, disc-ping clicks, steady dim speckle). The two ramps are
+  pointer with two separate radii: the bright cluster stays within 6 cells,
+  while the warp reaches `--matrix-warp-reach` (9 cells) and displaces a cell by
+  up to `--matrix-warp` (18 canvas px), both in `globals.css` — disc-ping
+  clicks, steady dim speckle). The identity and
+  about blocks are `pointer-events-none`: the pointer never lands on the hero's
+  content, so nothing there is selectable or draggable and the magnet and pings
+  keep tracking across the whole band. The two ramps are
   matched perceptually rather than by hex: the ambient `dim` tier — the steady
   speckle squares and the bed glyphs — steps the same ~8 L* and ~+13 chroma off
   its own band either way (`#c4afe0` on the light band, `#2e2a4a` on the dark),
@@ -191,8 +197,18 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   use full `bg-surface-alt`; portfolio, skills and contacts are transparent.
 - Radii: cards and panels `rounded-2xl` (16px), inner media `rounded-xl` (12px),
   buttons `rounded-lg` (8px), chips `rounded` (4px).
+- Backdrop blur: **one theme value for every translucent surface** —
+  `backdrop-blur-surface` (`3px`, `tailwind.config.ts`) on the sticky header, the
+  mobile drawer, the image-modal overlay, a card's view badge and the request
+  band's overlay. Per-element blur values are not used: the token is the only
+  knob, so retuning it moves every frosted surface together.
 - Borders: always 1px `border-subtle`; interaction raises the border to
   `accent-violet/40–/50`, optionally with a tinted shadow. **No image zoom on hover.**
+- Cursors: the three kinds are wired through `--cursor-default` / `-pointer` /
+  `-text` (`globals.css`, remapped onto Tailwind's `cursor-*` utilities), and the
+  site currently ships the **system** cursors for each kind. The custom
+  pixel-grid art is in `public/cursors/` — switching a kind over is replacing its
+  keyword in the token with the `url(…) hotspot` form noted beside it.
 - Choice controls render through `Dropdown`: the trigger wears the field canon
   (`rounded-lg`, 1px `border-subtle`, `bg-surface-base`, mono type) so it is
   indistinguishable from the inputs beside it, and the menu is a **portalled**
