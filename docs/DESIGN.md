@@ -193,13 +193,17 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   typewriter. `prefers-reduced-motion` disables smooth scroll and transitions
   (mirrors the repo's existing rule) and also keeps the hero typewriter static.
 - **Hero portrait shape** (`hero_section.shape`): `pebble` (default), `square`,
-  `rounded` (`rounded-xl` — the inner-media radius above) and `squircle`. Pebble
-  and squircle are `clip-path` utilities over an inline `clipPath` in
-  `objectBoundingBox` units (`clip-pebble` / `clip-squircle`), so the shape
-  scales with the portrait at every breakpoint; the squircle path is a sampled
-  superellipse (`|x|⁴ + |y|⁴ = 1`). The accent plate behind the portrait is the
-  pebble path for `pebble` and a `bg-accent-violet` shape plate otherwise. An
-  absent or unknown stored value renders `pebble`.
+  `rounded` and `squircle`. Every preset is built the same way: the accent plate
+  is the full portrait box in the preset's shape (`bg-accent-violet`) and the
+  image mask is that same shape inset by `2.15%` of the box, so the accent ring
+  stays ~5.6px at 260px in every preset — presets differ in corner treatment
+  only, never in size or ring width. `pebble` and `squircle` are `clip-path`
+  utilities over an inline `clipPath` in `objectBoundingBox` units
+  (`clip-pebble` / `clip-squircle`), so they scale with the portrait at every
+  breakpoint; both paths are normalised to fill their box (the squircle is a
+  sampled superellipse, `|x|⁴ + |y|⁴ = 1`). `rounded` states its radius as a
+  share of the box (`rounded-[15%]`) — a fixed radius read as a square at the
+  desktop size. An absent or unknown stored value renders `pebble`.
 - **Hero roles** are an ordered list: `hero-section.top.roles.0…` (a numeric index
   map) when the CMS list exists, otherwise the singular `top.role`, which stays
   as the live fallback for copy written before the list — content is never

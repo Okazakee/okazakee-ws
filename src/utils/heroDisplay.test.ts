@@ -3,6 +3,7 @@ import { formatLabels } from '@/utils/formatLabels';
 import {
   heroBackdropClass,
   heroPortraitClass,
+  heroShapes,
   normalizeHeroShape,
   normalizeTypewriterTarget,
   parseTypewriterRuns,
@@ -12,6 +13,14 @@ import {
   typewriterLength,
   typewritesRole,
 } from '@/utils/heroDisplay';
+
+/** Geometry each preset must apply to BOTH the accent plate and the mask. */
+const presetGeometry = {
+  pebble: 'clip-pebble',
+  square: '',
+  rounded: 'rounded-[15%]',
+  squircle: 'clip-squircle',
+} as const;
 
 describe('portrait shape presets', () => {
   it('keeps every stored preset', () => {
@@ -27,25 +36,42 @@ describe('portrait shape presets', () => {
     expect(normalizeHeroShape('hexagon')).toBe('pebble');
   });
 
-  it('clips the pebble portrait exactly as before the presets existed', () => {
-    expect(heroPortraitClass('pebble')).toBe(
-      'clip-pebble relative h-full w-full'
-    );
+  it('insets every preset by the same ring, inside a plate that fills the box', () => {
+    const ringInset = 'inset-[2.15%]';
+
+    for (const shape of heroShapes) {
+      const mask = heroPortraitClass(shape);
+      const plate = heroBackdropClass(shape);
+
+      // The mask sits inside the plate by exactly the ring width…
+      expect(mask).toContain('absolute');
+      expect(mask).toContain(ringInset);
+      expect(plate).toContain('inset-0');
+      expect(plate).toContain('bg-accent-violet');
+      // …clips its own overflow, so a corner radius actually applies…
+      expect(mask).toContain('overflow-hidden');
+
+      // …and both outlines share ONE geometry class, which is what keeps the
+      // ring a constant width instead of drifting at the corners.
+      const geometry = presetGeometry[shape];
+      if (geometry) {
+        expect(mask).toContain(geometry);
+        expect(plate).toContain(geometry);
+      }
+    }
   });
 
-  it('clips the other presets with the site clip-path idiom', () => {
-    expect(heroPortraitClass('square')).toBe(
-      'overflow-hidden relative h-full w-full'
-    );
-    expect(heroPortraitClass('rounded')).toBe(
-      'overflow-hidden rounded-xl relative h-full w-full'
-    );
-    expect(heroPortraitClass('squircle')).toBe(
-      'clip-squircle relative h-full w-full'
-    );
-    expect(heroBackdropClass('squircle')).toBe(
-      'absolute -inset-3 z-0 clip-squircle'
-    );
+  it('scales the rounded preset radius with the portrait', () => {
+    // A fixed radius (`rounded-xl`, 12px) is 4.6% of a 260px portrait and
+    // reads as a square, so this preset states its radius as a share.
+    expect(heroPortraitClass('rounded')).toMatch(/rounded-\[\d+%\]/);
+    expect(heroBackdropClass('rounded')).toMatch(/rounded-\[\d+%\]/);
+  });
+
+  it('leaves the square preset with no corner geometry at all', () => {
+    for (const cls of [heroPortraitClass('square'), heroBackdropClass('square')]) {
+      expect(cls).not.toMatch(/rounded|clip-/);
+    }
   });
 
   it('samples the squircle clip inside the object bounding box', () => {
