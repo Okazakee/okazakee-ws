@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import Dropdown from '@/components/common/Dropdown';
 import { publicConfig } from '@/config/public';
 import {
   type RequestFormOptions,
@@ -72,9 +73,6 @@ export function RequestForm() {
 
   const fieldClass =
     'w-full rounded-lg border border-border-subtle bg-surface-base px-3 py-2.5 font-mono text-xs text-text-main placeholder:text-text-dim focus:border-accent-violet/60 focus:outline-none';
-  // Mock's select: native appearance off, a chevron 8px from the right edge
-  // and a 16px line box (see .request-select in globals.css).
-  const selectClass = `${fieldClass} request-select`;
   const labelClass =
     'mb-2 block font-mono text-[11px] uppercase tracking-[0.08em] text-text-dim';
 
@@ -96,13 +94,6 @@ export function RequestForm() {
       {control}
     </div>
   );
-
-  const optionItems = (items: { value: string; label: string }[]) =>
-    items.map((option) => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ));
 
   const pages = [
     [
@@ -163,41 +154,32 @@ export function RequestForm() {
       field(
         'request-type',
         copy.type,
-        <select
-          className={selectClass}
+        <Dropdown
           id="request-type"
-          name="type"
-          onChange={(event) => update('type', event.target.value)}
+          onChange={(next) => update('type', next)}
+          options={options.type}
           value={values.type}
-        >
-          {optionItems(options.type)}
-        </select>
+        />
       ),
       field(
         'request-budget',
         copy.budget,
-        <select
-          className={selectClass}
+        <Dropdown
           id="request-budget"
-          name="budget"
-          onChange={(event) => update('budget', event.target.value)}
+          onChange={(next) => update('budget', next)}
+          options={options.budget}
           value={values.budget}
-        >
-          {optionItems(options.budget)}
-        </select>
+        />
       ),
       field(
         'request-timeline',
         copy.timeline,
-        <select
-          className={selectClass}
+        <Dropdown
           id="request-timeline"
-          name="timeline"
-          onChange={(event) => update('timeline', event.target.value)}
+          onChange={(next) => update('timeline', next)}
+          options={options.timeline}
           value={values.timeline}
-        >
-          {optionItems(options.timeline)}
-        </select>,
+        />,
         true
       ),
     ],

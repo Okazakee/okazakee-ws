@@ -193,6 +193,13 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   buttons `rounded-lg` (8px), chips `rounded` (4px).
 - Borders: always 1px `border-subtle`; interaction raises the border to
   `accent-violet/40–/50`, optionally with a tinted shadow. **No image zoom on hover.**
+- Choice controls render through `Dropdown`: the trigger wears the field canon
+  (`rounded-lg`, 1px `border-subtle`, `bg-surface-base`, mono type) so it is
+  indistinguishable from the inputs beside it, and the menu is a **portalled**
+  listbox (`rounded-xl`, 1px `border-subtle`, `bg-surface-card`, `shadow-xl`,
+  `z-60`) — a card's `overflow-hidden` or a scrolling pane can never clip it.
+  The row under the pointer or the keyboard cursor tints `accent-violet/10`;
+  the selected row is `accent-violet-light` with a check.
 - Motion: `transition-colors` ~300ms; nothing decorative outside the hero
   typewriter. `prefers-reduced-motion` disables smooth scroll and transitions
   (mirrors the repo's existing rule) and also keeps the hero typewriter static.
