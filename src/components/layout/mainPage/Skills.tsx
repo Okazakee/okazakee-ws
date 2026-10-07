@@ -40,7 +40,7 @@ export default async function Skills({ locale }: { locale: string }) {
         </div>
         <InnerHtml
           as="p"
-          className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"
+          className="mx-auto mt-2 w-fit max-w-xl font-mono text-xs text-accent-violet-light sm:text-sm"
           html={formatLabels(t('subtitle'))}
         />
         <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
@@ -49,7 +49,7 @@ export default async function Skills({ locale }: { locale: string }) {
       <div className="space-y-12">
         {skillsCategories.map((category) => (
           <div key={category.id}>
-            <h3 className="mb-4 text-center font-mono text-sm uppercase tracking-wider text-text-dim">
+            <h3 className="mx-auto mb-4 w-fit text-center font-mono text-sm uppercase tracking-wider text-text-dim">
               {category.name}
             </h3>
             <div className="flex flex-wrap justify-center gap-3">

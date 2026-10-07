@@ -125,7 +125,7 @@ export function CareerClient({
       </div>
 
       {nested && (
-        <p className="mb-4 text-xs text-text-dim">
+        <p className="mb-4 w-fit text-xs text-text-dim">
           {entry[`location_${locale}`]} {separator}{' '}
           {t(`remote.${entry.remote}`)}
         </p>
@@ -159,7 +159,7 @@ export function CareerClient({
           </div>
           <InnerHtml
             as="p"
-            className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"
+            className="mx-auto mt-2 w-fit max-w-xl font-mono text-xs text-accent-violet-light sm:text-sm"
             html={formatLabels(t('subtitle'))}
           />
           <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
@@ -213,7 +213,7 @@ export function CareerClient({
                         {group.company}
                         <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim" />
                       </a>
-                      <p className="mt-1 text-xs text-text-dim">
+                      <p className="mt-1 w-fit text-xs text-text-dim">
                         {latest[`location_${locale}`]} {separator}{' '}
                         {t(`remote.${latest.remote}`)}
                       </p>

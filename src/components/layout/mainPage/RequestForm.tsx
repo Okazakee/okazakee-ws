@@ -268,10 +268,10 @@ export function RequestForm() {
   if (status === 'sent') {
     return (
       <div className="relative mt-14 overflow-hidden rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-8">
-        <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-accent-violet">
+        <p className="mx-auto w-fit text-center font-mono text-[11px] uppercase tracking-[0.2em] text-accent-violet">
           {copy.eyebrow}
         </p>
-        <h3 className="mt-3 text-center font-heading text-xl font-semibold text-text-white">
+        <h3 className="mx-auto mt-3 w-fit text-center font-heading text-xl font-semibold text-text-white">
           {copy.successTitle}
         </h3>
         <p className="mx-auto mt-2 max-w-xl text-center text-sm leading-relaxed text-text-muted">

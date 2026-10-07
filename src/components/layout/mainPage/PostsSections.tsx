@@ -55,7 +55,7 @@ export default async function PostsSection({ locale }: { locale: string }) {
                   </div>
                   <InnerHtml
                     as="p"
-                    className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"
+                    className="mx-auto mt-2 w-fit max-w-xl font-mono text-xs text-accent-violet-light sm:text-sm"
                     html={formatLabels(t(isBlog ? 'subtitle2' : 'subtitle1'))}
                   />
                   <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
