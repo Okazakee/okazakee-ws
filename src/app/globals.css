@@ -209,13 +209,29 @@
     cursor: var(--cursor-default);
   }
 
+  /* Interactive elements, and everything inside them, so a button or a card
+     link keeps the hand over its own content instead of inheriting a caret
+     from a prose rule. Plain selector lists throughout: an `:is()` in these
+     rules would be lowered to `:-webkit-any()` by the production build, which
+     carries pseudo-class specificity and outranks the plain selectors — that
+     made links inside prose flip to the caret under `next build` while the dev
+     server showed the hand. */
   a,
+  button,
   summary,
   select,
   [role="button"],
   [role="combobox"],
   [role="option"],
-  [role="tab"] {
+  [role="tab"],
+  a *,
+  button *,
+  summary *,
+  select *,
+  [role="button"] *,
+  [role="combobox"] *,
+  [role="option"] *,
+  [role="tab"] * {
     cursor: var(--cursor-pointer);
   }
 
