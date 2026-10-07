@@ -43,7 +43,7 @@ const SquircleClipPath = () => (
 );
 
 const roleLineClass =
-  'font-mono text-xl tracking-normal text-text-muted md:text-2xl';
+  'mx-auto w-fit rounded-2xl bg-surface-base/40 p-2 font-mono text-xl tracking-normal text-text-muted md:text-2xl';
 
 /**
  * Hero and about block (docs/DESIGN.md §6): one full-height band — the portrait
@@ -117,7 +117,7 @@ export default async function Hero({ locale }: { locale: string }) {
           >
             <InnerHtml
               as="h1"
-              className="mb-3 font-heading text-3xl font-semibold tracking-tight text-text-white sm:text-4xl md:text-5xl"
+              className="mb-3 rounded-2xl bg-surface-base/40 p-2 font-heading text-3xl font-semibold tracking-tight text-text-white sm:text-4xl md:text-5xl"
               html={formatLabels(t('top.name'))}
             />
             {animatedRoles.length > 1 ? (
