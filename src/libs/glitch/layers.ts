@@ -19,7 +19,11 @@
  * The generator is pure, so its numbers are covered by `layers.test.ts`
  * without a DOM.
  */
-export type GlitchMode = 'hover' | 'click';
+/** The two ported presets. */
+export type GlitchPreset = 'hover' | 'click';
+
+/** What a host plays: one preset, or both (hover on enter, click on click). */
+export type GlitchMode = GlitchPreset | 'both';
 
 export type GlitchLayer = {
   steps: Keyframe[];
@@ -49,8 +53,12 @@ export type GlitchOptions = {
   };
 };
 
-/** How far a slice travels, in percent of the element's width. */
-const SLICE_SHIFT = 30;
+/**
+ * How far a slice travels, in percent of the element's width. PowerGlitch uses
+ * 30 — a third of the element, which on a card is a tear across its
+ * neighbours; the site keeps the tearing close to the content instead.
+ */
+const SLICE_SHIFT = 12;
 
 /**
  * How much the glitch is felt at `stepPct` of the loop: 0 outside the window,
@@ -167,24 +175,30 @@ export function generateGlitchLayers(options: GlitchOptions): GlitchLayer[] {
  * `hover` is the smooth character on quick timing: the slice window ramps in
  * and out (`glitchTimeSpan` 0.1 → 0.9), so the burst eases rather than
  * switching on, while the loop is short enough to be gone in a fifth of a
- * second. `click` is PowerGlitch's own click preset — more slices, faster
- * steps, one shot — for a button that fires on every click.
+ * second. `click` is PowerGlitch's click preset at the site's weight — a few
+ * more slices, faster steps, one shot — for a click that replays it.
  *
- * Both velocities are deliberately higher than PowerGlitch's defaults: the
- * loop was shortened, and a shorter loop at the original velocity would simply
- * cut the number of jumps. Raising it keeps six or seven distinct positions
- * (the glitch) while spending less time on it (the speed).
+ * Three knobs are deliberately below PowerGlitch's defaults, because this
+ * decoration has to sit on content a reader is trying to use:
+ *
+ *   velocity   raised (15/20 → 25/35) while the loop was shortened, so a
+ *              shorter burst keeps its six or seven discrete jumps instead of
+ *              losing them
+ *   amplitude  0.2 → 0.05/0.06: the shake is a fraction of the element's own
+ *              box, and a fifth of a card is a card that jumps
+ *   slices     6/15 → 4/6, and `SLICE_SHIFT` 30 → 12, so the tearing stays on
+ *              the element instead of across its neighbours
  */
-export const glitchPresets: Record<GlitchMode, GlitchOptions> = {
+export const glitchPresets: Record<GlitchPreset, GlitchOptions> = {
   hover: {
     timing: { duration: 200, iterations: 1 },
     glitchTimeSpan: { start: 0.1, end: 0.9 },
-    shake: { velocity: 25, amplitudeX: 0.2, amplitudeY: 0.2 },
+    shake: { velocity: 25, amplitudeX: 0.05, amplitudeY: 0.05 },
     slice: {
-      count: 6,
+      count: 4,
       velocity: 25,
       minHeight: 0.02,
-      maxHeight: 0.15,
+      maxHeight: 0.1,
       hueRotate: true,
       cssFilters: '',
     },
@@ -192,12 +206,12 @@ export const glitchPresets: Record<GlitchMode, GlitchOptions> = {
   click: {
     timing: { duration: 170, iterations: 1 },
     glitchTimeSpan: { start: 0, end: 1 },
-    shake: { velocity: 30, amplitudeX: 0.2, amplitudeY: 0.2 },
+    shake: { velocity: 30, amplitudeX: 0.06, amplitudeY: 0.06 },
     slice: {
-      count: 15,
+      count: 6,
       velocity: 35,
       minHeight: 0.02,
-      maxHeight: 0.15,
+      maxHeight: 0.12,
       hueRotate: true,
       cssFilters: '',
     },

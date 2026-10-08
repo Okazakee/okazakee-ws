@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import { useEffect } from 'react';
 import {
+  type GlitchLayer,
   type GlitchMode,
   generateGlitchLayers,
   glitchPresets,
@@ -24,8 +25,9 @@ export type GlitchTrigger = 'self' | 'group';
  * (`opacity: 0`) except while its own animation runs, so the layers cannot
  * leak into the layout or the paint when nothing is playing.
  *
- * Both modes are one shot, and both stop where they started: `hover` plays on
- * entry and cancels on leave, `click` cancels and replays on every click.
+ * One shot each way, and both stop where they started: `hover` plays on entry
+ * and cancels on leave, `click` cancels and replays on every click, `both` does
+ * both (the hover preset on entry, the click preset on a click).
  *
  * `prefers-reduced-motion: reduce` is read before any of this exists, so those
  * readers get no listeners and no clones at all. The global CSS rule that
@@ -42,17 +44,19 @@ export function useGlitch(
     if (!container) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const layers = generateGlitchLayers(glitchPresets[mode]);
+    const hoverLayers =
+      mode === 'click' ? null : generateGlitchLayers(glitchPresets.hover);
+    const clickLayers =
+      mode === 'hover' ? null : generateGlitchLayers(glitchPresets.click);
     let copies: HTMLElement[] | null = null;
 
     // Node i plays layer i: the glitched element shakes, one copy per remaining
     // slice layer clips, shifts and tints a band. Both are resolved from the
     // DOM on every trigger, because React may swap the glitched element itself
-    // under the copies (the theme toggle's icon changes on click), which
-    // detaches whatever we captured last time. The copies carry their own
-    // marker rather than relying on `aria-hidden`: the host's content is often
-    // `aria-hidden` too (every lucide icon is).
-    const play = () => {
+    // under the copies, which detaches whatever we captured last time. The
+    // copies carry their own marker rather than relying on `aria-hidden`: the
+    // host's content is often `aria-hidden` too (every lucide icon is).
+    const play = (layers: GlitchLayer[]) => {
       const base = container.querySelector<HTMLElement>(
         ':scope > :not([data-glitch-layer])'
       );
@@ -97,22 +101,30 @@ export function useGlitch(
         ? (container.closest('.group') ?? container)
         : container;
 
-    const restart = () => {
+    const onEnter = () => {
+      if (hoverLayers) play(hoverLayers);
+    };
+    // A click replays its own preset over whatever the hover left behind; the
+    // two presets differ in layer count, which `play` handles by rebuilding.
+    const onClick = () => {
+      const layers = clickLayers ?? hoverLayers;
+      if (!layers) return;
       cancel();
-      play();
+      play(layers);
     };
 
-    if (mode === 'hover') {
-      host.addEventListener('mouseenter', play);
+    if (mode !== 'click') {
+      host.addEventListener('mouseenter', onEnter);
       host.addEventListener('mouseleave', cancel);
-    } else {
-      host.addEventListener('click', restart);
+    }
+    if (mode !== 'hover') {
+      host.addEventListener('click', onClick);
     }
 
     return () => {
-      host.removeEventListener('mouseenter', play);
+      host.removeEventListener('mouseenter', onEnter);
       host.removeEventListener('mouseleave', cancel);
-      host.removeEventListener('click', restart);
+      host.removeEventListener('click', onClick);
       cancel();
       for (const copy of copies ?? []) copy.remove();
     };
