@@ -39,6 +39,10 @@
     "privacyPolicy": "Informativa sulla Privacy"
   },
   "posts-section": {
+    "title1": "Portfolio",
+    "title2": "Blog",
+    "subtitle1": "Una ****selezione di progetti**** che sviluppo e mantengo, con codice sorgente e implementazioni live quando disponibili",
+    "subtitle2": "Post occasionali su interessanti ****esperienze**** di sviluppo e ****approfondimenti****",
     "website": "Sito web",
     "source": "Codice Sorgente",
     "ios": "iOS",
@@ -60,12 +64,34 @@
     "searchbar": "Cerca post dal titolo, desc o tag..."
   },
   "contacts-section": {
+    "title": "Contatti",
+    "subtitle": "Puoi ****contattarmi**** tramite:",
     "directChannels": "CANALI DIRETTI",
     "directChannelsLabel": "Canali di contatto diretti",
     "projectInquiry": "RICHIESTA PROGETTO",
     "projectInquiryLabel": "Richiesta progetto"
   },
   "privacyPolicy": {
-    "title": "Informativa sulla Privacy"
+    "title": "Informativa sulla Privacy",
+    "description": "Scopri come raccogliamo, utilizziamo e proteggiamo i tuoi dati personali quando visiti il nostro sito web."
+  },
+  "skills-section": {
+    "title": "Skills & Stack Tecnico",
+    "subtitle": "Tecnologie che utilizzo regolarmente tra sviluppo ****web, mobile, backend e infrastruttura****"
+  },
+  "career-section": {
+    "title": "Percorso Professionale",
+    "subtitle": "La mia esperienza professionale tra sviluppo ****web, mobile e integrazione di prodotto****",
+    "year": "anno",
+    "years": "anni",
+    "month": "mese",
+    "months": "mesi",
+    "locale": "it",
+    "present": "Presente",
+    "remote": {
+      "full": "Remoto",
+      "hybrid": "Ibrido",
+      "onSite": "In sede"
+    }
   }
 }

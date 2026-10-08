@@ -39,6 +39,10 @@
     "privacyPolicy": "Privacy Policy"
   },
   "posts-section": {
+    "title1": "Portfolio",
+    "title2": "Blog",
+    "subtitle1": "A ****selection of projects**** I build and maintain, with source code and live implementations where available",
+    "subtitle2": "Occasional posts on interesting development ****experience**** and ****insights****",
     "website": "Website",
     "source": "Source Code",
     "ios": "iOS",
@@ -60,12 +64,34 @@
     "searchbar": "Search posts by title, desc or tag..."
   },
   "contacts-section": {
+    "title": "Contacts",
+    "subtitle": "You can ****reach me**** through the following channels:",
     "directChannels": "DIRECT CHANNELS",
     "directChannelsLabel": "Direct contact channels",
     "projectInquiry": "PROJECT REQUEST",
     "projectInquiryLabel": "Project request"
   },
   "privacyPolicy": {
-    "title": "Privacy Policy"
+    "title": "Privacy Policy",
+    "description": "Learn how we collect, use, and protect your personal data when you visit our website."
+  },
+  "skills-section": {
+    "title": "Skills & Tech Stack",
+    "subtitle": "Technologies I use regularly across ****web, mobile, backend and infrastructure**** work"
+  },
+  "career-section": {
+    "title": "Career History",
+    "subtitle": "My professional experience across ****web, mobile and product integration****",
+    "year": "year",
+    "years": "years",
+    "month": "month",
+    "months": "months",
+    "locale": "en",
+    "present": "Present",
+    "remote": {
+      "full": "Remote",
+      "hybrid": "Hybrid",
+      "onSite": "On-site"
+    }
   }
 }
