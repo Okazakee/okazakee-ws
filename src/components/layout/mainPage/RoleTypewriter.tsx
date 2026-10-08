@@ -4,8 +4,10 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import {
   parseTypewriterRuns,
+  sharedTypewriterWords,
   typewriterHtml,
   typewriterLength,
+  typewriterStep,
 } from '@/utils/heroDisplay';
 import {
   createKeystrokePacer,
@@ -65,6 +67,7 @@ export function RoleTypewriter({
       }),
     [roles]
   );
+  const sharedWords = useMemo(() => sharedTypewriterWords(roles), [roles]);
   const rolesKey = roles.join('\u0000');
 
   const [active, setActive] = useState(0);
@@ -82,7 +85,11 @@ export function RoleTypewriter({
 
     const line = (index: number) => {
       const runs = parseTypewriterRuns(roles[index]);
-      return { runs, text: runs.map((run) => run.text).join('') };
+      return {
+        runs,
+        text: runs.map((run) => run.text).join(''),
+        shared: sharedWords[index] ?? [],
+      };
     };
 
     const resume = typewriterPhases.get(slot) ?? null;
@@ -116,7 +123,7 @@ export function RoleTypewriter({
     const tick = () => {
       if (phase === 'erasing') {
         if (typed > 0) {
-          typed -= 1;
+          typed = typewriterStep(typed, -1, current.text.length, current.shared);
           setRevealed(typed);
           persist();
           timer.current = window.setTimeout(tick, pacer.backspaceDelay());
@@ -146,7 +153,7 @@ export function RoleTypewriter({
 
       if (typed < current.text.length) {
         const char = current.text[typed];
-        typed += 1;
+        typed = typewriterStep(typed, 1, current.text.length, current.shared);
         setRevealed(typed);
         persist();
 
@@ -178,7 +185,7 @@ export function RoleTypewriter({
       clearTimeout(timer.current);
       persist();
     };
-  }, [slot, cycles, rolesKey, roles, lines]);
+  }, [slot, cycles, rolesKey, roles, lines, sharedWords]);
 
   const line = lines[Math.min(active, lines.length - 1)];
 
@@ -192,7 +199,8 @@ export function RoleTypewriter({
             ? typewriterHtml(
                 line.runs,
                 revealed,
-                cursorVisible ? 'typewriter-cursor' : undefined
+                cursorVisible ? 'typewriter-cursor' : undefined,
+                sharedWords[active]
               )
             : ''
         }

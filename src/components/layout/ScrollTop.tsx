@@ -1,5 +1,6 @@
 'use client';
 
+import { Glitch } from '@/components/common/Glitch';
 import { ArrowUpToLine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
@@ -59,8 +60,12 @@ export default function ScrollTop() {
         }}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
-        <span className="hidden md:inline">{t('right')}</span>
-        <ArrowUpToLine className="h-4 w-4" />
+        <Glitch mode="both">
+          <span className="flex items-center justify-center gap-2">
+            <span className="hidden md:inline">{t('right')}</span>
+            <ArrowUpToLine className="h-4 w-4" />
+          </span>
+        </Glitch>
       </button>
     )
   );

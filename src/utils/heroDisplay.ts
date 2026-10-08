@@ -102,6 +102,58 @@ export function typewriterLength(runs: TypewriterRun[]): number {
   for (const run of runs) total += run.text.length;
   return total;
 }
+/** Character positions of words repeated across two or more role lines. */
+export function sharedTypewriterWords(roles: string[]): number[][] {
+  const lines = roles.map((role) =>
+    parseTypewriterRuns(role)
+      .map((run) => run.text)
+      .join('')
+  );
+  const wordCounts: Record<string, number> = {};
+  for (const text of lines) {
+    const words = new Set(
+      [...text.matchAll(/[\p{L}\p{N}_]+/gu)].map((match) =>
+        match[0].toLowerCase()
+      )
+    );
+    for (const word of words) wordCounts[word] = (wordCounts[word] ?? 0) + 1;
+  }
+  return lines.map((text) => {
+    const positions: number[] = [];
+    for (const match of text.matchAll(/[\p{L}\p{N}_]+/gu)) {
+      if ((wordCounts[match[0].toLowerCase()] ?? 0) > 1) {
+        if (match.index > 0 && /\s/.test(text[match.index - 1])) {
+          positions.push(match.index - 1);
+        }
+        for (
+          let index = match.index;
+          index < match.index + match[0].length;
+          index += 1
+        ) {
+          positions.push(index);
+        }
+      }
+    }
+    return positions;
+  });
+}
+
+export function typewriterStep(
+  position: number,
+  direction: 1 | -1,
+  length: number,
+  sharedPositions: number[]
+): number {
+  let next = position + direction;
+  while (
+    next >= 0 &&
+    next < length &&
+    sharedPositions.includes(next)
+  ) {
+    next += direction;
+  }
+  return Math.max(0, Math.min(length, next));
+}
 
 /**
  * Markup for the first `revealed` characters. A full reveal is byte-identical
@@ -112,18 +164,21 @@ export function typewriterLength(runs: TypewriterRun[]): number {
 export function typewriterHtml(
   runs: TypewriterRun[],
   revealed: number,
-  cursorClass?: string
+  cursorClass?: string,
+  sharedPositions: number[] = []
 ): string {
-  let remaining = Math.max(0, revealed);
+  let position = 0;
   let html = '';
-
   for (const run of runs) {
-    if (remaining <= 0) break;
-    const slice = run.text.slice(0, remaining);
-    remaining -= slice.length;
-    html += run.labeled ? `<label>${slice}</label>` : slice;
+    let content = '';
+    for (const char of run.text) {
+      if (position < revealed || sharedPositions.includes(position)) {
+        content += char;
+      }
+      position += 1;
+    }
+    if (content) html += run.labeled ? `<label>${content}</label>` : content;
   }
-
   return cursorClass
     ? `${html}<span class="${cursorClass}" aria-hidden="true"></span>`
     : html;

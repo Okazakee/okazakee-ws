@@ -127,6 +127,23 @@ describe('RoleTypewriter', () => {
     expect(container.innerHTML).not.toContain('typewriter-cursor');
     expect(vi.getTimerCount()).toBe(0);
   });
+  it('keeps words shared by roles visible while typing only unique words', async () => {
+    setReducedMotion(false);
+    await render(
+      createElement(RoleTypewriter, {
+        roles: ['Fullstack Developer', 'Mobile Developer'],
+        slot: 5,
+      })
+    );
+
+    await advance(typewriterStartMs);
+    expect(live()).toBe('F Developer');
+
+    expect(
+      await advanceUntil(() => live() === 'Fullstack Developer')
+    ).toBeGreaterThan(0);
+    expect(await advanceUntil(() => live() === 'Mobile Developer')).toBeGreaterThan(0);
+  });
 
   it('types, holds four seconds, backspaces away and types the next role', async () => {
     setReducedMotion(false);

@@ -256,15 +256,17 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   else decorative outside the hero typewriter. `prefers-reduced-motion`
   disables smooth scroll and transitions (mirrors the repo's existing rule) and
   also keeps the hero typewriter static.
+  The hero typewriter also leaves any whole word shared by two or more roles visible
+  throughout the cycle; only unique words are typed and erased.
 - **Glitch** (`Glitch` in `components/common`, ported from PowerGlitch /
   react-powerglitch, MIT — the engine lives in `libs/glitch`, the numbers are
   covered by `layers.test.ts`): two of that library's behaviours, one shot each,
   and **only on these** — the **skills tiles**, the **post cards**
   (both lists, plus the archive card that closes each one), the **contact
-  tiles**, the **hero portrait**, the **career company link** and the **header
-  nav items**. It is decoration on things a reader is trying to use, and it stays
-  off the header's **controls** (theme, language, Resume, drawer toggle). Both of
-  its effects are fast (a sixth of a second) and small.
+  tiles**, the **hero portrait**, the **career company link**, the **header
+  nav items** and the **back-to-top button**. It stays off the header's
+  **controls** (theme, language, Resume, drawer toggle). Both of its effects
+  are fast (a sixth of a second) and small.
   `mode` is per surface. The **skills tiles**, the **contact tiles** and the
   **archive card** that closes each posts list wire both triggers; the **post
   cards** are **click only** (`mode="click"` — nothing on hover, so moving the

@@ -277,41 +277,11 @@ conventions for file placement, naming, and structure.
 
 ### 13.1 Branch and PR workflow (mandatory)
 
-`master` is the integration branch and must stay releasable. Every change —
-feature, fix, refactor, docs, dependency bump — is made on a dedicated branch
-and merged through a pull request.
+`staging` is the only branch for new edits. Do not create, switch to, or
+commit on any other branch. Every change is committed and pushed to `staging`.
 
-**Two owner gates.** Nothing opens or merges on the agent's own initiative:
-the PR is opened only after the owner confirms the branch is complete, and
-the merge follows review. Pushing a branch is not permission to open a PR,
-and being asked to make a change is not permission to open one either.
-
-1. Branch from the latest `master` (or `beta` when the change belongs to the
-   beta line): `<type>/<short-slug>`, e.g. `fix/view-counter-reset`,
-   `feat/cms-revalidation`.
-2. Commit only on that branch. `master` and `beta` never receive direct
-   commits.
-3. Push the branch when the work is ready — and stop there.
-4. Open the PR against `master` (or `beta`) with `gh pr create` only after the
-   owner confirms the branch is done. The body describes the change, the
-   affected contract, and the checks run.
-5. CI (`.github/workflows/ci.yml`) must be green before merge.
-6. Merge with a merge commit (`gh pr merge --merge`); never squash or rebase,
-   never force-push `master`/`beta`.
-7. Delete the merged branch.
-
-**Exception — you ask for it.** A direct commit/push to `master`/`beta` is
-allowed only when you explicitly ask for one in the session (for example
-"push this to master"). That request is the authorization; the agent never
-decides on its own that a direct push is warranted. When it happens:
-
-- keep the diff to the minimum that resolves the issue, with a commit
-  message that states why it went straight to the branch;
-- no force-push, history rewrite, or unrelated cleanup in the same commit;
-- open a follow-up PR (or review) if the result is not trivially verifiable.
-
-Without that explicit request, work goes through a branch and a PR, however
-urgent it feels.
+Changes may be committed and pushed to `staging` when ready. Do not open a PR,
+merge, or delete branches unless the owner explicitly requests it.
 
 ### 13.2 Commit and merge conventions
 
