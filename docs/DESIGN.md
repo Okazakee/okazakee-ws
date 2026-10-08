@@ -237,9 +237,26 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   `z-60`) — a card's `overflow-hidden` or a scrolling pane can never clip it.
   The row under the pointer or the keyboard cursor tints `accent-violet/10`;
   the selected row is `accent-violet-light` with a check.
-- Motion: `transition-colors` ~300ms; nothing decorative outside the hero
-  typewriter. `prefers-reduced-motion` disables smooth scroll and transitions
+- Motion: `transition-colors` ~300ms, plus the chromatic-aberration glitch
+  below; nothing else decorative outside the hero typewriter.
+  `prefers-reduced-motion` disables smooth scroll and transitions
   (mirrors the repo's existing rule) and also keeps the hero typewriter static.
+- **Chromatic-aberration glitch** (hover/focus, attached today to the skills
+  tiles): `glitch-text` and `glitch-icon` in `globals.css` are the whole
+  primitive — two seams over one effect, no component and no JS. The fringe is
+  the two accent tokens pulled apart, `accent-cyan` one way and
+  `accent-violet` the other, painted as `text-shadow` on glyphs and as
+  `drop-shadow` on an icon's wrapper (the wrapper, not the `img`: `filter`
+  would otherwise clobber the `dark:invert` filter chain). A one-shot 260 ms
+  stepped burst rides along, moving `transform` only — the fringes are painted
+  once when the class applies, so a hover repaints two text runs and never lays
+  out. No `mix-blend-mode`: blending the copies would isolate a stacking
+  context to save two shadows. `--glitch-shift` (1.5 px, `:root`) is the only
+  knob; a host that needs a wider split overrides it locally. It is attached
+  from variants on the tile's own `group` — `group-hover:` **and**
+  `group-focus-visible:` — so the keyboard gets what the pointer gets, and the
+  reduced-motion rule below (which flattens `animation-duration`) leaves the
+  fringe, which is colour rather than motion, and drops only the jitter.
 - **Hero portrait shape** (`hero_section.shape`): `pebble` (default), `square`,
   `rounded` and `squircle`. Every preset is built the same way: the accent plate
   is the full portrait box in the preset's shape (`bg-accent-violet`) and the

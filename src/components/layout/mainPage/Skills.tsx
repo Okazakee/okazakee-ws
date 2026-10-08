@@ -20,6 +20,9 @@ const rowClass =
  * Skills render in the canonical order (`utils/skillOrder`), and a skill with a
  * `link` renders its tile as an external anchor; without one the tile is the
  * plain `<div>` it has always been.
+ *
+ * Hovering or focusing a tile runs the chromatic-aberration glitch on its icon
+ * and title (`docs/DESIGN.md` §3).
  */
 export default async function Skills({ locale }: { locale: string }) {
   const skillsCategories = await getSkillsCategories();
@@ -59,7 +62,7 @@ export default async function Skills({ locale }: { locale: string }) {
                 const body = (
                   <>
                     <span className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border-subtle bg-surface-raised">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border-subtle bg-surface-raised group-focus-visible:glitch-icon group-hover:glitch-icon">
                         <Image
                           alt={skill.title}
                           blurDataURL={skill.blurhashURL || undefined}
@@ -73,7 +76,7 @@ export default async function Skills({ locale }: { locale: string }) {
                           width={48}
                         />
                       </span>
-                      <span className="font-mono text-sm font-semibold text-text-white transition-colors group-hover:text-accent-violet-light">
+                      <span className="font-mono text-sm font-semibold text-text-white transition-colors group-focus-visible:glitch-text group-hover:glitch-text group-hover:text-accent-violet-light">
                         {skill.title}
                       </span>
                     </span>
