@@ -1,15 +1,9 @@
 /**
- * Canonical ordering of skills inside a category.
+ * Canonical ordering of skills and categories.
  *
- * The CMS publishes `skills.position` (dense, 0-based, per category). A NULL
- * position means "never ordered": such rows keep their insertion order and sort
- * after every positioned row, so the fresh column never reshuffles live
- * content. The id tiebreak makes the result total and therefore stable across
- * renders.
- *
- * Mirrored by the CMS preview
- * (`okazakee-cms/src/components/common/cms/previews/canonical/skillOrder.ts`);
- * keep both copies in sync so a draft never disagrees with the site.
+ * The CMS publishes dense, zero-based category positions and skill positions
+ * within each category. Unpositioned rows sort last; id is the deterministic
+ * tiebreaker for both equal and missing positions.
  */
 export function sortSkillsByPosition<
   T extends {

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -17,11 +18,7 @@ type FooterNamespaces = 'footer' | 'posts-section';
 vi.mock('next-intl/server', async () => {
   const messages = await import('@/i18n/messages/site.en.json');
   return {
-    getTranslations: async ({
-      namespace,
-    }: {
-      namespace: FooterNamespaces;
-    }) => {
+    getTranslations: async ({ namespace }: { namespace: FooterNamespaces }) => {
       const group = (
         messages.default as Record<FooterNamespaces, Record<string, string>>
       )[namespace];
@@ -35,47 +32,54 @@ vi.mock('next/link', async () => {
     default: (props: Record<string, unknown>) => createElement('a', props),
   };
 });
+vi.mock('../common/CopyButton', async () => {
+  // The hoisted mock factory runs before static React imports initialize.
+  const { createElement } = await import('react');
+  return {
+    default: ({
+      copyValue,
+      children,
+    }: {
+      copyValue: string;
+      children: ReactNode;
+    }) => createElement('button', { 'data-copy-value': copyValue }, children),
+  };
+});
 
 import Footer from './Footer';
 
-async function render(props: {
-  name?: string | null;
-  vatNumber?: string | null;
-}) {
+async function render(props: { vatNumber?: string | null }) {
   return renderToStaticMarkup(await Footer({ locale: 'en', ...props }));
 }
 
 describe('Footer identity', () => {
-  it('renders the shipped defaults for a row with no identity', async () => {
+  it('renders no VAT affordance for a row with no stored number', async () => {
     const markup = await render({});
 
     expect(markup).toContain('>Okazakee</a>');
-    expect(markup).toContain('VAT IT - 02863310815');
+    expect(markup).not.toContain('VAT IT');
+    expect(markup).not.toContain('data-copy-value');
   });
 
-  it('renders the stored identity, VAT zeroes intact', async () => {
-    const markup = await render({
-      name: 'Okazakee Studio',
-      vatNumber: '01234567890',
-    });
-
-    expect(markup).toContain('>Okazakee Studio</a>');
-    expect(markup).not.toContain('>Okazakee</a>');
-    expect(markup).toContain('VAT IT - 01234567890');
-    expect(markup).not.toContain('02863310815');
-  });
-
-  it('keeps the defaults for a null or blank identity', async () => {
-    const markup = await render({ name: '   ', vatNumber: null });
+  it('renders the stored VAT verbatim with zeroes intact', async () => {
+    const markup = await render({ vatNumber: '01234567890' });
 
     expect(markup).toContain('>Okazakee</a>');
-    expect(markup).toContain('VAT IT - 02863310815');
+    expect(markup).toContain('VAT IT - 01234567890');
+    expect(markup).toContain('data-copy-value="01234567890"');
   });
 
-  it('keeps the GitHub links under a custom name', async () => {
-    const markup = await render({ name: 'Okazakee Studio' });
+  it.each([null, '   '])(
+    'hides the VAT for an unset value (%s) and keeps the fixed links',
+    async (vatNumber) => {
+      const markup = await render({ vatNumber });
 
-    expect(markup).toContain('href="https://github.com/Okazakee"');
-    expect(markup).toContain('href="https://github.com/Okazakee/okazakee-ws"');
-  });
+      expect(markup).not.toContain('VAT IT');
+      expect(markup).not.toContain('data-copy-value');
+      expect(markup).toContain('href="https://github.com/Okazakee"');
+      expect(markup).toContain(
+        'href="https://github.com/Okazakee/okazakee-ws"'
+      );
+    }
+  );
 });

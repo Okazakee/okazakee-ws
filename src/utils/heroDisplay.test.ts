@@ -5,13 +5,11 @@ import {
   heroPortraitClass,
   heroShapes,
   normalizeHeroShape,
-  normalizeTypewriterTarget,
   parseTypewriterRuns,
   resolveHeroRoles,
   squircleClipPath,
   typewriterHtml,
   typewriterLength,
-  typewritesRole,
 } from '@/utils/heroDisplay';
 
 /** Geometry each preset must apply to BOTH the accent plate and the mask. */
@@ -69,7 +67,10 @@ describe('portrait shape presets', () => {
   });
 
   it('leaves the square preset with no corner geometry at all', () => {
-    for (const cls of [heroPortraitClass('square'), heroBackdropClass('square')]) {
+    for (const cls of [
+      heroPortraitClass('square'),
+      heroBackdropClass('square'),
+    ]) {
       expect(cls).not.toMatch(/rounded|clip-/);
     }
   });
@@ -93,69 +94,30 @@ describe('portrait shape presets', () => {
 });
 
 describe('hero role list', () => {
-  it('renders the singular role when no list was ever written', () => {
-    expect(resolveHeroRoles(undefined, 'Fullstack Developer')).toEqual([
-      'Fullstack Developer',
-    ]);
-    expect(resolveHeroRoles(null, 'Fullstack Developer')).toEqual([
-      'Fullstack Developer',
-    ]);
-    expect(resolveHeroRoles([], 'Fullstack Developer')).toEqual([
-      'Fullstack Developer',
-    ]);
-    expect(resolveHeroRoles({ 0: '' }, 'Fullstack Developer')).toEqual([
-      'Fullstack Developer',
-    ]);
+  it('renders nothing for an absent or empty list', () => {
+    expect(resolveHeroRoles(undefined)).toEqual([]);
+    expect(resolveHeroRoles(null)).toEqual([]);
+    expect(resolveHeroRoles([])).toEqual([]);
+    expect(resolveHeroRoles({ 0: '' })).toEqual([]);
   });
 
   it('orders the stored list by index, whatever the key order', () => {
-    expect(resolveHeroRoles({ 1: 'Second', 0: 'First' }, 'Legacy')).toEqual([
+    expect(resolveHeroRoles({ 1: 'Second', 0: 'First' })).toEqual([
       'First',
       'Second',
     ]);
-    expect(resolveHeroRoles(['First', 'Second'], 'Legacy')).toEqual([
-      'First',
-      'Second',
-    ]);
+    expect(resolveHeroRoles(['First', 'Second'])).toEqual(['First', 'Second']);
   });
 
   it('drops holes left by a removed entry instead of rendering blanks', () => {
-    expect(resolveHeroRoles(['First', null, '', 'Second'], 'Legacy')).toEqual([
+    expect(resolveHeroRoles(['First', null, ' ', 'Second'])).toEqual([
       'First',
       'Second',
     ]);
   });
 
-  it('renders nothing when neither source holds copy', () => {
-    expect(resolveHeroRoles(undefined, '')).toEqual([]);
-    expect(resolveHeroRoles([], null)).toEqual([]);
-  });
-});
-
-describe('typewriter targets', () => {
-  it('falls back to the first role for an unknown target', () => {
-    expect(normalizeTypewriterTarget(null)).toBe('role1');
-    expect(normalizeTypewriterTarget('role9')).toBe('role1');
-    expect(normalizeTypewriterTarget('role2')).toBe('role2');
-    expect(normalizeTypewriterTarget('all')).toBe('all');
-  });
-
-  it('animates only the chosen line', () => {
-    expect([0, 1, 2].map((index) => typewritesRole('role1', index))).toEqual([
-      true,
-      false,
-      false,
-    ]);
-    expect([0, 1, 2].map((index) => typewritesRole('role2', index))).toEqual([
-      false,
-      true,
-      false,
-    ]);
-    expect([0, 1, 2].map((index) => typewritesRole('all', index))).toEqual([
-      true,
-      true,
-      true,
-    ]);
+  it('does not resurrect a role after the last entry is removed', () => {
+    expect(resolveHeroRoles({})).toEqual([]);
   });
 });
 

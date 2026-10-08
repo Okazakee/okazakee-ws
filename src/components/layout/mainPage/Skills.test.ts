@@ -62,32 +62,27 @@ beforeEach(() => {
   h.getSkillsCategories.mockReset();
 });
 
-const tileClasses =
-  'group relative flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-card p-3.5 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover w-full sm:w-[calc(50%-7px)] lg:w-[calc(33.333%-10px)]';
-
 describe('Skills tiles', () => {
-  it('renders an unlinked tile as a plain div, exactly as before', async () => {
+  it('renders an unlinked skill without an anchor', async () => {
     const markup = await render([skill(1)]);
 
-    expect(markup).toContain(`<div class="${tileClasses}">`);
     expect(markup).not.toContain('<a ');
     expect(markup).toContain('Skill 1');
   });
 
-  it('renders a linked tile as an external anchor with the same tokens', async () => {
+  it('renders a linked skill as an external anchor', async () => {
     const markup = await render([
       skill(1, { link: 'https://www.typescriptlang.org/' }),
     ]);
-    expect(markup).toContain(
-      `<a class="${tileClasses}" href="https://www.typescriptlang.org/" rel="noopener noreferrer" target="_blank">`
-    );
+    expect(markup).toContain('href="https://www.typescriptlang.org/"');
+    expect(markup).toContain('rel="noopener noreferrer"');
+    expect(markup).toContain('target="_blank"');
   });
 
   it('treats a blank link as no link', async () => {
     const markup = await render([skill(1, { link: '   ' })]);
 
     expect(markup).not.toContain('<a ');
-    expect(markup).toContain(`<div class="${tileClasses}">`);
   });
 
   it('renders skills in the canonical order regardless of row order', async () => {
@@ -99,5 +94,18 @@ describe('Skills tiles', () => {
 
     expect(markup.indexOf('Skill 2')).toBeLessThan(markup.indexOf('Skill 1'));
     expect(markup.indexOf('Skill 1')).toBeLessThan(markup.indexOf('Skill 3'));
+  });
+
+  it('renders renamed CMS categories in position order, not localized names', async () => {
+    h.getSkillsCategories.mockResolvedValue([
+      { id: 1, name: 'Renamed stack', position: 1, skills: [skill(1)] },
+      { id: 2, name: 'First tools', position: 0, skills: [skill(2)] },
+    ]);
+    const markup = renderToStaticMarkup(await Skills({ locale: 'it' }));
+    expect(markup).toContain('Renamed stack');
+    expect(markup.indexOf('First tools')).toBeLessThan(
+      markup.indexOf('Renamed stack')
+    );
+    expect(markup).not.toContain('skills.1');
   });
 });

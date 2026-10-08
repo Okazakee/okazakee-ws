@@ -1,15 +1,12 @@
-import type { HeroShape, TypewriterTarget } from '@/types/fetchedData.types';
+import type { HeroShape } from '@/types/fetchedData.types';
 
 /**
- * Hero presentation helpers (docs/DESIGN.md §3): the portrait shape presets,
- * the role line list and the typewriter label runs. Every stored value is
- * treated as untrusted — an absent or unknown one degrades to the historic
- * rendering instead of throwing or dropping the block.
+ * Hero presentation helpers: portrait presets, ordered role lists and label
+ * runs. Stored presets are treated as untrusted and unknown shapes degrade
+ * to the default portrait.
  */
 
 export const heroShapes = ['pebble', 'square', 'rounded', 'squircle'] as const;
-
-export const typewriterTargets = ['role1', 'role2', 'all'] as const;
 
 /**
  * Corner/clip geometry of one preset. The SAME class drives the accent plate
@@ -49,12 +46,6 @@ export function heroBackdropClass(shape: HeroShape): string {
   return `absolute inset-0 z-0 bg-accent-violet ${heroShapeClasses[shape]}`.trim();
 }
 
-export function normalizeTypewriterTarget(
-  value: string | null | undefined
-): TypewriterTarget {
-  return typewriterTargets.find((target) => target === value) ?? 'role1';
-}
-
 export type TypewriterRun = { text: string; labeled: boolean };
 
 const labelPattern = /\*\*\*\*([^*]+)\*\*\*\*/g;
@@ -80,18 +71,9 @@ function toOrderedStrings(value: unknown): string[] {
   return [];
 }
 
-/**
- * The role lines to render: `hero-section.top.roles` when the CMS list is
- * present, otherwise the singular `top.role` that predates it, so existing
- * content keeps rendering exactly as before.
- */
-export function resolveHeroRoles(
-  stored: unknown,
-  singular: string | null | undefined
-): string[] {
-  const roles = toOrderedStrings(stored);
-  if (roles.length > 0) return roles;
-  return isFilledString(singular) ? [singular] : [];
+/** Ordered localized roles; blank entries never enter the animation. */
+export function resolveHeroRoles(stored: unknown): string[] {
+  return toOrderedStrings(stored);
 }
 
 /** Splits `****text****` runs from plain ones, in document order. */
@@ -145,15 +127,6 @@ export function typewriterHtml(
   return cursorClass
     ? `${html}<span class="${cursorClass}" aria-hidden="true"></span>`
     : html;
-}
-
-/** True when the role line at `index` is the configured typewriter target. */
-export function typewritesRole(
-  target: TypewriterTarget,
-  index: number
-): boolean {
-  if (target === 'all') return true;
-  return index === (target === 'role1' ? 0 : 1);
 }
 
 // Superellipse (|x|^4 + |y|^4 = 1) sampled as an objectBoundingBox path, so

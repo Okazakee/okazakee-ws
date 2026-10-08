@@ -101,7 +101,7 @@ export default async function Skills({ locale }: { locale: string }) {
       </div>
 
       <div className="space-y-12">
-        {skillsCategories.map((category, index) => (
+        {sortSkillsByPosition(skillsCategories).map((category, index) => (
           <div className="space-y-4" key={category.id}>
             <SectionEyebrow index={index + 1} label={category.name} />
             <div className="flex flex-wrap justify-center gap-3.5">

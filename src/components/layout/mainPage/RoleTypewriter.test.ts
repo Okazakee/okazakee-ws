@@ -3,8 +3,8 @@ import { act, createElement, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RoleTypewriter } from '@/components/layout/mainPage/RoleTypewriter';
 import { typewriterPhases } from '@/components/layout/mainPage/heroAnimationState';
+import { RoleTypewriter } from '@/components/layout/mainPage/RoleTypewriter';
 import { formatLabels } from '@/utils/formatLabels';
 import {
   createKeystrokePacer,
@@ -91,16 +91,18 @@ describe('RoleTypewriter', () => {
   it('stays static for the whole session under reduced motion', async () => {
     setReducedMotion(true);
     await render(
-      createElement(RoleTypewriter, { roles: ['Developer', 'Analyst'], slot: 1 })
+      createElement(RoleTypewriter, {
+        roles: ['Developer', 'Analyst'],
+        slot: 1,
+      })
     );
 
     await advance(60_000);
 
     expect(live()).toBe('Developer');
-    expect([...container.querySelectorAll('p')].map((el) => el.textContent)).toEqual([
-      'Developer',
-      'Analyst',
-    ]);
+    expect(
+      [...container.querySelectorAll('p')].map((el) => el.textContent)
+    ).toEqual(['Developer', 'Analyst']);
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -129,7 +131,10 @@ describe('RoleTypewriter', () => {
   it('types, holds four seconds, backspaces away and types the next role', async () => {
     setReducedMotion(false);
     await render(
-      createElement(RoleTypewriter, { roles: ['Developer', 'Analyst'], slot: 3 })
+      createElement(RoleTypewriter, {
+        roles: ['Developer', 'Analyst'],
+        slot: 3,
+      })
     );
 
     expect(await advanceUntil(() => live() === 'Developer')).toBeGreaterThan(0);
@@ -157,9 +162,45 @@ describe('RoleTypewriter', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('starts cycling when a completed single role gains companions', async () => {
+    setReducedMotion(false);
+    await render(
+      createElement(RoleTypewriter, { roles: ['Developer'], slot: 0 })
+    );
+    await advanceUntil(() => live() === 'Developer');
+    await render(
+      createElement(RoleTypewriter, {
+        roles: ['Developer', 'Analyst'],
+        slot: 0,
+      })
+    );
+    expect(await advanceUntil(() => live() === 'Analyst')).toBeGreaterThan(0);
+    expect(container.innerHTML).toContain('typewriter-cursor');
+  });
+
+  it('finishes and stops when a cycling list becomes a single role', async () => {
+    setReducedMotion(false);
+    await render(
+      createElement(RoleTypewriter, {
+        roles: ['Developer', 'Analyst'],
+        slot: 0,
+      })
+    );
+    await advanceUntil(() => live() === 'Developer');
+    await advanceUntil(() => live().length < 'Developer'.length);
+    await render(
+      createElement(RoleTypewriter, { roles: ['Developer'], slot: 0 })
+    );
+    await advanceUntil(() => live() === 'Developer');
+    expect(container.innerHTML).not.toContain('typewriter-cursor');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('stops its timer on unmount', async () => {
     setReducedMotion(false);
-    await render(createElement(RoleTypewriter, { roles: ['Developer'], slot: 4 }));
+    await render(
+      createElement(RoleTypewriter, { roles: ['Developer'], slot: 4 })
+    );
 
     await advance(typewriterStartMs + 120);
     await act(async () => root.unmount());

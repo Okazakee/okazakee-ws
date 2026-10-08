@@ -41,8 +41,7 @@ async function LocaleShell({
     ? resumeData[`resume_${locale}` as keyof ResumeData]
     : null;
 
-  // Null while the CMS has never written the row: the header then renders
-  // the bundled logos and the computed nav hrefs it always rendered.
+  // Header images and VAT are CMS-owned; footer identity stays local.
   const settings = await getSiteSettings();
 
   return (
@@ -50,19 +49,15 @@ async function LocaleShell({
       <LocaleScrollRestore />
       <Header
         locale={locale}
+        logoDarkUrl={settings?.header_logo_dark ?? null}
+        logoLightUrl={settings?.header_logo_light ?? null}
         resumeLink={resumeLink}
-        logoDark={settings?.header_logo_dark ?? null}
-        logoLight={settings?.header_logo_light ?? null}
       />
       <div className="flex min-w-0 flex-1 flex-col [&>*]:min-w-0 [&>*]:w-full">
         {children}
       </div>
       <ScrollTop />
-      <Footer
-        locale={locale}
-        name={settings?.footer_name ?? null}
-        vatNumber={settings?.footer_vat_number ?? null}
-      />
+      <Footer locale={locale} vatNumber={settings?.footer_vat_number ?? null} />
     </NextIntlClientProvider>
   );
 }

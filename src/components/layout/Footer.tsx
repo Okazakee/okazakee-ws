@@ -2,20 +2,14 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import CopyLinkButton from '../common/CopyButton';
 
-// Identity the footer showed before the CMS could edit it; a null/blank stored
-// value keeps these (module-level constants are camelCase per AGENTS.md §7).
-const defaultName = 'Okazakee';
-const defaultVatNumber = '02863310815';
+const siteName = 'Okazakee';
 
 export default async function Footer({
   locale,
-  name,
   vatNumber,
 }: {
   locale: string;
-  /** Stored `site_settings.footer_name`; null keeps the default. */
-  name?: string | null;
-  /** Stored `site_settings.footer_vat_number`; null keeps the default. */
+  /** Stored `site_settings.footer_vat_number`; null/blank renders no VAT. */
   vatNumber?: string | null;
 }) {
   const t = await getTranslations({ locale, namespace: 'footer' });
@@ -29,10 +23,9 @@ export default async function Footer({
 
   const separator = '//';
 
-  // Resolved once and used twice: the label and the clipboard value stay the
-  // same string, so a stored VAT keeps its zeroes instead of diverging.
-  const displayName = name?.trim() || defaultName;
-  const vat = vatNumber?.trim() || defaultVatNumber;
+  // The CMS owns the value: it is printed and copied verbatim, and an unset
+  // one renders no VAT affordance at all rather than a local substitute.
+  const vat = vatNumber?.trim() || null;
 
   return (
     <footer className="border-t border-border-subtle bg-surface-alt py-8 font-mono text-xs text-text-dim sm:py-0">
@@ -47,7 +40,7 @@ export default async function Footer({
             rel="noopener noreferrer"
             target="_blank"
           >
-            {displayName}
+            {siteName}
           </Link>{' '}
           <span>{separator}</span>{' '}
           <Link
@@ -61,15 +54,19 @@ export default async function Footer({
         </div>
 
         <div className="flex items-center gap-4">
-          <CopyLinkButton
-            buttonTitle={t('buttonTitle')}
-            className="transition-colors hover:text-text-muted"
-            copiedLabel={tPosts('preCopy')}
-            copyValue={vat}
-          >
-            {t('middle')} - {vat}
-          </CopyLinkButton>
-          <span>{separator}</span>
+          {vat && (
+            <>
+              <CopyLinkButton
+                buttonTitle={t('buttonTitle')}
+                className="transition-colors hover:text-text-muted"
+                copiedLabel={tPosts('preCopy')}
+                copyValue={vat}
+              >
+                {t('middle')} - {vat}
+              </CopyLinkButton>
+              <span>{separator}</span>
+            </>
+          )}
           <Link
             className="underline transition-colors hover:text-text-muted"
             href={cmsPublicUrl}

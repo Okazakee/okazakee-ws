@@ -12,6 +12,7 @@ import type {
   SiteSettings,
   SkillsCategory,
 } from '@/types/fetchedData.types';
+import { isValidHttpUrl } from '@/utils/postButtons';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -89,7 +90,7 @@ export async function getHeroSection(): Promise<HeroSection | null> {
 
   const { data, error } = await supabase
     .from('hero_section')
-    .select('id, propic, blurhashURL, shape, typewriter, typewriter_target')
+    .select('id, propic, blurhashURL, shape')
     .single();
 
   if (error?.code === 'PGRST116') {
@@ -126,7 +127,14 @@ export async function getSkillsCategories(): Promise<SkillsCategory[] | null> {
         position
       )
     `)
-    .order('position', { ascending: true });
+    .order('position', { ascending: true, nullsFirst: false })
+    .order('id', { ascending: true })
+    .order('position', {
+      referencedTable: 'skills',
+      ascending: true,
+      nullsFirst: false,
+    })
+    .order('id', { referencedTable: 'skills', ascending: true });
 
   if (error) {
     console.error(error);
@@ -218,7 +226,11 @@ export async function getContacts(): Promise<Contact[] | null> {
   cacheTag(cacheTags.contacts);
   applySupabaseCacheLife();
 
-  const { data, error } = await supabase.from('contacts').select('*');
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .order('position', { ascending: true, nullsFirst: false })
+    .order('id', { ascending: true });
 
   if (error) {
     console.error(error);
@@ -375,22 +387,17 @@ export async function getResumeLink(
 }
 
 /**
- * The single `site_settings` row: header logos, the ordered nav anchors and
- * the footer identity. Returns null when the row has never been written — the
- * header then renders exactly the bundled assets and computed hrefs it
- * rendered before the CMS could edit them, and the footer its defaults.
+ * CMS-owned header images and VAT. A null header image keeps that theme's
+ * bundled asset; a null VAT renders no VAT affordance (there is no default).
  */
 export async function getSiteSettings(): Promise<SiteSettings | null> {
   'use cache';
   cacheTag(cacheTags.siteSettings);
   applySupabaseCacheLife();
 
-  // `*` rather than a column list: the footer identity columns only exist on
-  // databases that ran the Layout migration, and naming them here would make
-  // every read on the others fail with a missing-column error.
   const { data, error } = await supabase
     .from('site_settings')
-    .select('*')
+    .select('header_logo_dark, header_logo_light, footer_vat_number')
     .order('id', { ascending: true })
     .limit(1)
     .maybeSingle();
@@ -406,11 +413,12 @@ export async function getSiteSettings(): Promise<SiteSettings | null> {
 
   const row = data as SiteSettings;
 
-  // Absent (pre-migration row) and blank both read as "unconfigured", so the
-  // footer falls back to the values it shipped with instead of a gap.
+  const darkLogo = row.header_logo_dark?.trim() || null;
+  const lightLogo = row.header_logo_light?.trim() || null;
   return {
-    ...row,
-    footer_name: row.footer_name?.trim() || null,
+    header_logo_dark: darkLogo && isValidHttpUrl(darkLogo) ? darkLogo : null,
+    header_logo_light:
+      lightLogo && isValidHttpUrl(lightLogo) ? lightLogo : null,
     footer_vat_number: row.footer_vat_number?.trim() || null,
   };
 }

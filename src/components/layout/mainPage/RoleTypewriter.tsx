@@ -73,8 +73,12 @@ export function RoleTypewriter({
   const timer = useRef<number | undefined>(undefined);
 
   useLayoutEffect(() => {
-    if (roles.length === 0) return;
-    if (window.matchMedia(reducedMotionQuery).matches) return;
+    if (roles.length === 0 || window.matchMedia(reducedMotionQuery).matches) {
+      setActive(0);
+      setRevealed(lines[0]?.length ?? 0);
+      setCursorVisible(false);
+      return;
+    }
 
     const line = (index: number) => {
       const runs = parseTypewriterRuns(roles[index]);
@@ -85,13 +89,14 @@ export function RoleTypewriter({
     let index = resume ? Math.min(resume.index, roles.length - 1) : 0;
     let current = line(index);
     let typed = Math.min(resume?.typed ?? 0, current.text.length);
-    let phase: Phase = resume?.erasing ? 'erasing' : 'typing';
+    let phase: Phase = cycles && resume?.erasing ? 'erasing' : 'typing';
 
     // A line that already finished in this document stays finished: full text,
     // no cursor, no timers.
     if (!cycles && typed >= current.text.length) {
       setActive(index);
       setRevealed(current.text.length);
+      setCursorVisible(false);
       return;
     }
 
@@ -126,6 +131,16 @@ export function RoleTypewriter({
         setRevealed(0);
         persist();
         timer.current = window.setTimeout(tick, pacer.nextRoleDelay());
+        return;
+      }
+      // A completed single role may acquire companions without remounting.
+      if (typed >= current.text.length && cycles) {
+        phase = 'erasing';
+        persist();
+        timer.current = window.setTimeout(
+          tick,
+          typewriterHoldMs + pacer.backspaceReachDelay()
+        );
         return;
       }
 
@@ -163,7 +178,7 @@ export function RoleTypewriter({
       clearTimeout(timer.current);
       persist();
     };
-  }, [slot, cycles, rolesKey, roles]);
+  }, [slot, cycles, rolesKey, roles, lines]);
 
   const line = lines[Math.min(active, lines.length - 1)];
 
@@ -183,14 +198,16 @@ export function RoleTypewriter({
         }
       />
       {cycles &&
-        lines.slice(1).map((rest, offset) => (
-          <InnerHtml
-            as={as}
-            className={`${className ?? ''} hero-role-rest`.trim()}
-            html={typewriterHtml(rest.runs, rest.length)}
-            key={roles[offset + 1]}
-          />
-        ))}
+        lines
+          .slice(1)
+          .map((rest, offset) => (
+            <InnerHtml
+              as={as}
+              className={`${className ?? ''} hero-role-rest`.trim()}
+              html={typewriterHtml(rest.runs, rest.length)}
+              key={roles[offset + 1]}
+            />
+          ))}
     </>
   );
 }

@@ -10,10 +10,8 @@ import {
   heroBackdropClass,
   heroPortraitClass,
   normalizeHeroShape,
-  normalizeTypewriterTarget,
   resolveHeroRoles,
   squircleClipPath,
-  typewritesRole,
 } from '@/utils/heroDisplay';
 import { HeroMatrix } from './HeroMatrix';
 import { RoleTypewriter } from './RoleTypewriter';
@@ -49,8 +47,8 @@ const roleLineClass =
 /**
  * Hero and about block (docs/DESIGN.md §6): one full-height band — the portrait
  * beside the name and role(s), then the about card below in the section-header
- * pattern. The portrait shape, the role list and the typewriter target come
- * from `hero_section`; unknown values fall back to the historic rendering.
+ * pattern. The portrait shape comes from `hero_section`; localized roles
+ * always animate, typing once for one role and cycling for several.
  */
 export default async function Hero({ locale }: { locale: string }) {
   const heroSection = await getHeroSection();
@@ -60,17 +58,7 @@ export default async function Hero({ locale }: { locale: string }) {
 
   const shape = normalizeHeroShape(heroSection.shape);
   const storedRoles: unknown = t.has('top.roles') ? t.raw('top.roles') : null;
-  const roles = resolveHeroRoles(storedRoles, t('top.role'));
-  const target = heroSection.typewriter
-    ? normalizeTypewriterTarget(heroSection.typewriter_target)
-    : null;
-
-  // The roles the typewriter animates. More than one cycles inside a single
-  // line, so those collapse to the line the animation is on; a lone animated
-  // role keeps its place in the stack.
-  const animatedRoles = target
-    ? roles.filter((_, index) => typewritesRole(target, index))
-    : [];
+  const roles = resolveHeroRoles(storedRoles);
 
   // The paragraph arrives as separate blocks separated by blank lines
   const paragraphs = t('aboutme.paragraph')
@@ -113,10 +101,7 @@ export default async function Hero({ locale }: { locale: string }) {
                   it, the container's `auto` would reach the image and make it
                   draggable and selectable again. */}
               <span className="pointer-events-none relative">
-                <span
-                  aria-hidden="true"
-                  className={heroBackdropClass(shape)}
-                />
+                <span aria-hidden="true" className={heroBackdropClass(shape)} />
                 <span className={heroPortraitClass(shape)}>
                   <Image
                     alt="Profile picture"
@@ -145,34 +130,12 @@ export default async function Hero({ locale }: { locale: string }) {
               className="mb-3 rounded-2xl bg-surface-base/40 p-2 font-heading text-3xl font-semibold tracking-tight text-text-white sm:text-4xl md:text-5xl"
               html={formatLabels(t('top.name'))}
             />
-            {animatedRoles.length > 1 ? (
-              <RoleTypewriter
-                as="p"
-                className={roleLineClass}
-                key="animated-roles"
-                roles={animatedRoles}
-                slot={0}
-              />
-            ) : (
-              roles.map((role, index) =>
-                target && typewritesRole(target, index) ? (
-                  <RoleTypewriter
-                    as="p"
-                    className={roleLineClass}
-                    key={role}
-                    roles={[role]}
-                    slot={index}
-                  />
-                ) : (
-                  <InnerHtml
-                    as="p"
-                    className={roleLineClass}
-                    html={formatLabels(role)}
-                    key={role}
-                  />
-                )
-              )
-            )}
+            <RoleTypewriter
+              as="p"
+              className={roleLineClass}
+              roles={roles}
+              slot={0}
+            />
           </div>
         </div>
 

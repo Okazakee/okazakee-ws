@@ -4,30 +4,17 @@ export type HeroSection = {
   blurhashURL: string;
   /** Portrait preset; null falls back to `pebble` via normalizeHeroShape. */
   shape: string | null;
-  typewriter: boolean;
-  typewriter_target: string | null;
 };
 
 /** Portrait presets the website can render; mirrors the hero_section CHECK. */
 export type HeroShape = 'pebble' | 'square' | 'rounded' | 'squircle';
 
-/** Which role line the typewriter animates; mirrors the hero_section CHECK. */
-export type TypewriterTarget = 'role1' | 'role2' | 'all';
-
-/**
- * The single `site_settings` row: the header chrome and footer identity the
- * CMS owns. Every field is nullable — a null logo means "keep the bundled
- * asset" and null footer identity keeps the shipped default. Nav anchors are
- * not stored: every nav link points at its own section.
- */
+/** The single layout configuration row owned by the CMS. */
 export type SiteSettings = {
-  /** Logo shown in dark theme; null falls back to the bundled asset. */
+  /** Theme-specific header images; null keeps each bundled logo. */
   header_logo_dark: string | null;
-  /** Logo shown in light theme; null falls back to the bundled asset. */
   header_logo_light: string | null;
-  /** Footer display name; null keeps the bundled default. */
-  footer_name: string | null;
-  /** Footer VAT number (TEXT, zeroes matter); null keeps the default. */
+  /** Footer VAT number (TEXT, zeroes matter); null renders no VAT. */
   footer_vat_number: string | null;
 };
 
