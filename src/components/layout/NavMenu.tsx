@@ -264,13 +264,13 @@ export default function NavMenu({
           <ThemeToggle ariaLabel={t('theme')} />
           {resumeLink && (
             <Link
-              className={`${resumeClass} w-[100px] overflow-hidden px-2 py-1.5 text-xs`}
+              className={`${resumeClass} group w-[100px] overflow-hidden px-2 py-1.5 text-xs`}
               data-umami-event="Resume button"
               href={resumeLink}
               rel="noopener noreferrer"
               target="_blank"
             >
-              <Glitch className="w-full" mode="click">
+              <Glitch className="w-full" mode="click" trigger="group">
                 <span className="flex items-center gap-1">
                   <FileUser className="h-[15px] w-[15px] shrink-0" />
                   <ResumeLabel label={resumeLabel} />
@@ -360,7 +360,7 @@ export default function NavMenu({
 
                 {resumeLink && (
                   <Link
-                    className={`${resumeClass} min-h-[52px] items-center justify-center px-3 py-3 text-sm`}
+                    className={`${resumeClass} group min-h-[52px] items-center justify-center px-3 py-3 text-sm`}
                     data-umami-event="Resume button"
                     href={resumeLink}
                     onClick={() => setIsOpen(false)}
@@ -368,7 +368,7 @@ export default function NavMenu({
                     tabIndex={isOpen ? 0 : -1}
                     target="_blank"
                   >
-                    <Glitch className="w-full" mode="click">
+                    <Glitch className="w-full" mode="click" trigger="group">
                       <span className="flex w-full items-center justify-center gap-1">
                         <FileUser className="h-4 w-4 shrink-0" />
                         {resumeLabel}

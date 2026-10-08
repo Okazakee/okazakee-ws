@@ -39,33 +39,55 @@ export function useGlitch(
 ): void {
   useEffect(() => {
     const container = containerRef.current;
-    const glitched = container?.firstElementChild;
-    if (!(container && glitched instanceof HTMLElement)) return;
+    if (!container) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const layers = generateGlitchLayers(glitchPresets[mode]);
     let copies: HTMLElement[] | null = null;
 
-    // Node i plays layer i, by construction: the glitched element shakes, and
-    // one copy per remaining slice layer clips, shifts and tints a band.
+    // Node i plays layer i: the glitched element shakes, one copy per remaining
+    // slice layer clips, shifts and tints a band. Both are resolved from the
+    // DOM on every trigger, because React may swap the glitched element itself
+    // under the copies (the theme toggle's icon changes on click), which
+    // detaches whatever we captured last time. The copies carry their own
+    // marker rather than relying on `aria-hidden`: the host's content is often
+    // `aria-hidden` too (every lucide icon is).
     const play = () => {
-      copies ??= layers.slice(1).map(() => {
-        const copy = glitched.cloneNode(true) as HTMLElement;
-        copy.setAttribute('aria-hidden', 'true');
-        copy.style.opacity = '0';
-        copy.style.pointerEvents = 'none';
-        copy.style.userSelect = 'none';
-        container.append(copy);
-        return copy;
-      });
+      const base = container.querySelector<HTMLElement>(
+        ':scope > :not([data-glitch-layer])'
+      );
+      if (!base) return;
 
-      [glitched, ...copies].forEach((node, index) => {
+      const stale =
+        !copies ||
+        copies.length !== layers.length - 1 ||
+        copies.some((copy) => !copy.isConnected);
+
+      if (stale) {
+        for (const copy of copies ?? []) copy.remove();
+        copies = layers.slice(1).map(() => {
+          const copy = base.cloneNode(true) as HTMLElement;
+          copy.dataset.glitchLayer = 'true';
+          copy.setAttribute('aria-hidden', 'true');
+          copy.style.opacity = '0';
+          copy.style.pointerEvents = 'none';
+          copy.style.userSelect = 'none';
+          container.append(copy);
+          return copy;
+        });
+      }
+
+      const nodes: HTMLElement[] = [base, ...(copies ?? [])];
+      for (const [index, node] of nodes.entries()) {
         node.animate(layers[index].steps, layers[index].timing);
-      });
+      }
     };
 
+    // Whatever the container holds — a layer mid-burst, a stale copy, the base
+    // — stopping means cancelling what is running. Nothing is created here, so
+    // a leave-before-enter never pays for clones it will not use.
     const cancel = () => {
-      for (const node of copies ? [glitched, ...copies] : [glitched]) {
+      for (const node of container.children) {
         for (const animation of node.getAnimations()) animation.cancel();
       }
     };

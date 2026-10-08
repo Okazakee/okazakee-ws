@@ -245,12 +245,17 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   react-powerglitch, MIT — the engine lives in `libs/glitch`, the numbers are
   covered by `layers.test.ts`): exactly two of that library's behaviours, both
   one shot. `mode="hover"` is the smooth character on quick timing — six slice
-  layers with the intensity ramped in and out across a **320 ms** loop
+  layers with the intensity ramped in and out across a **200 ms** loop
   (`glitchTimeSpan` 0.1 → 0.9), cancelling where it started when the pointer
   leaves — and it plays on the **skills tiles**. `mode="click"` is
   PowerGlitch's own click preset, fifteen slices stepped faster, replayed on
-  every click, and it plays on the **Resume button** (header and mobile
-  drawer). The burst is a WAAPI animation per layer, generated from
+  every click over a **170 ms** loop, and it plays on the **theme toggle** and
+  the **Resume button** (header and mobile drawer) — the toggle because a click
+  there acts in place, so the burst is actually seen, whereas the Resume link
+  opens a tab and the drawer closes itself. Both presets run their velocities
+  above PowerGlitch's defaults on purpose: the loops were shortened, and a
+  short loop at the original velocity would only cut the number of jumps. The
+  burst is a WAAPI animation per layer, generated from
   `libs/glitch/layers.ts`: one base layer that shakes the glitched element (0.2%
   amplitude, sub-pixel) and one clone per slice layer that clips a 2–15% band
   of it, shoves it up to 30% sideways and hue-rotates it, every layer stepped
@@ -258,11 +263,16 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   element being glitched keeps **all** of its own styles — nothing on it gets a
   shadow, a filter or a transform while resting; the clones are the only things
   that move, they live in the container's own grid cell (`globals.css`
-  `.glitch`), they are created on the first trigger rather than at mount, and
-  they start and end invisible (`opacity: 0`). `overflow: hidden` plus
+  `.glitch`), they are created on the first trigger rather than at mount, they
+  are re-created if React swaps the glitched element out from under them (the
+  theme toggle's icon), and they start and end invisible (`opacity: 0`).
+  `overflow: hidden` plus
   `border-radius: inherit` keep every shifted slice inside the host's box and
-  corners. `trigger="group"` hangs the listeners on the nearest `.group` host,
-  which is why the whole tile — padding included — starts the tile burst.
+  corners. `trigger="group"` hangs the listeners on the nearest `.group` host:
+  every host here is bigger than the element it glitches — a tile, a padded
+  pill, a 44px touch target around an 18px icon — and the burst belongs to the
+  whole box, which is also what makes the tile's own hover colours and its
+  glitch fire together.
   Two knobs, both in `glitchPresets`: the timings above and, per layer, whether
   the slice tints by hue rotation or by an explicit `cssFilters` string.
   `prefers-reduced-motion: reduce` is read before any of it exists, so those

@@ -21,7 +21,7 @@ interface GlitchProps {
  *
  * `mode` picks the ported behaviour. `hover` is the smooth character on quick
  * timing: six slice layers with the intensity ramped in and out across a
- * 320 ms loop, cancelling the moment the pointer leaves. `click` is
+ * 200 ms loop, cancelling the moment the pointer leaves. `click` is
  * PowerGlitch's own click preset — fifteen slices, faster steps — replayed on
  * every click. Both are one shot.
  *
@@ -29,6 +29,10 @@ interface GlitchProps {
  * stacks inside this container's grid cell (`globals.css`), so the box itself
  * is never shadowed, filtered or moved. Wrap a single element, and give this
  * component the class that element's box would have had.
+ *
+ * Give a host that is bigger than its content (`group`) `trigger="group"`, or
+ * the burst stays inside the content box: a padded button would only glitch
+ * where the content is, not where it was clicked.
  */
 export function Glitch({
   children,

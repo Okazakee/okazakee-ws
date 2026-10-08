@@ -166,18 +166,23 @@ export function generateGlitchLayers(options: GlitchOptions): GlitchLayer[] {
  *
  * `hover` is the smooth character on quick timing: the slice window ramps in
  * and out (`glitchTimeSpan` 0.1 → 0.9), so the burst eases rather than
- * switching on, while the loop is short enough to be over in a third of a
+ * switching on, while the loop is short enough to be gone in a fifth of a
  * second. `click` is PowerGlitch's own click preset — more slices, faster
  * steps, one shot — for a button that fires on every click.
+ *
+ * Both velocities are deliberately higher than PowerGlitch's defaults: the
+ * loop was shortened, and a shorter loop at the original velocity would simply
+ * cut the number of jumps. Raising it keeps six or seven distinct positions
+ * (the glitch) while spending less time on it (the speed).
  */
 export const glitchPresets: Record<GlitchMode, GlitchOptions> = {
   hover: {
-    timing: { duration: 320, iterations: 1 },
+    timing: { duration: 200, iterations: 1 },
     glitchTimeSpan: { start: 0.1, end: 0.9 },
-    shake: { velocity: 15, amplitudeX: 0.2, amplitudeY: 0.2 },
+    shake: { velocity: 25, amplitudeX: 0.2, amplitudeY: 0.2 },
     slice: {
       count: 6,
-      velocity: 15,
+      velocity: 25,
       minHeight: 0.02,
       maxHeight: 0.15,
       hueRotate: true,
@@ -185,12 +190,12 @@ export const glitchPresets: Record<GlitchMode, GlitchOptions> = {
     },
   },
   click: {
-    timing: { duration: 250, iterations: 1 },
+    timing: { duration: 170, iterations: 1 },
     glitchTimeSpan: { start: 0, end: 1 },
-    shake: { velocity: 15, amplitudeX: 0.2, amplitudeY: 0.2 },
+    shake: { velocity: 30, amplitudeX: 0.2, amplitudeY: 0.2 },
     slice: {
       count: 15,
-      velocity: 20,
+      velocity: 35,
       minHeight: 0.02,
       maxHeight: 0.15,
       hueRotate: true,
