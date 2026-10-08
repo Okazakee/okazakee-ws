@@ -223,9 +223,10 @@ export default function NavMenu({
   };
 
   // Nav items take the company name's hover treatment (the career cards): the
-  // accent ink and an underline, and the glitch burst on hover. The active item
-  // keeps its own violet rule — the resting items carry a transparent one so
-  // nothing shifts when a section becomes active.
+  // accent ink and an underline. The active item keeps its own violet rule —
+  // the resting items carry a transparent one so nothing shifts when a section
+  // becomes active. The glitch bursts on that active-state change, not on
+  // pointer hover.
   const desktopIdle =
     'border-b border-transparent pb-0.5 transition-colors hover:text-accent-violet-light hover:underline hover:underline-offset-2';
   const desktopActive =
@@ -246,12 +247,7 @@ export default function NavMenu({
           const active = isActive(item);
 
           return (
-            <Glitch
-              active={active}
-              className="w-fit"
-              key={item.id}
-              mode="hover"
-            >
+            <Glitch active={active} className="w-fit" key={item.id} mode="click">
               <Link
                 aria-current={active ? 'page' : undefined}
                 className={active ? desktopActive : desktopIdle}
