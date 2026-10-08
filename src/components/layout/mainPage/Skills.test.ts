@@ -63,7 +63,7 @@ beforeEach(() => {
 });
 
 const tileClasses =
-  'group flex aspect-square w-24 flex-col items-center justify-center gap-2 rounded-xl border border-border-subtle bg-surface-card p-3 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:w-32 md:w-[150px]';
+  'group relative flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-card p-3.5 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover w-full sm:w-[calc(50%-7px)] lg:w-[calc(33.333%-10px)]';
 
 describe('Skills tiles', () => {
   it('renders an unlinked tile as a plain div, exactly as before', async () => {

@@ -1,5 +1,7 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
-import type { LucideProps } from 'lucide-react';
+import { SectionEyebrow } from '@components/common/SectionEyebrow';
+import { SectionNumber } from '@components/common/SectionNumber';
+import { ArrowUpRight, type LucideProps } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import React from 'react';
@@ -9,7 +11,6 @@ import {
   LinkedinIcon,
 } from '@/components/common/BrandIcons';
 import { InnerHtml } from '@/components/common/InnerHtml';
-import { SectionNumber } from '@components/common/SectionNumber';
 import { formatLabels } from '@/utils/formatLabels';
 import { getContacts } from '@/utils/getData';
 import { RequestForm } from './RequestForm';
@@ -65,36 +66,46 @@ export default async function Contacts({ locale }: { locale: string }) {
         <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {contacts.map(({ id, label, icon, link, bg_color }) => {
-          const IconComponent = getIconComponent(icon);
+      <section aria-label={t('directChannelsLabel')} className="mb-14 w-full">
+        <SectionEyebrow index={1} label={t('directChannels')} />
 
-          return (
-            <Link
-              className="group flex flex-col items-center gap-3 rounded-2xl border border-border-subtle bg-surface-card p-5 text-center transition-colors hover:border-accent-violet hover:bg-surface-raised"
-              data-umami-event={`${label} button`}
-              href={link}
-              key={id}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <span
-                className="flex h-12 w-12 items-center justify-center rounded-xl"
-                style={{ backgroundColor: `${bg_color}1a`, color: bg_color }}
+        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+          {contacts.map(({ id, label, icon, link, bg_color }) => {
+            const IconComponent = getIconComponent(icon);
+
+            return (
+              <Link
+                className="group relative flex min-h-32 flex-col items-center justify-between rounded-xl border border-border-subtle bg-surface-card p-4 text-center transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover"
+                data-umami-event={`${label} button`}
+                href={link}
+                key={id}
+                rel="noopener noreferrer"
+                target="_blank"
               >
-                {IconComponent ? (
-                  <IconComponent className="h-6 w-6" strokeWidth={1.8} />
-                ) : null}
-              </span>
-              <span className="text-sm font-medium text-text-white">
-                {label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+                <span className="flex w-full justify-end">
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-dim transition-colors group-hover:text-accent-violet-light" />
+                </span>
+                <span
+                  className="my-2 flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle bg-surface-raised transition-colors group-hover:border-accent-violet/50"
+                  style={{ backgroundColor: `${bg_color}1a`, color: bg_color }}
+                >
+                  {IconComponent ? (
+                    <IconComponent className="h-5 w-5" strokeWidth={1.8} />
+                  ) : null}
+                </span>
+                <span className="mt-1 font-mono text-xs font-medium text-text-main transition-colors group-hover:text-text-white">
+                  {label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
-      <RequestForm />
+      <section aria-label={t('projectInquiryLabel')} className="w-full">
+        <SectionEyebrow index={2} label={t('projectInquiry')} />
+        <RequestForm />
+      </section>
     </section>
   );
 }

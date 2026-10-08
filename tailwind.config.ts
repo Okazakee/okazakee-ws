@@ -9,13 +9,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      // One backdrop blur for every translucent surface in the site: the
-      // sticky header, the mobile drawer, the image-modal overlay, a post
-      // card's badge and the request band's overlay all use
-      // `backdrop-blur-surface`, so the value is tuned in one place
-      // (docs/DESIGN.md §3). Per-element blur values are not used.
+      // Two backdrop blurs for the site's translucent surfaces: the sticky
+      // header, the mobile drawer, the image-modal overlay, a post card's
+      // badge and the request band's overlay all use `backdrop-blur-surface`,
+      // while the mobile header and nav drawer pair uses the stronger
+      // `backdrop-blur-mobile` (docs/DESIGN.md §3). Per-element blur values
+      // are not used.
       backdropBlur: {
         surface: '3px',
+        mobile: '5px',
       },
       // The cursor kinds resolve to the ported "Blue" art in globals.css, so
       // every `cursor-*` class in the codebase (and the `@apply`s in the base

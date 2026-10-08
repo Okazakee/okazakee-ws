@@ -186,6 +186,33 @@ export async function getBlogPosts(): Promise<BlogPost[] | null> {
   return data;
 }
 
+export async function getPostCount(
+  type: 'blog' | 'portfolio'
+): Promise<number> {
+  'use cache';
+  cacheTag(type === 'blog' ? cacheTags.blog : cacheTags.portfolio);
+  applySupabaseCacheLife();
+
+  const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
+  let query = supabase
+    .from(table)
+    .select('id', { count: 'exact', head: true })
+    .eq('hidden', false);
+
+  if (enforcePublishDate) {
+    query = query.lte('created_at', getCurrentTime());
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    console.error('Error fetching post count:', error);
+    throw error;
+  }
+
+  return count ?? 0;
+}
+
 export async function getContacts(): Promise<Contact[] | null> {
   'use cache';
   cacheTag(cacheTags.contacts);

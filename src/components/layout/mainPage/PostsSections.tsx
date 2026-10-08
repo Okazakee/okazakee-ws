@@ -1,21 +1,25 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
 import PostCard from '@components/common/PostCard';
-import { ArrowRight } from 'lucide-react';
+import { SectionNumber } from '@components/common/SectionNumber';
+import { Archive, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { SectionNumber } from '@components/common/SectionNumber';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
-import { getBlogPosts, getPortfolioPosts } from '@/utils/getData';
+import { getBlogPosts, getPortfolioPosts, getPostCount } from '@/utils/getData';
 
 /**
- * Home previews of the latest projects and posts (docs/DESIGN.md §6): the blog
- * band is tinted, the portfolio one is not, and each closes with the link to
- * its list page.
+ * Home previews of the latest projects and posts: each section shows up to
+ * three cards and a localized archive card linking to the full list.
  */
 export default async function PostsSection({ locale }: { locale: string }) {
-  const portfolioPosts = await getPortfolioPosts();
-  const blogPosts = await getBlogPosts();
+  const [portfolioPosts, blogPosts, portfolioCount, blogCount] =
+    await Promise.all([
+      getPortfolioPosts(),
+      getBlogPosts(),
+      getPostCount('portfolio'),
+      getPostCount('blog'),
+    ]);
 
   const t = await getTranslations({ locale, namespace: 'posts-section' });
   const sections = ['portfolio', 'blog'] as const;
@@ -29,6 +33,8 @@ export default async function PostsSection({ locale }: { locale: string }) {
         const isBlog = section === 'blog';
         const sectionIndex = isBlog ? 5 : 4;
         const posts = isBlog ? blogPosts : portfolioPosts;
+        const totalCount = isBlog ? blogCount : portfolioCount;
+        const remainingCount = Math.max(0, totalCount - posts.length);
 
         return (
           posts.length > 0 && (
@@ -62,20 +68,48 @@ export default async function PostsSection({ locale }: { locale: string }) {
                 </div>
 
                 <div className="space-y-6">
-                  {posts.map((post) => (
+                  {posts.slice(0, 3).map((post) => (
                     <PostCard key={post.id} locale={locale} post={post} />
                   ))}
                 </div>
 
-                <div className="mt-12 flex justify-center">
-                  <Link
-                    className="inline-flex items-center gap-2 rounded-xl bg-accent-violet-deep/80 px-6 py-2.5 font-mono text-xs text-white shadow-md shadow-accent-violet-deep/20 transition-all hover:-translate-y-0.5 hover:bg-accent-violet-deep"
-                    href={`/${locale}/${section}`}
-                  >
-                    {t('button')}
+                <Link
+                  className="mt-6 flex w-full flex-col gap-5 rounded-2xl border border-dashed border-border-subtle bg-surface-card/40 p-6 transition-all hover:border-accent-violet/50 hover:bg-surface-card-hover/60 sm:min-h-[290px] sm:flex-row sm:items-center sm:justify-between sm:p-7 md:min-h-[275px] lg:min-h-[175px] lg:py-6"
+                  href={`/${locale}/${section}`}
+                >
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-surface-raised text-accent-violet">
+                        <Archive className="h-5 w-5" />
+                      </span>
+                      <h3 className="font-mono text-base font-medium text-text-white sm:text-lg">
+                        {remainingCount > 0
+                          ? t(
+                              isBlog
+                                ? 'archiveMorePosts'
+                                : 'archiveMoreProjects',
+                              { count: remainingCount }
+                            )
+                          : t(
+                              isBlog ? 'archiveAllPosts' : 'archiveAllProjects'
+                            )}
+                      </h3>
+                    </div>
+                    <p className="mt-2 max-w-xl font-mono text-xs text-text-muted sm:text-sm">
+                      {t(
+                        isBlog
+                          ? 'archiveDescriptionPosts'
+                          : 'archiveDescriptionProjects'
+                      )}
+                    </p>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-accent-violet px-5 py-2.5 font-mono text-sm font-semibold text-text-on-accent transition-colors hover:bg-accent-violet-deep dark:bg-accent-violet-deep dark:text-white dark:hover:bg-accent-violet-deep sm:w-auto">
+                    {t(
+                      isBlog ? 'archiveViewAllPosts' : 'archiveViewAllProjects'
+                    )}
                     <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
+                  </span>
+                </Link>
               </div>
             </section>
           )

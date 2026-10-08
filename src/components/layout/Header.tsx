@@ -31,7 +31,7 @@ export default function Header({
   const lightSrc = logoLightUrl?.trim() ? logoLightUrl : logoLight.src;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border-subtle bg-surface-base/70 backdrop-blur-surface">
+    <header className="sticky top-0 z-50 border-b border-border-subtle bg-surface-base/70 backdrop-blur-mobile lg:backdrop-blur-surface">
       <div className="mx-auto grid h-16 max-w-5xl grid-cols-[1fr_auto_1fr] items-center pl-6 pr-3 lg:pr-6">
         <Link
           className="col-start-1 flex items-center justify-self-start"

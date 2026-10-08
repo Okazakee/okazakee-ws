@@ -4,11 +4,8 @@ This document is the design contract for the redesigned site. It supersedes the
 Stitch-generated brief that used to live here: the redesign is now the canon, and
 where the two disagree this file wins.
 
-Provenance of every value below: the approved HTML mockups in
-`~/Downloads/stitch_okazakee_hybrid_tui_interface/` (`code.html`, `portfolio.html`,
-`privacy-policy.html`, `error.html`, `blog-post.html`, `portfolio-post.html`) plus the
-`precall` project for the request form. Values were verified by measuring the rendered
-mocks (contrast ratios, box geometry, tap targets), not copied from a tool.
+The design values below are grounded in the approved visual specification and
+checked against measured contrast, component geometry, and tap targets.
 
 Source, tests and configuration remain authoritative for implementation detail; this
 document owns the system: tokens, type, layout, component behaviour and the data rules.
@@ -197,11 +194,12 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   use full `bg-surface-alt`; portfolio, skills and contacts are transparent.
 - Radii: cards and panels `rounded-2xl` (16px), inner media `rounded-xl` (12px),
   buttons `rounded-lg` (8px), chips `rounded` (4px).
-- Backdrop blur: **one theme value for every translucent surface** —
-  `backdrop-blur-surface` (`3px`, `tailwind.config.ts`) on the sticky header, the
-  mobile drawer, the image-modal overlay, a card's view badge and the request
-  band's overlay. Per-element blur values are not used: the token is the only
-  knob, so retuning it moves every frosted surface together.
+- Backdrop blur: `backdrop-blur-surface` (`3px`, `tailwind.config.ts`) stays the
+  global value for the image-modal overlay, a card's view badge and the request
+  band's overlay. The sticky header and the mobile drawer wear
+  `backdrop-blur-mobile` (`5px`) below `lg` and fall back to `surface` at `lg`
+  and up. Per-element blur values are not used: the two tokens are the only
+  knobs.
 - Borders: always 1px `border-subtle`; interaction raises the border to
   `accent-violet/40–/50`, optionally with a tinted shadow. **No image zoom on hover.**
 - Cursors: the **Windows "Blue" scheme**, ported from its `.cur` resources into
@@ -337,11 +335,21 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 ## 5. Components
 
 ### 5.1 Cards (posts and projects)
-Poster (4:3-ish, `md:w-72` for blog, `md:w-80` for portfolio, full-bleed), then
-body: title (`group-hover` → `accent-violet-light`), description, then chips. The
-only floating badge is the view count (eye + real `views`) bottom-right — cards
-carry no star badge, `GitHubStars` renders on the post detail page only. The
-whole card is a link to `/{locale}/{type}/{id}/{slug}`; no hover zoom.
+Blog and portfolio use one card component and one layout: a rounded image poster
+(`200px`, `220px` from `sm`, `lg:w-[380px]`), then title with an external-arrow
+affordance, description and wrapping chips. The card uses theme-token surfaces
+and border hover without a shadow; the poster never zooms. The view count
+(eye icon and current total) floats bottom-right. Cards carry no star badge;
+`GitHubStars` renders on the post detail page only. The whole card links through
+to `/{locale}/{type}/{id}/{slug}`; the slug uses the card title (English for
+portfolio, visitor locale for blog).
+
+On the home page, each section shows its three newest cards, then a themed
+archive CTA instead of the old Explore more button. The title shows the count
+of remaining posts; the CTA links to that type's full list page.
+
+The archive action uses theme-safe fill and ink: light mode keeps the violet
+button, while dark mode uses deep violet with white text.
 
 ### 5.2 Chips / tags
 `inline-flex items-center gap-1 rounded border border-border-subtle bg-surface-raised
@@ -366,11 +374,16 @@ horizontal scroll under `prefers-reduced-motion`).
   121×40 instead of being letterboxed into a 40×40 box.
 
 ### 5.4 Contacts and the project request form
-- Contacts are the four real rows (Email, LinkedIn, GitHub, Telegram) with the DB
-  `bg_color` as the tile accent. The résumé is **not** a contact action: the header
-  renders it (desktop row and the mobile drawer's pinned block) from
-  `hero_section.resume_${locale}`, and the CMS edits both PDFs from its single
-  Layout section.
+- Keep the existing centered title and subtitle treatment. Render the four contact DB
+  rows as compact channel tiles using each row's `bg_color` as the icon accent. The
+  uppercase `DIRECT CHANNELS` and `PROJECT REQUEST` labels live in local
+  `site.{en,it}.json` messages; each row renders its `01.`/`02.` prefix in muted ink
+  after a violet `>` marker.
+- Direct-channel tiles use the shared card surface/border hover treatment (no shadow),
+  brand-tinted 40px icon squares, and an external-arrow cue.
+- The résumé is **not** a contact action: the header renders it (desktop row and
+  mobile drawer's pinned block) from `hero_section.resume_${locale}`, and the CMS
+  edits both PDFs from its single Layout section.
 - The request form is **built and live**: a three-step wizard (contact →
   project → details) carrying Name, Email, Company, existing website/repo,
   Project type, Budget range, Desired timeline, "What are you building?", a
@@ -381,6 +394,10 @@ horizontal scroll under `prefers-reduced-motion`).
   personal data and carries no anon/authenticated grant. Success replaces the
   form with a confirmation; a failure renders the endpoint's stable error code
   in the visitor's own locale. The browser never holds a key.
+- The inquiry header and form panel use a section eyebrow outside a bordered,
+  token-surface panel, centered mono heading, visible three-step progress,
+  uppercase field labels, and `surface-base` controls with a violet focus ring.
+  The same panel chrome wraps every wizard step and the success state.
 - Intake is bounded: a hard 8 KB body cap checked before parsing, and a
   per-IP token bucket (3 requests, refilling one every 30 minutes). That
   throttle is per-instance and an abuse/cost bound, not a security control —
@@ -400,8 +417,7 @@ horizontal scroll under `prefers-reduced-motion`).
 Left: `Made with ❤️ by` + the name **linked to the GitHub profile**, then `Source Code`
 linking the repo — both with the violet hover. Right: the VAT value as a copy
 affordance carrying `footer.buttonTitle`, then CMS and Privacy Policy links — the three
-separated by `//`, the links underlined and hovering to `text-text-muted` (mock at
-`code.html`).
+separated by `//`, the links underlined and hovering to `text-text-muted`.
 
 Only the **two identity values** behind that chrome are data
 (`site_settings.footer_name` / `site_settings.footer_vat_number` — §8). The wording,
@@ -481,20 +497,20 @@ captions and the blurhash as the placeholder background.
 ## 8. Data fidelity rules
 
 Every string and value in the UI comes from the database or an existing translation key.
-Invented copy is a defect, not a placeholder. The request form and the Italian nav labels
-are the known exceptions still open — listed with the quirks below.
+Invented copy is a defect, not a placeholder. The Italian nav labels are the known copy
+exception — listed with the quirks below.
 
 **Sources of truth**
 
 | UI | source |
 |---|---|
-| all copy | `i18n_translations.translations` (editable namespaces: `hero-section`, `skills-section`, `career-section`, `contacts-section`, `posts-section`, `privacyPolicy`; the privacy body is the `privacy_policy` **column**, not a namespace, and no `request-form` namespace exists yet). `header`, `footer`, `errors` and the `posts-section` chrome are no longer read from here at all — they are frozen site files merged over this object, local winning (§8 quirk list) |
+| all copy | `i18n_translations.translations` (editable namespaces: `hero-section`, `skills-section`, `career-section`, `contacts-section`, `posts-section`, `privacyPolicy`; the privacy body is the `privacy_policy` **column**, not a namespace). Local `contacts-section` messages freeze the channel/inquiry labels; `header`, `footer`, `errors` and the `posts-section` chrome are also frozen site files merged over this object, local winning (§8 quirk list). The request wizard has a dedicated `requestForm.{en,it}.json` copy source, not a `request-form` namespace |
 | hero name/about | `hero-section.top.name`, `hero-section.aboutme.*` |
 | hero roles | `hero-section.top.roles.0…` when the list exists, else the singular `hero-section.top.role` (kept as the fallback, never migrated) |
 | hero portrait/animation | `hero_section.shape` (`pebble` default), `hero_section.typewriter` + `hero_section.typewriter_target` (`role1` \| `role2` \| `all`) |
 | skills | `skills_categories` (ordered by `position`) + nested `skills` (`icon` URL, `invert`, optional `link` URL rendered as an external tile anchor, `position` inside its category; `position` NULL sorts last with an id tiebreak) |
 | career | `career_entries` (`logo`, `website_url`, `location_*`, `remote`, `startDate`/`endDate`, `description_*`, `skills`) |
-| contacts | `contacts` rows (`label`, `link`, `icon`, `bg_color`) |
+| contacts | `contacts` rows (`label`, `link`, `icon`, `bg_color`) plus local static channel/inquiry labels |
 | posts | `blog_posts` / `portfolio_posts` (`title_en` + `title_${locale}`, `description_*`, `body_*`, `image` + `blurhashURL`, `post_tags`, `views`); project quick links come from `portfolio_posts.buttons` (see §6) |
 | post buttons | `portfolio_posts.buttons` — an ordered jsonb array of `{ kind, url, label? }` where `kind` is `website` \| `source` \| `demo` \| `store` \| `fdroid` \| `ios` \| `custom`. Array order IS render order. The label and icon of a preset belong to the site (`src/i18n/messages/postButtons.{en,it}.json` + the icon map in the page), so `label` is only read for `custom`. Null/empty `buttons` falls back to the legacy `source_link` / `demo_link` / `store_link` / `fdroid_link` / `website` / `ios_store_link` columns in that order |
 | post button copy | static per-locale messages, NOT `posts-section` translations — these are site invariants, so an editor cannot retitle "Source code" |

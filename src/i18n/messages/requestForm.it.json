@@ -1,8 +1,8 @@
 {
-  "eyebrow": "Richiesta di progetto",
   "title": "Inviami una richiesta",
   "subtitle": "Tre passaggi rapidi: chi sei, cosa stai costruendo e i dettagli.",
   "steps": ["Contatti", "Progetto", "Dettagli"],
+  "progress": "Avanzamento",
   "back": "Indietro",
   "next": "Avanti",
   "submit": "Invia richiesta",

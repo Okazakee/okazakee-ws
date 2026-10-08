@@ -15,13 +15,13 @@ import siteIt from '@/i18n/messages/site.it.json';
  * transposed, which is why `NavMenu` used to carry a hardcoded Italian label
  * list; that workaround is gone, and the pair is only ever edited together here.
  *
- * The merge is LOCAL OVER DATABASE and one namespace deep. The two namespaces
- * that also carry editable keys are `posts-section` (the four headings, edited
- * from the Portfolio and Blog sections) and `privacyPolicy` (the description,
- * edited from the Privacy policy section); everything else comes through from
- * the database untouched. `career-section` is deliberately absent — its date and
- * remote-type vocabulary is already edited from the Career section, which is
- * where it belongs.
+ * The merge is LOCAL OVER DATABASE and one namespace deep. Local keys in
+ * `contacts-section` label the fixed channel and inquiry groups;
+ * `posts-section` carries the site-owned post labels alongside CMS copy, and
+ * `privacyPolicy` carries the frozen title alongside its CMS-owned description.
+ * The remaining database messages pass through untouched. `career-section` is
+ * deliberately absent — its date and remote-type vocabulary is already edited
+ * from the Career section, where it belongs.
  *
  * A frozen key can never be overridden by a stale database row.
  */

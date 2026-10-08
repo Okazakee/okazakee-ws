@@ -1,8 +1,8 @@
 {
-  "eyebrow": "Project request",
   "title": "Send me a request",
   "subtitle": "Three quick steps: who you are, what you are building, and the details.",
   "steps": ["Contact", "Project", "Details"],
+  "progress": "Progress",
   "back": "Back",
   "next": "Next",
   "submit": "Send request",

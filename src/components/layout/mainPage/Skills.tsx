@@ -1,15 +1,16 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
+import { SectionEyebrow } from '@components/common/SectionEyebrow';
+import { SectionNumber } from '@components/common/SectionNumber';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { formatLabels } from '@/utils/formatLabels';
-import { SectionNumber } from '@components/common/SectionNumber';
 import { getSkillsCategories } from '@/utils/getData';
 import { sortSkillsByPosition } from '@/utils/skillOrder';
 
-const tileClass =
-  'group flex aspect-square w-24 flex-col items-center justify-center gap-2 rounded-xl border border-border-subtle bg-surface-card p-3 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:w-32 md:w-[150px]';
+const rowClass =
+  'group relative flex items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface-card p-3.5 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover';
 
 /**
  * Skills grid (docs/DESIGN.md §6): centred square tiles per category, three per
@@ -47,47 +48,59 @@ export default async function Skills({ locale }: { locale: string }) {
       </div>
 
       <div className="space-y-12">
-        {skillsCategories.map((category) => (
-          <div key={category.id}>
-            <h3 className="mx-auto mb-4 w-fit text-center font-mono text-sm uppercase tracking-wider text-text-dim">
-              {category.name}
-            </h3>
-            <div className="flex flex-wrap justify-center gap-3">
+        {skillsCategories.map((category, index) => (
+          <div className="space-y-4" key={category.id}>
+            <SectionEyebrow index={index + 1} label={category.name} />
+            <div className="flex flex-wrap justify-center gap-3.5">
               {sortSkillsByPosition(category.skills).map((skill) => {
                 const href = skill.link?.trim() ? skill.link.trim() : null;
-                const content = (
+                const widthClass =
+                  'w-full sm:w-[calc(50%-7px)] lg:w-[calc(33.333%-10px)]';
+                const body = (
                   <>
-                    <Image
-                      alt={skill.title}
-                      blurDataURL={skill.blurhashURL || undefined}
-                      className={`h-10 w-10 object-contain ${
-                        skill.invert ? 'dark:invert' : ''
-                      }`}
-                      height={80}
-                      placeholder={skill.blurhashURL ? 'blur' : 'empty'}
-                      sizes="40px"
-                      src={skill.icon}
-                      width={80}
-                    />
-                    <span className="text-center font-mono text-[11px] text-text-main transition-colors group-hover:text-text-white">
-                      {skill.title}
+                    <span className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border-subtle bg-surface-raised">
+                        <Image
+                          alt={skill.title}
+                          blurDataURL={skill.blurhashURL || undefined}
+                          className={`max-h-6 max-w-6 object-contain ${
+                            skill.invert ? 'dark:invert' : ''
+                          }`}
+                          height={48}
+                          placeholder={skill.blurhashURL ? 'blur' : 'empty'}
+                          sizes="24px"
+                          src={skill.icon}
+                          width={48}
+                        />
+                      </span>
+                      <span className="font-mono text-sm font-semibold text-text-white transition-colors group-hover:text-accent-violet-light">
+                        {skill.title}
+                      </span>
                     </span>
+                    {href ? (
+                      <span
+                        aria-hidden="true"
+                        className="font-mono text-xs text-text-dim transition-colors group-hover:text-accent-violet"
+                      >
+                        ↗
+                      </span>
+                    ) : null}
                   </>
                 );
 
                 return href ? (
                   <Link
-                    className={tileClass}
+                    className={`${rowClass} ${widthClass}`}
                     href={href}
                     key={skill.id}
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    {content}
+                    {body}
                   </Link>
                 ) : (
-                  <div className={tileClass} key={skill.id}>
-                    {content}
+                  <div className={`${rowClass} ${widthClass}`} key={skill.id}>
+                    {body}
                   </div>
                 );
               })}

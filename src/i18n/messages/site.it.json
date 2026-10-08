@@ -45,12 +45,25 @@
     "store": "Play Store",
     "fdroid": "FDroid",
     "demo": "Live Demo",
-    "button": "Scopri di più",
+    "archiveMoreProjects": "+{count} altri progetti nell'archivio",
+    "archiveMorePosts": "+{count} altri articoli nell'archivio",
+    "archiveAllProjects": "Esplora l'archivio completo dei progetti",
+    "archiveAllPosts": "Esplora l'archivio completo degli articoli",
+    "archiveDescriptionProjects": "Scopri la raccolta completa, inclusi i progetti non mostrati qui.",
+    "archiveDescriptionPosts": "Scopri la raccolta completa, inclusi gli articoli non mostrati qui.",
+    "archiveViewAllProjects": "Vedi tutti i progetti",
+    "archiveViewAllPosts": "Vedi tutti gli articoli",
     "copyButton": "Copia link del post",
     "preCopy": "Copiato!",
     "no-posts": "Non ci sono post disponibili!",
     "ratelimit": "Troppe richieste! Attendere e riprovare.",
     "searchbar": "Cerca post dal titolo, desc o tag..."
+  },
+  "contacts-section": {
+    "directChannels": "CANALI DIRETTI",
+    "directChannelsLabel": "Canali di contatto diretti",
+    "projectInquiry": "RICHIESTA PROGETTO",
+    "projectInquiryLabel": "Richiesta progetto"
   },
   "privacyPolicy": {
     "title": "Informativa sulla Privacy"

@@ -72,9 +72,9 @@ export function RequestForm() {
   const [error, setError] = useState<string | null>(null);
 
   const fieldClass =
-    'w-full rounded-lg border border-border-subtle bg-surface-base px-3 py-2.5 font-mono text-xs text-text-main placeholder:text-text-dim focus:border-accent-violet/60 focus:outline-none';
+    'w-full rounded-lg border border-border-subtle bg-surface-base px-4 py-3 font-mono text-xs text-text-main placeholder:text-text-dim/60 transition-colors focus:border-accent-violet focus:bg-surface-base focus:outline-none focus:ring-1 focus:ring-accent-violet/30 sm:text-sm';
   const labelClass =
-    'mb-2 block font-mono text-[11px] uppercase tracking-[0.08em] text-text-dim';
+    'mb-2 flex w-fit items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-text-dim';
 
   const update = (key: keyof FormValues, value: string | boolean) => {
     setValues((current) => ({ ...current, [key]: value }));
@@ -89,7 +89,10 @@ export function RequestForm() {
   ) => (
     <div className={span ? 'sm:col-span-2' : undefined} key={id}>
       <label className={labelClass} htmlFor={id}>
-        {label}
+        <span>{label}</span>
+        {(id === 'request-name' || id === 'request-email') && (
+          <span className="text-accent-violet/60">*</span>
+        )}
       </label>
       {control}
     </div>
@@ -158,6 +161,7 @@ export function RequestForm() {
           id="request-type"
           onChange={(next) => update('type', next)}
           options={options.type}
+          triggerClassName={fieldClass}
           value={values.type}
         />
       ),
@@ -168,6 +172,7 @@ export function RequestForm() {
           id="request-budget"
           onChange={(next) => update('budget', next)}
           options={options.budget}
+          triggerClassName={fieldClass}
           value={values.budget}
         />
       ),
@@ -178,6 +183,7 @@ export function RequestForm() {
           id="request-timeline"
           onChange={(next) => update('timeline', next)}
           options={options.timeline}
+          triggerClassName={fieldClass}
           value={values.timeline}
         />,
         true
@@ -267,19 +273,18 @@ export function RequestForm() {
 
   if (status === 'sent') {
     return (
-      <div className="relative mt-14 overflow-hidden rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-8">
-        <p className="mx-auto w-fit text-center font-mono text-[11px] uppercase tracking-[0.2em] text-accent-violet">
-          {copy.eyebrow}
-        </p>
-        <h3 className="mx-auto mt-3 w-fit text-center font-heading text-xl font-semibold text-text-white">
-          {copy.successTitle}
-        </h3>
-        <p className="mx-auto mt-2 max-w-xl text-center text-sm leading-relaxed text-text-muted">
-          {copy.successBody}
-        </p>
-        <div className="mt-7 flex justify-center">
+      <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-10">
+        <div className="mb-9 text-center">
+          <h3 className="font-mono text-xl font-bold tracking-tight text-text-white sm:text-2xl">
+            {copy.successTitle}
+          </h3>
+          <p className="mx-auto mt-2 max-w-lg font-mono text-xs leading-relaxed text-text-muted sm:text-sm">
+            {copy.successBody}
+          </p>
+        </div>
+        <div className="flex justify-center">
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs uppercase tracking-[0.08em] text-text-main transition-colors hover:border-accent-violet/50 hover:text-text-white"
+            className="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-text-main transition-colors hover:border-accent-violet/50 hover:text-text-white"
             onClick={() => {
               setValues(initialValues(options));
               setStatus('idle');
@@ -295,50 +300,54 @@ export function RequestForm() {
   }
 
   return (
-    <div className="relative mt-14 overflow-hidden rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-8">
-      <p className="text-center font-mono text-[11px] uppercase tracking-[0.2em] text-accent-violet">
-        {copy.eyebrow}
-      </p>
-      <h3 className="mt-3 text-center font-heading text-xl font-semibold text-text-white">
-        {copy.title}
-      </h3>
-      <p className="mx-auto mt-2 max-w-xl text-center text-sm leading-relaxed text-text-muted">
-        {copy.subtitle}
-      </p>
+    <div className="relative overflow-hidden rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-10">
+      <div className="mb-9 text-center">
+        <h3 className="font-mono text-xl font-bold tracking-tight text-text-white sm:text-2xl">
+          {copy.title}
+        </h3>
+        <p className="mx-auto mt-2 max-w-lg font-mono text-xs leading-relaxed text-text-muted sm:text-sm">
+          {copy.subtitle}
+        </p>
+      </div>
 
-      <ol className="mx-auto mt-6 flex max-w-md items-center gap-2">
-        {copy.steps.map((label, index) => (
-          <li
-            className="flex min-w-0 flex-1 items-center gap-2 last:flex-none"
-            key={label}
-          >
-            <span
-              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[11px] transition-colors ${
-                index < step
-                  ? 'border-accent-violet bg-accent-violet text-text-on-accent'
-                  : index === step
-                    ? 'border-accent-violet text-accent-violet-light'
-                    : 'border-border-subtle text-text-dim'
-              }`}
+      <nav aria-label={copy.progress} className="mx-auto mb-10 max-w-md">
+        <ol className="flex items-center gap-2">
+          {copy.steps.map((label, index) => (
+            <li
+              aria-current={index === step ? 'step' : undefined}
+              className="flex min-w-0 flex-1 items-center gap-1.5 last:flex-none sm:gap-2.5"
+              key={label}
             >
-              {index < step ? <Check className="h-3.5 w-3.5" /> : index + 1}
-            </span>
-            <span
-              className={`hidden truncate font-mono text-[11px] sm:block ${
-                index === step ? 'text-text-main' : 'text-text-dim'
-              }`}
-            >
-              {label}
-            </span>
-            {index < copy.steps.length - 1 && (
               <span
-                aria-hidden="true"
-                className={`h-px min-w-3 flex-1 ${index < step ? 'bg-accent-violet' : 'bg-border-subtle'}`}
-              />
-            )}
-          </li>
-        ))}
-      </ol>
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[11px] transition-colors ${
+                  index < step
+                    ? 'border-accent-violet bg-accent-violet text-text-on-accent dark:border-accent-violet-deep dark:bg-accent-violet-deep dark:text-white'
+                    : index === step
+                      ? 'border-accent-violet bg-accent-violet/10 text-accent-violet-light ring-1 ring-accent-violet/20'
+                      : 'border-border-subtle bg-surface-base text-text-dim'
+                }`}
+              >
+                {index < step ? <Check className="h-3.5 w-3.5" /> : index + 1}
+              </span>
+              <span
+                className={`truncate font-mono text-[10px] sm:text-[11px] ${
+                  index === step ? 'text-accent-violet-light' : 'text-text-dim'
+                }`}
+              >
+                {label}
+              </span>
+              {index < copy.steps.length - 1 && (
+                <span
+                  aria-hidden="true"
+                  className={`h-px min-w-2 flex-1 sm:min-w-3 ${
+                    index < step ? 'bg-accent-violet' : 'bg-border-subtle'
+                  }`}
+                />
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
 
       <form
         className="mt-7 flex min-h-[269px] flex-col"
@@ -357,9 +366,9 @@ export function RequestForm() {
           </p>
         )}
 
-        <div className="mt-auto flex items-center justify-between gap-3 pt-7">
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border-subtle/70 pt-4">
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs uppercase tracking-[0.08em] text-text-main transition-colors hover:border-accent-violet/50 hover:text-text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-text-main transition-colors hover:border-accent-violet/50 hover:text-text-white disabled:cursor-not-allowed disabled:opacity-40"
             disabled={step === 0}
             onClick={() => setStep((current) => Math.max(0, current - 1))}
             type="button"
@@ -369,7 +378,7 @@ export function RequestForm() {
           </button>
           {step < pages.length - 1 ? (
             <button
-              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs uppercase tracking-[0.08em] text-text-on-accent transition-colors hover:bg-accent-violet-light"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-text-on-accent transition-colors hover:bg-accent-violet-deep dark:bg-accent-violet-deep dark:text-white dark:hover:bg-accent-violet-deep"
               onClick={() =>
                 setStep((current) => Math.min(pages.length - 1, current + 1))
               }
@@ -380,7 +389,7 @@ export function RequestForm() {
             </button>
           ) : (
             <button
-              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs uppercase tracking-[0.08em] text-text-on-accent transition-colors hover:bg-accent-violet-light disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-text-on-accent transition-colors hover:bg-accent-violet-deep disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-violet-deep dark:text-white dark:hover:bg-accent-violet-deep"
               disabled={status === 'sending'}
               type="submit"
             >
@@ -391,9 +400,7 @@ export function RequestForm() {
         </div>
       </form>
 
-      {/* Intake is closed (the fail-safe default on production builds): the
-          band says so, and POST /api/requests answers 503 for the same flag,
-          so a visitor can never believe a request was taken. */}
+      {/* The intake band mirrors the endpoint's fail-safe availability. */}
       {!publicConfig.requestIntakeEnabled && (
         <div
           aria-hidden="true"
