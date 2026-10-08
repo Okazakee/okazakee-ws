@@ -284,7 +284,7 @@ export function RequestForm() {
         </div>
         <div className="flex justify-center">
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-text-main transition-colors hover:border-accent-violet/50 hover:text-text-white"
+            className="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-text-main transition-colors hover:border-accent-violet/50 hover:text-text-white focus-visible:border-accent-violet focus-visible:outline-none"
             onClick={() => {
               setValues(initialValues(options));
               setStatus('idle');
@@ -368,32 +368,32 @@ export function RequestForm() {
 
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-border-subtle/70 pt-4">
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-text-main transition-colors hover:border-accent-violet/50 hover:text-text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-text-main transition-colors hover:border-accent-violet/50 hover:text-text-white focus-visible:border-accent-violet focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40"
             disabled={step === 0}
             onClick={() => setStep((current) => Math.max(0, current - 1))}
             type="button"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="icon-optical h-4 w-4" />
             {copy.back}
           </button>
           {step < pages.length - 1 ? (
             <button
-              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-text-on-accent transition-colors hover:bg-accent-violet-deep dark:bg-accent-violet-deep dark:text-white dark:hover:bg-accent-violet-deep"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-text-on-accent transition hover:bg-accent-violet-deep hover:ring-1 hover:ring-accent-violet/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-violet dark:bg-accent-violet-deep dark:text-white"
               onClick={() =>
                 setStep((current) => Math.min(pages.length - 1, current + 1))
               }
               type="button"
             >
               {copy.next}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="icon-optical h-4 w-4" />
             </button>
           ) : (
             <button
-              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-text-on-accent transition-colors hover:bg-accent-violet-deep disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-violet-deep dark:text-white dark:hover:bg-accent-violet-deep"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-text-on-accent transition hover:bg-accent-violet-deep hover:ring-1 hover:ring-accent-violet/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-violet disabled:cursor-not-allowed disabled:opacity-60 dark:bg-accent-violet-deep dark:text-white"
               disabled={status === 'sending'}
               type="submit"
             >
-              <Send className="h-4 w-4" />
+              <Send className="icon-optical h-4 w-4" />
               {status === 'sending' ? copy.sending : copy.submit}
             </button>
           )}

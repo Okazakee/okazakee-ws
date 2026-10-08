@@ -45,20 +45,25 @@ export type GlitchOptions = {
     count: number;
     /** Steps computed per second of animation. */
     velocity: number;
+    /**
+     * How far a slice travels, in percent of the element's width.
+     * PowerGlitch hardcodes 30.
+     */
+    shift: number;
     minHeight: number;
     maxHeight: number;
-    /** Random hue rotation per step; ignored when `cssFilters` is set. */
-    hueRotate: boolean;
+    /**
+     * How far a slice's hue may rotate either way, in degrees, or `false` to
+     * leave the colour alone. PowerGlitch hardcodes ±360; a narrower range keeps
+     * the tint in the palette's family instead of landing on any hue.
+     */
+    hueRange: number | false;
+    /**
+     * Fixed `filter` for every slice step. Setting it wins over `hueRange`.
+     */
     cssFilters: string;
   };
 };
-
-/**
- * How far a slice travels, in percent of the element's width. PowerGlitch uses
- * 30 — a third of the element, which on a card is a tear across its
- * neighbours; the site keeps the tearing close to the content instead.
- */
-const SLICE_SHIFT = 12;
 
 /**
  * How much the glitch is felt at `stepPct` of the loop: 0 outside the window,
@@ -113,7 +118,7 @@ function sliceLayer(options: GlitchOptions): GlitchLayer {
       continue;
     }
 
-    const shift = glitchRandom(options, stepPct) * SLICE_SHIFT;
+    const shift = glitchRandom(options, stepPct) * options.slice.shift;
     const step: Keyframe = {
       opacity: '1',
       transform: `translate3d(${shift}%,0,0)`,
@@ -125,8 +130,10 @@ function sliceLayer(options: GlitchOptions): GlitchLayer {
 
     if (options.slice.cssFilters) {
       step.filter = options.slice.cssFilters;
-    } else if (options.slice.hueRotate) {
-      const hue = Math.floor(glitchRandom(options, stepPct) * 360);
+    } else if (options.slice.hueRange) {
+      const hue = Math.floor(
+        glitchRandom(options, stepPct) * options.slice.hueRange
+      );
       step.filter = `hue-rotate(${hue}deg)`;
     }
 
@@ -170,49 +177,94 @@ export function generateGlitchLayers(options: GlitchOptions): GlitchLayer[] {
 }
 
 /**
+ * Displacement caps, in px, applied to whatever preset is about to play
+ * (`clampGlitchToBox`). PowerGlitch expresses travel and shake as percentages
+ * of the element's own box, which only works while the boxes are similar: the
+ * recipe that tears a 285px tile by 34px tears a 976px card by 117px and
+ * shudders it 39px sideways, which reads as the page glitching rather than the
+ * card. The caps are set just above what a skill tile needs, so a tile is
+ * generated exactly as it was and anything larger is pulled back to it.
+ */
+export const glitchCaps = { travel: 36, shakeX: 12, shakeY: 6 };
+
+/**
+ * The same options with its travels expressed against a real box: a percentage
+ * is only kept while it stays inside the cap.
+ */
+export function clampGlitchToBox(
+  options: GlitchOptions,
+  box: { width: number; height: number }
+): GlitchOptions {
+  if (box.width <= 0 || box.height <= 0) return options;
+
+  const share = (px: number, extent: number) => (px / extent) * 100;
+
+  return {
+    ...options,
+    shake: options.shake
+      ? {
+          ...options.shake,
+          amplitudeX: Math.min(
+            options.shake.amplitudeX,
+            share(glitchCaps.shakeX, box.width)
+          ),
+          amplitudeY: Math.min(
+            options.shake.amplitudeY,
+            share(glitchCaps.shakeY, box.height)
+          ),
+        }
+      : false,
+    slice: {
+      ...options.slice,
+      shift: Math.min(options.slice.shift, share(glitchCaps.travel, box.width)),
+    },
+  };
+}
+
+/**
  * The two behaviours ported from react-powerglitch, as the site plays them.
+ * Both are fast (a sixth of a second) and both are small: this decoration sits
+ * on content a reader is trying to use, so it accents the element rather than
+ * taking it over.
  *
- * `hover` is the smooth character on quick timing: the slice window ramps in
- * and out (`glitchTimeSpan` 0.1 → 0.9), so the burst eases rather than
- * switching on, while the loop is short enough to be gone in a fifth of a
- * second. `click` is PowerGlitch's click preset at the site's weight — a few
- * more slices, faster steps, one shot — for a click that replays it.
+ * `hover` is the canon — the one the tiles were tuned against — and every
+ * surface that glitches uses exactly it: four slice layers, each a 2–10% band
+ * of the element torn sideways by up to 12%, a 4% shake, the intensity ramped
+ * in and out across the loop (`glitchTimeSpan` 0.1 → 0.9).
  *
- * Three knobs are deliberately below PowerGlitch's defaults, because this
- * decoration has to sit on content a reader is trying to use:
- *
- *   velocity   raised (15/20 → 25/35) while the loop was shortened, so a
- *              shorter burst keeps its six or seven discrete jumps instead of
- *              losing them
- *   amplitude  0.2 → 0.05/0.06: the shake is a fraction of the element's own
- *              box, and a fifth of a card is a card that jumps
- *   slices     6/15 → 4/6, and `SLICE_SHIFT` 30 → 12, so the tearing stays on
- *              the element instead of across its neighbours
+ * `click` is the same speed and a different effect, not a louder one. Nothing
+ * travels: the three slice layers stay where they are and are broadly clipped
+ * (12–30% tall) with their hue rotated within ±90°, so a click reads as colour
+ * bands flickering across the element while it takes a short vertical nudge
+ * (the shake is mostly on Y). Its window is the whole loop, so every step
+ * glitches instead of easing in.
  */
 export const glitchPresets: Record<GlitchPreset, GlitchOptions> = {
   hover: {
-    timing: { duration: 200, iterations: 1 },
+    timing: { duration: 150, iterations: 1 },
     glitchTimeSpan: { start: 0.1, end: 0.9 },
-    shake: { velocity: 25, amplitudeX: 0.05, amplitudeY: 0.05 },
+    shake: { velocity: 35, amplitudeX: 0.04, amplitudeY: 0.04 },
     slice: {
       count: 4,
-      velocity: 25,
+      velocity: 35,
+      shift: 12,
       minHeight: 0.02,
       maxHeight: 0.1,
-      hueRotate: true,
+      hueRange: 360,
       cssFilters: '',
     },
   },
   click: {
-    timing: { duration: 170, iterations: 1 },
+    timing: { duration: 150, iterations: 1 },
     glitchTimeSpan: { start: 0, end: 1 },
-    shake: { velocity: 30, amplitudeX: 0.06, amplitudeY: 0.06 },
+    shake: { velocity: 35, amplitudeX: 0.01, amplitudeY: 0.035 },
     slice: {
-      count: 6,
+      count: 3,
       velocity: 35,
-      minHeight: 0.02,
-      maxHeight: 0.12,
-      hueRotate: true,
+      shift: 0,
+      minHeight: 0.12,
+      maxHeight: 0.3,
+      hueRange: 90,
       cssFilters: '',
     },
   },

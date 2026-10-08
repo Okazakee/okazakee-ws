@@ -16,7 +16,10 @@ const rowClass =
 
 /**
  * A tile's content — icon, title, and the link arrow when the skill has a
- * `link`. It is one element on purpose: it is what `Glitch` bursts.
+ * `link`. The arrow sits in the tile's **top-right corner** (`self-start`
+ * against the row's `items-center`), the way every other linked tile and card
+ * marks where it goes; the icon and title stay centred on the row. It is one
+ * element on purpose: it is what `Glitch` bursts.
  */
 function SkillContent({
   skill,
@@ -49,7 +52,7 @@ function SkillContent({
       {href ? (
         <span
           aria-hidden="true"
-          className="font-mono text-xs text-text-dim transition-colors group-hover:text-accent-violet"
+          className="self-start font-mono text-xs text-text-dim transition-colors group-hover:text-accent-violet"
         >
           ↗
         </span>

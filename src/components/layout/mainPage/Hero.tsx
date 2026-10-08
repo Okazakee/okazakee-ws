@@ -1,4 +1,5 @@
 import { ErrorDiv } from '@components/common/ErrorDiv';
+import { Glitch } from '@components/common/Glitch';
 import { FingerprintPattern, Mouse } from 'lucide-react';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
@@ -90,22 +91,46 @@ export default async function Hero({ locale }: { locale: string }) {
           data-hero-zone="identity"
         >
           <div className="relative mb-10 aspect-square w-[190px] shrink-0 md:mb-12 md:w-[240px] xl:mb-0 xl:w-[260px]">
-            {/* Accent plate, drawn behind the image mask in the same shape,
-                so the ring between them stays a constant width */}
-            <div aria-hidden="true" className={heroBackdropClass(shape)} />
+            {/* The whole pebble glitches: the accent plate and the masked photo
+                are one glitched element, so the ring tears with the image
+                instead of holding still while only the photo moves.
 
-            <div className={heroPortraitClass(shape)}>
-              <Image
-                alt="Profile picture"
-                blurDataURL={heroSection.blurhashURL}
-                className="object-cover"
-                fill
-                placeholder="blur"
-                priority
-                sizes="(min-width: 1280px) 260px, (min-width: 768px) 240px, 190px"
-                src={heroSection.propic}
-              />
-            </div>
+                `absolute inset-0` gives the layer container the portrait's own
+                square — the layers inside are absolutely positioned, so a
+                container in normal flow would collapse to zero height and have
+                nothing to hover — and `pointer-events-auto` on it is what makes
+                the portrait hoverable at all, since the identity block is
+                `pointer-events-none`. Everything inside stays
+                `pointer-events-none`, so the image is still neither draggable
+                nor selectable and the matrix magnet still sees the move. */}
+            <Glitch
+              className="pointer-events-auto absolute inset-0"
+              mode="hover"
+            >
+              {/* Positioned, so the ring inset and the image mask resolve
+                  against it exactly as they did against the wrapper — and
+                  `pointer-events-none` because the property inherits: without
+                  it, the container's `auto` would reach the image and make it
+                  draggable and selectable again. */}
+              <span className="pointer-events-none relative">
+                <span
+                  aria-hidden="true"
+                  className={heroBackdropClass(shape)}
+                />
+                <span className={heroPortraitClass(shape)}>
+                  <Image
+                    alt="Profile picture"
+                    blurDataURL={heroSection.blurhashURL}
+                    className="object-cover"
+                    fill
+                    placeholder="blur"
+                    priority
+                    sizes="(min-width: 1280px) 260px, (min-width: 768px) 240px, 190px"
+                    src={heroSection.propic}
+                  />
+                </span>
+              </span>
+            </Glitch>
           </div>
 
           <div

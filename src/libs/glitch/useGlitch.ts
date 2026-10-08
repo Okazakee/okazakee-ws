@@ -1,18 +1,45 @@
 import type { RefObject } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
-  type GlitchLayer,
   type GlitchMode,
+  type GlitchOptions,
+  type GlitchPreset,
+  clampGlitchToBox,
   generateGlitchLayers,
   glitchPresets,
 } from '@/libs/glitch/layers';
 
 /**
  * What starts the burst: the container itself, or the nearest `.group`
- * ancestor — the marker the site puts on every hover host, for a card whose
+ * ancestor — the marker the site puts on every hover host, for a tile whose
  * content sits inside its padding and should glitch from its whole box.
  */
 export type GlitchTrigger = 'self' | 'group';
+
+/**
+ * What starts the burst, and what plays.
+ */
+export type GlitchConfig = {
+  /** Which triggers are wired: `hover`, `click`, or `both`. */
+  mode: GlitchMode;
+  /** What starts a burst: the container itself, or the nearest `.group`. */
+  trigger?: GlitchTrigger;
+  /**
+   * Preset the **hover** trigger plays. It is the canon tear by default; the
+   * cards and contact tiles override it with the click's flicker, because a
+   * sideways tear reads as a broken layout at their size. A click always plays
+   * the click preset.
+   */
+  hoverPreset?: GlitchPreset;
+  /**
+   * Burst when this flips to `true`: the escape hatch for a state change that
+   * is not a pointer event, like the scroll-spy moving the nav highlight. Pass
+   * the state the element already renders — its active class, its
+   * `aria-current` — as one boolean. Nothing plays on mount, so a page that
+   * loads with something already active stays quiet until it changes.
+   */
+  active?: boolean;
+};
 
 /**
  * Plays a ported PowerGlitch burst (docs/DESIGN.md §3) on the first element
@@ -27,7 +54,13 @@ export type GlitchTrigger = 'self' | 'group';
  *
  * One shot each way, and both stop where they started: `hover` plays on entry
  * and cancels on leave, `click` cancels and replays on every click, `both` does
- * both (the hover preset on entry, the click preset on a click).
+ * both.
+ *
+ * The preset is clamped to the box the element actually has before its layers
+ * are generated (`clampGlitchToBox`), because its travels are percentages: the
+ * recipe tuned on a skill tile would otherwise throw a full-width card around
+ * and shudder it sideways. Whatever the box, the burst stays the size the tile
+ * established.
  *
  * `prefers-reduced-motion: reduce` is read before any of this exists, so those
  * readers get no listeners and no clones at all. The global CSS rule that
@@ -36,18 +69,19 @@ export type GlitchTrigger = 'self' | 'group';
  */
 export function useGlitch(
   containerRef: RefObject<HTMLElement | null>,
-  mode: GlitchMode,
-  trigger: GlitchTrigger = 'self'
+  { mode, trigger = 'self', hoverPreset = 'hover', active = false }: GlitchConfig
 ): void {
+  // The setup effect owns everything the burst needs; this handle is how the
+  // state effect below reaches it without re-running the setup on every
+  // highlight change (which would cancel a burst already in flight).
+  const playRef = useRef<(preset: GlitchPreset) => void>(() => {});
+  const mounted = useRef(false);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const hoverLayers =
-      mode === 'click' ? null : generateGlitchLayers(glitchPresets.hover);
-    const clickLayers =
-      mode === 'hover' ? null : generateGlitchLayers(glitchPresets.click);
     let copies: HTMLElement[] | null = null;
 
     // Node i plays layer i: the glitched element shakes, one copy per remaining
@@ -56,11 +90,19 @@ export function useGlitch(
     // under the copies, which detaches whatever we captured last time. The
     // copies carry their own marker rather than relying on `aria-hidden`: the
     // host's content is often `aria-hidden` too (every lucide icon is).
-    const play = (layers: GlitchLayer[]) => {
+    //
+    // The preset is generated against the box this element has right now: its
+    // travels are percentages of that box, and clamping them is what keeps a
+    // 976px card as slight as the 285px tile it is modelled on.
+    const play = (preset: GlitchOptions) => {
       const base = container.querySelector<HTMLElement>(
         ':scope > :not([data-glitch-layer])'
       );
       if (!base) return;
+
+      const layers = generateGlitchLayers(
+        clampGlitchToBox(preset, base.getBoundingClientRect())
+      );
 
       const stale =
         !copies ||
@@ -87,6 +129,9 @@ export function useGlitch(
       }
     };
 
+    // The state trigger plays the same presets the pointer does.
+    playRef.current = (preset) => play(glitchPresets[preset]);
+
     // Whatever the container holds — a layer mid-burst, a stale copy, the base
     // — stopping means cancelling what is running. Nothing is created here, so
     // a leave-before-enter never pays for clones it will not use.
@@ -101,16 +146,12 @@ export function useGlitch(
         ? (container.closest('.group') ?? container)
         : container;
 
-    const onEnter = () => {
-      if (hoverLayers) play(hoverLayers);
-    };
+    const onEnter = () => play(glitchPresets[hoverPreset]);
     // A click replays its own preset over whatever the hover left behind; the
-    // two presets differ in layer count, which `play` handles by rebuilding.
+    // two differ in layer count, which `play` handles by rebuilding the copies.
     const onClick = () => {
-      const layers = clickLayers ?? hoverLayers;
-      if (!layers) return;
       cancel();
-      play(layers);
+      play(glitchPresets.click);
     };
 
     if (mode !== 'click') {
@@ -128,5 +169,16 @@ export function useGlitch(
       cancel();
       for (const copy of copies ?? []) copy.remove();
     };
-  }, [containerRef, mode, trigger]);
+  }, [containerRef, mode, trigger, hoverPreset]);
+
+  // A state change — the scroll-spy moving the highlight — bursts exactly like
+  // a hover does. The first run is skipped, so a page that loads with a section
+  // already active never glitches on arrival; only a change does.
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    if (active) playRef.current(hoverPreset);
+  }, [active, hoverPreset]);
 }

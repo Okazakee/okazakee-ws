@@ -1,5 +1,6 @@
 'use client';
 
+import { Glitch } from '@components/common/Glitch';
 import { ExternalLink, FileUser, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -221,8 +222,12 @@ export default function NavMenu({
     return pathname === item.route || pathname.startsWith(`${item.route}/`);
   };
 
+  // Nav items take the company name's hover treatment (the career cards): the
+  // accent ink and an underline, and the glitch burst on hover. The active item
+  // keeps its own violet rule — the resting items carry a transparent one so
+  // nothing shifts when a section becomes active.
   const desktopIdle =
-    'border-b border-transparent pb-0.5 transition-colors hover:text-accent-violet-light hover:border-accent-violet';
+    'border-b border-transparent pb-0.5 transition-colors hover:text-accent-violet-light hover:underline hover:underline-offset-2';
   const desktopActive =
     'font-semibold scale-105 text-accent-violet-light border-b border-accent-violet pb-0.5';
   const rowBase =
@@ -241,18 +246,24 @@ export default function NavMenu({
           const active = isActive(item);
 
           return (
-            <Link
-              aria-current={active ? 'page' : undefined}
-              className={active ? desktopActive : desktopIdle}
-              href={getHref(item)}
+            <Glitch
+              active={active}
+              className="w-fit"
               key={item.id}
-              onClick={(event) => handleClick(event, item)}
+              mode="hover"
             >
-              <span className="mr-1 text-[10px] text-text-dim">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              {label(index)}
-            </Link>
+              <Link
+                aria-current={active ? 'page' : undefined}
+                className={active ? desktopActive : desktopIdle}
+                href={getHref(item)}
+                onClick={(event) => handleClick(event, item)}
+              >
+                <span className="mr-1 text-[10px] text-text-dim">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                {label(index)}
+              </Link>
+            </Glitch>
           );
         })}
       </nav>

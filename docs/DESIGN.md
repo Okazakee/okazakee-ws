@@ -135,6 +135,15 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   family so the "hybrid TUI" reading holds.
 - Label convention: uppercase, `tracking-[0.08em]` (controls) to `[0.2em]` (eyebrows),
   `text-[11px]` for the micro tier.
+- **Icon + uppercase label rows**: White Rabbit's caps fill the ascent exactly
+  (glyph ink `0..1400` of a `2100` upem), so inside a `text-xs` line box — 12px
+  type, 16px line — their ink centre sits **0.57px above** the box centre that
+  `items-center` aligns the icon to. Such rows therefore put `icon-optical`
+  (`globals.css`) on the icon, which raises it by exactly that much: measured
+  from the font, not eyeballed. The label is never the thing that moves — a
+  fractional shift lands the glyphs between device pixels, and this font is
+  drawn to sit on them. Applied today to the request form's Back, Next and
+  Submit buttons; a new icon + label row should take it too.
 - Scale in use: post detail titles `text-3xl md:text-4xl`, the hero h1
   `text-3xl sm:text-4xl md:text-5xl`; section titles `text-2xl sm:text-3xl`;
   card titles `text-lg`; body `0.95rem` at `1.85` line-height; prose captions
@@ -156,9 +165,15 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   while the warp reaches `--matrix-warp-reach` (9 cells) and displaces a cell by
   up to `--matrix-warp` (18 canvas px), both in `globals.css` — disc-ping
   clicks, steady dim speckle). The identity and
-  about blocks are `pointer-events-none`: the pointer never lands on the hero's
-  content, so nothing there is selectable or draggable and the magnet and pings
-  keep tracking across the whole band. The two ramps are
+  about blocks are `pointer-events-none`: nothing there is selectable or
+  draggable, and the magnet and the pings keep tracking across the whole band.
+  The one exception is the portrait's glitch container (§3 below), which takes
+  the pointer so the portrait can glitch on hover; everything inside it stays
+  `pointer-events-none` — the container's `auto` does not inherit past the
+  glitched element — so the image is still neither draggable nor selectable and
+  the magnet still sees the move. The glitched element there is the **whole
+  pebble**, plate and masked photo together, so the ring tears with the image.
+  The two ramps are
   matched perceptually rather than by hex: the ambient `dim` tier — the steady
   speckle squares and the bed glyphs — steps the same ~8 L* and ~+13 chroma off
   its own band either way (`#c4afe0` on the light band, `#2e2a4a` on the dark),
@@ -244,26 +259,41 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - **Glitch** (`Glitch` in `components/common`, ported from PowerGlitch /
   react-powerglitch, MIT — the engine lives in `libs/glitch`, the numbers are
   covered by `layers.test.ts`): two of that library's behaviours, one shot each,
-  and **only on the content surfaces** — the **skills tiles**, the **post cards**
-  (`PostCard`, both lists) and the **contact tiles**. It is decoration on things
-  a reader is trying to use, so it is not on the chrome (header controls,
-  buttons) and it is deliberately quieter than the library's own defaults.
-  `mode="both"`, which all three surfaces use, plays the hover preset on entry
-  and the click preset on a click: hover is the smooth character on quick timing
-  — four slice layers with the intensity ramped in and out across a **200 ms**
-  loop (`glitchTimeSpan` 0.1 → 0.9), cancelling where it started when the
-  pointer leaves — and click is the same character at a slightly harder setting
-  (**170 ms**, six slices, faster steps) replayed on every click.
+  and **only on these** — the **skills tiles**, the **post cards**
+  (both lists, plus the archive card that closes each one), the **contact
+  tiles**, the **hero portrait**, the **career company link** and the **header
+  nav items**. It is decoration on things a reader is trying to use, and it stays
+  off the header's **controls** (theme, language, résumé, drawer toggle). Both of
+  its effects are fast (a sixth of a second) and small.
+  `mode` is per surface. The **skills tiles**, the **contact tiles** and the
+  **archive card** that closes each posts list wire both triggers; the **post
+  cards** are **click only** (`mode="click"` — nothing on hover, so moving the
+  pointer down a list of them stays quiet); the **hero portrait**, the **career
+  company link** and the **nav items** are hover only, since none of them is a
+  click target. A click always plays the flicker, and any surface with hover says
+  what that hover plays (`hoverPreset`). Every burst is a pointer event except
+  the nav items', which also fire on a state change: the scroll-spy hands the
+  newly active item its own `active` state, and that item bursts once.
+  The **skills tiles** use the canon tear on hover: four slice layers, each a
+  2–10% band of the element torn sideways by up to 12%, a 4% shake, and the
+  intensity ramped in and out across the loop (`glitchTimeSpan` 0.1 → 0.9),
+  cancelling where it started when the pointer leaves. The **contact tiles** and
+  the **archive card flicker on hover instead** (`hoverPreset="click"`): a
+  sideways tear reads as a broken layout at their size, where three broad bands
+  standing still and rotating their hue within ±90° while the element takes a
+  short vertical nudge reads as a signal. The flicker's window is the whole
+  loop, so every step glitches rather than easing in. Both presets run a
+  **150 ms** loop and both jump six times (35 steps a second), so they are
+  equally quick and equally slight. Those travels are percentages of the
+  element's own box, so they are clamped in px before the layers are generated
+  (`clampGlitchToBox`: 36 px of travel, 12 / 6 px of shake): whatever preset a
+  surface ends up running, a wide box can never tear or shudder harder than the
+  tile the recipe was tuned on.
   The burst is a WAAPI animation per layer, generated from `libs/glitch/layers.ts`:
   one base layer that shakes the glitched element and one clone per slice layer
-  that clips a 2–12% band of it, shoves it up to 12% sideways and hue-rotates
-  it, every layer stepped (`steps(n, jump-start)`) so positions jump instead of
-  interpolating. Three knobs sit below PowerGlitch's defaults on purpose:
-  amplitudes **0.05 / 0.06** (its 0.2 is a fifth of the box — a card that
-  jumps), slice counts **4 / 6** (its 6 / 15) and `SLICE_SHIFT` **12%** (its
-  30%, a tear across the neighbours). Velocities went *up* (25 / 35) while the
-  loops were shortened, so a quicker burst keeps its jumps instead of losing
-  them.
+  that clips a band of it, shifts it sideways by up to the preset's travel and
+  rotates its hue by up to the preset's range, every layer stepped
+  (`steps(n, jump-start)`) so positions jump instead of interpolating.
   The element being glitched keeps **all** of its own styles — nothing on it
   gets a shadow, a filter or a transform while resting; the clones are the only
   things that move, they live in the container's own grid cell (`globals.css`
@@ -272,11 +302,14 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   they start and end invisible (`opacity: 0`). `overflow: hidden` plus
   `border-radius: inherit` keep every shifted slice inside the host's box and
   corners. `trigger="group"` hangs the listeners on the nearest `.group` host,
-  so a padded tile glitches from its whole box and not just from the content
-  inside its padding; the cards and contact tiles wrap the whole host instead,
-  which puts the burst on exactly the box the pointer is over.
-  Two knobs, both in `glitchPresets`: the timings above and, per layer, whether
-  the slice tints by hue rotation or by an explicit `cssFilters` string.
+  and every surface glitches **inside its own frame**: the tiles, the cards and
+  the contact tiles all wrap their *content* in the layer container, so the box
+  the reader is looking at — border, background, corners — never moves while the
+  content in it tears. The tiles' container fills their padding box; a card and a
+  contact tile keep their own box and hand their row layout to the glitched
+  element instead.
+  Two knobs, both in `glitchPresets`: the timings and travels above, and how far
+  a slice's hue rotates (± degrees, or `false`) or an explicit `cssFilters`.
   `prefers-reduced-motion: reduce` is read before any of it exists, so those
   readers get no listeners and no clones — the global rule that flattens
   `animation-duration` cannot reach a WAAPI animation.
@@ -341,6 +374,17 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   the CMS.
 - Desktop nav: appears at **`lg`**, centred, mono `text-xs`; active item =
   `text-accent-violet-light font-semibold` + 1px `border-accent-violet` underline.
+  **Hover is the company name's treatment** (§5.3): the ink goes
+  `accent-violet-light` with `underline underline-offset-2`, and the glitch burst
+  plays (`docs/DESIGN.md` §3). The resting item keeps a 1px transparent rule so
+  nothing shifts when a section becomes active, and the effect runs on hover
+  only — the drawer's rows are the mobile nav, where hover is not an affordance.
+  A nav item has no arrow, so the underline and the burst are the whole effect.
+  **The highlight change bursts too**: the scroll-spy moving the active section
+  hands that state to the item's `Glitch` (`active`), so the item that just
+  became active plays the same burst once. The first run after mount is skipped,
+  so a page that loads with a section already active stays quiet until the
+  highlight actually moves.
 - Mobile header: logo, theme toggle, hamburger — all right-aligned, 44×44 targets, right
   padding halved (`pr-3`, desktop `pr-6`).
 - Mobile menu: fullscreen under the header. It is **portalled to `<body>`** as
@@ -410,6 +454,15 @@ horizontal scroll under `prefers-reduced-motion`).
   none) so it starts at the first dot centre and ends at the last, and shares the dots' x
   axis — the old full-height border overshot 13px above and 261px below.
 - Each card links to the company website; the logo is not a separate link.
+- **Card hover is a post card's, minus the click and minus the glitch**: the
+  frame keeps `transition-colors` to
+  `hover:border-accent-violet/50 hover:bg-surface-card-hover`, the company name
+  takes `accent-violet-light` (on the card's hover as well as its own) and its
+  arrow nudges (`group-hover:-translate-y-0.5 group-hover:translate-x-0.5`,
+  exactly as `PostCard`'s does). A career card does **not** glitch, just as a
+  post card has no hover glitch; the one glitch in this section is on the
+  company link (§3). The hover `group` is the timeline item's, whose box is the
+  card's box.
 - Logos: `max-h-10 w-auto object-contain` — constrain height only, so 3:1 marks render
   121×40 instead of being letterboxed into a 40×40 box.
 
@@ -438,6 +491,15 @@ horizontal scroll under `prefers-reduced-motion`).
   token-surface panel, centered mono heading, visible three-step progress,
   uppercase field labels, and `surface-base` controls with a violet focus ring.
   The same panel chrome wraps every wizard step and the success state.
+- **Wizard buttons carry §3's interaction contract.** The bordered ones (Back,
+  Send another) raise their border and ink on `hover`, and again on
+  `focus-visible`, over `transition-colors`. The accent-filled ones (Next,
+  Submit) have no border to raise, so `hover` and `focus-visible` add an accent
+  ring instead (`ring-1 ring-accent-violet/50`, solid on focus) — which is why
+  they use `transition` and not `transition-colors`: a ring is a box-shadow.
+  Their dark-mode hover used to pin the fill to the colour it already had, so in
+  dark nothing faded at all; the ring is the cue in both themes, and the fill
+  keeps its white ink (§1.3) instead of lightening under it.
 - Intake is bounded: a hard 8 KB body cap checked before parsing, and a
   per-IP token bucket (3 requests, refilling one every 30 minutes). That
   throttle is per-instance and an abuse/cost bound, not a security control —

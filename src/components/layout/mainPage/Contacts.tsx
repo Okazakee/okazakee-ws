@@ -75,33 +75,41 @@ export default async function Contacts({ locale }: { locale: string }) {
             const IconComponent = getIconComponent(icon);
 
             return (
-              <Glitch key={id} mode="both">
-                <Link
-                  className="group relative flex min-h-32 flex-col items-center justify-between rounded-xl border border-border-subtle bg-surface-card p-4 text-center transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover"
-                  data-umami-event={`${label} button`}
-                  href={link}
-                  rel="noopener noreferrer"
-                  target="_blank"
+              <Link
+                className="group relative flex min-h-32 rounded-xl border border-border-subtle bg-surface-card p-4 text-center transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover"
+                data-umami-event={`${label} button`}
+                href={link}
+                key={id}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <Glitch
+                  className="w-full flex-1"
+                  hoverPreset="click"
+                  mode="both"
+                  trigger="group"
                 >
-                  <span className="flex w-full justify-end">
-                    <ArrowUpRight className="h-3.5 w-3.5 text-text-dim transition-colors group-hover:text-accent-violet-light" />
+                  <span className="flex w-full flex-col items-center justify-between">
+                    <span className="flex w-full justify-end">
+                      <ArrowUpRight className="h-3.5 w-3.5 text-text-dim transition-colors group-hover:text-accent-violet-light" />
+                    </span>
+                    <span
+                      className="my-2 flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle bg-surface-raised transition-colors group-hover:border-accent-violet/50"
+                      style={{
+                        backgroundColor: `${bg_color}1a`,
+                        color: bg_color,
+                      }}
+                    >
+                      {IconComponent ? (
+                        <IconComponent className="h-5 w-5" strokeWidth={1.8} />
+                      ) : null}
+                    </span>
+                    <span className="mt-1 font-mono text-xs font-medium text-text-main transition-colors group-hover:text-text-white">
+                      {label}
+                    </span>
                   </span>
-                  <span
-                    className="my-2 flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle bg-surface-raised transition-colors group-hover:border-accent-violet/50"
-                    style={{
-                      backgroundColor: `${bg_color}1a`,
-                      color: bg_color,
-                    }}
-                  >
-                    {IconComponent ? (
-                      <IconComponent className="h-5 w-5" strokeWidth={1.8} />
-                    ) : null}
-                  </span>
-                  <span className="mt-1 font-mono text-xs font-medium text-text-main transition-colors group-hover:text-text-white">
-                    {label}
-                  </span>
-                </Link>
-              </Glitch>
+                </Glitch>
+              </Link>
             );
           })}
         </div>

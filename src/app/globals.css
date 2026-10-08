@@ -779,6 +779,18 @@ input[type="checkbox"]:not([class*="request-"]):checked {
   grid-area: 1 / 1 / -1 / -1;
 }
 
+/* Optical alignment for icon + uppercase-label rows (docs/DESIGN.md §2).
+   White Rabbit's caps fill the ascent exactly (glyph ink 0..1400 of a 2100
+   upem), so in a `text-xs` line box — 12px type, 16px line — the caps' ink
+   centre lands 0.57px ABOVE the box centre that `items-center` aligns to the
+   icon's centre: measured, not guessed. Raising the icon by that much puts its
+   own centred ink on the caps instead of on the line box. The label is left
+   alone on purpose: a fractional shift of text lands the glyphs between device
+   pixels, and this font is drawn to sit on them. */
+.icon-optical {
+  transform: translateY(-0.57px);
+}
+
 /* Career description bullets: the disc marker is swapped for the lucide
    chevron-right glyph, painted with the accent via an inline SVG mask. */
 .career-list ul {

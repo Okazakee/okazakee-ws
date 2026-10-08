@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { GlitchOptions } from './layers';
-import { generateGlitchLayers, glitchPresets } from './layers';
+import {
+  clampGlitchToBox,
+  generateGlitchLayers,
+  glitchPresets,
+} from './layers';
 
 const shift = /^translate3d\((-?[\d.]+)%,0,0\)$/;
 const shake = /^translate3d\((-?[\d.]+)%,(-?[\d.]+)%,0\)$/;
@@ -125,6 +129,69 @@ describe('generateGlitchLayers', () => {
       expect(Math.abs(Number(match[1]))).toBeLessThanOrEqual(amplitudeX * 100);
       expect(Math.abs(Number(match[2]))).toBeLessThanOrEqual(amplitudeY * 100);
     }
+  });
+
+  it('keeps every slice inside its preset travel', () => {
+    for (const preset of [glitchPresets.hover, glitchPresets.click]) {
+      const layers = generateGlitchLayers(preset).slice(1);
+      expect(layers.length).toBeGreaterThan(0);
+
+      for (const layer of layers) {
+        for (const step of layer.steps) {
+          if (step.transform === 'none' || step.transform === undefined) {
+            continue;
+          }
+
+          const match = shift.exec(String(step.transform));
+          expect(match).not.toBeNull();
+          if (!match) continue;
+
+          expect(Math.abs(Number(match[1]))).toBeLessThanOrEqual(
+            preset.slice.shift
+          );
+        }
+      }
+    }
+  });
+
+  it('pulls a library-sized preset back to the pixel budget', () => {
+    // PowerGlitch's own numbers: 30% travel and 20% shake amplitudes, both far
+    // past what a 976px card can take.
+    const loud = {
+      ...glitchPresets.hover,
+      shake: { velocity: 15, amplitudeX: 5, amplitudeY: 5 },
+      slice: { ...glitchPresets.hover.slice, shift: 30 },
+    };
+    const clamped = clampGlitchToBox(loud, { width: 976, height: 262 });
+
+    expect(clamped.slice.shift).toBeCloseTo((36 / 976) * 100, 5);
+    expect(shakeOf(clamped).amplitudeX).toBeCloseTo((12 / 976) * 100, 5);
+    expect(shakeOf(clamped).amplitudeY).toBeCloseTo((6 / 262) * 100, 5);
+    // Everything the caps do not touch is carried through untouched.
+    expect(clamped.timing).toEqual(loud.timing);
+  });
+
+  it('leaves a box that is already inside the budget alone', () => {
+    // A skill tile: 12% of 285px is 34px, inside the 36px budget.
+    expect(
+      clampGlitchToBox(glitchPresets.hover, { width: 285, height: 40 })
+    ).toEqual(glitchPresets.hover);
+  });
+
+  it('keeps the click preset still', () => {
+    const clamped = clampGlitchToBox(glitchPresets.click, {
+      width: 976,
+      height: 262,
+    });
+
+    expect(clamped.slice).toEqual(glitchPresets.click.slice);
+    expect(clamped.slice.shift).toBe(0);
+  });
+
+  it('ignores a box it cannot measure', () => {
+    expect(
+      clampGlitchToBox(glitchPresets.hover, { width: 0, height: 0 })
+    ).toEqual(glitchPresets.hover);
   });
 
   it('tints the bands by hue rotation, or by the filters it is given', () => {

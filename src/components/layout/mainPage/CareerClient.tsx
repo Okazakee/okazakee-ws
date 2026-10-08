@@ -4,6 +4,7 @@ import { ArrowUpRight, Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { ChipRow } from '@components/common/ChipRow';
 import { ClientMarkdown } from '@components/common/ClientMarkdown';
+import { Glitch } from '@components/common/Glitch';
 import { SectionNumber } from '@components/common/SectionNumber';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { diffMonths, formatMonthYear } from '@/utils/formatDate';
@@ -192,7 +193,7 @@ export function CareerClient({
                   />
                 </span>
 
-                <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-7">
+                <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:p-7">
                   <div className="mb-5 flex flex-wrap items-start gap-3">
                     <span className="flex shrink-0 items-center rounded-lg border border-border-subtle bg-surface-raised p-1.5">
                       {/* biome-ignore lint/performance/noImgElement: brand marks arrive in arbitrary aspect ratios, so the height is capped rather than fixed */}
@@ -204,15 +205,21 @@ export function CareerClient({
                       />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <a
-                        className="inline-flex items-center gap-1 font-heading text-base font-semibold text-text-white transition-colors hover:text-accent-violet-light hover:underline hover:underline-offset-2"
-                        href={latest.website_url}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        {group.company}
-                        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim" />
-                      </a>
+                      {/* The glitch stays on the link, never the card: the card's
+                          hover is a post card's colours and micro-motions only.
+                          `w-fit` keeps the burst's box on the link's own box
+                          rather than the empty space beside it. */}
+                      <Glitch className="w-fit" mode="hover">
+                        <a
+                          className="inline-flex items-center gap-1 font-heading text-base font-semibold text-text-white transition-colors group-hover:text-accent-violet-light hover:text-accent-violet-light hover:underline hover:underline-offset-2"
+                          href={latest.website_url}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          {group.company}
+                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-violet-light" />
+                        </a>
+                      </Glitch>
                       <p className="mt-1 w-fit text-xs text-text-dim">
                         {latest[`location_${locale}`]} {separator}{' '}
                         {t(`remote.${latest.remote}`)}
