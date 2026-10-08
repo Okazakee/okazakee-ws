@@ -41,12 +41,6 @@
   --matrix-warp: 18;
   --matrix-warp-reach: 9;
 
-  /* Chromatic-aberration hover glitch (docs/DESIGN.md §3): the offset of the
-     two accent fringes and of the one-shot jitter, in CSS px. One knob for
-     every host — override it locally (inline style, or a wrapping rule) when a
-     larger element wants a wider split. */
-  --glitch-shift: 1.5px;
-
   /* Custom cursors (docs/DESIGN.md §3): the Windows "Blue" scheme, ported from
      the .cur resources into public/cursors/ and recoloured to accent-violet —
      the cursor format is a raster container (BMP/PNG entries, no vectors), so
@@ -762,57 +756,6 @@ input[type="checkbox"]:not([class*="request-"]):checked {
 .animate-tags:hover,
 .animate-tags:focus-within {
   animation-play-state: paused;
-}
-
-/* Chromatic-aberration hover glitch (docs/DESIGN.md §3) — one primitive, two
-   seams, both pure CSS and both layout-free:
-     glitch-text  glyphs: the two accent fringes (cyan one way, violet the
-                  other) plus a one-shot stepped jitter
-     glitch-icon  artwork: the same fringes as drop-shadows on a wrapper, no
-                  jitter, so a logo box never leaves its slot
-   The fringes are painted once, when the class applies; only `transform` moves
-   during the burst, so a hover repaints two text runs and never lays out.
-   Applied from a variant on a `.group` host —
-   `group-hover:glitch-text group-focus-visible:glitch-text` — so keyboard focus
-   gets the same treatment as the pointer. `--glitch-shift` (`:root` above) is
-   the offset knob.
-   Reduced motion: the global rule below flattens `animation-duration`, so the
-   jitter disappears and the static fringe — colour, not motion — stays. */
-@utility glitch-text {
-  text-shadow:
-    calc(var(--glitch-shift) * -1) 0 0 var(--c-accent-cyan),
-    var(--glitch-shift) 0 0 var(--c-accent-violet);
-  animation: glitch-shift 260ms steps(2, end) 1;
-}
-
-@utility glitch-icon {
-  filter: drop-shadow(calc(var(--glitch-shift) * -0.75) 0 0 var(--c-accent-cyan))
-    drop-shadow(calc(var(--glitch-shift) * 0.75) 0 0 var(--c-accent-violet));
-}
-
-@keyframes glitch-shift {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  20% {
-    transform: translate3d(calc(var(--glitch-shift) * -0.6), 0, 0);
-  }
-  40% {
-    transform: translate3d(calc(var(--glitch-shift) * 0.8), 0, 0);
-  }
-  60% {
-    transform: translate3d(
-      calc(var(--glitch-shift) * -0.25),
-      calc(var(--glitch-shift) * 0.4),
-      0
-    );
-  }
-  80% {
-    transform: translate3d(calc(var(--glitch-shift) * 0.35), 0, 0);
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
 }
 
 /* Career description bullets: the disc marker is swapped for the lucide
