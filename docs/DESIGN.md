@@ -200,8 +200,8 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   off-screen painting stops.
 - **Section header pattern** (used on every section and page): centred title in
   `text-white`, mono subtitle in `accent-violet-light`, then a `40×2px` accent
-  rule (`h-0.5 w-10`, `rounded-full`). The subtitle is always real copy from the
-  CMS translations, never invented.
+  rule (`h-0.5 w-10`, `rounded-full`). Structural subtitles are shipped in the
+  website's local EN/IT messages, never invented or editable in the CMS.
   The `01`–`06` index sits in the left column of a `1fr auto 1fr` grid (badge
   right-aligned, `pr-2.5`) with an empty spacer third column, so the badge hangs
   beside the title without pulling the title text off the centre line.
@@ -263,7 +263,7 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   (both lists, plus the archive card that closes each one), the **contact
   tiles**, the **hero portrait**, the **career company link** and the **header
   nav items**. It is decoration on things a reader is trying to use, and it stays
-  off the header's **controls** (theme, language, résumé, drawer toggle). Both of
+  off the header's **controls** (theme, language, Resume, drawer toggle). Both of
   its effects are fast (a sixth of a second) and small.
   `mode` is per surface. The **skills tiles**, the **contact tiles** and the
   **archive card** that closes each posts list wire both triggers; the **post
@@ -325,20 +325,14 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   sampled superellipse, `|x|⁴ + |y|⁴ = 1`). `rounded` states its radius as a
   share of the box (`rounded-[15%]`) — a fixed radius read as a square at the
   desktop size. An absent or unknown stored value renders `pebble`.
-- **Hero roles** are an ordered list: `hero-section.top.roles.0…` (a numeric index
-  map) when the CMS list exists, otherwise the singular `top.role`, which stays
-  as the live fallback for copy written before the list — content is never
-  migrated behind the editor's back. A single role renders exactly the old lone
-  line; several roles stack in the same mono style with `space-y-1` — unless the
-  typewriter animates more than one of them, which collapses them into the single
-  line the animation is on (the rest stay in the document, see below).
-- **Hero typewriter** (`hero_section.typewriter` with `typewriter_target` =
-  `role1` | `role2` | `all`): the chosen roles type out with a human keystroke
-  rhythm — every delay is drawn from a seeded generator (a floor plus jitter, a
-  beat after a space or punctuation, short bursts, the occasional hesitation),
-  never a constant interval. A lone chosen role types once and settles; two or
-  more cycle: type the role, hold four seconds, backspace it away on its own
-  faster rhythm, type the next. It is a leaf client component
+- **Hero roles** are the ordered `hero-section.top.roles` list, represented as
+  an array or numeric index map. The dev cutover migrates the old singular
+  role; no runtime fallback remains. Blank entries are ignored.
+- **Hero typewriter** is automatic: one nonblank role types once, removes its
+  cursor and stops. Multiple roles cycle in their saved order: type, hold,
+  erase, then type the next. Pacing uses the existing seeded human-keystroke
+  rhythm. There are no stored animation switches or role-target fields.
+  It is a leaf client component
   (`RoleTypewriter`), so the rest of the hero stays a server component. The line
   is always painted complete first, so server output, hydration and
   reduced-motion visitors all read static markup; the reveal only starts when
@@ -355,15 +349,13 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - Logo: two source PNGs swapped by theme — `title-ws.png` (1809×320, dark) and
   `title-ws-lightmode.png` (1815×325, light) — both rendered
   `h-6 w-auto max-w-none shrink-0 object-contain` (136×24 at every width),
-  **no hover treatment**, linking to the locale home. Both variants are
-  CMS-editable per theme via `site_settings.header_logo_dark` /
-  `header_logo_light`, and they resolve **per theme**: a row with only one
-  variant renders the stored logo for that theme and the bundled asset for the
-  other. With neither stored (or no row at all) the markup is byte-identical to
-  the bundled-assets version. Every editable value in this section is owned by one
-  CMS section — **Layout** — which also holds the résumé PDFs and the footer
-  identity; the wording around them is frozen here (§8), so that editor has no
-  translation surface at all.
+  **no hover treatment**, linking to the locale home. Each theme can instead
+  render a CMS-uploaded image from `site_settings.header_logo_dark` /
+  `header_logo_light`: the two resolve **independently**, so a null one keeps
+  that theme's bundled asset. A stored image keeps its own aspect ratio (fixed
+  24px height, automatic width) and is never centre-cropped. Resume PDFs
+  belong to CMS **System → Resume**; the rest of CMS **Layout** owns the VAT
+  number.
 - Nav buttons: the six destinations, their labels and the anchor each link
   points at are all site-side. `header.buttons` (the labels) is frozen copy in
   this repo — the CMS has no surface for it — and every link points at its own
@@ -467,16 +459,17 @@ horizontal scroll under `prefers-reduced-motion`).
   121×40 instead of being letterboxed into a 40×40 box.
 
 ### 5.4 Contacts and the project request form
-- Keep the existing centered title and subtitle treatment. Render the four contact DB
-  rows as compact channel tiles using each row's `bg_color` as the icon accent. The
-  uppercase `DIRECT CHANNELS` and `PROJECT REQUEST` labels live in local
+- Keep the existing centered title and subtitle treatment from local EN/IT
+  messages. Render ordered contact DB rows as compact channel tiles with
+  editor-supplied SVG image URLs and each row's `bg_color` badge accent.
+  The uppercase `DIRECT CHANNELS` and `PROJECT REQUEST` labels live in local
   `site.{en,it}.json` messages; each row renders its `01.`/`02.` prefix in muted ink
   after a violet `>` marker.
 - Direct-channel tiles use the shared card surface/border hover treatment (no shadow),
   brand-tinted 40px icon squares, and an external-arrow cue.
-- The résumé is **not** a contact action: the header renders it (desktop row and
-  mobile drawer's pinned block) from `hero_section.resume_${locale}`, and the CMS
-  edits both PDFs from its single Layout section.
+- Resume is **not** a contact action: the header renders it (desktop row and
+  mobile drawer's pinned block) from `hero_section.resume_${locale}`, and the
+  CMS edits both PDFs in **System → Resume**.
 - The request form is **built and live**: a three-step wizard (contact →
   project → details) carrying Name, Email, Company, existing website/repo,
   Project type, Budget range, Desired timeline, "What are you building?", a
@@ -521,15 +514,11 @@ linking the repo — both with the violet hover. Right: the VAT value as a copy
 affordance carrying `footer.buttonTitle`, then CMS and Privacy Policy links — the three
 separated by `//`, the links underlined and hovering to `text-text-muted`.
 
-Only the **two identity values** behind that chrome are data
-(`site_settings.footer_name` / `site_settings.footer_vat_number` — §8). The wording,
-the `//` separators and the links themselves stay frozen site copy: a stored name is
-still linked to the same GitHub profile, and the GitHub, repo, CMS and privacy hrefs
-are site-owned. Each value is nullable and a null *or blank* one renders the literal
-this repo shipped with (`Okazakee`, `02863310815`), so an unconfigured row is
-byte-identical to the footer before the CMS existed. The VAT is resolved once and
-used twice — printed and copied — so a stored value keeps its leading zero; it is
-displayed verbatim and never parsed.
+Only **VAT** is CMS data (`site_settings.footer_vat_number` — §8). The name
+`Okazakee`, wording, separators and links stay website-owned. When no VAT is
+stored the affordance is omitted entirely — the site ships no default number.
+The resolved string is printed and copied verbatim;
+leading zeroes survive and no numeric parsing occurs.
 
 ### 5.6 Back to top
 Fixed bottom-right, inverted fill (`bg-text-main` on `text-surface-base`), `rounded-xl`,
@@ -598,29 +587,28 @@ captions and the blurhash as the placeholder background.
 
 ## 8. Data fidelity rules
 
-Every string and value in the UI comes from the database or an existing translation key.
-Invented copy is a defect, not a placeholder. The Italian nav labels are the known copy
-exception — listed with the quirks below.
+Every string and value comes from editorial data or a local translation key.
+Invented copy is a defect, not a placeholder.
 
 **Sources of truth**
 
 | UI | source |
 |---|---|
-| all copy | `i18n_translations.translations` (editable namespaces: `hero-section`, `skills-section`, `career-section`, `contacts-section`, `posts-section`, `privacyPolicy`; the privacy body is the `privacy_policy` **column**, not a namespace). Local `contacts-section` messages freeze the channel/inquiry labels; `header`, `footer`, `errors` and the `posts-section` chrome are also frozen site files merged over this object, local winning (§8 quirk list). The request wizard has a dedicated `requestForm.{en,it}.json` copy source, not a `request-form` namespace |
-| hero name/about | `hero-section.top.name`, `hero-section.aboutme.*` |
-| hero roles | `hero-section.top.roles.0…` when the list exists, else the singular `hero-section.top.role` (kept as the fallback, never migrated) |
-| hero portrait/animation | `hero_section.shape` (`pebble` default), `hero_section.typewriter` + `hero_section.typewriter_target` (`role1` \| `role2` \| `all`) |
-| skills | `skills_categories` (ordered by `position`) + nested `skills` (`icon` URL, `invert`, optional `link` URL rendered as an external tile anchor, `position` inside its category; `position` NULL sorts last with an id tiebreak) |
+| structural copy | Website `site.{en,it}.json`: Skills, Career, Contacts and post headings, career vocabulary, privacy subtitle and site chrome. Local values win over stale DB messages. The request wizard has its dedicated `requestForm.{en,it}.json` source |
+| hero name/about | CMS `hero-section.top.name` and `hero-section.aboutme.paragraph` |
+| hero roles | CMS ordered `hero-section.top.roles`, with blanks filtered and no singular fallback |
+| hero portrait/animation | `hero_section.shape` (`pebble` default); automatic one-role completion or multi-role loop |
+| skills | CMS category names and positions plus nested `skills` icons, links and per-category positions. Both levels sort by position (null last), then ID |
 | career | `career_entries` (`logo`, `website_url`, `location_*`, `remote`, `startDate`/`endDate`, `description_*`, `skills`) |
-| contacts | `contacts` rows (`label`, `link`, `icon`, `bg_color`) plus local static channel/inquiry labels |
+| contacts | CMS `contacts` rows: `label`, `link`, absolute HTTP(S) SVG image `icon`, `bg_color`, `position`; ordered by position (null last), then ID |
 | posts | `blog_posts` / `portfolio_posts` (`title_en` + `title_${locale}`, `description_*`, `body_*`, `image` + `blurhashURL`, `post_tags`, `views`); project quick links come from `portfolio_posts.buttons` (see §6) |
 | post buttons | `portfolio_posts.buttons` — an ordered jsonb array of `{ kind, url, label? }` where `kind` is `website` \| `source` \| `demo` \| `store` \| `fdroid` \| `ios` \| `custom`. Array order IS render order. The label and icon of a preset belong to the site (`src/i18n/messages/postButtons.{en,it}.json` + the icon map in the page), so `label` is only read for `custom`. Null/empty `buttons` falls back to the legacy `source_link` / `demo_link` / `store_link` / `fdroid_link` / `website` / `ios_store_link` columns in that order |
 | post button copy | static per-locale messages, NOT `posts-section` translations — these are site invariants, so an editor cannot retitle "Source code" |
 | author | `user_profiles` via `author_id` (`display_name`, `avatar_url`) |
-| resume | `hero_section.resume_en` / `resume_it` — the columns are unchanged, but the CMS edits them from the Layout section: the résumé left Contacts, which now owns contact rows and its translations only |
-| header logos | `site_settings.header_logo_dark` / `header_logo_light` — absolute URLs; NULL falls back to the bundled `title-ws*.png` for that theme, independently per theme |
+| resume | `hero_section.resume_en` / `resume_it`, edited by CMS System → Resume; publication invalidates the Resume/header cache tags |
+| header images | Bundled `title-ws*.png` per theme, or the CMS `site_settings.header_logo_dark` / `header_logo_light` override when stored; each theme falls back independently |
 |nav buttons|site-side constants (`src/utils/navAnchors.ts`): six items whose label comes from the frozen `header.buttons` copy and whose anchor is the item's own section id — nothing stored, nothing CMS-editable||
-| footer identity | `site_settings.footer_name` / `footer_vat_number` — nullable `TEXT`: the leading zero of an Italian VAT number is part of the identifier, so it is never numeric, and the value is printed and copied verbatim, never parsed. Null or blank renders this repo's literals (`Okazakee`, `02863310815`) |
+| footer identity | Local `Okazakee`; CMS `site_settings.footer_vat_number` is nullable text, displayed/copied verbatim, omitted from the footer when unset (no local default) |
 
 **Custom formatting to honour**
 
@@ -663,23 +651,17 @@ exception — listed with the quirks below.
   **site invariant** and deliberately NOT CMS-editable: an editor must not be
   able to retitle a validation message. The option VALUES are storage, not
   copy, and stay identical in both locales.
-- Frozen: `errors`, `header`, `footer` and the `posts-section` chrome (post
-  link labels, empty states, search placeholder, copy-to-clipboard feedback) are
-  no longer CMS-editable. They are **site invariants**: an editor retitling
-  "Page not found" or reordering the nav breaks the product, not the words.
-  They live in `src/i18n/messages/site.{en,it}.json` and are merged over the
-  database by `src/i18n/siteCopy.ts`, one namespace deep, **local winning** —
-  so a stale row can never shadow a frozen key. Same rule and same shape as
-  `requestForm` and `postButtons`.
-- Staging-only: `site_settings` and the two footer identity columns live in
-  `dev_staging`, so a `public` build keeps rendering the footer's shipped
-  defaults. `getSiteSettings` therefore selects `*` rather than naming the
-  footer columns — a database that never ran
-  `20261005145655_add_site_settings_footer_identity.sql` (dev_staging-qualified,
-  nullable columns, no backfill) must keep serving the header — and it
-  normalises blank to null so the footer falls back instead of rendering a gap.
-  `public` is untouched until that file is deliberately promoted; nothing here
-  asserts it has been.
+- Frozen: `errors`, `header`, `footer`, `skills-section`, `career-section`,
+  `contacts-section`, `posts-section` and `privacyPolicy` structural messages
+  live in `src/i18n/messages/site.{en,it}.json`. The namespace merge is local
+  over database; obsolete stored strings cannot override website-owned copy.
+  CMS entry fields, Hero content and the separate privacy-policy body remain
+  editorial data.
+- Dev-only cutover: `20261008135608_cms_content_controls_dev_staging.sql`
+  removes obsolete animation/logo/footer-name fields and fixed copy from
+  `dev_staging`, preserving roles and policy bodies. `getSiteSettings` selects
+  only VAT explicitly. No compatibility fallback or production promotion is
+  implied; `public` remains untouched until an explicit release decision.
 - `header.buttons` is index-aligned with the nav's render order (`navItemIds`)
   and must hold one order in both locales. The stored Italian array had Career
   and Portfolio transposed, which is what the hardcoded `italianLabels` array in
@@ -716,5 +698,5 @@ behaviour.
 
 Still undesigned: nothing structural. The lightbox (`ImageModal`), share (`ShareButton`),
 view counter (`ViewDisplay` plus the `incrementViews` action), the search empty and
-rate-limited states, and the blur-up placeholders are all built. What remains is the §8
-defect list — shipped copy that still has to move to the CMS.
+rate-limited states, and the blur-up placeholders are all built. The §8 ownership
+rules distinguish editorial content from website-local copy.

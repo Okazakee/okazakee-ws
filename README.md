@@ -87,47 +87,40 @@ okazakee-cms ───────▶ Supabase ◀──────── okaza
   content-change events from the CMS (HMAC-SHA256, replay window, hard-coded
   tag allowlist) and calls `revalidateTag(tag, { expire: 0 })` — immediate
   expiry, because a request arriving from another app cannot use `updateTag`.
-- **i18n:** translations are stored in the Supabase `i18n_translations` table
-  and served through `getTranslationsSupabase` (server) or `next-intl`
-  clients (browser). Edited from the CMS, rendered here — except the header and
-  footer chrome, which is frozen locally and wins over the database (see
-  [Site Chrome & Footer Identity](#site-chrome--footer-identity)).
+- **i18n:** CMS identity/about content comes from `i18n_translations`; fixed
+  headings, career vocabulary, privacy subtitle and site chrome come from
+  local EN/IT files. `withSiteCopy` merges local strings over stale database
+  values. Localized entry fields and privacy-policy bodies remain CMS content.
 
 ## Site Chrome & Footer Identity
 
-Everything structural about the header and footer is **frozen in this
-repository**, not stored in `i18n_translations`:
+Structural copy lives in `src/i18n/messages/site.{en,it}.json`: navigation,
+footer chrome, Skills/Career/Portfolio/Blog/Contacts headings, career date and
+remote vocabulary, post labels and the privacy subtitle. `withSiteCopy` in
+`src/i18n/siteCopy.ts` merges these messages over database values.
 
-- `src/i18n/messages/site.{en,it}.json` hold the `header` and `footer`
-  namespaces: nav labels, theme and language controls, credit, source,
-  back-to-top and privacy-policy labels.
-- `src/i18n/siteCopy.ts` (`withSiteCopy`, wired in `src/i18n/request.ts`) merges
-  them **over** the database messages, one namespace deep, so a stale
-  `i18n_translations` row can never override them. `posts-section` and
-  `privacyPolicy` stay mergeable only because the CMS still edits a few keys in
-  them.
-
-The CMS **Layout** section owns what is left of the chrome:
-
-| Owned here | Source | Notes |
+| Content | Source | Owner |
 | --- | --- | --- |
-| Dark/light header logos, navigation anchors | `site_settings` | Single row; unchanged |
-| Résumé PDFs (EN/IT) | `hero_section.resume_en` / `resume_it` | Moved out of Contacts in the CMS; persistence unchanged |
-| Footer display name, VAT number | `site_settings.footer_name` / `footer_vat_number` | Nullable `TEXT`; `NULL` renders the defaults below |
+| Header images, navigation, footer name | Bundled assets and local code/copy | Website |
+| Header images (custom override) | `site_settings.header_logo_dark` / `header_logo_light` | CMS Layout |
+| Resume PDFs (EN/IT) | `hero_section.resume_en` / `resume_it` | CMS System → Resume |
+| VAT number | `site_settings.footer_vat_number` | CMS Layout |
+| Hero name, ordered roles, about | `hero-section` translations | CMS Hero |
+| Skill categories and entries | `skills_categories` / `skills`, dense positions | CMS Skills |
+| Contact links and SVG icon URLs | `contacts`, dense positions | CMS Contacts |
 
-Both footer fields are optional, and a blank input is stored as `NULL` — which
-keeps the values this repository renders today: the name `Okazakee` and the VAT
-number `02863310815`. The displayed VAT and the value written to the clipboard
-are the same string, so the Italian leading zero survives; the value is never
-parsed, and the footer's own links stay fixed.
+VAT is textual and displayed/copied verbatim; when it is null or blank the
+footer renders no VAT affordance at all (there is no local default), and the
+footer name stays `Okazakee`. Each header image is
+independent: a null one renders that theme's bundled asset, so clearing dark
+leaves a custom light image in place (and vice versa). One nonblank role
+animates to completion once; multiple roles loop in their saved order.
+Reduced motion shows static readable roles.
 
-`site_settings` exists only in `dev_staging`, so the footer identity does too.
-`okazakee-cms/supabase/migrations/20261005150208_add_site_settings_footer_identity.sql`
-is explicitly `dev_staging.`-qualified and only adds nullable columns with no
-backfill, so it is a no-op for the rendered footer and **`public` stays
-unchanged**. There is no automatic apply: any future database change stays
-explicitly reviewed/manual, and the historical public/unqualified sources must
-never be replayed against shared `public`.
+The content-controls migration is applied only to `dev_staging`; this
+checkout has not promoted schema or content changes to `public`. Production
+release requires an explicit, separately reviewed cutover. Historical SQL must
+never be replayed blindly against the production schema.
 
 ## Getting Started
 
@@ -183,14 +176,11 @@ every post page.
 NEXT_PUBLIC_SUPABASE_DB_SCHEMA=dev_staging
 ```
 
-Storage is the exception: buckets are project-level, so uploads still hit the
-live bucket. Set `SUPABASE_BUCKET` to a development bucket when you need them to
-land somewhere else.
-
-The CMS Layout editors (logos, anchors, résumé PDFs, footer identity) therefore
-only exist in `dev_staging` as well — a `public` build renders the frozen
-defaults described in
-[Site Chrome & Footer Identity](#site-chrome--footer-identity).
+Storage and Auth are project-level. The CMS selects `website-dev` for staging
+and refuses non-production writes to a real project's `public` schema.
+Staging user removal leaves shared Auth identities untouched. Both local apps
+must use `NEXT_PUBLIC_SUPABASE_DB_SCHEMA=dev_staging`, with matching local
+revalidation secrets and endpoints.
 
 ### Scripts
 
