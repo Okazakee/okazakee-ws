@@ -237,9 +237,37 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   `z-60`) — a card's `overflow-hidden` or a scrolling pane can never clip it.
   The row under the pointer or the keyboard cursor tints `accent-violet/10`;
   the selected row is `accent-violet-light` with a check.
-- Motion: `transition-colors` ~300ms; nothing decorative outside the hero
-  typewriter. `prefers-reduced-motion` disables smooth scroll and transitions
-  (mirrors the repo's existing rule) and also keeps the hero typewriter static.
+- Motion: `transition-colors` ~300ms, plus the ported glitch below; nothing
+  else decorative outside the hero typewriter. `prefers-reduced-motion`
+  disables smooth scroll and transitions (mirrors the repo's existing rule) and
+  also keeps the hero typewriter static.
+- **Glitch** (`Glitch` in `components/common`, ported from PowerGlitch /
+  react-powerglitch, MIT — the engine lives in `libs/glitch`, the numbers are
+  covered by `layers.test.ts`): exactly two of that library's behaviours, both
+  one shot. `mode="hover"` is the smooth character on quick timing — six slice
+  layers with the intensity ramped in and out across a **320 ms** loop
+  (`glitchTimeSpan` 0.1 → 0.9), cancelling where it started when the pointer
+  leaves — and it plays on the **skills tiles**. `mode="click"` is
+  PowerGlitch's own click preset, fifteen slices stepped faster, replayed on
+  every click, and it plays on the **Resume button** (header and mobile
+  drawer). The burst is a WAAPI animation per layer, generated from
+  `libs/glitch/layers.ts`: one base layer that shakes the glitched element (0.2%
+  amplitude, sub-pixel) and one clone per slice layer that clips a 2–15% band
+  of it, shoves it up to 30% sideways and hue-rotates it, every layer stepped
+  (`steps(n, jump-start)`) so positions jump instead of interpolating. The
+  element being glitched keeps **all** of its own styles — nothing on it gets a
+  shadow, a filter or a transform while resting; the clones are the only things
+  that move, they live in the container's own grid cell (`globals.css`
+  `.glitch`), they are created on the first trigger rather than at mount, and
+  they start and end invisible (`opacity: 0`). `overflow: hidden` plus
+  `border-radius: inherit` keep every shifted slice inside the host's box and
+  corners. `trigger="group"` hangs the listeners on the nearest `.group` host,
+  which is why the whole tile — padding included — starts the tile burst.
+  Two knobs, both in `glitchPresets`: the timings above and, per layer, whether
+  the slice tints by hue rotation or by an explicit `cssFilters` string.
+  `prefers-reduced-motion: reduce` is read before any of it exists, so those
+  readers get no listeners and no clones — the global rule that flattens
+  `animation-duration` cannot reach a WAAPI animation.
 - **Hero portrait shape** (`hero_section.shape`): `pebble` (default), `square`,
   `rounded` and `squircle`. Every preset is built the same way: the accent plate
   is the full portrait box in the preset's shape (`bg-accent-violet`) and the

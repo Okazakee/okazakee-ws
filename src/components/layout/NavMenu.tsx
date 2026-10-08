@@ -1,5 +1,6 @@
 'use client';
 
+import { Glitch } from '@components/common/Glitch';
 import { ExternalLink, FileUser, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -269,8 +270,12 @@ export default function NavMenu({
               rel="noopener noreferrer"
               target="_blank"
             >
-              <FileUser className="h-[15px] w-[15px] shrink-0" />
-              <ResumeLabel label={resumeLabel} />
+              <Glitch className="w-full" mode="click">
+                <span className="flex items-center gap-1">
+                  <FileUser className="h-[15px] w-[15px] shrink-0" />
+                  <ResumeLabel label={resumeLabel} />
+                </span>
+              </Glitch>
             </Link>
           )}
         </div>
@@ -363,9 +368,13 @@ export default function NavMenu({
                     tabIndex={isOpen ? 0 : -1}
                     target="_blank"
                   >
-                    <FileUser className="h-4 w-4 shrink-0" />
-                    {resumeLabel}
-                    <ExternalLink className="ml-auto h-4 w-4 text-text-dim" />
+                    <Glitch className="w-full" mode="click">
+                      <span className="flex w-full items-center justify-center gap-1">
+                        <FileUser className="h-4 w-4 shrink-0" />
+                        {resumeLabel}
+                        <ExternalLink className="ml-auto h-4 w-4 text-text-dim" />
+                      </span>
+                    </Glitch>
                   </Link>
                 )}
               </div>

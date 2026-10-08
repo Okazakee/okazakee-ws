@@ -758,6 +758,27 @@ input[type="checkbox"]:not([class*="request-"]):checked {
   animation-play-state: paused;
 }
 
+/* Glitch layers (docs/DESIGN.md §3) — the box `Glitch` renders for the burst
+   ported from PowerGlitch (MIT). The container is always the grid stack, so
+   callers pass sizing only (`w-full`) and the glitched element carries the row
+   layout: every layer shares one grid cell, so a copy costs a paint and no
+   layout, and the box cannot move when the animation does. `Glitch`'s hook
+   appends the copies itself, one per slice layer, and they stay invisible
+   (`opacity: 0`) until their own animation plays. `overflow: hidden` plus
+   `border-radius: inherit` clip the shifted slices to the host's own box and
+   corners — PowerGlitch's `hideOverflow`, which is what a card or a button
+   wants. Declared outside `@layer` on purpose: the grid stack is the
+   primitive, not a default a utility may override. */
+.glitch {
+  display: grid;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.glitch > * {
+  grid-area: 1 / 1 / -1 / -1;
+}
+
 /* Career description bullets: the disc marker is swapped for the lucide
    chevron-right glyph, painted with the accent via an inline SVG mask. */
 .career-list ul {
