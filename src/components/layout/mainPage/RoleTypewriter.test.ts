@@ -138,6 +138,10 @@ describe('RoleTypewriter', () => {
 
     await advance(typewriterStartMs);
     expect(live()).toBe('F Developer');
+    const currentMarkup = container.querySelector('p')?.innerHTML ?? '';
+    expect(currentMarkup.indexOf('typewriter-cursor')).toBeLessThan(
+      currentMarkup.indexOf('Developer')
+    );
 
     expect(
       await advanceUntil(() => live() === 'Fullstack Developer')

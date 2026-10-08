@@ -60,7 +60,7 @@ export default function ScrollTop() {
         }}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
-        <Glitch mode="both">
+        <Glitch hoverPreset="click" mode="both">
           <span className="flex items-center justify-center gap-2">
             <span className="hidden md:inline">{t('right')}</span>
             <ArrowUpToLine className="h-4 w-4" />

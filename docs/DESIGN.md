@@ -256,8 +256,9 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   else decorative outside the hero typewriter. `prefers-reduced-motion`
   disables smooth scroll and transitions (mirrors the repo's existing rule) and
   also keeps the hero typewriter static.
-  The hero typewriter also leaves any whole word shared by two or more roles visible
-  throughout the cycle; only unique words are typed and erased.
+  The hero typewriter leaves whole words shared by two or more roles visible
+  throughout the cycle; only unique words are typed and erased, and the cursor
+  stays at that typing boundary.
 - **Glitch** (`Glitch` in `components/common`, ported from PowerGlitch /
   react-powerglitch, MIT — the engine lives in `libs/glitch`, the numbers are
   covered by `layers.test.ts`): two of that library's behaviours, one shot each,
@@ -279,14 +280,14 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   The **skills tiles** use the canon tear on hover: four slice layers, each a
   2–10% band of the element torn sideways by up to 12%, a 4% shake, and the
   intensity ramped in and out across the loop (`glitchTimeSpan` 0.1 → 0.9),
-  cancelling where it started when the pointer leaves. The **contact tiles** and
-  the **archive card flicker on hover instead** (`hoverPreset="click"`): a
-  sideways tear reads as a broken layout at their size, where three broad bands
-  standing still and rotating their hue within ±90° while the element takes a
-  short vertical nudge reads as a signal. The flicker's window is the whole
-  loop, so every step glitches rather than easing in. Both presets run a
-  **150 ms** loop and both jump six times (35 steps a second), so they are
-  equally quick and equally slight. Those travels are percentages of the
+  cancelling where it started when the pointer leaves. The **contact tiles**, the
+  **archive card**, and the **back-to-top button** flicker on hover instead
+  (`hoverPreset="click"`): three broad bands standing still and rotating their
+  hue within ±90° while the element takes a short vertical nudge. The button
+  uses the broader bands to make its small surface easier to notice.
+  The flicker's window is the whole loop, so every step glitches instead of
+  easing in. Both presets run a **150 ms** loop with six steps (35 per second);
+  the broader button flicker stays within the same travel caps. Travels are
   element's own box, so they are clamped in px before the layers are generated
   (`clampGlitchToBox`: 36 px of travel, 12 / 6 px of shake): whatever preset a
   surface ends up running, a wide box can never tear or shudder harder than the

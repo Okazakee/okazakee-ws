@@ -156,10 +156,8 @@ export function typewriterStep(
 }
 
 /**
- * Markup for the first `revealed` characters. A full reveal is byte-identical
- * to `formatLabels(text)`, so a finished line renders exactly like the static
- * one. `cursorClass` appends a terminal cursor element while the line is
- * animating; omitted, the output is plain text (SSR and finished states).
+ * Markup for the revealed prefix plus shared words. The cursor stays at the
+ * animation boundary instead of after always-visible text.
  */
 export function typewriterHtml(
   runs: TypewriterRun[],
@@ -169,9 +167,13 @@ export function typewriterHtml(
 ): string {
   let position = 0;
   let html = '';
+  const cursor = cursorClass
+    ? `<span class="${cursorClass}" aria-hidden="true"></span>`
+    : '';
   for (const run of runs) {
     let content = '';
     for (const char of run.text) {
+      if (position === revealed) content += cursor;
       if (position < revealed || sharedPositions.includes(position)) {
         content += char;
       }
@@ -179,9 +181,8 @@ export function typewriterHtml(
     }
     if (content) html += run.labeled ? `<label>${content}</label>` : content;
   }
-  return cursorClass
-    ? `${html}<span class="${cursorClass}" aria-hidden="true"></span>`
-    : html;
+  if (position === revealed) html += cursor;
+  return html;
 }
 
 // Superellipse (|x|^4 + |y|^4 = 1) sampled as an objectBoundingBox path, so
