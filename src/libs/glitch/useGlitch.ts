@@ -24,11 +24,12 @@ export type GlitchConfig = {
   mode: GlitchMode;
   /** What starts a burst: the container itself, or the nearest `.group`. */
   trigger?: GlitchTrigger;
+  /** Probability from 0 through 1 that an eligible trigger starts a burst. */
+  probability?: number;
   /**
-   * Preset the **hover** trigger plays. It is the canon tear by default; the
-   * cards and contact tiles override it with the click's flicker, because a
-   * sideways tear reads as a broken layout at their size. A click always plays
-   * the click preset.
+   * Preset the **hover** trigger plays. It is the canon tear by default; cards
+   * override it with the click's flicker, because a sideways tear reads as a
+   * broken layout at their size. A click always plays the click preset.
    */
   hoverPreset?: GlitchPreset;
   /**
@@ -52,9 +53,9 @@ export type GlitchConfig = {
  * (`opacity: 0`) except while its own animation runs, so the layers cannot
  * leak into the layout or the paint when nothing is playing.
  *
- * One shot each way, and both stop where they started: `hover` plays on entry
- * and cancels on leave, `click` cancels and replays on every click, `both` does
- * both.
+ * Every eligible trigger samples `probability`: `1` always plays, while a lower
+ * value leaves that interaction still. Hover cancels on leave; click cancels
+ * and replays when its sample starts a burst.
  *
  * The preset is clamped to the box the element actually has before its layers
  * are generated (`clampGlitchToBox`), because its travels are percentages: the
@@ -69,7 +70,13 @@ export type GlitchConfig = {
  */
 export function useGlitch(
   containerRef: RefObject<HTMLElement | null>,
-  { mode, trigger = 'self', hoverPreset = 'hover', active = false }: GlitchConfig
+  {
+    mode,
+    trigger = 'self',
+    hoverPreset = 'hover',
+    active = false,
+    probability = 1,
+  }: GlitchConfig
 ): void {
   // The setup effect owns everything the burst needs; this handle is how the
   // state effect below reaches it without re-running the setup on every
@@ -81,6 +88,8 @@ export function useGlitch(
     const container = containerRef.current;
     if (!container) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const shouldPlay = () => Math.random() < probability;
 
     let copies: HTMLElement[] | null = null;
 
@@ -129,8 +138,10 @@ export function useGlitch(
       }
     };
 
-    // The state trigger plays the same presets the pointer does.
-    playRef.current = (preset) => play(glitchPresets[preset]);
+    // The state trigger uses the same probability and presets as the pointer.
+    playRef.current = (preset) => {
+      if (shouldPlay()) play(glitchPresets[preset]);
+    };
 
     // Whatever the container holds — a layer mid-burst, a stale copy, the base
     // — stopping means cancelling what is running. Nothing is created here, so
@@ -146,10 +157,13 @@ export function useGlitch(
         ? (container.closest('.group') ?? container)
         : container;
 
-    const onEnter = () => play(glitchPresets[hoverPreset]);
+    const onEnter = () => {
+      if (shouldPlay()) play(glitchPresets[hoverPreset]);
+    };
     // A click replays its own preset over whatever the hover left behind; the
     // two differ in layer count, which `play` handles by rebuilding the copies.
     const onClick = () => {
+      if (!shouldPlay()) return;
       cancel();
       play(glitchPresets.click);
     };
@@ -169,7 +183,7 @@ export function useGlitch(
       cancel();
       for (const copy of copies ?? []) copy.remove();
     };
-  }, [containerRef, mode, trigger, hoverPreset]);
+  }, [containerRef, mode, trigger, hoverPreset, probability]);
 
   // A state change — the scroll-spy moving the highlight — bursts exactly like
   // a hover does. The first run is skipped, so a page that loads with a section

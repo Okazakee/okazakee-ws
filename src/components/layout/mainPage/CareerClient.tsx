@@ -198,52 +198,56 @@ export function CareerClient({
                   />
                 </span>
 
-                <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:p-7">
-                  <div className="mb-5 flex flex-wrap items-start gap-3">
-                    <span className="flex shrink-0 items-center rounded-lg border border-border-subtle bg-surface-raised p-1.5">
-                      {/* biome-ignore lint/performance/noImgElement: brand marks arrive in arbitrary aspect ratios, so the height is capped rather than fixed */}
-                      <img
-                        alt={group.company}
-                        className="max-h-10 w-auto object-contain"
-                        loading="lazy"
-                        src={latest.logo}
-                      />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      {/* The glitch stays on the link, never the card: the card's
-                          hover is a post card's colours and micro-motions only.
-                          `w-fit` keeps the burst's box on the link's own box
-                          rather than the empty space beside it. */}
-                      <Glitch className="w-fit" mode="hover">
-                        <a
-                          className="inline-flex items-center gap-1 font-heading text-base font-semibold text-text-white transition-colors group-hover:text-accent-violet-light hover:text-accent-violet-light hover:underline hover:underline-offset-2"
-                          href={latest.website_url}
-                          rel="noopener noreferrer"
-                          target="_blank"
-                        >
-                          {group.company}
-                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-violet-light" />
-                        </a>
-                      </Glitch>
-                      <p className="mt-1 w-fit text-xs text-text-dim">
-                        {latest[`location_${locale}`]}{' '}
-                        <span className="text-accent-violet">{separator}</span>{' '}
-                        {t(`remote.${latest.remote}`)}
-                      </p>
+                <Glitch
+                  className="w-full"
+                  hoverPreset="click"
+                  probability={0.1}
+                  mode="both"
+                  trigger="group"
+                >
+                  <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:p-7">
+                    <div className="mb-5 flex flex-wrap items-start gap-3">
+                      <span className="flex shrink-0 items-center rounded-lg border border-border-subtle bg-surface-raised p-1.5">
+                        {/* biome-ignore lint/performance/noImgElement: brand marks arrive in arbitrary aspect ratios, so the height is capped rather than fixed */}
+                        <img
+                          alt={group.company}
+                          className="max-h-10 w-auto object-contain"
+                          loading="lazy"
+                          src={latest.logo}
+                        />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <Glitch className="w-fit" mode="hover">
+                          <a
+                            className="inline-flex items-center gap-1 font-heading text-base font-semibold text-text-white transition-colors group-hover:text-accent-violet-light hover:text-accent-violet-light hover:underline hover:underline-offset-2"
+                            href={latest.website_url}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          >
+                            {group.company}
+                            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-violet-light" />
+                          </a>
+                        </Glitch>
+                        <p className="mt-1 w-fit text-xs text-text-dim">
+                          {latest[`location_${locale}`]}{' '}
+                          <span className="text-accent-violet">{separator}</span>{' '}
+                          {t(`remote.${latest.remote}`)}
+                        </p>
+                      </div>
+                      {pill(latest)}
                     </div>
-                    {pill(latest)}
+
+                    {position(latest, false)}
+
+                    {older.length > 0 && (
+                      <div className="mt-6 space-y-5 border-t border-border-subtle pt-5">
+                        {older.map((entry) => (
+                          <div key={entry.id}>{position(entry, true)}</div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
-                  {position(latest, false)}
-
-                  {older.length > 0 && (
-                    <div className="mt-6 space-y-5 border-t border-border-subtle pt-5">
-                      {older.map((entry) => (
-                        <div key={entry.id}>{position(entry, true)}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </Glitch>
               </div>
             );
           })}

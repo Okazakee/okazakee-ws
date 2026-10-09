@@ -118,13 +118,23 @@ export default async function Skills({ locale }: { locale: string }) {
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    <Glitch className="w-full" mode="both" trigger="group">
+                    <Glitch
+                      className="w-full"
+                      mode="both"
+                      probability={0.25}
+                      trigger="group"
+                    >
                       <SkillContent href={href} skill={skill} />
                     </Glitch>
                   </Link>
                 ) : (
                   <div className={`${rowClass} ${widthClass}`} key={skill.id}>
-                    <Glitch className="w-full" mode="both" trigger="group">
+                    <Glitch
+                      className="w-full"
+                      mode="both"
+                      probability={0.25}
+                      trigger="group"
+                    >
                       <SkillContent href={null} skill={skill} />
                     </Glitch>
                   </div>

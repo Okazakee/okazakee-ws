@@ -66,8 +66,8 @@ export default async function Contacts({ locale }: { locale: string }) {
               >
                 <Glitch
                   className="w-full flex-1"
-                  hoverPreset="click"
-                  mode="both"
+                  mode="hover"
+                  probability={0.25}
                   trigger="group"
                 >
                   <span className="flex w-full flex-col items-center justify-between">

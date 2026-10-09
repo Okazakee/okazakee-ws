@@ -83,6 +83,7 @@ export default async function PostsSection({ locale }: { locale: string }) {
                   <Glitch
                     className="w-full"
                     hoverPreset="click"
+                    probability={0.25}
                     mode="both"
                     trigger="group"
                   >

@@ -19,10 +19,12 @@ interface GlitchProps {
   /**
    * Preset the **hover** trigger plays. It is the canon tear by default; pass
    * `"click"` for a surface that should flicker on hover instead, which is what
-   * the cards and the contact tiles do. A click always plays the click preset.
+   * the cards do. A click always plays the click preset.
    */
   hoverPreset?: GlitchPreset;
   mode: GlitchMode;
+  /** Probability from 0 through 1 that an eligible trigger starts a burst. */
+  probability?: number;
   style?: CSSProperties;
   trigger?: GlitchTrigger;
 }
@@ -32,12 +34,13 @@ interface GlitchProps {
  * react-powerglitch (MIT, github.com/7PH/react-powerglitch) — over the element
  * it wraps, then stops.
  *
- * `mode` picks the triggers. The hover and click presets share a 150 ms
- * duration: the canon tear uses four 2–10% bands torn sideways by up to 12%,
- * with 4% shake; the flicker uses three 12–30% bands with ±90° hue and a short
- * vertical nudge. The back-to-top wraps the button itself and uses the same
- * hover tear as the profile portrait. A **click** always plays the click
- * preset; `both` wires both and cancels hover on leave. Every mode is one shot.
+ * `mode` picks the triggers and `probability` determines how often each
+ * eligible trigger plays. The hover and click presets share a 150 ms duration:
+ * the canon tear uses four 2–10% bands torn sideways by up to 12%, with 4%
+ * shake; the flicker uses three 12–30% bands with ±90° hue and a short vertical
+ * nudge. The back-to-top wraps the button itself and uses the same hover tear
+ * as the profile portrait. A selected **click** plays the click preset; `both`
+ * wires both and cancels hover on leave. Every mode is one shot.
  *
  * The wrapped element keeps its own styles: the burst plays on clones the hook
  * stacks inside this container's grid cell (`globals.css`), so the box itself
@@ -57,12 +60,19 @@ export function Glitch({
   className = '',
   hoverPreset = 'hover',
   mode,
+  probability = 1,
   style,
   trigger = 'self',
 }: GlitchProps) {
   const containerRef = useRef<HTMLSpanElement>(null);
 
-  useGlitch(containerRef, { active, hoverPreset, mode, trigger });
+  useGlitch(containerRef, {
+    active,
+    hoverPreset,
+    mode,
+    probability,
+    trigger,
+  });
 
   return (
     <span className={`glitch ${className}`.trim()} ref={containerRef} style={style}>

@@ -9,9 +9,8 @@ import { Tags } from './Tags';
 /**
  * Post card (docs/DESIGN.md §5.1): one link for the whole card, hover colours on
  * the card, and the glitch (`docs/DESIGN.md` §3) on the content *inside* it —
- * the frame keeps still. `mode="click"`: the card flickers when it is clicked
- * and does nothing on hover, where the tear read as a broken layout and the
- * flicker as noise on every card the pointer crossed.
+ * the frame keeps still. The same flicker as the archive card plays on hover
+ * and click; `trigger="group"` gives its padded link the full card hit area.
  */
 export default function PostCard({
   post,
@@ -37,7 +36,13 @@ export default function PostCard({
       className="group relative flex rounded-2xl border border-border-subtle bg-surface-card p-4 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:p-5"
       href={href}
     >
-      <Glitch className="w-full" mode="click" trigger="group">
+      <Glitch
+        className="w-full"
+        hoverPreset="click"
+        probability={0.25}
+        mode="both"
+        trigger="group"
+      >
         <span className="flex w-full flex-col gap-5 lg:flex-row lg:items-stretch lg:gap-6">
           <div className="relative h-[200px] w-full shrink-0 overflow-hidden rounded-xl bg-surface-raised sm:h-[220px] lg:w-[380px]">
             <Image

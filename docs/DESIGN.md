@@ -262,31 +262,36 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - **Glitch** (`Glitch` in `components/common`, ported from PowerGlitch /
   react-powerglitch, MIT — the engine lives in `libs/glitch`, the numbers are
   covered by `layers.test.ts`): two of that library's behaviours, one shot each,
-  and **only on these** — the **skills tiles**, the **post cards**
-  (both lists, plus the archive card that closes each one), the **contact
-  tiles**, the **hero portrait**, the **career company link**, the **header
-  nav items** and the **back-to-top button**. It stays off the header's
+  and **only on these** — the **skills tiles**, the **post cards** (both lists,
+  plus the archive card that closes each one), the **contact tiles**, the
+  **hero portrait**, the **career entries**, the **career company links**, the
+  **header nav items** and the **back-to-top button**. It stays off the header's
   **controls** (theme, language, Resume, drawer toggle). Both of its effects
   are fast (a sixth of a second) and small.
-  `mode` is per surface. The **skills tiles**, the **contact tiles** and the
-  **archive card** that closes each posts list wire both triggers; the **post
-  cards** are **click only** (`mode="click"` — nothing on hover, so moving the
-  pointer down a list of them stays quiet); the **hero portrait**, the **career
-  company link** and the **nav items** are hover only, since none of them is a
-  click target. A click always plays the flicker, and any surface with hover says
-  what that hover plays (`hoverPreset`). Every burst is a pointer event except
-  the nav items', which also fire on a state change: the scroll-spy hands the
-  newly active item its own `active` state, and that item bursts once.
-  The **skills tiles** use the canon tear on hover: four slice layers, each a
-  2–10% band of the element torn sideways by up to 12%, a 4% shake, and the
-  intensity ramped in and out across the loop (`glitchTimeSpan` 0.1 → 0.9),
-  cancelling where it started when the pointer leaves. The **contact tiles**
-  and the **archive card** flicker on hover instead (`hoverPreset="click"`):
-  three broad bands (12–30%) rotate hue within ±90° as the element takes a
-  short vertical nudge. The **back-to-top button** glitches as a whole and uses
-  the same default tear preset as the profile portrait. Both presets run a
-  **150 ms** loop with six steps (35 per second); travel stays within the same
-  pixel caps (`clampGlitchToBox`: 36 px horizontal, 12 / 6 px shake).
+  `mode` is per surface. The **skills tiles**, the **post cards**, the
+  **career entries** and the **archive card** that closes each posts list wire
+  both triggers; the **hero portrait**, the **career company links**, the
+  **header nav items** and the **contact tiles** are hover only. Every eligible
+  trigger independently samples `probability`: the **hero portrait**, **career
+  company links**, **header nav items** and **back-to-top button** always play
+  (`1`); the **skills tiles**, **post cards**, **archive card** and **contact
+  tiles** play 25% of the time (`0.25`); **career entries** play 10% of the
+  time (`0.1`). A selected click plays the flicker, and any surface with hover
+  says what that hover plays (`hoverPreset`). Every burst is a pointer event
+  except the nav items', which also fire on a state change: the scroll-spy hands
+  the newly active item its own `active` state, and that item bursts once.
+  The **skills tiles**, **contact tiles** and **career company links** use the
+  canon tear on hover, the same default preset as the profile portrait: four
+  slice layers, each a 2–10% band of the element torn sideways by up to 12%, a
+  4% shake, and the intensity ramped in and out across the loop
+  (`glitchTimeSpan` 0.1 → 0.9), cancelling where it started when the pointer
+  leaves. The **post cards**, **career entries** and **archive card** flicker
+  on hover instead (`hoverPreset="click"`): three broad bands (12–30%) rotate
+  hue within ±90° as the element takes a short vertical nudge.
+  The **back-to-top button** glitches as a whole and uses the same default tear
+  preset as the profile portrait. Both presets run a **150 ms** loop with six
+  steps (35 per second); travel stays within the same pixel caps
+  (`clampGlitchToBox`: 36 px horizontal, 12 / 6 px shake).
   The burst is a WAAPI animation per layer, generated from `libs/glitch/layers.ts`:
   one base layer that shakes the glitched element and one clone per slice layer
   that clips a band of it, shifts it sideways by up to the preset's travel and
