@@ -105,9 +105,8 @@ export default function LanguageToggle() {
     ]
   );
 
-  // Warm the RSC payload on hover/focus so the click commits from cache.
-  // Guarded: post slugs prefetch the prefix-swapped path until canonical
-  // alternates publish, exactly what a click would navigate to.
+  // Warm the destination's shared App Shell on hover/focus. URL-specific
+  // content, including post slugs, continues resolving during navigation.
   const warmLocale = (forLocale: AppLocale) => {
     if (forLocale === locale || switchingTo !== null || !mounted) return;
     try {

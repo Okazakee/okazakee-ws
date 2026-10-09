@@ -52,6 +52,7 @@ const nextConfig: NextConfig = {
   // Ensure sharp is bundled correctly for serverless
   serverExternalPackages: ['sharp'],
   cacheComponents: true,
+  partialPrefetching: true,
   // Permanent 308s for the legacy wrong-slug URLs previously advertised in the
   // sitemap; other malformed slugs keep the page-level soft redirect fallback.
   async redirects() {
