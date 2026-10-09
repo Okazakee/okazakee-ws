@@ -94,7 +94,7 @@ export function CareerClient({
   );
 
   const pill = (entry: CareerEntry) => (
-    <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle bg-surface-raised px-2.5 py-1 font-mono text-xs text-text-muted">
+    <span className="ml-0 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle bg-surface-raised px-2.5 py-1 font-mono text-xs text-text-muted sm:ml-auto">
       {!entry.endDate && (
         <span className="h-1.5 w-1.5 rounded-full bg-status-active" />
       )}
@@ -199,27 +199,30 @@ export function CareerClient({
                 </span>
 
                 <Glitch
-                  className="w-full"
+                  className="min-w-0 w-full"
                   hoverPreset="click"
                   probability={0.1}
                   mode="both"
                   trigger="group"
                 >
-                  <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:p-7">
-                    <div className="mb-5 flex flex-wrap items-start gap-3">
-                      <span className="flex shrink-0 items-center rounded-lg border border-border-subtle bg-surface-raised p-1.5">
+                  <div className="min-w-0 w-full rounded-2xl border border-border-subtle bg-surface-card p-6 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:p-7">
+                    <div className="mb-5 flex flex-col items-center gap-3 text-left sm:flex-row sm:flex-wrap sm:items-start">
+                      <span className="flex w-fit shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-surface-raised p-1.5">
                         {/* biome-ignore lint/performance/noImgElement: brand marks arrive in arbitrary aspect ratios, so the height is capped rather than fixed */}
                         <img
                           alt={group.company}
-                          className="max-h-10 w-auto object-contain"
+                          className="max-h-14 w-auto object-contain sm:max-h-10"
                           loading="lazy"
                           src={latest.logo}
                         />
                       </span>
-                      <div className="min-w-0 flex-1">
+                      <div className="order-2 flex w-full justify-center sm:order-3 sm:ml-auto sm:w-auto sm:justify-end">
+                        {pill(latest)}
+                      </div>
+                      <div className="order-3 flex w-full min-w-0 flex-col items-start sm:order-2 sm:w-auto sm:flex-1">
                         <Glitch className="w-fit" mode="hover">
                           <a
-                            className="inline-flex items-center gap-1 font-heading text-base font-semibold text-text-white transition-colors group-hover:text-accent-violet-light hover:text-accent-violet-light hover:underline hover:underline-offset-2"
+                            className="inline-flex items-center gap-1 font-heading text-lg font-semibold text-text-white transition-colors group-hover:text-accent-violet-light hover:text-accent-violet-light hover:underline hover:underline-offset-2 sm:text-base"
                             href={latest.website_url}
                             rel="noopener noreferrer"
                             target="_blank"
@@ -228,13 +231,12 @@ export function CareerClient({
                             <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-violet-light" />
                           </a>
                         </Glitch>
-                        <p className="mt-1 w-fit text-xs text-text-dim">
+                        <p className="mt-1 w-fit text-sm text-text-dim sm:text-xs">
                           {latest[`location_${locale}`]}{' '}
                           <span className="text-accent-violet">{separator}</span>{' '}
                           {t(`remote.${latest.remote}`)}
                         </p>
                       </div>
-                      {pill(latest)}
                     </div>
 
                     {position(latest, false)}
