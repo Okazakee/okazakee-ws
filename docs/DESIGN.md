@@ -220,27 +220,28 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - Cursors: the **Windows "Blue" scheme**, ported from its `.cur` resources into
   `public/cursors/` and recoloured to `accent-violet` (`#9451ff`; `not-allowed`
   keeps the scheme's red, which is the point of it). `.cur` is a raster
-  container (BMP or PNG entries, no vectors), so the unsuffixed files are the
-  native 64px PNG payloads unpacked without re-encoding, and `-48` / `-60` are
-  LANCZOS resamples of them. A cursor
-  draws at intrinsic ÷ descriptor, and the compositor resamples any non-integer
-  ratio — mush at the near-1:1 ones, which is what a 64px art at 60 device px
-  looks like. So each kind carries one candidate per device pixel ratio,
-  `image-set(… 48px 1x, … 60px 1.25x, … 64px 1.3333x)`: every display draws its
-  own bitmap 1:1 at **48 CSS px** (1.5× the 32px MDN recommends and Windows
-  shows at 100% DPI, short of the full 64). That descriptor plus the matching
-  variant is the knob for the size; 1.3333x is also the ceiling of the scheme's
-  art, so coarser displays get that one resampled. Hotspots are in the drawn
-  space, the metadata's 64px values × 0.75; three 64px entries declared a corner
-  (`Unavailable`, `Verticle resize`, `Diagonal resize 1`) where their own 32px
-  entries say "centre", so those use the 32px value. Fourteen kinds are wired as
+  container (BMP or PNG entries, no vectors). Only the fourteen original
+  **64×64 PNGs** are stored; no pre-resized DPI variants remain.
+  `--cursor-scale` in `globals.css` is the single website-wide size control:
+  **1 = 32 CSS px**, the scheme's normal size and
+  [MDN's recommended cursor size](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/cursor#icon_size_limits).
+  `1.5` restores 48px and `2` uses 64px. Each cursor uses a single-image
+  `image-set()` with a derived resolution of `2dppx / --cursor-scale`; this
+  controls logical size independently of device pixel ratio, not the OS pointer
+  size. Hotspots scale from the existing 48px coordinates by
+  `2 / 3 × --cursor-scale` and are quantized to native integer coordinates.
+  This preserves the corrected centre hotspots for `Unavailable`,
+  `Verticle resize` and `Diagonal resize 1`. Browsers resample the same raster
+  for the display; fractional DPI can look softer than the old prepared
+  variants. Native cursors retain normal hit testing without JavaScript pointer
+  tracking. Fourteen kinds are wired as
   `--cursor-*` tokens and remapped onto Tailwind's `cursor-*` utilities, so any
   `cursor-not-allowed` / `cursor-progress` / … class picks up the art with no
   sweep. Attached today: `default` (the page), `pointer` (links, buttons and
   everything inside them — a card's title and description keep the hand instead
   of turning into a caret), `text` (prose and text fields) and `not-allowed`
   (`:disabled`, `[aria-disabled]`). The rest (`wait`, `progress`, `crosshair`,
-  `help`, `move`, the three resizes, `copy`) are ready but unattached: the site
+  `help`, `move`, the four resizes, `copy`) are ready but unattached: the site
   has no drag, resize, move or zoom affordance to hang them on. `Link select`,
   `Person select` and `Handwritting` have no CSS counterpart and stay unported.
   Replacing a whole `image-set()` with the keyword alone returns that kind to the
