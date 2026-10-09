@@ -331,10 +331,15 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - **Hero roles** are the ordered `hero-section.top.roles` list, represented as
   an array or numeric index map. The dev cutover migrates the old singular
   role; no runtime fallback remains. Blank entries are ignored.
+  Accent labels use exactly four asterisks on each side (`****Mobile****`);
+  extra asterisks are literal content, not part of the animation.
 - **Hero typewriter** types each character at a constant speed. One nonblank
   role stops after completing; multiple roles loop in saved order: type, hold,
   erase, then type the next. The cursor is visible only while a role starts
   typing and disappears as soon as that role is complete.
+  Words shared by roles stay visible. The cursor follows a stationary prefix
+  (Italian `Sviluppatore`) and precedes a stationary suffix (English
+  `Developer`), including the empty-changing-text pause between roles.
   It is a leaf client component
   (`RoleTypewriter`), so the rest of the hero stays a server component. The line
   is always painted complete first, so server output, hydration and

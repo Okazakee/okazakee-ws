@@ -7,6 +7,7 @@ import {
   normalizeHeroShape,
   parseTypewriterRuns,
   resolveHeroRoles,
+  sharedTypewriterWords,
   squircleClipPath,
   typewriterHtml,
   typewriterLength,
@@ -149,5 +150,129 @@ describe('typewriter label runs', () => {
 
   it('never renders a negative reveal', () => {
     expect(typewriterHtml(parseTypewriterRuns('abc'), -4)).toBe('');
+  });
+});
+
+describe('typewriter cursor boundary', () => {
+  const cursorClass = 'typewriter-cursor';
+  const cursor = `<span class="${cursorClass}" aria-hidden="true"></span>`;
+  const italianRoles = [
+    'Sviluppatore ****Full-stack****',
+    'Sviluppatore ****Mobile****',
+  ];
+  const englishRoles = [
+    'Full-stack ****Developer****',
+    'Mobile ****Developer****',
+  ];
+
+  it('keeps the Italian shared prefix before the empty or resumed cursor', () => {
+    const shared = sharedTypewriterWords(italianRoles);
+
+    for (const [index, role] of italianRoles.entries()) {
+      const runs = parseTypewriterRuns(role);
+      for (const revealed of [0, 1, 6, 11, 12]) {
+        expect(typewriterHtml(runs, revealed, cursorClass, shared[index])).toBe(
+          `Sviluppatore${cursor}`
+        );
+      }
+    }
+  });
+
+  it('follows the changing labelled Italian word while typing and erasing', () => {
+    const shared = sharedTypewriterWords(italianRoles);
+
+    for (const [index, role] of italianRoles.entries()) {
+      const runs = parseTypewriterRuns(role);
+      const changingWord = index === 0 ? 'Full-stack' : 'Mobile';
+      const length = typewriterLength(runs);
+
+      expect(typewriterHtml(runs, 13, cursorClass, shared[index])).toBe(
+        `Sviluppatore <label>${cursor}</label>`
+      );
+      expect(typewriterHtml(runs, 14, cursorClass, shared[index])).toBe(
+        `Sviluppatore <label>${changingWord[0]}${cursor}</label>`
+      );
+      expect(typewriterHtml(runs, length - 1, cursorClass, shared[index])).toBe(
+        `Sviluppatore <label>${changingWord.slice(0, -1)}${cursor}</label>`
+      );
+      expect(typewriterHtml(runs, length, cursorClass, shared[index])).toBe(
+        `Sviluppatore <label>${changingWord}</label>${cursor}`
+      );
+    }
+  });
+
+  it('keeps the English cursor before the stationary labelled suffix', () => {
+    const shared = sharedTypewriterWords(englishRoles);
+
+    for (const [index, role] of englishRoles.entries()) {
+      const runs = parseTypewriterRuns(role);
+      const changingWord = index === 0 ? 'Full-stack' : 'Mobile';
+
+      expect(typewriterHtml(runs, 0, cursorClass, shared[index])).toBe(
+        `${cursor} <label>Developer</label>`
+      );
+      expect(typewriterHtml(runs, 1, cursorClass, shared[index])).toBe(
+        `${changingWord[0]}${cursor} <label>Developer</label>`
+      );
+      expect(
+        typewriterHtml(runs, changingWord.length, cursorClass, shared[index])
+      ).toBe(`${changingWord}${cursor} <label>Developer</label>`);
+      expect(
+        typewriterHtml(
+          runs,
+          changingWord.length + 1,
+          cursorClass,
+          shared[index]
+        )
+      ).toBe(`${changingWord} <label>${cursor}Developer</label>`);
+      expect(
+        typewriterHtml(runs, typewriterLength(runs), cursorClass, shared[index])
+      ).toBe(`${changingWord} <label>Developer</label>${cursor}`);
+    }
+  });
+
+  it('normalizes adjacent shared prefix segments across label boundaries', () => {
+    const roles = [
+      '****Senior**** Sviluppatore ****Full-stack****',
+      '****Senior**** Sviluppatore ****Mobile****',
+    ];
+    const shared = sharedTypewriterWords(roles);
+    const runs = parseTypewriterRuns(roles[0]);
+
+    for (const revealed of [0, 3, 6, 9, 19]) {
+      expect(typewriterHtml(runs, revealed, cursorClass, shared[0])).toBe(
+        `<label>Senior</label> Sviluppatore${cursor}`
+      );
+    }
+  });
+
+  it('renders one trailing cursor when the entire line is stationary', () => {
+    const roles = ['****Senior**** Developer', '****Senior**** Developer'];
+    const shared = sharedTypewriterWords(roles);
+    const runs = parseTypewriterRuns(roles[0]);
+    const length = typewriterLength(runs);
+
+    for (const revealed of [0, 3, 6, length - 1, length]) {
+      expect(typewriterHtml(runs, revealed, cursorClass, shared[0])).toBe(
+        `<label>Senior</label> Developer${cursor}`
+      );
+    }
+  });
+
+  it('preserves ordinary reveal boundaries without shared words', () => {
+    const runs = parseTypewriterRuns('Hi ****there****');
+
+    expect(typewriterHtml(runs, 0, cursorClass)).toBe(cursor);
+    expect(typewriterHtml(runs, 2, cursorClass)).toBe(`Hi${cursor}`);
+    expect(typewriterHtml(runs, 3, cursorClass)).toBe(
+      `Hi <label>${cursor}</label>`
+    );
+    expect(typewriterHtml(runs, 7, cursorClass)).toBe(
+      `Hi <label>ther${cursor}</label>`
+    );
+    expect(typewriterHtml(runs, typewriterLength(runs), cursorClass)).toBe(
+      `Hi <label>there</label>${cursor}`
+    );
+    expect(typewriterHtml([], 0, cursorClass)).toBe(cursor);
   });
 });

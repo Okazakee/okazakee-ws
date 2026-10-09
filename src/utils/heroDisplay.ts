@@ -145,19 +145,15 @@ export function typewriterStep(
   sharedPositions: number[]
 ): number {
   let next = position + direction;
-  while (
-    next >= 0 &&
-    next < length &&
-    sharedPositions.includes(next)
-  ) {
+  while (next >= 0 && next < length && sharedPositions.includes(next)) {
     next += direction;
   }
   return Math.max(0, Math.min(length, next));
 }
 
 /**
- * Markup for the revealed prefix plus shared words. The cursor stays at the
- * animation boundary instead of after always-visible text.
+ * Markup for the revealed prefix plus shared words. The cursor follows any
+ * stationary prefix, but stays before a stationary suffix.
  */
 export function typewriterHtml(
   runs: TypewriterRun[],
@@ -170,10 +166,13 @@ export function typewriterHtml(
   const cursor = cursorClass
     ? `<span class="${cursorClass}" aria-hidden="true"></span>`
     : '';
+  let sharedPrefixLength = 0;
+  while (sharedPositions.includes(sharedPrefixLength)) sharedPrefixLength += 1;
+  const cursorPosition = Math.max(revealed, sharedPrefixLength);
   for (const run of runs) {
     let content = '';
     for (const char of run.text) {
-      if (position === revealed) content += cursor;
+      if (position === cursorPosition) content += cursor;
       if (position < revealed || sharedPositions.includes(position)) {
         content += char;
       }
@@ -181,7 +180,7 @@ export function typewriterHtml(
     }
     if (content) html += run.labeled ? `<label>${content}</label>` : content;
   }
-  if (position === revealed) html += cursor;
+  if (position === cursorPosition) html += cursor;
   return html;
 }
 

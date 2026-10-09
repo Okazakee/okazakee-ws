@@ -49,6 +49,26 @@ async function advanceUntil(done: () => boolean, limitMs = 30_000) {
 /** The animated line: the roles it is not cycling through are hidden siblings. */
 const live = () => container.querySelector('p')?.textContent ?? '';
 
+/** Read visible text on either side of the cursor, including nested labels. */
+function cursorText() {
+  const line = container.querySelector('p');
+  const cursor = line?.querySelector('.typewriter-cursor');
+  expect(line).not.toBeNull();
+  expect(cursor).not.toBeNull();
+  const before = document.createRange();
+  before.selectNodeContents(line!);
+  before.setEndBefore(cursor!);
+  const after = document.createRange();
+  after.selectNodeContents(line!);
+  after.setStartAfter(cursor!);
+  return { before: before.toString(), after: after.toString() };
+}
+
+const labels = () =>
+  [...container.querySelectorAll('p:first-child label')]
+    .map((label) => label.textContent)
+    .filter(Boolean);
+
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
   vi.useFakeTimers();
@@ -121,26 +141,163 @@ describe('RoleTypewriter', () => {
     expect(container.innerHTML).not.toContain('typewriter-cursor');
     expect(vi.getTimerCount()).toBe(0);
   });
-  it('keeps words shared by roles visible while typing only unique words', async () => {
+  it('keeps the English shared suffix after the cursor through erasure and typing', async () => {
     setReducedMotion(false);
+    const slot = 5;
     await render(
       createElement(RoleTypewriter, {
-        roles: ['Fullstack Developer', 'Mobile Developer'],
-        slot: 5,
+        roles: ['Full-stack ****Developer****', 'Mobile ****Developer****'],
+        slot,
       })
     );
 
-    await advance(typewriterStartMs);
-    expect(live()).toBe('F Developer');
-    const currentMarkup = container.querySelector('p')?.innerHTML ?? '';
-    expect(currentMarkup.indexOf('typewriter-cursor')).toBeLessThan(
-      currentMarkup.indexOf('Developer')
+    const expectBoundary = (changing: string) => {
+      const text = cursorText();
+      expect(text.before).toBe(changing);
+      expect(text.after.trimStart()).toBe('Developer');
+      expect(labels()).toEqual(['Developer']);
+    };
+    expect(live()).toBe(' Developer');
+    expectBoundary('');
+    expect(await advanceUntil(() => live() === 'F Developer')).toBeGreaterThan(
+      0
     );
+    expectBoundary('F');
+    expect(
+      await advanceUntil(() => live() === 'Full-stack Developer')
+    ).toBeGreaterThan(0);
+    expect(labels()).toEqual(['Developer']);
 
     expect(
-      await advanceUntil(() => live() === 'Fullstack Developer')
+      await advanceUntil(() => {
+        const phase = typewriterPhases.get(slot);
+        return phase?.index === 0 && phase.erasing && phase.typed === 0;
+      })
     ).toBeGreaterThan(0);
-    expect(await advanceUntil(() => live() === 'Mobile Developer')).toBeGreaterThan(0);
+    expect(live()).toBe(' Developer');
+    expectBoundary('');
+    expect(
+      await advanceUntil(() => {
+        const phase = typewriterPhases.get(slot);
+        return phase?.index === 1 && !phase.erasing && phase.typed === 0;
+      })
+    ).toBeGreaterThan(0);
+    expect(live()).toBe(' Developer');
+    expectBoundary('');
+    expect(await advanceUntil(() => live() === 'Mo Developer')).toBeGreaterThan(
+      0
+    );
+    expectBoundary('Mo');
+    expect(
+      await advanceUntil(() => live() === 'Mobile Developer')
+    ).toBeGreaterThan(0);
+    expect(labels()).toEqual(['Developer']);
+  });
+
+  it('keeps the Italian shared prefix before the cursor throughout both role transitions', async () => {
+    setReducedMotion(false);
+    const slot = 6;
+    await render(
+      createElement(RoleTypewriter, {
+        roles: [
+          'Sviluppatore ****Full-stack****',
+          'Sviluppatore ****Mobile****',
+        ],
+        slot,
+      })
+    );
+
+    const expectBoundary = (changing: string) => {
+      const text = cursorText();
+      expect(text.before.trimEnd()).toBe(
+        changing ? `Sviluppatore ${changing}` : 'Sviluppatore'
+      );
+      expect(text.after).toBe('');
+      expect(labels()).toEqual(changing ? [changing] : []);
+    };
+    const until = async (done: () => boolean) => {
+      expect(
+        await advanceUntil(() => {
+          expect(live().startsWith('Sviluppatore')).toBe(true);
+          return done();
+        })
+      ).toBeGreaterThan(0);
+    };
+    const atBoundary = (index: number, erasing: boolean) => {
+      const phase = typewriterPhases.get(slot);
+      return (
+        phase?.index === index && phase.erasing === erasing && phase.typed === 0
+      );
+    };
+
+    expect(live().trimEnd()).toBe('Sviluppatore');
+    expectBoundary('');
+    await until(() => live() === 'Sviluppatore F');
+    expectBoundary('F');
+    await until(() => live() === 'Sviluppatore Full-stack');
+    expect(labels()).toEqual(['Full-stack']);
+    expect(container.querySelector('p .typewriter-cursor')).toBeNull();
+
+    await until(() => atBoundary(0, true));
+    expectBoundary('');
+    await until(() => atBoundary(1, false));
+    expectBoundary('');
+    await until(() => live() === 'Sviluppatore Mo');
+    expectBoundary('Mo');
+    await until(() => live() === 'Sviluppatore Mobile');
+    expect(labels()).toEqual(['Mobile']);
+    expect(container.querySelector('p .typewriter-cursor')).toBeNull();
+
+    await until(() => atBoundary(1, true));
+    expectBoundary('');
+    await until(() => atBoundary(0, false));
+    expectBoundary('');
+    await until(() => live() === 'Sviluppatore Fu');
+    expectBoundary('Fu');
+    await until(() => live() === 'Sviluppatore Full-stack');
+    expect(labels()).toEqual(['Full-stack']);
+  });
+
+  it('resumes a locale remount inside the Italian shared prefix without moving the cursor before it', async () => {
+    setReducedMotion(false);
+    const slot = 7;
+    await render(
+      createElement(RoleTypewriter, {
+        key: 'en',
+        roles: ['Full-stack ****Developer****', 'Mobile ****Developer****'],
+        slot,
+      })
+    );
+    expect(
+      await advanceUntil(() => live() === 'Full- Developer')
+    ).toBeGreaterThan(0);
+    const saved = { ...typewriterPhases.get(slot)! };
+    expect(saved.typed).toBeGreaterThan(0);
+    expect(saved.typed).toBeLessThan('Sviluppatore'.length);
+
+    await render(
+      createElement(RoleTypewriter, {
+        key: 'it',
+        roles: [
+          'Sviluppatore ****Full-stack****',
+          'Sviluppatore ****Mobile****',
+        ],
+        slot,
+      })
+    );
+    expect(typewriterPhases.get(slot)).toEqual(saved);
+    expect(live().trimEnd()).toBe('Sviluppatore');
+    expect(cursorText()).toEqual({ before: 'Sviluppatore', after: '' });
+    expect(labels()).toEqual([]);
+
+    expect(
+      await advanceUntil(() => {
+        expect(live().startsWith('Sviluppatore')).toBe(true);
+        return live() === 'Sviluppatore F';
+      })
+    ).toBeGreaterThan(0);
+    expect(cursorText()).toEqual({ before: 'Sviluppatore F', after: '' });
+    expect(labels()).toEqual(['F']);
   });
 
   it('types, holds four seconds, backspaces away and types the next role', async () => {
