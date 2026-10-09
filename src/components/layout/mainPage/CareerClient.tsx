@@ -88,7 +88,7 @@ export function CareerClient({
     <>
       {formatMonthYear(entry.startDate)} -{' '}
       {entry.endDate ? formatMonthYear(entry.endDate) : t('present')}{' '}
-      <span className="text-accent-violet">{separator}</span>{' '}
+      <span>{separator}</span>{' '}
       {duration(entry.startDate, entry.endDate)}
     </>
   );

@@ -440,7 +440,8 @@ horizontal scroll under `prefers-reduced-motion`).
 - Date pill sits at the **card's top-right**, in the header row next to the logo/company;
   older roles keep an inline pill on their own row.
 - Active role wears a `status-active` pip inside the pill.
-- The `//` separators in date pills and location/remote metadata use `accent-violet`.
+- The `//` in date pills keeps the pill's muted text color; separators in
+  location/remote metadata use `accent-violet`.
 - The line is drawn **dot-to-dot** per entry (`top-[13px]`, `-bottom-[61px]`, last entry
   none) so it starts at the first dot centre and ends at the last, and shares the dots' x
   axis — the old full-height border overshot 13px above and 261px below.
