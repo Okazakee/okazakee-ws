@@ -4,7 +4,6 @@ import localFont from 'next/font/local';
 import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
-import { Suspense } from 'react';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
 import { LocaleScrollRestore } from '@/components/layout/LocaleScrollRestore';
@@ -98,9 +97,7 @@ export default async function RootLayout({
         className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased scroll-smooth`}
       >
         <Providers locale={locale}>
-          <Suspense>
-            <LocaleShell params={params}>{children}</LocaleShell>
-          </Suspense>
+          <LocaleShell params={params}>{children}</LocaleShell>
           {/* Vercel-only analytics endpoint: skip it off-platform so local dev
               does not request a script that only exists on Vercel. */}
           {process.env.VERCEL && <SpeedInsights />}

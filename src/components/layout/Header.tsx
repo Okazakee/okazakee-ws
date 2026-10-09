@@ -2,6 +2,7 @@ import logo from '@public/title-ws.png';
 import logoLight from '@public/title-ws-lightmode.png';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import NavMenu from './NavMenu';
 
 /**
@@ -55,7 +56,13 @@ export default function Header({
             width={lightLogo ? 256 : 136}
           />
         </Link>
-        <NavMenu locale={locale} resumeLink={resumeLink} />
+        {/* NavMenu reads search params (locale toggle preserves the query),
+            so it owns a tight Suspense boundary: the header shell, hero and
+            sections render directly instead of hiding inside one shell-wide
+            postponed copy that would duplicate every id on the page. */}
+        <Suspense fallback={null}>
+          <NavMenu locale={locale} resumeLink={resumeLink} />
+        </Suspense>
       </div>
     </header>
   );
