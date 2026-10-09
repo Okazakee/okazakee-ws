@@ -19,11 +19,11 @@
  * The generator is pure, so its numbers are covered by `layers.test.ts`
  * without a DOM.
  */
-/** The two ported presets. */
-export type GlitchPreset = 'hover' | 'click';
+/** The hover, click and slightly stronger back-to-top presets. */
+export type GlitchPreset = 'hover' | 'click' | 'backToTop';
 
-/** What a host plays: one preset, or both (hover on enter, click on click). */
-export type GlitchMode = GlitchPreset | 'both';
+/** What a host plays: one trigger, or both (hover on enter, click on click). */
+export type GlitchMode = 'hover' | 'click' | 'both';
 
 export type GlitchLayer = {
   steps: Keyframe[];
@@ -265,6 +265,20 @@ export const glitchPresets: Record<GlitchPreset, GlitchOptions> = {
       minHeight: 0.12,
       maxHeight: 0.3,
       hueRange: 90,
+      cssFilters: '',
+    },
+  },
+  backToTop: {
+    timing: { duration: 150, iterations: 1 },
+    glitchTimeSpan: { start: 0, end: 1 },
+    shake: { velocity: 35, amplitudeX: 0.012, amplitudeY: 0.045 },
+    slice: {
+      count: 4,
+      velocity: 35,
+      shift: 0,
+      minHeight: 0.15,
+      maxHeight: 0.36,
+      hueRange: 120,
       cssFilters: '',
     },
   },

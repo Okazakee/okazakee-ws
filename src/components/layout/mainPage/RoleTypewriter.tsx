@@ -19,13 +19,12 @@ import { typewriterPhases } from './heroAnimationState';
 const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
 
 interface RoleTypewriterProps {
-  /**
-   * The roles this line carries. A single role types once and settles; several
-   * cycle — type, hold, backspace away, type the next.
-   */
+  /** The roles this line carries. */
   roles: string[];
   /** Key of this line in the hero role list; keys the resumable phase. */
   slot: number;
+  /** Whether multiple roles keep cycling after the first reveal. */
+  idleAnimationEnabled?: boolean;
   as?: 'p' | 'span' | 'div';
   className?: string;
 }
@@ -51,10 +50,11 @@ type Phase = 'typing' | 'erasing';
 export function RoleTypewriter({
   roles,
   slot,
+  idleAnimationEnabled = true,
   as = 'p',
   className,
 }: RoleTypewriterProps) {
-  const cycles = roles.length > 1;
+  const cycles = idleAnimationEnabled && roles.length > 1;
   const lines = useMemo(
     () =>
       roles.map((role) => {
@@ -205,7 +205,7 @@ export function RoleTypewriter({
             : ''
         }
       />
-      {cycles &&
+      {roles.length > 1 &&
         lines
           .slice(1)
           .map((rest, offset) => (

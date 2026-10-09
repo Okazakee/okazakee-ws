@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useRef } from 'react';
 import type { GlitchMode, GlitchPreset } from '@/libs/glitch/layers';
 import { type GlitchTrigger, useGlitch } from '@/libs/glitch/useGlitch';
@@ -23,6 +23,7 @@ interface GlitchProps {
    */
   hoverPreset?: GlitchPreset;
   mode: GlitchMode;
+  style?: CSSProperties;
   trigger?: GlitchTrigger;
 }
 
@@ -31,17 +32,13 @@ interface GlitchProps {
  * react-powerglitch (MIT, github.com/7PH/react-powerglitch) — over the element
  * it wraps, then stops.
  *
- * `mode` picks the triggers, and the two presets are the same speed and size —
- * fast and small on purpose, since this sits on content a reader is using.
- * The canon is the tear: four slice layers, each a 2–10% band torn sideways by
- * up to 12%, a 4% shake and the intensity ramped in and out, all over a 150 ms
- * loop. The other is the flicker, a different effect rather than a louder one:
- * three broad bands (12–30%) that stay in place and rotate their hue within
- * ±90° while the element takes a short vertical nudge, same 150 ms. **Hover**
- * plays the tear unless the surface asks for `hoverPreset="click"` (the cards
- * and contact tiles do, because a sideways tear reads as a broken layout at
- * their size); a **click** always plays the flicker; `both` wires both and
- * cancels hover on leave. Every mode is one shot.
+ * `mode` picks the triggers. The standard hover and click presets share a
+ * 150 ms duration: the canon tear uses four 2–10% bands torn sideways by up to
+ * 12%, with 4% shake; the flicker uses three 12–30% bands with ±90° hue and a
+ * short vertical nudge. The back-to-top has a slightly stronger four-band
+ * flicker preset. **Hover** plays the tear unless the surface selects another
+ * `hoverPreset`; a **click** always plays the click preset; `both` wires both
+ * and cancels hover on leave. Every mode is one shot.
  *
  * The wrapped element keeps its own styles: the burst plays on clones the hook
  * stacks inside this container's grid cell (`globals.css`), so the box itself
@@ -61,6 +58,7 @@ export function Glitch({
   className = '',
   hoverPreset = 'hover',
   mode,
+  style,
   trigger = 'self',
 }: GlitchProps) {
   const containerRef = useRef<HTMLSpanElement>(null);
@@ -68,7 +66,7 @@ export function Glitch({
   useGlitch(containerRef, { active, hoverPreset, mode, trigger });
 
   return (
-    <span className={`glitch ${className}`.trim()} ref={containerRef}>
+    <span className={`glitch ${className}`.trim()} ref={containerRef} style={style}>
       {children}
     </span>
   );

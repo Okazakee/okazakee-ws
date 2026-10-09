@@ -51,22 +51,24 @@ export default function ScrollTop() {
 
   return (
     showLink && (
-      <button
-        type="button"
-        className="fixed right-4 z-40 flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-text-main p-3 font-mono text-xs uppercase tracking-[0.08em] text-surface-base shadow-lg transition-colors duration-300 hover:bg-accent-violet hover:text-text-on-accent md:right-8 md:px-4 md:py-2"
+      <Glitch
+        className="fixed right-4 z-40 md:right-8"
+        hoverPreset="backToTop"
+        mode="both"
         style={{
           bottom: `${buttonOffset}px`,
           opacity: opacity,
         }}
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
-        <Glitch hoverPreset="click" mode="both">
-          <span className="flex items-center justify-center gap-2">
-            <span className="hidden md:inline">{t('right')}</span>
-            <ArrowUpToLine className="h-4 w-4" />
-          </span>
-        </Glitch>
-      </button>
+        <button
+          type="button"
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-text-main p-3 font-mono text-xs uppercase tracking-[0.08em] text-surface-base shadow-lg transition-colors duration-300 hover:bg-accent-violet hover:text-text-on-accent md:px-4 md:py-2"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <span className="hidden md:inline">{t('right')}</span>
+          <ArrowUpToLine className="h-4 w-4" />
+        </button>
+      </Glitch>
     )
   );
 }

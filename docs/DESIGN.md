@@ -280,18 +280,14 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   The **skills tiles** use the canon tear on hover: four slice layers, each a
   2–10% band of the element torn sideways by up to 12%, a 4% shake, and the
   intensity ramped in and out across the loop (`glitchTimeSpan` 0.1 → 0.9),
-  cancelling where it started when the pointer leaves. The **contact tiles**, the
-  **archive card**, and the **back-to-top button** flicker on hover instead
-  (`hoverPreset="click"`): three broad bands standing still and rotating their
-  hue within ±90° while the element takes a short vertical nudge. The button
-  uses the broader bands to make its small surface easier to notice.
-  The flicker's window is the whole loop, so every step glitches instead of
-  easing in. Both presets run a **150 ms** loop with six steps (35 per second);
-  the broader button flicker stays within the same travel caps. Travels are
-  element's own box, so they are clamped in px before the layers are generated
-  (`clampGlitchToBox`: 36 px of travel, 12 / 6 px of shake): whatever preset a
-  surface ends up running, a wide box can never tear or shudder harder than the
-  tile the recipe was tuned on.
+  cancelling where it started when the pointer leaves. The **contact tiles**
+  and the **archive card** flicker on hover instead (`hoverPreset="click"`):
+  three broad bands (12–30%) rotate hue within ±90° as the element takes a
+  short vertical nudge. The **back-to-top button** uses its own stronger
+  `backToTop` hover preset across the whole button: four broader bands (15–36%),
+  hue within ±120° and a slightly larger vertical nudge. Both flicker presets
+  run a **150 ms** loop with six steps (35 per second); travel stays within the
+  same pixel caps (`clampGlitchToBox`: 36 px horizontal, 12 / 6 px shake).
   The burst is a WAAPI animation per layer, generated from `libs/glitch/layers.ts`:
   one base layer that shakes the glitched element and one clone per slice layer
   that clips a band of it, shifts it sideways by up to the preset's travel and
@@ -331,10 +327,10 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - **Hero roles** are the ordered `hero-section.top.roles` list, represented as
   an array or numeric index map. The dev cutover migrates the old singular
   role; no runtime fallback remains. Blank entries are ignored.
-- **Hero typewriter** is automatic: one nonblank role types once, removes its
-  cursor and stops. Multiple roles cycle in their saved order: type, hold,
-  erase, then type the next. Pacing uses the existing seeded human-keystroke
-  rhythm. There are no stored animation switches or role-target fields.
+- **Hero typewriter** is controlled by `roleTypewriterIdleAnimationEnabled` in
+  `Hero.tsx`, currently `false`: roles type out once and the cursor disappears;
+  setting it `true` resumes the saved-order type/hold/erase cycle for multiple
+  roles. Pacing uses the existing seeded human-keystroke rhythm.
   It is a leaf client component
   (`RoleTypewriter`), so the rest of the hero stays a server component. The line
   is always painted complete first, so server output, hydration and
@@ -445,6 +441,7 @@ horizontal scroll under `prefers-reduced-motion`).
 - Date pill sits at the **card's top-right**, in the header row next to the logo/company;
   older roles keep an inline pill on their own row.
 - Active role wears a `status-active` pip inside the pill.
+- The `//` separators in date pills and location/remote metadata use `accent-violet`.
 - The line is drawn **dot-to-dot** per entry (`top-[13px]`, `-bottom-[61px]`, last entry
   none) so it starts at the first dot centre and ends at the last, and shares the dots' x
   axis — the old full-height border overshot 13px above and 261px below.

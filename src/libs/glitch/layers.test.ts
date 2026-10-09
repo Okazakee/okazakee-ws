@@ -26,7 +26,7 @@ function shakeOf(preset: GlitchOptions) {
 
 describe('generateGlitchLayers', () => {
   it('plays one shake layer first, then one layer per slice', () => {
-    for (const preset of [glitchPresets.hover, glitchPresets.click]) {
+    for (const preset of Object.values(glitchPresets)) {
       const layers = generateGlitchLayers(preset);
       expect(layers).toHaveLength(preset.slice.count + 1);
       // The base layer is the only one that shakes; slices stay on one axis.
@@ -44,6 +44,20 @@ describe('generateGlitchLayers', () => {
             )
           )
       ).toBe(true);
+    }
+  });
+  it('makes the back-to-top flicker stronger than the standard click preset', () => {
+    const preset = glitchPresets.backToTop;
+    const click = glitchPresets.click;
+
+    expect(preset.slice.count).toBeGreaterThan(click.slice.count);
+    expect(preset.slice.maxHeight).toBeGreaterThan(click.slice.maxHeight);
+    expect(preset.slice.hueRange).toBe(120);
+    expect(click.slice.hueRange).toBe(90);
+    expect(preset.shake).not.toBe(false);
+    expect(click.shake).not.toBe(false);
+    if (preset.shake && click.shake) {
+      expect(preset.shake.amplitudeY).toBeGreaterThan(click.shake.amplitudeY);
     }
   });
 
@@ -132,7 +146,7 @@ describe('generateGlitchLayers', () => {
   });
 
   it('keeps every slice inside its preset travel', () => {
-    for (const preset of [glitchPresets.hover, glitchPresets.click]) {
+    for (const preset of Object.values(glitchPresets)) {
       const layers = generateGlitchLayers(preset).slice(1);
       expect(layers.length).toBeGreaterThan(0);
 

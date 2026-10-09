@@ -84,10 +84,14 @@ export function CareerClient({
     return `${years} ${t(years === 1 ? 'year' : 'years')}`;
   };
 
-  const dates = (entry: CareerEntry) =>
-    `${formatMonthYear(entry.startDate)} - ${
-      entry.endDate ? formatMonthYear(entry.endDate) : t('present')
-    } ${separator} ${duration(entry.startDate, entry.endDate)}`;
+  const dates = (entry: CareerEntry) => (
+    <>
+      {formatMonthYear(entry.startDate)} -{' '}
+      {entry.endDate ? formatMonthYear(entry.endDate) : t('present')}{' '}
+      <span className="text-accent-violet">{separator}</span>{' '}
+      {duration(entry.startDate, entry.endDate)}
+    </>
+  );
 
   const pill = (entry: CareerEntry) => (
     <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle bg-surface-raised px-2.5 py-1 font-mono text-xs text-text-muted">
@@ -127,7 +131,8 @@ export function CareerClient({
 
       {nested && (
         <p className="mb-4 w-fit text-xs text-text-dim">
-          {entry[`location_${locale}`]} {separator}{' '}
+          {entry[`location_${locale}`]}{' '}
+          <span className="text-accent-violet">{separator}</span>{' '}
           {t(`remote.${entry.remote}`)}
         </p>
       )}
@@ -221,7 +226,8 @@ export function CareerClient({
                         </a>
                       </Glitch>
                       <p className="mt-1 w-fit text-xs text-text-dim">
-                        {latest[`location_${locale}`]} {separator}{' '}
+                        {latest[`location_${locale}`]}{' '}
+                        <span className="text-accent-violet">{separator}</span>{' '}
                         {t(`remote.${latest.remote}`)}
                       </p>
                     </div>

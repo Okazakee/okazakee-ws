@@ -148,6 +148,27 @@ describe('RoleTypewriter', () => {
     ).toBeGreaterThan(0);
     expect(await advanceUntil(() => live() === 'Mobile Developer')).toBeGreaterThan(0);
   });
+  it('types the first role once when idle cycling is disabled', async () => {
+    setReducedMotion(false);
+    await render(
+      createElement(RoleTypewriter, {
+        idleAnimationEnabled: false,
+        roles: ['Fullstack Developer', 'Mobile Developer'],
+        slot: 6,
+      })
+    );
+
+    expect(
+      await advanceUntil(() => live() === 'Fullstack Developer')
+    ).toBeGreaterThan(0);
+    expect(container.querySelector('p')?.innerHTML).not.toContain(
+      'typewriter-cursor'
+    );
+    expect(
+      [...container.querySelectorAll('p')].map((element) => element.textContent)
+    ).toEqual(['Fullstack Developer', 'Mobile Developer']);
+    expect(vi.getTimerCount()).toBe(0);
+  });
 
   it('types, holds four seconds, backspaces away and types the next role', async () => {
     setReducedMotion(false);
