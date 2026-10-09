@@ -73,6 +73,8 @@ export function CareerClient({
   const t = useTranslations('career-section');
   const groups = groupByCompany(careerEntries);
 
+  // Current positions fall back to the current date, which is dynamic at
+  // prerender time: keep every <Career> usage inside a Suspense boundary.
   const duration = (startDate: string, endDate: string | null) => {
     const months = diffMonths(endDate ?? new Date(), startDate);
 

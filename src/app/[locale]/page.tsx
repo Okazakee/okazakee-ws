@@ -3,6 +3,7 @@ import Contacts from '@layout/mainPage/Contacts';
 import Hero from '@layout/mainPage/Hero';
 import PostsSection from '@layout/mainPage/PostsSections';
 import Skills from '@layout/mainPage/Skills';
+import { Suspense } from 'react';
 import { JsonLd } from '@/components/common/JsonLd';
 import { getContacts } from '@/utils/getData';
 import {
@@ -90,7 +91,12 @@ export default async function Home({
 
       <Skills locale={locale} />
 
-      <Career locale={locale} />
+      {/* Current positions render durations against the current date, which
+          is dynamic at prerender time and needs its own boundary now that
+          the shell no longer suspends as a whole (see Header/NavMenu). */}
+      <Suspense fallback={null}>
+        <Career locale={locale} />
+      </Suspense>
 
       <PostsSection locale={locale} />
 

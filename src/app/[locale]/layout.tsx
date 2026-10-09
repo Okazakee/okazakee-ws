@@ -4,6 +4,7 @@ import localFont from 'next/font/local';
 import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
+import { Suspense } from 'react';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
 import { LocaleScrollRestore } from '@/components/layout/LocaleScrollRestore';
@@ -43,7 +44,11 @@ async function LocaleShell({
 
   return (
     <NextIntlClientProvider locale={locale}>
-      <LocaleScrollRestore />
+      {/* Reads the pathname: needs its own boundary now that the shell no
+          longer suspends as a whole (see Header/NavMenu). */}
+      <Suspense fallback={null}>
+        <LocaleScrollRestore />
+      </Suspense>
       <Header
         locale={locale}
         logoDarkUrl={settings?.header_logo_dark ?? null}
