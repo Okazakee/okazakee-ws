@@ -1,0 +1,65 @@
+{
+  "title": "Send me a request",
+  "subtitle": "Three quick steps: who you are, what you are building, and the details.",
+  "steps": ["Contact", "Project", "Details"],
+  "progress": "Progress",
+  "back": "Back",
+  "next": "Next",
+  "submit": "Send request",
+  "sending": "Sending…",
+  "comingSoon": "Coming soon",
+  "name": "Name",
+  "namePlaceholder": "Your name",
+  "email": "Email",
+  "emailPlaceholder": "you@company.com",
+  "company": "Company",
+  "companyPlaceholder": "Company or organisation",
+  "website": "Website",
+  "websitePlaceholder": "https://example.com",
+  "type": "Project type",
+  "budget": "Budget",
+  "timeline": "Timeline",
+  "request": "Project details",
+  "requestPlaceholder": "What are you building? Goals, scope, links…",
+  "consent": "I agree to the processing of my data as described in the",
+  "optionLabels": {
+    "type": {
+      "Website": "Website",
+      "Web app": "Web app",
+      "Mobile app": "Mobile app",
+      "Other": "Other"
+    },
+    "budget": {
+      "< €1k": "< €1k",
+      "€1–5k": "€1–5k",
+      "€5–15k": "€5–15k",
+      "€15k+": "€15k+"
+    },
+    "timeline": {
+      "ASAP": "ASAP",
+      "1–2 months": "1–2 months",
+      "3–6 months": "3–6 months",
+      "Flexible": "Flexible"
+    }
+  },
+  "successTitle": "Request received",
+  "successBody": "Thanks — your request is in my inbox and I will reply to the email you gave me.",
+  "sendAnother": "Send another request",
+  "errors": {
+    "name": "Add your name.",
+    "email": "Add a valid email address.",
+    "company": "This value is too long.",
+    "website": "Use a full http(s) address, or leave the field empty.",
+    "type": "Pick a project type.",
+    "budget": "Pick a budget range.",
+    "timeline": "Pick a timeline.",
+    "request": "Describe the project, up to 4000 characters.",
+    "consent": "Please accept the privacy policy to continue.",
+    "generic": "The request could not be sent. Please try again.",
+    "rateLimited": "Too many requests from your connection. Please try again later.",
+    "disabled": "Requests are not open right now. Please get in touch by email.",
+    "bodyTooLarge": "The message is too long to send. Please shorten it.",
+    "storageUnavailable": "The request could not be stored. Please try again in a moment.",
+    "network": "No connection to the server. Please try again."
+  }
+}

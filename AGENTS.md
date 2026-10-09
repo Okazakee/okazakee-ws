@@ -8,7 +8,9 @@ Next.js 16 personal portfolio and blog. TypeScript throughout, React 19, Supabas
 > credentials. The public cache vocabulary lives in
 > `src/libs/content/cacheTags.ts`; the CMS sends signed content-change events
 > to `/api/internal/content-revalidate`, which validates them (HMAC, replay
-> window, hard-coded tag allowlist) and calls `revalidateTag(tag, 'max')`.
+> window, hard-coded tag allowlist) and calls `revalidateTag(tag, { expire: 0 })`
+> — immediate expiry, so a committed CMS edit can never keep being served the
+> previous render.
 > Legacy `/{locale}/cms*` URLs redirect to the CMS via
 > `LEGACY_CMS_REDIRECT_HOST` in `src/proxy.ts`.
 
@@ -35,10 +37,10 @@ src/
   config/                           # Env + runtime config (public, shared)
   hooks/                            # Client hooks (useZoom)
   i18n/                             # next-intl config (routing, request) + public messages
-  libs/content/                     # Public cache-tag vocabulary + revalidation contract
+  libs/                           # Shared libs (requests intake, search, throttle, content contract)
   store/                            # Zustand stores (themeStore)
   types/                            # Shared domain types (fetchedData.types)
-  utils/                            # Utilities (getData, tokenBucket, formatDate, Supabase stateless client)
+  utils/                            # Utilities (getData, debounce, formatDate, Supabase stateless client)
   proxy.ts                          # Proxy handler for Vercel deployment (not app code)
 ```
 
@@ -187,13 +189,18 @@ export async function getPosts(): Promise<BlogPost[] | null> {
 | `@config/*` | `./*config.ts` | no — **dead**, resolves to the repo root; config lives in `src/config/`, import via `@/config/*` |
 | `@blog/*` `@portfolio/*` `@fonts/*` `@styles/*` | `./src/blog/*` etc. | no — no matching directories exist |
 
-- **Supabase clients:** The public site is read-only and every client is
-  stateless, built from `publicConfig` with the publishable key
-  (`@supabase/supabase-js`). There are three module-level instances — the read
-  layer (`src/utils/getData.ts`) and the two view-counter server actions
+- **Supabase clients:** the public site is read-only for CONTENT, and every
+  read client is stateless, built from `publicConfig` with the publishable
+  key (`@supabase/supabase-js`). There are three module-level instances — the
+  read layer (`src/utils/getData.ts`) and the two view-counter server actions
   (`src/app/actions/getCurrentViews.ts`, `src/app/actions/incrementViews.ts`).
-  There is no server/client/admin Supabase client in this repo — the CMS owns
-  all writes. Never add elevated keys here.
+  The single exception is the **project-request intake**
+  (`src/libs/requests/store.ts` via `src/config/requests.ts`): it holds a
+  server-only secret key because `project_requests` has no anon/authenticated
+  grant — it holds a visitor's name, email and free text, so the public form
+  is the only writer that can accept an anonymous submission. That key is
+  server-only (never `NEXT_PUBLIC_`, never in a client import graph) and the
+  CMS still owns every content write.
 - **Never use relative imports** for anything outside the immediate sibling directory. Always use `@/` aliases.
 
 ```typescript
@@ -270,41 +277,11 @@ conventions for file placement, naming, and structure.
 
 ### 13.1 Branch and PR workflow (mandatory)
 
-`master` is the integration branch and must stay releasable. Every change —
-feature, fix, refactor, docs, dependency bump — is made on a dedicated branch
-and merged through a pull request.
+`staging` is the only branch for new edits. Do not create, switch to, or
+commit on any other branch. Every change is committed and pushed to `staging`.
 
-**Two owner gates.** Nothing opens or merges on the agent's own initiative:
-the PR is opened only after the owner confirms the branch is complete, and
-the merge follows review. Pushing a branch is not permission to open a PR,
-and being asked to make a change is not permission to open one either.
-
-1. Branch from the latest `master` (or `beta` when the change belongs to the
-   beta line): `<type>/<short-slug>`, e.g. `fix/view-counter-reset`,
-   `feat/cms-revalidation`.
-2. Commit only on that branch. `master` and `beta` never receive direct
-   commits.
-3. Push the branch when the work is ready — and stop there.
-4. Open the PR against `master` (or `beta`) with `gh pr create` only after the
-   owner confirms the branch is done. The body describes the change, the
-   affected contract, and the checks run.
-5. CI (`.github/workflows/ci.yml`) must be green before merge.
-6. Merge with a merge commit (`gh pr merge --merge`); never squash or rebase,
-   never force-push `master`/`beta`.
-7. Delete the merged branch.
-
-**Exception — you ask for it.** A direct commit/push to `master`/`beta` is
-allowed only when you explicitly ask for one in the session (for example
-"push this to master"). That request is the authorization; the agent never
-decides on its own that a direct push is warranted. When it happens:
-
-- keep the diff to the minimum that resolves the issue, with a commit
-  message that states why it went straight to the branch;
-- no force-push, history rewrite, or unrelated cleanup in the same commit;
-- open a follow-up PR (or review) if the result is not trivially verifiable.
-
-Without that explicit request, work goes through a branch and a PR, however
-urgent it feels.
+Changes may be committed and pushed to `staging` when ready. Do not open a PR,
+merge, or delete branches unless the owner explicitly requests it.
 
 ### 13.2 Commit and merge conventions
 
@@ -347,7 +324,7 @@ urgent it feels.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

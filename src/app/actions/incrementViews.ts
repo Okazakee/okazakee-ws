@@ -6,7 +6,8 @@ import { publicConfig } from '@/config/public';
 
 const supabase = createClient(
   publicConfig.supabaseUrl,
-  publicConfig.supabasePublishableKey
+  publicConfig.supabasePublishableKey,
+  { db: { schema: publicConfig.supabaseSchema } }
 );
 
 export async function incrementViews(

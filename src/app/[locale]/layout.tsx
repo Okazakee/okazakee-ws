@@ -5,16 +5,15 @@ import { notFound } from 'next/navigation';
 import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
 import { Suspense } from 'react';
-import { publicConfig } from '@/config/public';
 import Footer from '@/components/layout/Footer';
 import Header from '@/components/layout/Header';
+import { LocaleScrollRestore } from '@/components/layout/LocaleScrollRestore';
 import ScrollTop from '@/components/layout/ScrollTop';
+import { publicConfig } from '@/config/public';
 import { isValidLocale, locales } from '@/i18n/routing';
 import type { ResumeData } from '@/types/fetchedData.types';
-import { getResumeLink, getTranslationsSupabase } from '@/utils/getData';
+import { getResumeLink, getSiteSettings } from '@/utils/getData';
 import { Providers } from '../providers';
-
-const umamiEnabled = process.env.UMAMI_ENABLED === 'true';
 
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',
@@ -34,19 +33,33 @@ async function LocaleShell({
   children: React.ReactNode;
 }) {
   const { locale } = await params;
-  const messages = await getTranslationsSupabase(locale);
 
   const resumeData = (await getResumeLink()) as ResumeData;
   const resumeLink = resumeData
     ? resumeData[`resume_${locale}` as keyof ResumeData]
     : null;
 
+  // Header images and VAT are CMS-owned; footer identity stays local.
+  const settings = await getSiteSettings();
+
   return (
-    <NextIntlClientProvider messages={messages} locale={locale}>
-      <Header locale={locale} resumeLink={resumeLink} />
-      <div className="flex min-w-0 flex-1 flex-col [&>*]:min-w-0 [&>*]:w-full">{children}</div>
+    <NextIntlClientProvider locale={locale}>
+      {/* Reads the pathname: needs its own boundary now that the shell no
+          longer suspends as a whole (see Header/NavMenu). */}
+      <Suspense fallback={null}>
+        <LocaleScrollRestore />
+      </Suspense>
+      <Header
+        locale={locale}
+        logoDarkUrl={settings?.header_logo_dark ?? null}
+        logoLightUrl={settings?.header_logo_light ?? null}
+        resumeLink={resumeLink}
+      />
+      <div className="flex min-w-0 flex-1 flex-col [&>*]:min-w-0 [&>*]:w-full">
+        {children}
+      </div>
       <ScrollTop />
-      <Footer locale={locale} />
+      <Footer locale={locale} vatNumber={settings?.footer_vat_number ?? null} />
     </NextIntlClientProvider>
   );
 }
@@ -81,28 +94,25 @@ export default async function RootLayout({
             <link rel="dns-prefetch" href={`https://${supabasePreconnect}`} />
           </>
         )}
-        <link rel="preconnect" href="https://umami.okazakee.dev" />
-        {/* Blocking theme script — runs before paint to avoid flash */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=localStorage.getItem('themeMode');var isDark=m==='dark'||(m!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',isDark);}catch(e){}})();`,
-          }}
-        />
+        {publicConfig.umamiEnabled && (
+          <link rel="preconnect" href="https://umami.okazakee.dev" />
+        )}
       </head>
       <body
-        className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased transition-colors duration-400 ease-in-out scroll-smooth`}
+        className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased scroll-smooth`}
       >
-        <Providers>
-          <Suspense>
-            <LocaleShell params={params}>{children}</LocaleShell>
-          </Suspense>
+        <Providers locale={locale}>
+          <LocaleShell params={params}>{children}</LocaleShell>
           {/* Vercel-only analytics endpoint: skip it off-platform so local dev
               does not request a script that only exists on Vercel. */}
           {process.env.VERCEL && <SpeedInsights />}
-          {umamiEnabled && (
+          {publicConfig.umamiEnabled && (
             <Script
               src="https://umami.okazakee.dev/script.js"
-              data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c"
+              data-website-id="075df10a-949e-4c65-87af-ed9125a266dc"
+              data-domains="okazakee.dev"
+              data-do-not-track="true"
+              data-exclude-hash="true"
               strategy="lazyOnload"
             />
           )}

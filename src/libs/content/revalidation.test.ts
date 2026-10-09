@@ -34,22 +34,32 @@ describe('validateRevalidationEvent', () => {
   });
 
   it('rejects bad event ids and timestamps', () => {
-    expect(validateRevalidationEvent(makeEvent({ eventId: 'x' })).ok).toBe(false);
+    expect(validateRevalidationEvent(makeEvent({ eventId: 'x' })).ok).toBe(
+      false
+    );
     expect(
       validateRevalidationEvent(makeEvent({ occurredAt: 'not-a-date' })).ok
     ).toBe(false);
   });
 
   it('rejects unknown source/operation/entity', () => {
-    expect(
-      validateRevalidationEvent(makeEvent({ source: 'evil' })).ok
-    ).toBe(false);
+    expect(validateRevalidationEvent(makeEvent({ source: 'evil' })).ok).toBe(
+      false
+    );
     expect(
       validateRevalidationEvent(makeEvent({ operation: 'drop-table' })).ok
     ).toBe(false);
+    expect(validateRevalidationEvent(makeEvent({ entity: 'users' })).ok).toBe(
+      false
+    );
+  });
+
+  it('accepts a header settings event with the site-settings tag', () => {
     expect(
-      validateRevalidationEvent(makeEvent({ entity: 'users' })).ok
-    ).toBe(false);
+      validateRevalidationEvent(
+        makeEvent({ entity: 'settings', tags: ['site-settings'] })
+      ).ok
+    ).toBe(true);
   });
 
   it('rejects entityId of wrong type', () => {
@@ -62,7 +72,9 @@ describe('validateRevalidationEvent', () => {
     expect(validateRevalidationEvent(makeEvent({ tags: [] })).ok).toBe(false);
     expect(
       validateRevalidationEvent(
-        makeEvent({ tags: Array.from({ length: 51 }, (_, i) => `post:blog:${i}`) })
+        makeEvent({
+          tags: Array.from({ length: 51 }, (_, i) => `post:blog:${i}`),
+        })
       ).ok
     ).toBe(false);
   });
@@ -119,12 +131,7 @@ describe('sign/verify', () => {
   it('rejects different timestamp', () => {
     const sig = signRevalidationEvent(SECRET, timestamp, body);
     expect(
-      verifyRevalidationSignature(
-        SECRET,
-        '2026-08-17T09:01:00.000Z',
-        body,
-        sig
-      )
+      verifyRevalidationSignature(SECRET, '2026-08-17T09:01:00.000Z', body, sig)
     ).toBe(false);
   });
 
@@ -132,9 +139,9 @@ describe('sign/verify', () => {
     expect(verifyRevalidationSignature(SECRET, timestamp, body, 'nope')).toBe(
       false
     );
-    expect(
-      verifyRevalidationSignature(SECRET, timestamp, body, 'v1=abc')
-    ).toBe(false);
+    expect(verifyRevalidationSignature(SECRET, timestamp, body, 'v1=abc')).toBe(
+      false
+    );
   });
 });
 

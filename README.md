@@ -30,11 +30,12 @@ public caches through a signed revalidation endpoint
 
 - **Bilingual routing** — EN/IT via `next-intl`, locale-aware
   `/[locale]/[post_type]/[id]/[title]` URLs
-- **Theming** — dark / light / auto with a flash-free bootstrap script
+- **Theming** — auto by default; saved light/dark choices override the system.
+  Initial loads and language switches apply the theme before paint.
 - **Search** — portfolio and blog content with a debounced search action
 - **View tracking** — per-post counters backed by Supabase RPCs
 - **Cache invalidation** — HMAC-signed, replay-protected revalidation events
-  from the CMS (`cacheTag` / `cacheLife`, `revalidateTag(tag, 'max')`)
+  from the CMS (`cacheTag` / `cacheLife`, `revalidateTag(tag, { expire: 0 })`)
 - **Performance** — Server Components for data and SEO, client islands only
   where interactivity demands it; WebP-only image pipeline (uploads arrive as
   WebP from the CMS, and the animated propic goes through the `next/image`
@@ -66,6 +67,16 @@ okazakee-cms ───────▶ Supabase ◀──────── okaza
 
 - **Routing:** `/[locale]/[post_type]/[id]/[title]` with i18n; legacy
   `/{locale}/cms*` URLs 307-redirect to the standalone CMS.
+- **Locale configuration:** `src/i18n/routing.ts` owns EN/IT, the English
+  default and prefix policy. The proxy delegates negotiation to next-intl;
+  server messages use `next/root-params` rather than request headers.
+- **Language switches:** navigate directly to each post's canonical localized
+  slug, retaining query parameters, fragments and a one-shot scroll handoff.
+  Portfolio titles and slugs remain English in both locales.
+- **Theme preferences:** `themeMode` is saved only after an explicit selection.
+  Without a saved choice, auto follows live system changes. The blocking
+  first-load script and locale-dependent layout effect restore the theme
+  before paint without making the root layout request-bound.
 - **Components:** Server Components for data and metadata; Client Components
   for interactivity (menu, theme, search).
 - **Supabase:** stateless clients — the read layer plus the two view-counter
@@ -74,10 +85,42 @@ okazakee-cms ───────▶ Supabase ◀──────── okaza
 - **Caching:** public reads use `cacheTag`/`cacheLife` with the vocabulary in
   `src/libs/content/cacheTags.ts`. The signed revalidation endpoint accepts
   content-change events from the CMS (HMAC-SHA256, replay window, hard-coded
-  tag allowlist) and calls `revalidateTag(tag, 'max')`.
-- **i18n:** translations are stored in the Supabase `i18n_translations` table
-  and served through `getTranslationsSupabase` (server) or `next-intl`
-  clients (browser). Edited from the CMS, rendered here.
+  tag allowlist) and calls `revalidateTag(tag, { expire: 0 })` — immediate
+  expiry, because a request arriving from another app cannot use `updateTag`.
+- **i18n:** CMS identity/about content comes from `i18n_translations`; fixed
+  headings, career vocabulary, privacy subtitle and site chrome come from
+  local EN/IT files. `withSiteCopy` merges local strings over stale database
+  values. Localized entry fields and privacy-policy bodies remain CMS content.
+
+## Site Chrome & Footer Identity
+
+Structural copy lives in `src/i18n/messages/site.{en,it}.json`: navigation,
+footer chrome, Skills/Career/Portfolio/Blog/Contacts headings, career date and
+remote vocabulary, post labels and the privacy subtitle. `withSiteCopy` in
+`src/i18n/siteCopy.ts` merges these messages over database values.
+
+| Content | Source | Owner |
+| --- | --- | --- |
+| Header images, navigation, footer name | Bundled assets and local code/copy | Website |
+| Header images (custom override) | `site_settings.header_logo_dark` / `header_logo_light` | CMS Layout |
+| Resume PDFs (EN/IT) | `hero_section.resume_en` / `resume_it` | CMS System → Resume |
+| VAT number | `site_settings.footer_vat_number` | CMS Layout |
+| Hero name, ordered roles, about | `hero-section` translations | CMS Hero |
+| Skill categories and entries | `skills_categories` / `skills`, dense positions | CMS Skills |
+| Contact links and SVG icon URLs | `contacts`, dense positions | CMS Contacts |
+
+VAT is textual and displayed/copied verbatim; when it is null or blank the
+footer renders no VAT affordance at all (there is no local default), and the
+footer name stays `Okazakee`. Each header image is
+independent: a null one renders that theme's bundled asset, so clearing dark
+leaves a custom light image in place (and vice versa). One nonblank role
+animates to completion once; multiple roles loop in their saved order.
+Reduced motion shows static readable roles.
+
+The content-controls migration is applied only to `dev_staging`; this
+checkout has not promoted schema or content changes to `public`. Production
+release requires an explicit, separately reviewed cutover. Historical SQL must
+never be replayed blindly against the production schema.
 
 ## Getting Started
 
@@ -119,8 +162,25 @@ bun run dev
 | `CONTENT_REVALIDATION_SECRET` | Shared secret authenticating content-change events from the CMS |
 | `UMAMI_ENABLED` | Enable Umami analytics (`true`/`false`) |
 | `ISR_REVALIDATION` | Cache lifetime in seconds (content caches + GitHub stars fetch); default `86400` in production, `600` otherwise |
-| `NEXT_PUBLIC_LOCALES` | Comma-separated locales (default `en,it`) |
-| `NEXT_PUBLIC_DEFAULT_LOCALE` | Default locale (default `en`) |
+
+**`NEXT_PUBLIC_SUPABASE_DB_SCHEMA` must be set for local work.** `public` holds
+production content; local development reads `dev_staging`, a cloned schema in the
+same Supabase project. The variable defaults to `public` when unset, and that
+fallback is not survivable here: `site_settings` and `project_requests` exist
+only in `dev_staging`, so a build against `public` dies on
+`PGRST205 — Could not find the table 'public.site_settings'` while prerendering
+every post page.
+
+```bash
+# .env.local
+NEXT_PUBLIC_SUPABASE_DB_SCHEMA=dev_staging
+```
+
+Storage and Auth are project-level. The CMS selects `website-dev` for staging
+and refuses non-production writes to a real project's `public` schema.
+Staging user removal leaves shared Auth identities untouched. Both local apps
+must use `NEXT_PUBLIC_SUPABASE_DB_SCHEMA=dev_staging`, with matching local
+revalidation secrets and endpoints.
 
 ### Scripts
 
@@ -132,7 +192,6 @@ bun run lint      # Biome lint
 bun run lint-fix  # Biome lint + autofix
 bun run format    # Biome format
 bun run test      # Vitest test suite
-bun run postinstall  # Re-apply the Next + TypeScript 7 patch (runs on install)
 ```
 
 ## Deployment

@@ -106,9 +106,7 @@ export default async function PostsPage({
         <InnerHtml
           as="h1"
           className="font-heading text-2xl font-semibold text-text-white sm:text-3xl"
-          html={formatLabels(
-            post_type === 'blog' ? t('title2') : t('title1')
-          )}
+          html={formatLabels(post_type === 'blog' ? t('title2') : t('title1'))}
         />
         <InnerHtml
           as="p"

@@ -11,9 +11,14 @@ import {
 /**
  * Internal, authenticated content-revalidation endpoint.
  *
- * Called by the standalone CMS after successful content mutations. Uses
- * `revalidateTag(tag, 'max')` — a Route Handler can NEVER use `updateTag`
- * (Server-Action-only).
+ * Called by the standalone CMS after successful content mutations — an external
+ * caller, so `updateTag` is unavailable (Server-Action-only) and
+ * `revalidateTag(tag, 'max')` is NOT usable here either: the `max` profile
+ * allows stale content to be served for a year while a revalidation runs in
+ * the background, so a CMS edit would keep rendering the previous value.
+ * `{ expire: 0 }` is the documented external-caller form: stale content is
+ * never served and the next request revalidates. See
+ * https://nextjs.org/docs/app/api-reference/functions/revalidateTag
  *
  * Security:
  * - POST only;
@@ -82,7 +87,9 @@ export async function POST(request: Request) {
   }
 
   for (const tag of event.tags) {
-    revalidateTag(tag, 'max');
+    // Immediate expiry: the public render must never serve the pre-edit value
+    // after the CMS reported the mutation as committed.
+    revalidateTag(tag, { expire: 0 });
   }
 
   console.log('[content-revalidate]', {

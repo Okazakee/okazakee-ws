@@ -1,11 +1,36 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
+import {
+  createHeroMatrixState,
+  HERO_SEED,
+  heroMatrixState,
+  type Ping,
+  type RainColumn,
+} from './heroAnimationState';
 import { createMatrixCanvasRenderer } from './matrixCanvasRenderer';
 
 const CELL = 14;
+// The pointer's magnet has TWO radii, deliberately separate:
+//  - POINTER_CELLS is the bright cluster: the cells that pop to the crest tier
+//    with extra light and heat. Fixed, so widening the warp can never light up a
+//    wider area.
+//  - the warp's own reach is `--matrix-warp-reach` (grid cells), so the
+//    displacement can reach further out than that cluster.
 const POINTER_CELLS = 6;
+// Fallbacks for the two tokens when they are missing or unusable.
+const FALLBACK_WARP_PX = 12;
+const FALLBACK_WARP_CELLS = 6;
 const GLYPHS = '>_/\\{}[]();:+*#$%&01';
+
+/** A positive number from a CSS token, with `fallback` for an odd value. */
+export function resolveNumericToken(
+  raw: string | null | undefined,
+  fallback: number
+): number {
+  const value = Number.parseFloat((raw ?? '').trim());
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
 
 // Ambient speckle: sparse steady pixels across the whole field, plus the
 // blinking cursor square that rides at the bottom of each rain trail.
@@ -39,7 +64,6 @@ const invisibleLum = (Number.EPSILON * (0.14 * FOCUS_OPACITY)) / 8;
 const pingTailDistance =
   Math.sqrt(-2 * 24 * 24 * Math.log(invisibleLum / 2.2)) + 1;
 const entranceTailTime = -140 * Math.log(invisibleLum / 0.3) + 140;
-
 const BAYER = [
   0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36,
   14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54, 22, 3, 35, 11, 43, 1, 33, 9, 41,
@@ -64,31 +88,18 @@ const DARK: Ramp = {
 };
 
 const LIGHT: Ramp = {
-  dim: '#d9cdf9',
+  // `dim` carries the steady speckle squares (0.55 alpha) and the ambient bed
+  // glyphs (0.8). Against the light band (#dfe2e9) the old pale lavender
+  // (#d9cdf9) composited to a −2.9 L* step — invisible — while dark's #2e2a4a
+  // steps +8.2 L* / +12.6 chroma off its own band. This value matches both
+  // steps on the light band (−8.3 L* / +12.6 chroma, measured from the canvas
+  // ink), so the field reads the same in either theme.
+  dim: '#c4afe0',
   mid: '#a582f5',
   lit: '#7c3aed',
   hover: '#6d28d9',
   crest: '#5b21b6',
 };
-
-interface RainColumn {
-  y: number;
-  speed: number;
-  len: number;
-  seed: number;
-  lead: number;
-  born: number;
-}
-
-interface Ping {
-  x: number;
-  y: number;
-  born: number;
-  life: number;
-  distances: Float64Array;
-  radius: number;
-  fade: number;
-}
 
 /**
  * Matrix-rain ground for the hero (docs/DESIGN.md §6): a transparent canvas
@@ -103,13 +114,32 @@ interface Ping {
 export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
+  // Layout effect: the first frame is drawn before the browser paints the
+  // swapped tree, so a locale switch never shows a blank canvas.
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const hero = canvas?.parentElement;
     if (!canvas || !hero) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const renderer = createMatrixCanvasRenderer(ctx, CELL, GLYPHS);
+    // Tracks the renderer's buffer allocation, which is independent of the
+    // canvas bitmap size (see measure).
+    let rendererSized = false;
+
+    // Two tokens, read once per mount: how far the pointer's warp reaches
+    // (`--matrix-warp-reach`, grid cells) and how hard it displaces a cell
+    // (`--matrix-warp`, canvas px). The bright cluster's radius is the fixed
+    // POINTER_CELLS, so neither token can brighten a wider area.
+    const rootStyle = getComputedStyle(document.documentElement);
+    const warpCells = resolveNumericToken(
+      rootStyle.getPropertyValue('--matrix-warp-reach'),
+      FALLBACK_WARP_CELLS
+    );
+    const magnetWarp = resolveNumericToken(
+      rootStyle.getPropertyValue('--matrix-warp'),
+      FALLBACK_WARP_PX
+    );
 
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
@@ -123,25 +153,35 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
         : LIGHT;
     };
 
-    let seed = 0x9451ff;
+    // Document-scoped session (heroAnimationState.ts): a locale switch
+    // remounts this component, and adopting the running state keeps the
+    // rain and the entrance wave uninterrupted. `interactive={false}`
+    // instances (error screens) keep a private state and never publish.
+    const state = interactive ? heroMatrixState() : createHeroMatrixState();
+    // Respawn randomness continues from the session cursor; the jitter table
+    // uses its own stream so a remount cannot advance that cursor.
     const rnd = () => {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      return seed / 4294967296;
+      state.seed = (state.seed * 1664525 + 1013904223) >>> 0;
+      return state.seed / 4294967296;
     };
     const jitter = new Float32Array(64 * 64);
-    for (let i = 0; i < jitter.length; i++) jitter[i] = rnd();
+    let jitterSeed = HERO_SEED;
+    for (let i = 0; i < jitter.length; i++) {
+      jitterSeed = (jitterSeed * 1664525 + 1013904223) >>> 0;
+      jitter[i] = jitterSeed / 4294967296;
+    }
 
     let W = 0;
     let H = 0;
     let cols = 0;
     let rows = 0;
     let entranceRow = 0;
-    let matCols: RainColumn[] = [];
-    const entranceT0 = performance.now();
+    let matCols: RainColumn[] = state.matCols;
+    const entranceT0 = state.entranceT0;
     const pointer = { x: -1e4, y: -1e4 };
     let strength = 0;
     let target = 0;
-    const pings: Ping[] = [];
+    const pings: Ping[] = state.pings;
     let fieldSize = 0;
     let fieldFocus: Float64Array;
     let fieldDim: Float64Array;
@@ -150,9 +190,15 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
     let fieldFlags: Uint8Array;
     let frozenHeads: Float64Array;
 
-    const initMatrix = () => {
-      matCols = [];
+    const seedFrozenHeads = () => {
       frozenHeads = new Float64Array(cols);
+      for (let c = 0; c < cols; c++) {
+        frozenHeads[c] = matCols[c].seed % Math.max(1, rows + 20);
+      }
+    };
+
+    const initMatrix = () => {
+      const columns: RainColumn[] = [];
       const now = performance.now();
       for (let c = 0; c < cols; c++) {
         // Fresh columns start above the fold and fall in staggered, so the
@@ -163,7 +209,7 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
         // Idle gaps between drops: ~1 in 7 columns starts empty so the
         // field breathes instead of filling every lane.
         const idle = !warmup && rnd() < 0.3;
-        matCols.push({
+        columns.push({
           y: idle
             ? -20 - rnd() * rows
             : warmup
@@ -175,8 +221,9 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
           lead: 2 + Math.floor(rnd() * 3),
           born: warmup ? 0 : now,
         });
-        frozenHeads[c] = matCols[c].seed % Math.max(1, rows + 20);
       }
+      state.matCols = matCols = columns;
+      seedFrozenHeads();
     };
 
     // Ellipse zones from the rendered content boxes, in canvas px. Identity
@@ -281,15 +328,28 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       W = Math.max(1, Math.round(box.width));
       H = Math.max(1, Math.round(box.height));
-      canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(H * dpr);
+      cols = Math.ceil(W / CELL) + 2;
+      rows = Math.ceil(H / CELL) + 2;
+      const bitmapW = Math.round(W * dpr);
+      const bitmapH = Math.round(H * dpr);
+      // Assigning width/height clears the bitmap; resize only on an actual
+      // change so a same-size re-measure keeps the painted frame.
+      if (canvas.width !== bitmapW || canvas.height !== bitmapH) {
+        canvas.width = bitmapW;
+        canvas.height = bitmapH;
+        rendererSized = false;
+      }
+      // `renderer.resize` allocates the renderer's cell buffers and must run
+      // once per renderer before any frame — including when the bitmap was
+      // already sized by a previous effect run over the same canvas node.
+      if (!rendererSized) {
+        renderer.resize(W, H, dpr, cols, rows);
+        rendererSized = true;
+      }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.font = `${CELL - 2}px ui-monospace, monospace`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      cols = Math.ceil(W / CELL) + 2;
-      rows = Math.ceil(H / CELL) + 2;
-      renderer.resize(W, H, dpr, cols, rows);
       // On tall mobile heroes, start the reveal inside the visible viewport.
       const visibleTop = Math.max(0, -box.top);
       const visibleBottom = Math.max(
@@ -297,7 +357,16 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
         Math.min(H, window.innerHeight - box.top)
       );
       entranceRow = (visibleTop + visibleBottom) / (2 * CELL);
-      initMatrix();
+      // Field continuity: a locale switch remounts with the same grid, and
+      // the adopted columns keep falling from their positions. Only a real
+      // grid change (first mount, resize, zoom) re-seeds them.
+      if (state.cols !== cols || state.rows !== rows) {
+        state.cols = cols;
+        state.rows = rows;
+        initMatrix();
+      } else {
+        seedFrozenHeads();
+      }
       measureZones();
     };
     measure();
@@ -333,6 +402,7 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
       renderer.beginFrame();
 
       const reach = POINTER_CELLS * CELL;
+      const warpReach = warpCells * CELL;
       const step = reduced ? 0 : Math.floor(t * 7);
       const elapsed = now - entranceT0;
       for (let i = 0; i < pings.length; i++) {
@@ -408,16 +478,20 @@ export function HeroMatrix({ interactive = true }: { interactive?: boolean }) {
           if (strength > 0.01) {
             const dx = px - pointer.x;
             const dy = py - pointer.y;
-            if (Math.abs(dx) < reach && Math.abs(dy) < reach) {
+            if (Math.abs(dx) < warpReach && Math.abs(dy) < warpReach) {
               const d = Math.sqrt(dx * dx + dy * dy);
-              if (d < reach && d > 0.01) {
-                const f = 1 - d / reach;
-                const push = f * f * 12 * strength;
+              if (d < warpReach && d > 0.01) {
+                const f = 1 - d / warpReach;
+                const push = f * f * magnetWarp * strength;
                 ox = (dx / d) * push;
                 oy = (dy / d) * push;
-                lum += f * f * strength * 0.5;
-                heat = Math.max(heat, f * f * strength);
-                pushed = true;
+                // Only the displacement follows the wider reach: the bright
+                // cluster keeps its fixed radius, so no extra area lights up.
+                if (d < reach) {
+                  lum += f * f * strength * 0.5;
+                  heat = Math.max(heat, f * f * strength);
+                  pushed = true;
+                }
               }
             }
           }

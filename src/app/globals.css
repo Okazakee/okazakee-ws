@@ -31,6 +31,108 @@
   --c-status-active: #047857;
   --c-code-bg: #dde1e7;
   --c-code-fg: #1b2030;
+
+  /* Hero matrix pointer warp (docs/DESIGN.md §6): two values the effect reads
+     once per mount, each with its own fallback — how far a cell is displaced
+     (`--matrix-warp`, canvas px) and how far that displacement reaches
+     (`--matrix-warp-reach`, grid cells). The BRIGHT cluster is not here: its
+     radius is the fixed POINTER_CELLS in HeroMatrix.tsx, so widening the reach
+     can never light up a wider area. */
+  --matrix-warp: 18;
+  --matrix-warp-reach: 9;
+
+  /* Custom cursors (docs/DESIGN.md §3): 14 canonical 64px PNGs per theme,
+     with original black details for light and white details for dark. The
+     existing root .dark switch selects the image URLs.
+     --cursor-scale is the website-wide size knob: 1 = 32 CSS px, 1.5 = 48,
+     2 = 64. Image resolution and hotspots scale together, preserving the
+     corrected centre hotspots. Unsupported custom images use the native
+     keyword fallback; raster resampling at fractional DPR is a tradeoff. */
+  --cursor-scale: 1;
+  --cursor-resolution: calc(2dppx / var(--cursor-scale));
+  --cursor-hotspot-scale: calc(2 * var(--cursor-scale) / 3);
+  --cursor-image-default: url("/cursors/default.png");
+  --cursor-image-pointer: url("/cursors/pointer.png");
+  --cursor-image-text: url("/cursors/text.png");
+  --cursor-image-not-allowed: url("/cursors/not-allowed.png");
+  --cursor-image-wait: url("/cursors/wait.png");
+  --cursor-image-progress: url("/cursors/progress.png");
+  --cursor-image-crosshair: url("/cursors/crosshair.png");
+  --cursor-image-help: url("/cursors/help.png");
+  --cursor-image-move: url("/cursors/move.png");
+  --cursor-image-ew-resize: url("/cursors/ew-resize.png");
+  --cursor-image-ns-resize: url("/cursors/ns-resize.png");
+  --cursor-image-nwse-resize: url("/cursors/nwse-resize.png");
+  --cursor-image-nesw-resize: url("/cursors/nesw-resize.png");
+  --cursor-image-copy: url("/cursors/copy.png");
+  --cursor-default:
+    image-set(var(--cursor-image-default) var(--cursor-resolution))
+    calc(15 * var(--cursor-hotspot-scale))
+    calc(14 * var(--cursor-hotspot-scale)),
+    default;
+  --cursor-pointer:
+    image-set(var(--cursor-image-pointer) var(--cursor-resolution))
+    calc(11 * var(--cursor-hotspot-scale))
+    calc(11 * var(--cursor-hotspot-scale)),
+    pointer;
+  --cursor-text:
+    image-set(var(--cursor-image-text) var(--cursor-resolution))
+    calc(23 * var(--cursor-hotspot-scale))
+    calc(23 * var(--cursor-hotspot-scale)),
+    text;
+  --cursor-not-allowed:
+    image-set(var(--cursor-image-not-allowed) var(--cursor-resolution))
+    calc(23 * var(--cursor-hotspot-scale))
+    calc(24 * var(--cursor-hotspot-scale)),
+    not-allowed;
+  --cursor-wait:
+    image-set(var(--cursor-image-wait) var(--cursor-resolution))
+    calc(24 * var(--cursor-hotspot-scale))
+    calc(25 * var(--cursor-hotspot-scale)),
+    wait;
+  --cursor-progress:
+    image-set(var(--cursor-image-progress) var(--cursor-resolution))
+    calc(6 * var(--cursor-hotspot-scale)) calc(4 * var(--cursor-hotspot-scale)),
+    progress;
+  --cursor-crosshair:
+    image-set(var(--cursor-image-crosshair) var(--cursor-resolution))
+    calc(25 * var(--cursor-hotspot-scale))
+    calc(23 * var(--cursor-hotspot-scale)),
+    crosshair;
+  --cursor-help:
+    image-set(var(--cursor-image-help) var(--cursor-resolution))
+    calc(7 * var(--cursor-hotspot-scale)) calc(5 * var(--cursor-hotspot-scale)),
+    help;
+  --cursor-move:
+    image-set(var(--cursor-image-move) var(--cursor-resolution))
+    calc(23 * var(--cursor-hotspot-scale))
+    calc(23 * var(--cursor-hotspot-scale)),
+    move;
+  --cursor-ew-resize:
+    image-set(var(--cursor-image-ew-resize) var(--cursor-resolution))
+    calc(23 * var(--cursor-hotspot-scale))
+    calc(23 * var(--cursor-hotspot-scale)),
+    ew-resize;
+  --cursor-ns-resize:
+    image-set(var(--cursor-image-ns-resize) var(--cursor-resolution))
+    calc(23 * var(--cursor-hotspot-scale))
+    calc(24 * var(--cursor-hotspot-scale)),
+    ns-resize;
+  --cursor-nwse-resize:
+    image-set(var(--cursor-image-nwse-resize) var(--cursor-resolution))
+    calc(24 * var(--cursor-hotspot-scale))
+    calc(24 * var(--cursor-hotspot-scale)),
+    nwse-resize;
+  --cursor-nesw-resize:
+    image-set(var(--cursor-image-nesw-resize) var(--cursor-resolution))
+    calc(24 * var(--cursor-hotspot-scale))
+    calc(24 * var(--cursor-hotspot-scale)),
+    nesw-resize;
+  --cursor-copy:
+    image-set(var(--cursor-image-copy) var(--cursor-resolution))
+    calc(23 * var(--cursor-hotspot-scale))
+    calc(22 * var(--cursor-hotspot-scale)),
+    copy;
 }
 
 .dark {
@@ -53,21 +155,273 @@
   --c-status-active: #10b981;
   --c-code-bg: #08090d;
   --c-code-fg: #e2e8f0;
+
+  --cursor-image-default: url("/cursors/dark/default.png");
+  --cursor-image-pointer: url("/cursors/dark/pointer.png");
+  --cursor-image-text: url("/cursors/dark/text.png");
+  --cursor-image-not-allowed: url("/cursors/dark/not-allowed.png");
+  --cursor-image-wait: url("/cursors/dark/wait.png");
+  --cursor-image-progress: url("/cursors/dark/progress.png");
+  --cursor-image-crosshair: url("/cursors/dark/crosshair.png");
+  --cursor-image-help: url("/cursors/dark/help.png");
+  --cursor-image-move: url("/cursors/dark/move.png");
+  --cursor-image-ew-resize: url("/cursors/dark/ew-resize.png");
+  --cursor-image-ns-resize: url("/cursors/dark/ns-resize.png");
+  --cursor-image-nwse-resize: url("/cursors/dark/nwse-resize.png");
+  --cursor-image-nesw-resize: url("/cursors/dark/nesw-resize.png");
+  --cursor-image-copy: url("/cursors/dark/copy.png");
 }
 
 @utility clip-pebble {
   clip-path: url(#pebble-clip);
   -webkit-clip-path: url(#pebble-clip);
-  position: relative;
-  overflow: visible;
+}
+
+@utility clip-squircle {
+  clip-path: url(#squircle-clip);
+  -webkit-clip-path: url(#squircle-clip);
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Custom cursors (docs/DESIGN.md §3), inherited by everything; the kinds
+       below hand the matching art to elements that get none from a class. */
+    cursor: var(--cursor-default);
+  }
+
+  /* Interactive elements, and everything inside them, so a button or a card
+     link keeps the hand over its own content instead of inheriting a caret
+     from a prose rule. Plain selector lists throughout: an `:is()` in these
+     rules would be lowered to `:-webkit-any()` by the production build, which
+     carries pseudo-class specificity and outranks the plain selectors — that
+     made links inside prose flip to the caret under `next build` while the dev
+     server showed the hand. */
+  a,
+  button,
+  summary,
+  select,
+  [role="button"],
+  [role="combobox"],
+  [role="option"],
+  [role="tab"],
+  a *,
+  button *,
+  summary *,
+  select *,
+  [role="button"] *,
+  [role="combobox"] *,
+  [role="option"] *,
+  [role="tab"] * {
+    cursor: var(--cursor-pointer);
+  }
+
+  /* Text cursor for prose and text fields — but never inside something
+     interactive: a card that is a link owns its whole area, so its heading and
+     description keep the pointer instead of turning into a caret. */
+  p:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  li:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h1:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h2:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h3:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h4:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h5:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  h6:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  blockquote:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  td:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  th:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  pre:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  code:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  textarea:not(
+    :is(
+        a,
+        button,
+        summary,
+        select,
+        [role="button"],
+        [role="combobox"],
+        [role="option"],
+        [role="tab"]
+      )
+      *
+  ),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not(
+    [type="button"]
+  ):not([type="reset"]):not([type="file"]) {
+    cursor: var(--cursor-text);
+  }
+
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  input[type="file"] {
+    cursor: var(--cursor-pointer);
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: var(--cursor-not-allowed);
   }
   body {
-    @apply bg-surface-base text-text-main transition-all duration-400;
+    @apply bg-surface-base text-text-main;
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
@@ -202,17 +556,20 @@
 .post td {
   overflow-wrap: anywhere;
 }
-.post p img {
+.post .post-figure {
+  margin: 2rem auto;
+}
+.post .post-figure img {
   display: block;
   width: 100%;
-  margin: 2rem 0 0;
+  margin: 0 auto;
   border-radius: 12px;
   border: 1px solid var(--c-border-subtle);
   cursor: pointer;
 }
 .post .fig-caption {
   display: block;
-  margin: 0.6rem 0 2rem;
+  margin: 0.6rem 0 0;
   font-family: var(--font-whiterabt), monospace;
   font-size: 0.72rem;
   color: var(--c-text-dim);
@@ -300,18 +657,6 @@
   white-space: pre;
 }
 
-/* Request form select (canon §5.4): the mock pairs `appearance: none` with a
-   chevron drawn 8px from the right edge and a 16px line box, which the native
-   control cannot reproduce. */
-.request-select {
-  appearance: none;
-  line-height: 1rem;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: calc(100% - 8px) 50%;
-  background-repeat: no-repeat;
-  background-size: 18px 18px;
-}
-
 /* Consent checkbox (canon §5.4): the mock pairs `appearance: none` with a
    1px subtle border and the forms-plugin checkmark, so the native control is
    replaced. Accent-driven, so both themes stay on brand. */
@@ -330,6 +675,54 @@ input[type="checkbox"]:not([class*="request-"]):checked {
   background-size: 100% 100%;
 }
 
+/* Hero typewriter cursor (docs/DESIGN.md §3): a terminal block at the
+   insertion point, painted with the accent token so dark/light theming
+   follows automatically. Rendered only while a line animates — a single-role
+   line drops it once typing finishes. */
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.typewriter-cursor {
+  display: inline-block;
+  width: 0.5ch;
+  height: 1em;
+  margin-left: 0.15em;
+  vertical-align: -0.1em;
+  background-color: var(--c-accent-violet);
+  animation: cursor-blink 1s step-end infinite;
+}
+
+/* Roles the typewriter is not currently cycling through (docs/DESIGN.md §3):
+   the live line carries the animated text, these stay in the document for
+   crawlers, and the reduced-motion rule below turns them back into the stacked
+   list a motionless visitor reads. Out of flow while hidden, so the live line
+   never moves. */
+.hero-role-rest {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-role-rest {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+}
+
 /* Tag row: one line, seamless loop when the chips overflow. The track carries
    the list twice while looping and slides half its width, so the junction is
    invisible. The second copy only exists while looping. */
@@ -344,6 +737,39 @@ input[type="checkbox"]:not([class*="request-"]):checked {
 .animate-tags:hover,
 .animate-tags:focus-within {
   animation-play-state: paused;
+}
+
+/* Glitch layers (docs/DESIGN.md §3) — the box `Glitch` renders for the burst
+   ported from PowerGlitch (MIT). The container is always the grid stack, so
+   callers pass sizing only (`w-full`) and the glitched element carries the row
+   layout: every layer shares one grid cell, so a copy costs a paint and no
+   layout, and the box cannot move when the animation does. `Glitch`'s hook
+   appends the copies itself, one per slice layer, and they stay invisible
+   (`opacity: 0`) until their own animation plays. `overflow: hidden` plus
+   `border-radius: inherit` clip the shifted slices to the host's own box and
+   corners — PowerGlitch's `hideOverflow`, which is what a card or a button
+   wants. Declared outside `@layer` on purpose: the grid stack is the
+   primitive, not a default a utility may override. */
+.glitch {
+  display: grid;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.glitch > * {
+  grid-area: 1 / 1 / -1 / -1;
+}
+
+/* Optical alignment for icon + uppercase-label rows (docs/DESIGN.md §2).
+   White Rabbit's caps fill the ascent exactly (glyph ink 0..1400 of a 2100
+   upem), so in a `text-xs` line box — 12px type, 16px line — the caps' ink
+   centre lands 0.57px ABOVE the box centre that `items-center` aligns to the
+   icon's centre: measured, not guessed. Raising the icon by that much puts its
+   own centred ink on the caps instead of on the line box. The label is left
+   alone on purpose: a fractional shift of text lands the glyphs between device
+   pixels, and this font is drawn to sit on them. */
+.icon-optical {
+  transform: translateY(-0.57px);
 }
 
 /* Career description bullets: the disc marker is swapped for the lucide

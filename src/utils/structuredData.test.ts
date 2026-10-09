@@ -100,7 +100,9 @@ describe('buildBlogPostingNode', () => {
       datePublished: '2026-02-10T00:00:00Z',
     });
     expect(node['@type']).toBe('BlogPosting');
-    expect(node['@id']).toBe('https://okazakee.dev/en/blog/12/dear-mom#article');
+    expect(node['@id']).toBe(
+      'https://okazakee.dev/en/blog/12/dear-mom#article'
+    );
     expect(node.url).toBe('https://okazakee.dev/en/blog/12/dear-mom');
     expect(node.mainEntityOfPage).toBe(node.url);
     expect(node.headline).toBe('Dear mom...');
@@ -166,7 +168,8 @@ describe('buildProjectNode', () => {
       name: 'Spendr',
       description: 'Personal finance tracker',
       links: {
-        store: 'https://play.google.com/store/apps/details?id=com.okazakee.spendr',
+        store:
+          'https://play.google.com/store/apps/details?id=com.okazakee.spendr',
         source: 'https://github.com/Okazakee/spendr',
       },
     });

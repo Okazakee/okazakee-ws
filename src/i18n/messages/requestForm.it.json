@@ -1,0 +1,65 @@
+{
+  "title": "Inviami una richiesta",
+  "subtitle": "Tre passaggi rapidi: chi sei, cosa stai costruendo e i dettagli.",
+  "steps": ["Contatti", "Progetto", "Dettagli"],
+  "progress": "Avanzamento",
+  "back": "Indietro",
+  "next": "Avanti",
+  "submit": "Invia richiesta",
+  "sending": "Invio…",
+  "comingSoon": "Presto disponibile",
+  "name": "Nome",
+  "namePlaceholder": "Il tuo nome",
+  "email": "Email",
+  "emailPlaceholder": "tu@azienda.com",
+  "company": "Azienda",
+  "companyPlaceholder": "Azienda o organizzazione",
+  "website": "Sito web",
+  "websitePlaceholder": "https://esempio.com",
+  "type": "Tipo di progetto",
+  "budget": "Budget",
+  "timeline": "Tempistiche",
+  "request": "Dettagli del progetto",
+  "requestPlaceholder": "Cosa stai costruendo? Obiettivi, ambito, link…",
+  "consent": "Acconsento al trattamento dei miei dati come descritto nella",
+  "optionLabels": {
+    "type": {
+      "Website": "Sito web",
+      "Web app": "App web",
+      "Mobile app": "App mobile",
+      "Other": "Altro"
+    },
+    "budget": {
+      "< €1k": "< €1k",
+      "€1–5k": "€1–5k",
+      "€5–15k": "€5–15k",
+      "€15k+": "€15k+"
+    },
+    "timeline": {
+      "ASAP": "Il prima possibile",
+      "1–2 months": "1–2 mesi",
+      "3–6 months": "3–6 mesi",
+      "Flexible": "Flessibile"
+    }
+  },
+  "successTitle": "Richiesta ricevuta",
+  "successBody": "Grazie — la tua richiesta è nella mia casella di arrivo e risponderò all'indirizzo email che hai indicato.",
+  "sendAnother": "Invia un'altra richiesta",
+  "errors": {
+    "name": "Inserisci il tuo nome.",
+    "email": "Inserisci un indirizzo email valido.",
+    "company": "Questo valore è troppo lungo.",
+    "website": "Usa un indirizzo http(s) completo oppure lascia il campo vuoto.",
+    "type": "Scegli un tipo di progetto.",
+    "budget": "Scegli una fascia di budget.",
+    "timeline": "Scegli delle tempistiche.",
+    "request": "Descrivi il progetto, fino a 4000 caratteri.",
+    "consent": "Accetta l'informativa privacy per continuare.",
+    "generic": "Non è stato possibile inviare la richiesta. Riprova.",
+    "rateLimited": "Troppe richieste dalla tua connessione. Riprova più tardi.",
+    "disabled": "Le richieste non sono aperte al momento. Contattami via email.",
+    "bodyTooLarge": "Il messaggio è troppo lungo. Accorcilo e riprova.",
+    "storageUnavailable": "Non è stato possibile salvare la richiesta. Riprova tra poco.",
+    "network": "Nessuna connessione al server. Riprova."
+  }
+}

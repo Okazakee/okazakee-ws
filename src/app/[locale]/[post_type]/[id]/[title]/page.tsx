@@ -4,12 +4,12 @@ import {
   Clock,
   ExternalLink,
   Globe,
+  Link2,
   Smartphone,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
 import { AppleIcon, GithubIcon } from '@/components/common/BrandIcons';
 import GitHubStars from '@/components/common/GitHubStars';
 import { JsonLd } from '@/components/common/JsonLd';
@@ -17,9 +17,17 @@ import FormattedDate from '@/components/common/FormattedDate';
 import ShareButton from '@/components/common/ShareButton';
 import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
+import { PublishLocaleAlternates } from '@/components/layout/PublishLocaleAlternates';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
+import { postButtonLabel } from '@/i18n/postButtons';
+import { locales } from '@/i18n/routing';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPostHref, slugifyTitle } from '@/utils/postHref';
+import {
+  type PostButtonKind,
+  postButtonUrl,
+  resolvePostButtons,
+} from '@/utils/postButtons';
 import {
   buildBlogPostingNode,
   buildProjectNode,
@@ -54,8 +62,6 @@ export default async function Page({
 
   const post: PostWithAuthor | null = await getPost(id, post_type);
 
-  const t = await getTranslations({ locale, namespace: 'posts-section' });
-
   // checks
   if (!post) {
     notFound();
@@ -75,6 +81,19 @@ export default async function Page({
     redirect(`/${locale}/${post_type}/${id}/${slugifiedTitle}`);
   }
 
+  // Canonical per-locale destinations for the language switch: blog slugs are
+  // localized, portfolio keeps the shared English slug — same rule as
+  // generateStaticParams/generateMetadata below.
+  const enTitle = post.title_en;
+  const itTitle = post_type === 'portfolio' ? post.title_en : post.title_it;
+  const alternates = {
+    key: `${post_type}:${id}`,
+    href: {
+      en: getPostHref({ locale: 'en', postType: post_type, id, title: enTitle }),
+      it: getPostHref({ locale: 'it', postType: post_type, id, title: itTitle }),
+    },
+  };
+
   const localeKey = `body_${locale}` as keyof typeof post;
 
   const postDescription = `description_${locale}` as keyof typeof post;
@@ -86,77 +105,36 @@ export default async function Page({
   const mobileLinkClass =
     'flex flex-1 items-center justify-center gap-2 rounded-lg border border-accent-violet/40 bg-accent-violet/10 px-3 py-3 font-mono text-xs text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20';
 
+  // `buttons` is a portfolio_posts-only column, so its presence is what
+  // discriminates a project row from a blog row (blog_posts has no buttons).
+  const buttons = 'buttons' in post ? resolvePostButtons(post) : [];
+  const sourceUrl = postButtonUrl(buttons, 'source');
+  const buttonIcons: Record<PostButtonKind, React.ReactNode> = {
+    website: <Globe size={14} />,
+    source: <GithubIcon size={14} />,
+    demo: <ExternalLink size={14} />,
+    store: <CirclePlay size={14} />,
+    fdroid: <Smartphone size={14} />,
+    ios: <AppleIcon size={14} />,
+    custom: <Link2 size={14} />,
+  };
+
   const metaLinks: {
     key: string;
     href: string;
     label: string | null;
     icon: React.ReactNode;
-    event: string;
-  }[] = [];
-
-  if (post_type === 'portfolio' && 'website' in post && post.website) {
-    metaLinks.push({
-      key: 'website',
-      href: post.website,
-      label: null,
-      icon: <Globe size={14} />,
-      event: 'Website button',
-    });
-  }
-
-  if (post_type === 'portfolio' && 'source_link' in post && post.source_link) {
-    metaLinks.push({
-      key: 'source',
-      href: post.source_link,
-      label: t('source'),
-      icon: <GithubIcon size={14} />,
-      event: 'View Source Code button',
-    });
-  }
-
-  if (post_type === 'portfolio' && 'demo_link' in post && post.demo_link) {
-    metaLinks.push({
-      key: 'demo',
-      href: post.demo_link,
-      label: t('demo'),
-      icon: <ExternalLink size={14} />,
-      event: 'View Demo button',
-    });
-  }
-
-  if (post_type === 'portfolio' && 'store_link' in post && post.store_link) {
-    metaLinks.push({
-      key: 'store',
-      href: post.store_link,
-      label: t('store'),
-      icon: <CirclePlay size={14} />,
-      event: 'Play Store button',
-    });
-  }
-
-  if (post_type === 'portfolio' && 'fdroid_link' in post && post.fdroid_link) {
-    metaLinks.push({
-      key: 'fdroid',
-      href: post.fdroid_link,
-      label: t('fdroid'),
-      icon: <Smartphone size={14} />,
-      event: 'F-Droid button',
-    });
-  }
-
-  if (
-    post_type === 'portfolio' &&
-    'ios_store_link' in post &&
-    post.ios_store_link
-  ) {
-    metaLinks.push({
-      key: 'ios',
-      href: post.ios_store_link,
-      label: t('ios'),
-      icon: <AppleIcon size={14} />,
-      event: 'iOS Store button',
-    });
-  }
+    kind: PostButtonKind;
+  }[] = buttons.map((button, index) => ({
+    key: `${button.kind}-${index}`,
+    href: button.url,
+    label:
+      button.kind === 'custom'
+        ? (button.label ?? postButtonLabel('custom', locale))
+        : postButtonLabel(button.kind, locale),
+    icon: buttonIcons[button.kind],
+    kind: button.kind,
+  }));
 
   const authorBlock = post.author ? (
     <>
@@ -175,9 +153,7 @@ export default async function Page({
           </span>
         )}
       </span>
-      <span className="text-sm text-text-main">
-        {post.author.display_name}
-      </span>
+      <span className="text-sm text-text-main">{post.author.display_name}</span>
     </>
   ) : null;
 
@@ -200,28 +176,30 @@ export default async function Page({
           name: post.title_en,
           description: String(post[postDescription]),
           links: {
-            website: 'website' in post ? post.website : null,
-            demo: 'demo_link' in post ? post.demo_link : null,
-            store: 'store_link' in post ? post.store_link : null,
-            source: 'source_link' in post ? post.source_link : null,
+            website: postButtonUrl(buttons, 'website'),
+            demo: postButtonUrl(buttons, 'demo'),
+            store: postButtonUrl(buttons, 'store'),
+            source: postButtonUrl(buttons, 'source'),
           },
         })),
   };
 
   return (
-    <article className="mx-auto max-w-5xl px-6 pt-12 pb-24 md:pt-24">
-      <JsonLd data={jsonLd} />
-      <div className="mx-auto max-w-3xl">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight text-text-white md:text-4xl">
-          {initTitle}
-        </h1>
-        <p className="mt-5 text-base leading-relaxed text-text-muted">
-          {String(post[postDescription])}
-        </p>
-        <div className="mt-7">
-          <Tags tags={post.post_tags} />
+    <>
+      <PublishLocaleAlternates alternates={alternates} />
+      <article className="mx-auto max-w-5xl px-6 pt-12 pb-24 md:pt-24">
+        <JsonLd data={jsonLd} />
+        <div className="mx-auto max-w-[60rem]">
+          <h1 className="font-heading text-3xl font-semibold tracking-tight text-text-white md:text-4xl">
+            {initTitle}
+          </h1>
+          <p className="mt-5 text-base leading-relaxed text-text-muted">
+            {String(post[postDescription])}
+          </p>
+          <div className="mt-7">
+            <Tags tags={post.post_tags} />
+          </div>
         </div>
-      </div>
 
       <div className="relative mt-10 h-56 w-full overflow-hidden rounded-2xl border border-accent-violet bg-surface-raised md:h-96">
         <Image
@@ -238,15 +216,14 @@ export default async function Page({
           src={post.image}
         />
       </div>
-
-      <div className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center gap-4 font-mono text-xs">
+      <div className="mx-auto mt-8 flex max-w-[60rem] flex-wrap items-center gap-4 font-mono text-xs">
         {metaLinks.length > 0 && (
           <div className="hidden items-center gap-3 md:flex">
             {metaLinks.map((link) => (
               <Link
                 className={linkClass}
-                data-umami-event={link.event}
-                data-umami-event-post={title}
+                data-umami-event="project-link-open"
+                data-umami-event-kind={link.kind}
                 href={link.href}
                 key={link.key}
                 rel="noopener noreferrer"
@@ -260,9 +237,7 @@ export default async function Page({
         )}
 
         {post_type !== 'portfolio' && authorBlock && (
-          <div className="hidden items-center gap-3 md:flex">
-            {authorBlock}
-          </div>
+          <div className="hidden items-center gap-3 md:flex">{authorBlock}</div>
         )}
 
         <span className="inline-flex items-center gap-2">
@@ -270,10 +245,7 @@ export default async function Page({
           <FormattedDate date={post?.created_at} />
         </span>
 
-        {post_type === 'portfolio' &&
-          post &&
-          'source_link' in post &&
-          post.source_link && <GitHubStars sourceLink={post.source_link} />}
+        {sourceUrl && <GitHubStars sourceLink={sourceUrl} />}
 
         <ViewDisplay
           initialViews={post.views ?? 0}
@@ -290,13 +262,13 @@ export default async function Page({
       </div>
 
       {post_type !== 'portfolio' && authorBlock && (
-        <div className="mx-auto mt-5 flex max-w-3xl items-center gap-3 md:hidden">
+        <div className="mx-auto mt-5 flex max-w-[60rem] items-center gap-3 md:hidden">
           {authorBlock}
         </div>
       )}
 
       {metaLinks.length > 0 && (
-        <div className="mx-auto mt-6 flex max-w-3xl flex-col gap-2 md:hidden">
+        <div className="mx-auto mt-6 flex max-w-[60rem] flex-col gap-2 md:hidden">
           {metaLinks.map((link, index) =>
             index % 2 === 0 ? (
               <div className="flex gap-2" key={link.key}>
@@ -305,8 +277,8 @@ export default async function Page({
                   .map((item) => (
                     <Link
                       className={mobileLinkClass}
-                      data-umami-event={item.event}
-                      data-umami-event-post={title}
+                      data-umami-event="project-link-open"
+                      data-umami-event-kind={item.kind}
                       href={item.href}
                       key={item.key}
                       rel="noopener noreferrer"
@@ -322,15 +294,15 @@ export default async function Page({
         </div>
       )}
 
-      <div className="post mx-auto mt-12 max-w-3xl text-left">
+      <div className="post mx-auto mt-12 max-w-[60rem] text-left">
         <MarkdownRenderer markdown={String(post[localeKey])} />
       </div>
     </article>
+    </>
   );
 }
 
 export async function generateStaticParams() {
-  const locales = ['en', 'it'];
   const portfolioPosts = (await getPosts(
     'portfolio',
     undefined,
@@ -400,7 +372,8 @@ export async function generateMetadata({
     };
   }
 
-  const postDescription = `description_${normalizedLocale}` as keyof typeof post;
+  const postDescription =
+    `description_${normalizedLocale}` as keyof typeof post;
   const postTitle =
     post_type === 'blog'
       ? (`title_${normalizedLocale}` as keyof typeof post)

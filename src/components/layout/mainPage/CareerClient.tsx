@@ -4,6 +4,7 @@ import { ArrowUpRight, Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { ChipRow } from '@components/common/ChipRow';
 import { ClientMarkdown } from '@components/common/ClientMarkdown';
+import { Glitch } from '@components/common/Glitch';
 import { SectionNumber } from '@components/common/SectionNumber';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { diffMonths, formatMonthYear } from '@/utils/formatDate';
@@ -72,6 +73,8 @@ export function CareerClient({
   const t = useTranslations('career-section');
   const groups = groupByCompany(careerEntries);
 
+  // Current positions fall back to the current date, which is dynamic at
+  // prerender time: keep every <Career> usage inside a Suspense boundary.
   const duration = (startDate: string, endDate: string | null) => {
     const months = diffMonths(endDate ?? new Date(), startDate);
 
@@ -83,13 +86,17 @@ export function CareerClient({
     return `${years} ${t(years === 1 ? 'year' : 'years')}`;
   };
 
-  const dates = (entry: CareerEntry) =>
-    `${formatMonthYear(entry.startDate)} - ${
-      entry.endDate ? formatMonthYear(entry.endDate) : t('present')
-    } ${separator} ${duration(entry.startDate, entry.endDate)}`;
+  const dates = (entry: CareerEntry) => (
+    <>
+      {formatMonthYear(entry.startDate)} -{' '}
+      {entry.endDate ? formatMonthYear(entry.endDate) : t('present')}{' '}
+      <span>{separator}</span>{' '}
+      {duration(entry.startDate, entry.endDate)}
+    </>
+  );
 
   const pill = (entry: CareerEntry) => (
-    <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle bg-surface-raised px-2.5 py-1 font-mono text-xs text-text-muted">
+    <span className="ml-0 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-subtle bg-surface-raised px-2.5 py-1 font-mono text-xs text-text-muted sm:ml-auto">
       {!entry.endDate && (
         <span className="h-1.5 w-1.5 rounded-full bg-status-active" />
       )}
@@ -125,8 +132,9 @@ export function CareerClient({
       </div>
 
       {nested && (
-        <p className="mb-4 text-xs text-text-dim">
-          {entry[`location_${locale}`]} {separator}{' '}
+        <p className="mb-4 w-fit text-xs text-text-dim">
+          {entry[`location_${locale}`]}{' '}
+          <span className="text-accent-violet">{separator}</span>{' '}
           {t(`remote.${entry.remote}`)}
         </p>
       )}
@@ -159,7 +167,7 @@ export function CareerClient({
           </div>
           <InnerHtml
             as="p"
-            className="mt-2 font-mono text-xs text-accent-violet-light sm:text-sm"
+            className="mx-auto mt-2 w-fit max-w-xl font-mono text-xs text-accent-violet-light sm:text-sm"
             html={formatLabels(t('subtitle'))}
           />
           <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
@@ -192,45 +200,58 @@ export function CareerClient({
                   />
                 </span>
 
-                <div className="rounded-2xl border border-border-subtle bg-surface-card p-6 sm:p-7">
-                  <div className="mb-5 flex flex-wrap items-start gap-3">
-                    <span className="flex shrink-0 items-center rounded-lg border border-border-subtle bg-surface-raised p-1.5">
-                      {/* biome-ignore lint/performance/noImgElement: brand marks arrive in arbitrary aspect ratios, so the height is capped rather than fixed */}
-                      <img
-                        alt={group.company}
-                        className="max-h-10 w-auto object-contain"
-                        loading="lazy"
-                        src={latest.logo}
-                      />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <a
-                        className="inline-flex items-center gap-1 font-heading text-base font-semibold text-text-white transition-colors hover:text-accent-violet-light hover:underline hover:underline-offset-2"
-                        href={latest.website_url}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        {group.company}
-                        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim" />
-                      </a>
-                      <p className="mt-1 text-xs text-text-dim">
-                        {latest[`location_${locale}`]} {separator}{' '}
-                        {t(`remote.${latest.remote}`)}
-                      </p>
+                <Glitch
+                  className="min-w-0 w-full"
+                  hoverPreset="click"
+                  probability={0.1}
+                  mode="both"
+                  trigger="group"
+                >
+                  <div className="min-w-0 w-full rounded-2xl border border-border-subtle bg-surface-card p-6 transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover sm:p-7">
+                    <div className="mb-5 flex flex-col items-center gap-3 text-left sm:flex-row sm:flex-wrap sm:items-start">
+                      <span className="flex w-fit shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-surface-raised p-1.5">
+                        {/* biome-ignore lint/performance/noImgElement: brand marks arrive in arbitrary aspect ratios, so the height is capped rather than fixed */}
+                        <img
+                          alt={group.company}
+                          className="max-h-14 w-auto object-contain sm:max-h-10"
+                          loading="lazy"
+                          src={latest.logo}
+                        />
+                      </span>
+                      <div className="order-2 flex w-full justify-center sm:order-3 sm:ml-auto sm:w-auto sm:justify-end">
+                        {pill(latest)}
+                      </div>
+                      <div className="order-3 flex w-full min-w-0 flex-col items-start sm:order-2 sm:w-auto sm:flex-1">
+                        <Glitch className="w-fit" mode="hover">
+                          <a
+                            className="inline-flex items-center gap-1 font-heading text-lg font-semibold text-text-white transition-colors group-hover:text-accent-violet-light hover:text-accent-violet-light hover:underline hover:underline-offset-2 sm:text-base"
+                            href={latest.website_url}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          >
+                            {group.company}
+                            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-text-dim transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-violet-light" />
+                          </a>
+                        </Glitch>
+                        <p className="mt-1 w-fit text-sm text-text-dim sm:text-xs">
+                          {latest[`location_${locale}`]}{' '}
+                          <span className="text-accent-violet">{separator}</span>{' '}
+                          {t(`remote.${latest.remote}`)}
+                        </p>
+                      </div>
                     </div>
-                    {pill(latest)}
+
+                    {position(latest, false)}
+
+                    {older.length > 0 && (
+                      <div className="mt-6 space-y-5 border-t border-border-subtle pt-5">
+                        {older.map((entry) => (
+                          <div key={entry.id}>{position(entry, true)}</div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
-                  {position(latest, false)}
-
-                  {older.length > 0 && (
-                    <div className="mt-6 space-y-5 border-t border-border-subtle pt-5">
-                      {older.map((entry) => (
-                        <div key={entry.id}>{position(entry, true)}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </Glitch>
               </div>
             );
           })}

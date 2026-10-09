@@ -2,7 +2,16 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import CopyLinkButton from '../common/CopyButton';
 
-export default async function Footer({ locale }: { locale: string }) {
+const siteName = 'Okazakee';
+
+export default async function Footer({
+  locale,
+  vatNumber,
+}: {
+  locale: string;
+  /** Stored `site_settings.footer_vat_number`; null/blank renders no VAT. */
+  vatNumber?: string | null;
+}) {
   const t = await getTranslations({ locale, namespace: 'footer' });
   const tPosts = await getTranslations({ locale, namespace: 'posts-section' });
 
@@ -13,6 +22,10 @@ export default async function Footer({ locale }: { locale: string }) {
   const linkClass = 'transition-colors hover:text-accent-violet-light';
 
   const separator = '//';
+
+  // The CMS owns the value: it is printed and copied verbatim, and an unset
+  // one renders no VAT affordance at all rather than a local substitute.
+  const vat = vatNumber?.trim() || null;
 
   return (
     <footer className="border-t border-border-subtle bg-surface-alt py-8 font-mono text-xs text-text-dim sm:py-0">
@@ -27,7 +40,7 @@ export default async function Footer({ locale }: { locale: string }) {
             rel="noopener noreferrer"
             target="_blank"
           >
-            Okazakee
+            {siteName}
           </Link>{' '}
           <span>{separator}</span>{' '}
           <Link
@@ -41,15 +54,19 @@ export default async function Footer({ locale }: { locale: string }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <CopyLinkButton
-            buttonTitle={t('buttonTitle')}
-            className="transition-colors hover:text-text-muted"
-            copiedLabel={tPosts('preCopy')}
-            copyValue="02863310815"
-          >
-            {t('middle')} - 02863310815
-          </CopyLinkButton>
-          <span>{separator}</span>
+          {vat && (
+            <>
+              <CopyLinkButton
+                buttonTitle={t('buttonTitle')}
+                className="transition-colors hover:text-text-muted"
+                copiedLabel={tPosts('preCopy')}
+                copyValue={vat}
+              >
+                {t('middle')} - {vat}
+              </CopyLinkButton>
+              <span>{separator}</span>
+            </>
+          )}
           <Link
             className="underline transition-colors hover:text-text-muted"
             href={cmsPublicUrl}

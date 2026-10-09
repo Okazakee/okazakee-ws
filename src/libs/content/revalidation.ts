@@ -35,6 +35,7 @@ const ALLOWED_ENTITIES = [
   'career',
   'skills',
   'contacts',
+  'settings',
   'hero',
   'resume',
   'translations',
@@ -44,7 +45,7 @@ const ALLOWED_ENTITIES = [
 
 // Hard-coded allowed tag namespace. Never accept arbitrary tags from the CMS.
 const ALLOWED_TAG_PATTERN =
-  /^(translations|privacy-policy|hero|skills|career|contacts|blog|portfolio|posts|resume|hero_section|post:(blog|portfolio):[A-Za-z0-9_-]+|author:[A-Za-z0-9_-]+)$/;
+  /^(translations|privacy-policy|hero|skills|career|contacts|blog|portfolio|posts|resume|hero_section|site-settings|post:(blog|portfolio):[A-Za-z0-9_-]+|author:[A-Za-z0-9_-]+)$/;
 
 const EVENT_ID_PATTERN = /^[A-Za-z0-9-]{8,100}$/;
 const MAX_ENTITY_ID_LENGTH = 100;
@@ -71,7 +72,10 @@ export function validateRevalidationEvent(raw: unknown): ValidationResult {
   const event = raw as Record<string, unknown>;
 
   if (event.version !== REVALIDATION_VERSION) {
-    return { ok: false, error: `Unsupported version: ${String(event.version)}` };
+    return {
+      ok: false,
+      error: `Unsupported version: ${String(event.version)}`,
+    };
   }
 
   if (
@@ -81,7 +85,10 @@ export function validateRevalidationEvent(raw: unknown): ValidationResult {
     return { ok: false, error: 'eventId must be a string of 8-100 chars' };
   }
 
-  if (typeof event.occurredAt !== 'string' || Number.isNaN(Date.parse(event.occurredAt))) {
+  if (
+    typeof event.occurredAt !== 'string' ||
+    Number.isNaN(Date.parse(event.occurredAt))
+  ) {
     return { ok: false, error: 'occurredAt must be an ISO timestamp' };
   }
 
@@ -102,7 +109,8 @@ export function validateRevalidationEvent(raw: unknown): ValidationResult {
     const idValue = event.entityId as unknown;
     const idOk =
       idType === 'number' ||
-      (idType === 'string' && (idValue as string).length <= MAX_ENTITY_ID_LENGTH);
+      (idType === 'string' &&
+        (idValue as string).length <= MAX_ENTITY_ID_LENGTH);
     if (!idOk) {
       return { ok: false, error: 'entityId must be a number or short string' };
     }

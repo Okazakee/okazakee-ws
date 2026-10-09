@@ -1,0 +1,97 @@
+{
+  "errors": {
+    "code": "404",
+    "home": "Home",
+    "retry": "Riprova",
+    "goBack": "Indietro",
+    "errorText": "Si è verificato un errore inatteso. Riprova.",
+    "errorLabel": "Errore di runtime",
+    "errorTitle": "Qualcosa è andato storto",
+    "notFoundText": "La pagina che stai cercando non esiste.",
+    "notFoundLabel": "404 non trovata",
+    "notFoundTitle": "Pagina non trovata",
+    "postErrorText": "Qualcosa è andato storto durante il caricamento di questo post.",
+    "postErrorTitle": "Ops!",
+    "postNotFoundText": "Il post che stai cercando non esiste."
+  },
+  "header": {
+    "buttons": [
+      "Home",
+      "Skills",
+      "Carriera",
+      "Portfolio",
+      "Blog",
+      "Contatti",
+      "Curriculum"
+    ],
+    "language": "Lingua",
+    "resume": "Curriculum",
+    "theme": "Tema"
+  },
+  "footer": {
+    "left": "Creato con ❤️ da",
+    "right": "Torna su",
+    "middle": "P.IVA",
+    "source": "Codice Sorgente",
+    "darkmode": "Tema Scuro",
+    "lightmode": "Tema Chiaro",
+    "buttonTitle": "Clicca per copiare la P.IVA",
+    "privacyPolicy": "Informativa sulla Privacy"
+  },
+  "posts-section": {
+    "title1": "Portfolio",
+    "title2": "Blog",
+    "subtitle1": "Una ****selezione di progetti**** che sviluppo e mantengo, con codice sorgente e implementazioni live quando disponibili",
+    "subtitle2": "Post occasionali su interessanti ****esperienze**** di sviluppo e ****approfondimenti****",
+    "website": "Sito web",
+    "source": "Codice Sorgente",
+    "ios": "iOS",
+    "store": "Play Store",
+    "fdroid": "FDroid",
+    "demo": "Live Demo",
+    "archiveMoreProjects": "+{count} altri progetti nell'archivio",
+    "archiveMorePosts": "+{count} altri articoli nell'archivio",
+    "archiveAllProjects": "Esplora l'archivio completo dei progetti",
+    "archiveAllPosts": "Esplora l'archivio completo degli articoli",
+    "archiveDescriptionProjects": "Scopri la raccolta completa, inclusi i progetti non mostrati qui.",
+    "archiveDescriptionPosts": "Scopri la raccolta completa, inclusi gli articoli non mostrati qui.",
+    "archiveViewAllProjects": "Vedi tutti i progetti",
+    "archiveViewAllPosts": "Vedi tutti gli articoli",
+    "copyButton": "Copia link del post",
+    "preCopy": "Copiato!",
+    "no-posts": "Non ci sono post disponibili!",
+    "ratelimit": "Troppe richieste! Attendere e riprovare.",
+    "searchbar": "Cerca post dal titolo, desc o tag..."
+  },
+  "contacts-section": {
+    "title": "Contatti",
+    "subtitle": "Puoi ****contattarmi**** tramite:",
+    "directChannels": "CANALI DIRETTI",
+    "directChannelsLabel": "Canali di contatto diretti",
+    "projectInquiry": "RICHIESTA PROGETTO",
+    "projectInquiryLabel": "Richiesta progetto"
+  },
+  "privacyPolicy": {
+    "title": "Informativa sulla Privacy",
+    "description": "Scopri come raccogliamo, utilizziamo e proteggiamo i tuoi dati personali quando visiti il nostro sito web."
+  },
+  "skills-section": {
+    "title": "Skills & Stack Tecnico",
+    "subtitle": "Tecnologie che utilizzo regolarmente tra sviluppo ****web, mobile, backend e infrastruttura****"
+  },
+  "career-section": {
+    "title": "Percorso Professionale",
+    "subtitle": "La mia esperienza professionale tra sviluppo ****web, mobile e integrazione di prodotto****",
+    "year": "anno",
+    "years": "anni",
+    "month": "mese",
+    "months": "mesi",
+    "locale": "it",
+    "present": "Presente",
+    "remote": {
+      "full": "Remoto",
+      "hybrid": "Ibrido",
+      "onSite": "In sede"
+    }
+  }
+}

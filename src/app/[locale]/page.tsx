@@ -3,6 +3,7 @@ import Contacts from '@layout/mainPage/Contacts';
 import Hero from '@layout/mainPage/Hero';
 import PostsSection from '@layout/mainPage/PostsSections';
 import Skills from '@layout/mainPage/Skills';
+import { Suspense } from 'react';
 import { JsonLd } from '@/components/common/JsonLd';
 import { getContacts } from '@/utils/getData';
 import {
@@ -12,6 +13,13 @@ import {
   SITE_NAME,
   SITE_OG_IMAGE,
 } from '@/utils/structuredData';
+
+// The home page's data access runs through `'use cache'` fetchers; on the
+// first cold render in dev the cache fill trips the instant validation and
+// reports the route as not instantly navigable. Later renders are cached and
+// instant, so this only opts the segment out of that validation feedback
+// (same opt-out as the post page).
+export const instant = false;
 
 export async function generateMetadata({
   params,
@@ -83,7 +91,12 @@ export default async function Home({
 
       <Skills locale={locale} />
 
-      <Career locale={locale} />
+      {/* Current positions render durations against the current date, which
+          is dynamic at prerender time and needs its own boundary now that
+          the shell no longer suspends as a whole (see Header/NavMenu). */}
+      <Suspense fallback={null}>
+        <Career locale={locale} />
+      </Suspense>
 
       <PostsSection locale={locale} />
 

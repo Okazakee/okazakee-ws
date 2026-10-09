@@ -1,44 +1,59 @@
 'use client';
 
-import type React from 'react';
-import { useEffect } from 'react';
-import useThemeStore from '../store/themeStore';
+import { useServerInsertedHTML } from 'next/navigation';
+import { type ReactNode, useLayoutEffect, useRef } from 'react';
+import useThemeStore from '@/store/themeStore';
 
-type IdleHandle = number | ReturnType<typeof setTimeout>;
-type IdleWindow = Window & {
-  requestIdleCallback?: (callback: IdleRequestCallback) => IdleHandle;
-  cancelIdleCallback?: (handle: IdleHandle) => void;
-};
-
-const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+export function Providers({
   children,
-}) => {
-  const { initializeTheme } = useThemeStore();
+  locale,
+}: {
+  children: ReactNode;
+  locale: string;
+}) {
+  const initializeTheme = useThemeStore((state) => state.initializeTheme);
+  const themeInserted = useRef(false);
 
-  useEffect(() => {
-    const idleWindow = window as IdleWindow;
-    let idleHandle: IdleHandle;
+  // SSR-only injection: runs during the server render, never re-renders on
+  // client navigation, so React never sees a client-rendered <script>.
+  // First paint on document loads; SPA locale switches keep <html> as-is
+  // and the layout effect below re-applies the saved theme.
+  useServerInsertedHTML(() => {
+    if (themeInserted.current) return null;
+    themeInserted.current = true;
 
-    if (typeof idleWindow.requestIdleCallback === 'function') {
-      idleHandle = idleWindow.requestIdleCallback(() => initializeTheme());
+    return (
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(() => {
+  try {
+    var c = {};
+    document.cookie.split(';').forEach(function (p) {
+      var i = p.indexOf('=');
+      if (i > 0) c[p.slice(0, i).trim()] = p.slice(i + 1).trim();
+    });
+    var m = null;
+    try {
+      m = localStorage.getItem('themeMode');
+    } catch (e) {}
+    m = m || c.themeMode;
+    var isDark =
+      m === 'dark' ||
+      (m !== 'light' &&
+        (c.resolvedTheme === 'dark' ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches));
+    document.documentElement.classList.toggle('dark', isDark);
+  } catch (e) {}
+})();`,
+        }}
+        id="theme-init"
+      />
+    );
+  });
 
-      return () => idleWindow.cancelIdleCallback?.(idleHandle);
-    }
-
-    idleHandle = globalThis.setTimeout(() => initializeTheme(), 1);
-    return () => globalThis.clearTimeout(idleHandle);
-  }, [initializeTheme]);
-
-  useEffect(() => {
-    const pathLocale = window.location.pathname.split('/')[1];
-    if (['en', 'it'].includes(pathLocale)) {
-      document.documentElement.lang = pathLocale;
-    }
-  }, []);
+  useLayoutEffect(() => {
+    initializeTheme();
+  }, [initializeTheme, locale]);
 
   return <>{children}</>;
-};
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return <ThemeProvider>{children}</ThemeProvider>;
 }

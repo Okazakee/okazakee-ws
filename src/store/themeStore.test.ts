@@ -158,13 +158,31 @@ describe('themeStore DOM application', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
-  it('initializes from the system preference on first visit', () => {
-    installFakeMediaQuery(true);
+  it('follows system changes on first visit without saving a manual choice', () => {
+    const fake = installFakeMediaQuery(true);
     useThemeStore.getState().initializeTheme();
 
-    expect(useThemeStore.getState().mode).toBe('dark');
-    expect(localStorage.getItem('themeMode')).toBe('dark');
+    expect(useThemeStore.getState().mode).toBe('auto');
+    expect(localStorage.getItem('themeMode')).toBeNull();
     expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+    dispatchSystemChange(fake, false);
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+    expect(localStorage.getItem('themeMode')).toBeNull();
+  });
+
+  it('restores saved manual choices despite a conflicting system theme', () => {
+    localStorage.setItem('themeMode', 'dark');
+    const fake = installFakeMediaQuery(false);
+    useThemeStore.getState().initializeTheme();
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+    useThemeStore.getState().setThemeMode('light');
+    dispatchSystemChange(fake, true);
+    useThemeStore.getState().initializeTheme();
+    expect(useThemeStore.getState().mode).toBe('light');
+    expect(localStorage.getItem('themeMode')).toBe('light');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
   it('applies the theme synchronously without reload or navigation', () => {

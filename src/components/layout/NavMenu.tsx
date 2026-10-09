@@ -1,52 +1,38 @@
 'use client';
 
+import { Glitch } from '@components/common/Glitch';
 import { ExternalLink, FileUser, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocaleSwitchStore } from '@/store/localeSwitchStore';
+import {
+  createMenuItems,
+  type NavMenuItem,
+  navItemHref,
+} from '@/utils/navAnchors';
 import LanguageToggle from './LanguageToggle';
 import ThemeToggle from './ThemeToggle';
 
-type MenuItem = {
-  id: string;
-  /** In-page section id on the home page (`home`, `skills`, ...). */
-  section: string;
-  /** Route used when the section cannot be reached on the current page. */
-  route: string;
-  /** True when the item is its own page (portfolio/blog) off the home page. */
-  page: boolean;
-};
+/**
+ * The drawer's open state must survive the locale-switch remount of the whole
+ * [locale] shell. Document-scoped like the hero session: restored only while
+ * a language switch is in flight (the switcher lives inside the drawer on
+ * mobile, so the reader was looking at it), while every ordinary navigation
+ * still starts closed. A reload is a new document, so the drawer starts
+ * closed as usual.
+ */
+let drawerOpenBeforeLocaleSwitch = false;
 
-const createMenuItems = (locale: string): MenuItem[] => [
-  { id: 'home', section: 'home', route: `/${locale}`, page: false },
-  { id: 'skills', section: 'skills', route: `/${locale}#skills`, page: false },
-  { id: 'career', section: 'career', route: `/${locale}#career`, page: false },
-  {
-    id: 'portfolio',
-    section: 'portfolio',
-    route: `/${locale}/portfolio`,
-    page: true,
-  },
-  { id: 'blog', section: 'blog', route: `/${locale}/blog`, page: true },
-  {
-    id: 'contacts',
-    section: 'contacts',
-    route: `/${locale}#contacts`,
-    page: false,
-  },
-];
-
-// Italian labels stay hardcoded here, as they were before the redesign
-const italianLabels = [
-  'Home',
-  'Skills',
-  'Carriera',
-  'Portfolio',
-  'Blog',
-  'Contatti',
-];
+/**
+ * Drawer cascade step (docs/DESIGN.md §4): rows enter 40ms apart and the
+ * footer lands one step after the last row. Closing replays that same
+ * timeline backwards — footer first, rows last-to-first, panel over the tail
+ * — so the exit is the entrance mirrored and lasts exactly as long.
+ */
+const rowStaggerMs = 40;
 
 /**
  * Navigation (docs/DESIGN.md §4): centred desktop nav from `lg` up, plus the
@@ -54,7 +40,52 @@ const italianLabels = [
  * in-page anchor and the active one follows the scroll position (the mock's
  * scroll-spy); on other pages the section items navigate back to their home
  * anchor while portfolio and blog highlight by route.
+ *
+ * Every item points at its own section: the anchor is the section id, which is
+ * site-side data and not edited anywhere, so the href, the scroll-spy and the
+ * click handler can never disagree.
  */
+function ResumeLabel({ label }: { label: string }) {
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [scale, setScale] = useState(1);
+
+  // Shrink long labels to the space left inside the fixed-width button. The
+  // outer span already excludes padding, icon and gap, so its width is the
+  // usable budget — no further subtraction. 1px tolerance avoids sub-pixel
+  // shrink on labels that already fit (e.g. "Resume"). Re-measures once the
+  // webfont arrives: fallback metrics fit, then the wider font overflows.
+  useLayoutEffect(() => {
+    const node = textRef.current;
+    const outer = node?.parentElement;
+    if (!node || !outer) return;
+    const measure = () => {
+      const usable = outer.clientWidth;
+      const needed = node.scrollWidth;
+      setScale(usable > 0 && needed > usable + 1 ? usable / needed : 1);
+    };
+    measure();
+    let cancelled = false;
+    document.fonts?.ready.then(() => {
+      if (!cancelled) measure();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [label]);
+
+  return (
+    <span className="flex min-w-0 flex-1 justify-center overflow-hidden">
+      <span
+        ref={textRef}
+        className="origin-center whitespace-nowrap"
+        style={scale < 1 ? { transform: `scale(${scale})` } : undefined}
+      >
+        {label}
+      </span>
+    </span>
+  );
+}
+
 export default function NavMenu({
   locale,
   resumeLink,
@@ -62,7 +93,11 @@ export default function NavMenu({
   locale: string;
   resumeLink: string | null;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(
+    () =>
+      drawerOpenBeforeLocaleSwitch &&
+      useLocaleSwitchStore.getState().handoff !== null
+  );
   const [mounted, setMounted] = useState(false);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string>('home');
@@ -73,8 +108,14 @@ export default function NavMenu({
   useEffect(() => {
     setMounted(true);
   }, []);
+  // Mirror the open state for the next mount of this shell (see the module
+  // comment): written after every change, read by a locale-switch remount.
+  useEffect(() => {
+    drawerOpenBeforeLocaleSwitch = isOpen;
+  }, [isOpen]);
   const menuItems = useMemo(() => createMenuItems(locale), [locale]);
   const t = useTranslations('header');
+  const resumeLabel = t('resume');
   const pathname = usePathname();
   const router = useRouter();
   const isHomePage = pathname === '/' || pathname === `/${locale}`;
@@ -99,17 +140,13 @@ export default function NavMenu({
 
   // Home: every nav item is an anchor; other pages: only the section items
   // scroll back home, portfolio and blog navigate to their own page.
-  const isAnchor = (item: MenuItem) => !item.page || isHomePage;
+  const isAnchor = (item: NavMenuItem) => !item.page || isHomePage;
 
-  const getHref = (item: MenuItem) => {
-    if (item.page && !isHomePage) return item.route;
-    if (isHomePage) return `#${item.section}`;
-    return `/${locale}`;
-  };
+  const getHref = (item: NavMenuItem) => navItemHref(item, locale, isHomePage);
 
   const handleClick = (
     event: React.MouseEvent<HTMLAnchorElement>,
-    item: MenuItem
+    item: NavMenuItem
   ) => {
     if (!isAnchor(item)) return;
 
@@ -131,8 +168,7 @@ export default function NavMenu({
     router.push(`/${locale}`);
   };
 
-  const label = (index: number) =>
-    locale === 'it' ? italianLabels[index] : t(`buttons.${index}`);
+  const label = (index: number) => t(`buttons.${index}`);
 
   // Scroll-spy over every home section, exactly like the mock: the last
   // section whose top passed the header threshold wins.
@@ -180,15 +216,21 @@ export default function NavMenu({
     }
   }, [pathname]);
 
-  const isActive = (item: MenuItem) => {
+  const isActive = (item: NavMenuItem) => {
     if (isHomePage) return activeSection === item.section;
     if (!item.page) return false;
     return pathname === item.route || pathname.startsWith(`${item.route}/`);
   };
 
-  const desktopIdle = 'transition-colors hover:text-accent-violet';
+  // Nav items take the company name's hover treatment (the career cards): the
+  // accent ink and an underline. The active item keeps its own violet rule —
+  // the resting items carry a transparent one so nothing shifts when a section
+  // becomes active. The glitch bursts on that active-state change, not on
+  // pointer hover.
+  const desktopIdle =
+    'border-b border-transparent pb-0.5 transition-colors hover:text-accent-violet-light hover:underline hover:underline-offset-2';
   const desktopActive =
-    'font-semibold text-accent-violet-light border-b border-accent-violet pb-0.5';
+    'font-semibold scale-105 text-accent-violet-light border-b border-accent-violet pb-0.5';
   const rowBase =
     'flex items-baseline gap-3.5 border-b border-border-subtle/50 px-1 py-3.5 transition-[opacity,translate] duration-200 ease-out';
   const rowIdle = `${rowBase} text-text-white`;
@@ -196,45 +238,46 @@ export default function NavMenu({
   const rowHidden = 'translate-y-2 opacity-0';
   const rowShown = 'translate-y-0 opacity-100';
   const resumeClass =
-    'flex items-center gap-1.5 rounded-lg border border-accent-violet/40 bg-accent-violet/10 font-mono text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20';
+    'flex items-center gap-1 rounded-lg border border-accent-violet/40 bg-accent-violet/10 font-mono text-accent-violet-light transition-colors hover:border-accent-violet hover:bg-accent-violet/20';
 
   return (
     <>
-      <nav className="col-start-2 hidden items-center gap-6 justify-self-center font-mono text-xs text-text-muted lg:flex">
+      <nav className="col-start-2 hidden items-center gap-5 justify-self-center font-mono text-xs text-text-muted lg:flex">
         {menuItems.map((item, index) => {
           const active = isActive(item);
 
           return (
-            <Link
-              aria-current={active ? 'page' : undefined}
-              className={active ? desktopActive : desktopIdle}
-              href={getHref(item)}
-              key={item.id}
-              onClick={(event) => handleClick(event, item)}
-            >
-              <span className="mr-1 text-[10px] text-text-dim">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              {label(index)}
-            </Link>
+            <Glitch active={active} className="w-fit" key={item.id} mode="click">
+              <Link
+                aria-current={active ? 'page' : undefined}
+                className={active ? desktopActive : desktopIdle}
+                href={getHref(item)}
+                onClick={(event) => handleClick(event, item)}
+              >
+                <span className="mr-1 text-[10px] text-text-dim">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                {label(index)}
+              </Link>
+            </Glitch>
           );
         })}
       </nav>
 
-      <div className="col-start-3 flex items-center gap-2 justify-self-end lg:gap-3">
-        <div className="hidden items-center gap-3 lg:flex">
+      <div className="col-start-3 flex items-center gap-2 justify-self-end lg:gap-2">
+        <div className="hidden items-center gap-2 lg:flex">
           <LanguageToggle />
           <ThemeToggle ariaLabel={t('theme')} />
           {resumeLink && (
             <Link
-              className={`${resumeClass} px-3 py-1.5 text-xs`}
-              data-umami-event="Resume button"
+              className={`${resumeClass} w-[100px] overflow-hidden px-2 py-1.5 text-xs`}
+              data-umami-event="resume-open"
               href={resumeLink}
               rel="noopener noreferrer"
               target="_blank"
             >
-              <FileUser className="h-[15px] w-[15px]" />
-              {locale === 'it' ? 'Curriculum' : 'Resume'}
+              <FileUser className="h-[15px] w-[15px] shrink-0" />
+              <ResumeLabel label={resumeLabel} />
             </Link>
           )}
         </div>
@@ -258,12 +301,17 @@ export default function NavMenu({
         createPortal(
           <div
             aria-hidden={!isOpen}
-            className={`fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-surface-base/70 backdrop-blur-md transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
+            className={`fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-surface-base/70 backdrop-blur-mobile transition-[opacity,translate,visibility] duration-200 ease-out lg:hidden ${
               isOpen
                 ? 'visible translate-y-0 opacity-100'
                 : 'invisible -translate-y-2 opacity-0'
             }`}
             id="mobile-nav"
+            style={{
+              transitionDelay: isOpen
+                ? '0ms'
+                : `${menuItems.length * rowStaggerMs}ms`,
+            }}
           >
             <div className="flex min-h-full flex-col px-6 pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
               <nav className="flex flex-col">
@@ -281,7 +329,10 @@ export default function NavMenu({
                         setIsOpen(false);
                       }}
                       style={{
-                        transitionDelay: isOpen ? `${index * 40}ms` : '0ms',
+                        transitionDelay: `${
+                          (isOpen ? index : menuItems.length - index) *
+                          rowStaggerMs
+                        }ms`,
                       }}
                       tabIndex={isOpen ? 0 : -1}
                     >
@@ -298,7 +349,11 @@ export default function NavMenu({
 
               <div
                 className={`mt-auto flex flex-col gap-3 pt-6 transition-[opacity,translate] duration-200 ease-out ${isOpen ? rowShown : rowHidden}`}
-                style={{ transitionDelay: isOpen ? '240ms' : '0ms' }}
+                style={{
+                  transitionDelay: `${
+                    (isOpen ? menuItems.length : 0) * rowStaggerMs
+                  }ms`,
+                }}
               >
                 <div className="flex items-center justify-between px-1 py-1 font-mono text-sm text-text-muted">
                   <span>{t('language')}</span>
@@ -308,7 +363,7 @@ export default function NavMenu({
                 {resumeLink && (
                   <Link
                     className={`${resumeClass} min-h-[52px] items-center justify-center px-3 py-3 text-sm`}
-                    data-umami-event="Resume button"
+                    data-umami-event="resume-open"
                     href={resumeLink}
                     onClick={() => setIsOpen(false)}
                     rel="noopener noreferrer"
@@ -316,7 +371,7 @@ export default function NavMenu({
                     target="_blank"
                   >
                     <FileUser className="h-4 w-4 shrink-0" />
-                    {locale === 'it' ? 'Curriculum' : 'Resume'}
+                    {resumeLabel}
                     <ExternalLink className="ml-auto h-4 w-4 text-text-dim" />
                   </Link>
                 )}

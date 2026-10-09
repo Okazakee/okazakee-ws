@@ -1,0 +1,97 @@
+{
+  "errors": {
+    "code": "404",
+    "home": "Home",
+    "retry": "Try Again",
+    "goBack": "Go Back",
+    "errorText": "An unexpected error occurred. Please try again.",
+    "errorLabel": "Runtime error",
+    "errorTitle": "Something went wrong",
+    "notFoundText": "The page you're looking for doesn't exist.",
+    "notFoundLabel": "404 not found",
+    "notFoundTitle": "Page not found",
+    "postErrorText": "Something went wrong while loading this post.",
+    "postErrorTitle": "Oops!",
+    "postNotFoundText": "The post you're looking for doesn't exist."
+  },
+  "header": {
+    "buttons": [
+      "Home",
+      "Skills",
+      "Career",
+      "Portfolio",
+      "Blog",
+      "Contacts",
+      "Resume"
+    ],
+    "language": "Language",
+    "resume": "Resume",
+    "theme": "Theme"
+  },
+  "footer": {
+    "left": "Made with ❤️ by",
+    "right": "Top",
+    "middle": "VAT IT",
+    "source": "Source Code",
+    "darkmode": "Dark Mode",
+    "lightmode": "Light Mode",
+    "buttonTitle": "Click to copy VAT number",
+    "privacyPolicy": "Privacy Policy"
+  },
+  "posts-section": {
+    "title1": "Portfolio",
+    "title2": "Blog",
+    "subtitle1": "A ****selection of projects**** I build and maintain, with source code and live implementations where available",
+    "subtitle2": "Occasional posts on interesting development ****experience**** and ****insights****",
+    "website": "Website",
+    "source": "Source Code",
+    "ios": "iOS",
+    "store": "Play Store",
+    "fdroid": "FDroid",
+    "demo": "Live Demo",
+    "archiveMoreProjects": "+{count} more projects in archive",
+    "archiveMorePosts": "+{count} more posts in archive",
+    "archiveAllProjects": "Explore the full project archive",
+    "archiveAllPosts": "Explore the full article archive",
+    "archiveDescriptionProjects": "Browse the complete collection, including projects not shown here.",
+    "archiveDescriptionPosts": "Browse the complete collection, including articles not shown here.",
+    "archiveViewAllProjects": "View all projects",
+    "archiveViewAllPosts": "View all posts",
+    "copyButton": "Copy post link",
+    "preCopy": "Copied!",
+    "no-posts": "There are no posts available!",
+    "ratelimit": "Too many requests! Please wait and retry.",
+    "searchbar": "Search posts by title, desc or tag..."
+  },
+  "contacts-section": {
+    "title": "Contacts",
+    "subtitle": "You can ****reach me**** through the following channels:",
+    "directChannels": "DIRECT CHANNELS",
+    "directChannelsLabel": "Direct contact channels",
+    "projectInquiry": "PROJECT REQUEST",
+    "projectInquiryLabel": "Project request"
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "description": "Learn how we collect, use, and protect your personal data when you visit our website."
+  },
+  "skills-section": {
+    "title": "Skills & Tech Stack",
+    "subtitle": "Technologies I use regularly across ****web, mobile, backend and infrastructure**** work"
+  },
+  "career-section": {
+    "title": "Career History",
+    "subtitle": "My professional experience across ****web, mobile and product integration****",
+    "year": "year",
+    "years": "years",
+    "month": "month",
+    "months": "months",
+    "locale": "en",
+    "present": "Present",
+    "remote": {
+      "full": "Remote",
+      "hybrid": "Hybrid",
+      "onSite": "On-site"
+    }
+  }
+}

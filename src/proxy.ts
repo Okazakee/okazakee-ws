@@ -1,41 +1,17 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+import { isValidLocale, routing } from '@/i18n/routing';
 import {
   isLegacyCmsRoute,
   stripLegacyCmsSegment,
 } from '@/utils/legacyCmsRoute';
 
-// Environment-based configuration with validation
-const LOCALES_ENV = process.env.NEXT_PUBLIC_LOCALES?.split(',') || ['en', 'it'];
-const DEFAULT_LOCALE_ENV = process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'en';
-
-// Validate configuration at startup
-if (
-  !Array.isArray(LOCALES_ENV) ||
-  !LOCALES_ENV.every(
-    (locale) => typeof locale === 'string' && locale.length === 2
-  )
-) {
-  throw new Error(
-    'Invalid LOCALES configuration: must be array of 2-character strings'
-  );
-}
-
-if (!LOCALES_ENV.includes(DEFAULT_LOCALE_ENV)) {
-  throw new Error(
-    `DEFAULT_LOCALE '${DEFAULT_LOCALE_ENV}' must be included in LOCALES array`
-  );
-}
-
-const LOCALES = LOCALES_ENV as string[];
-const DEFAULT_LOCALE = DEFAULT_LOCALE_ENV;
-const REDIRECT_HEADER = 'x-redirected';
+// Locale negotiation lives in src/i18n/routing.ts (single authority). The
+// proxy keeps the unrelated guards: bot probes, traversal, legacy CMS.
 
 // Precompiled patterns for performance
-const LOCALE_SET = new Set(LOCALES);
-const LOCALE_PATTERN = new RegExp(`^/(${LOCALES.join('|')})(?:/|$)`);
+const LOCALE_PATTERN = new RegExp(`^/(${routing.locales.join('|')})(?:/|$)`);
 const STATIC_ASSET_PATTERN = /\.[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*$/;
-const LOCALE_COOKIE_PATTERN = /^[a-zA-Z0-9_-]+$/;
 const BOT_PROBE_PATTERNS = [
   /^\/(?:wp-admin(?:\/|$)|wp-content(?:\/|$)|wp-includes(?:\/|$)|wp-json(?:\/|$)|wp-login\.php$|xmlrpc\.php$|phpmyadmin(?:\/|$))/i,
   /^\/wp-[a-z0-9-]+\.php(?:$|[/?#])/i,
@@ -44,8 +20,6 @@ const BOT_PROBE_PATTERNS = [
   /(?:^|\/)\.(?:env|git|docker)(?:$|[/.])/i,
   /^\/(?:sitemap(?:\.[a-z0-9_-]+)?|news_sitemap\.xml)(?:\/|%2f).+/i,
 ];
-const ACCEPT_LANGUAGE_PATTERN =
-  /^([a-z]{2})(?:-[a-z]{2})?(?:;q=[0-9.]+)?(?:,|$)/i;
 
 // Comprehensive path traversal protection
 const PATH_TRAVERSAL_PATTERNS = [
@@ -58,19 +32,7 @@ const PATH_TRAVERSAL_PATTERNS = [
   /[\u007f-\u009f]/, // Extended control characters
 ];
 
-const handleI18n = createMiddleware({
-  locales: LOCALES,
-  defaultLocale: DEFAULT_LOCALE,
-  localeDetection: true,
-  // Hreflang is emitted per page from metadata (with the real localized
-  // slugs); disable the middleware's locale-swap Link headers to keep a
-  // single source of truth.
-  alternateLinks: false,
-});
-
-function isValidLocale(locale: string | null | undefined): locale is string {
-  return typeof locale === 'string' && LOCALE_SET.has(locale);
-}
+const handleI18n = createMiddleware(routing);
 
 function extractLocaleFromPath(pathname: string): string | null {
   const match = pathname.match(LOCALE_PATTERN);
@@ -106,93 +68,8 @@ function validatePathname(pathname: string): string {
   return normalized;
 }
 
-function sanitizeCookieValue(value: string | undefined): string | null {
-  if (!value || typeof value !== 'string') return null;
-
-  // Additional validation for cookie security
-  if (value.length > 100) return null; // Prevent oversized cookies
-
-  if (!LOCALE_COOKIE_PATTERN.test(value)) return null;
-
-  return isValidLocale(value) ? value : null;
-}
-
-function parseAcceptLanguage(acceptLanguage: string | null): string | null {
-  if (!acceptLanguage) return null;
-
-  try {
-    const match = acceptLanguage.match(ACCEPT_LANGUAGE_PATTERN);
-    if (match && isValidLocale(match[1])) {
-      return match[1];
-    }
-  } catch (error) {
-    console.error('Failed to parse Accept-Language header:', error);
-  }
-
-  return null;
-}
-
-function createRedirectResponse(
-  request: NextRequest,
-  pathname: string,
-  locale: string
-): NextResponse {
-  const url = request.nextUrl.clone();
-  url.pathname = validatePathname(`/${locale}${pathname}`);
-  const response = NextResponse.redirect(url);
-  response.headers.set(REDIRECT_HEADER, 'true');
-  return response;
-}
-
-function handleMiddlewareError(
-  request: NextRequest,
-  error: unknown
-): NextResponse {
-  console.error('Middleware processing failed:', {
-    pathname: request.nextUrl.pathname,
-    error: error instanceof Error ? error.message : 'Unknown error',
-    timestamp: new Date().toISOString(),
-  });
-
-  try {
-    return createRedirectResponse(
-      request,
-      request.nextUrl.pathname,
-      DEFAULT_LOCALE
-    );
-  } catch (redirectError) {
-    console.error('Failed to create redirect URL:', redirectError);
-    return NextResponse.next();
-  }
-}
-function getPreferredLocale(request: NextRequest): string {
-  try {
-    const savedLocale = sanitizeCookieValue(
-      request.cookies.get('NEXT_LOCALE')?.value
-    );
-    if (savedLocale) {
-      return savedLocale;
-    }
-
-    const acceptLanguage = request.headers.get('accept-language');
-    const parsedLocale = parseAcceptLanguage(acceptLanguage);
-    if (parsedLocale) {
-      return parsedLocale;
-    }
-  } catch (error) {
-    console.error('Locale detection failed:', error);
-  }
-
-  return DEFAULT_LOCALE;
-}
-
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // Check redirect loop prevention
-  if (request.headers.get(REDIRECT_HEADER)) {
-    return NextResponse.next();
-  }
 
   if (isBotProbePath(pathname)) {
     return new NextResponse(null, { status: 404 });
@@ -213,15 +90,12 @@ export default async function proxy(request: NextRequest) {
   }
 
   try {
-    const currentLocale = extractLocaleFromPath(pathname);
-    const hasLocale = currentLocale !== null;
-
     // Legacy CMS cutover redirect: /{locale}/cms* URLs go to the standalone
     // CMS host, with the /cms segment stripped (the CMS now serves root
     // paths: /en/cms -> https://cms.okazakee.dev/en). 307 preserves the
     // query string. Controlled by LEGACY_CMS_REDIRECT_HOST; when unset these
     // routes no longer exist in this repository.
-    if (hasLocale && isLegacyCmsRoute(pathname)) {
+    if (extractLocaleFromPath(pathname) && isLegacyCmsRoute(pathname)) {
       const legacyCmsHost = process.env.LEGACY_CMS_REDIRECT_HOST;
       if (legacyCmsHost) {
         try {
@@ -229,27 +103,21 @@ export default async function proxy(request: NextRequest) {
           const url = request.nextUrl.clone();
           url.protocol = target.protocol;
           url.host = target.host;
-          url.pathname = validatePathname(
-            stripLegacyCmsSegment(pathname)
-          );
+          url.pathname = validatePathname(stripLegacyCmsSegment(pathname));
           return NextResponse.redirect(url, 307);
         } catch {
-          console.error(
-            'Invalid LEGACY_CMS_REDIRECT_HOST:',
-            legacyCmsHost
-          );
+          console.error('Invalid LEGACY_CMS_REDIRECT_HOST:', legacyCmsHost);
         }
       }
     }
 
-    if (hasLocale) {
-      return handleI18n(request);
-    }
-
-    const locale = getPreferredLocale(request);
-
-    return createRedirectResponse(request, pathname, locale);
+    return handleI18n(request);
   } catch (error) {
-    return handleMiddlewareError(request, error);
+    console.error('Middleware processing failed:', {
+      pathname: request.nextUrl.pathname,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    });
+    return NextResponse.next();
   }
 }

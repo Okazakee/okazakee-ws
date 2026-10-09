@@ -9,6 +9,36 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Two backdrop blurs for the site's translucent surfaces: the sticky
+      // header, the mobile drawer, the image-modal overlay, a post card's
+      // badge and the request band's overlay all use `backdrop-blur-surface`,
+      // while the mobile header and nav drawer pair uses the stronger
+      // `backdrop-blur-mobile` (docs/DESIGN.md §3). Per-element blur values
+      // are not used.
+      backdropBlur: {
+        surface: '3px',
+        mobile: '5px',
+      },
+      // The cursor kinds resolve to the ported "Blue" art in globals.css, so
+      // every `cursor-*` class in the codebase (and the `@apply`s in the base
+      // layer) uses it without a sweep. Kinds the scheme has no art for
+      // (`cursor-grab`, `zoom-in`, …) stay the system cursors.
+      cursor: {
+        default: 'var(--cursor-default)',
+        pointer: 'var(--cursor-pointer)',
+        text: 'var(--cursor-text)',
+        'not-allowed': 'var(--cursor-not-allowed)',
+        wait: 'var(--cursor-wait)',
+        progress: 'var(--cursor-progress)',
+        crosshair: 'var(--cursor-crosshair)',
+        help: 'var(--cursor-help)',
+        move: 'var(--cursor-move)',
+        'ew-resize': 'var(--cursor-ew-resize)',
+        'ns-resize': 'var(--cursor-ns-resize)',
+        'nwse-resize': 'var(--cursor-nwse-resize)',
+        'nesw-resize': 'var(--cursor-nesw-resize)',
+        copy: 'var(--cursor-copy)',
+      },
       fontFamily: {
         whiterabt: 'var(--font-whiterabt)',
         body: 'var(--font-whiterabt)',

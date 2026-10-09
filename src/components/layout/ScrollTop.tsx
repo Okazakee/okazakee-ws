@@ -1,8 +1,9 @@
 'use client';
 
+import { Glitch } from '@/components/common/Glitch';
 import { ArrowUpToLine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 export default function ScrollTop() {
   const [showLink, setShowLink] = useState(false);
@@ -24,31 +25,50 @@ export default function ScrollTop() {
 
     // Adjust button offset when near the bottom
     if (scrollY + viewportHeight >= totalHeight - 200) {
-      setButtonOffset(Math.max(16, 100 - (totalHeight - (scrollY + viewportHeight))));
+      setButtonOffset(
+        Math.max(16, 100 - (totalHeight - (scrollY + viewportHeight)))
+      );
     } else {
       setButtonOffset(16); // Reset to default offset
     }
   }, []);
 
+  // A locale switch remounts this subtree with fresh state, so derive the
+  // initial state from the live scroll position instead of waiting for the
+  // next scroll event: the layout pass covers a position the browser kept
+  // across the switch, and the effect below re-runs after
+  // LocaleScrollRestore (rendered earlier, same commit) has restored its
+  // captured position.
+  useLayoutEffect(() => {
+    handleScroll();
+  }, [handleScroll]);
+
   useEffect(() => {
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [handleScroll]);
 
   return (
     showLink && (
-      <button
-        type="button"
-        className="fixed right-4 z-40 flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-text-main p-3 font-mono text-xs uppercase tracking-[0.08em] text-surface-base shadow-lg transition-colors duration-300 hover:bg-accent-violet hover:text-text-on-accent md:right-8 md:px-4 md:py-2"
+      <Glitch
+        className="fixed right-4 z-40 md:right-8"
+        mode="hover"
         style={{
           bottom: `${buttonOffset}px`,
           opacity: opacity,
+          borderRadius: '0.75rem',
         }}
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
-        <span className="hidden md:inline">{t('right')}</span>
-        <ArrowUpToLine className="h-4 w-4" />
-      </button>
+        <button
+          type="button"
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-text-main p-3 font-mono text-xs uppercase tracking-[0.08em] text-surface-base shadow-lg transition-colors duration-300 hover:bg-accent-violet hover:text-text-on-accent md:px-4 md:py-2"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <span className="hidden md:inline">{t('right')}</span>
+          <ArrowUpToLine className="h-4 w-4" />
+        </button>
+      </Glitch>
     )
   );
 }
