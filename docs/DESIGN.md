@@ -220,8 +220,15 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - Cursors: the **Windows "Blue" scheme**, ported from its `.cur` resources into
   `public/cursors/` and recoloured to `accent-violet` (`#9451ff`; `not-allowed`
   keeps the scheme's red, which is the point of it). `.cur` is a raster
-  container (BMP or PNG entries, no vectors). Only the fourteen original
-  **64×64 PNGs** are stored; no pre-resized DPI variants remain.
+  container (BMP or PNG entries, no vectors). Each theme has fourteen
+  **64×64 PNGs** at one resolution; no pre-resized DPI variants remain.
+  Light mode keeps the original black-detail artwork in `public/cursors/`.
+  Dark mode uses white-detail counterparts in `public/cursors/dark/`: only
+  nontransparent neutral pixels with equal RGB channels below 128 are lightened
+  (`v → 255 − v`); all other RGB values and every alpha value stay unchanged,
+  preserving the violet/red art and antialiased transparency. The existing
+  root `.dark` class switches `--cursor-image-*` URLs for manual and automatic
+  themes; shared cursor definitions retain the same geometry and scale.
   `--cursor-scale` in `globals.css` is the single website-wide size control:
   **1 = 32 CSS px**, the scheme's normal size and
   [MDN's recommended cursor size](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/cursor#icon_size_limits).

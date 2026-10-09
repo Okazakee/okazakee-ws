@@ -41,7 +41,9 @@
   --matrix-warp: 18;
   --matrix-warp-reach: 9;
 
-  /* Custom cursors (docs/DESIGN.md §3): one native 64px PNG per kind.
+  /* Custom cursors (docs/DESIGN.md §3): 14 canonical 64px PNGs per theme,
+     with original black details for light and white details for dark. The
+     existing root .dark switch selects the image URLs.
      --cursor-scale is the website-wide size knob: 1 = 32 CSS px, 1.5 = 48,
      2 = 64. Image resolution and hotspots scale together, preserving the
      corrected centre hotspots. Unsupported custom images use the native
@@ -49,71 +51,85 @@
   --cursor-scale: 1;
   --cursor-resolution: calc(2dppx / var(--cursor-scale));
   --cursor-hotspot-scale: calc(2 * var(--cursor-scale) / 3);
+  --cursor-image-default: url("/cursors/default.png");
+  --cursor-image-pointer: url("/cursors/pointer.png");
+  --cursor-image-text: url("/cursors/text.png");
+  --cursor-image-not-allowed: url("/cursors/not-allowed.png");
+  --cursor-image-wait: url("/cursors/wait.png");
+  --cursor-image-progress: url("/cursors/progress.png");
+  --cursor-image-crosshair: url("/cursors/crosshair.png");
+  --cursor-image-help: url("/cursors/help.png");
+  --cursor-image-move: url("/cursors/move.png");
+  --cursor-image-ew-resize: url("/cursors/ew-resize.png");
+  --cursor-image-ns-resize: url("/cursors/ns-resize.png");
+  --cursor-image-nwse-resize: url("/cursors/nwse-resize.png");
+  --cursor-image-nesw-resize: url("/cursors/nesw-resize.png");
+  --cursor-image-copy: url("/cursors/copy.png");
   --cursor-default:
-    image-set(url("/cursors/default.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-default) var(--cursor-resolution))
     calc(15 * var(--cursor-hotspot-scale))
     calc(14 * var(--cursor-hotspot-scale)),
     default;
   --cursor-pointer:
-    image-set(url("/cursors/pointer.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-pointer) var(--cursor-resolution))
     calc(11 * var(--cursor-hotspot-scale))
     calc(11 * var(--cursor-hotspot-scale)),
     pointer;
   --cursor-text:
-    image-set(url("/cursors/text.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-text) var(--cursor-resolution))
     calc(23 * var(--cursor-hotspot-scale))
     calc(23 * var(--cursor-hotspot-scale)),
     text;
   --cursor-not-allowed:
-    image-set(url("/cursors/not-allowed.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-not-allowed) var(--cursor-resolution))
     calc(23 * var(--cursor-hotspot-scale))
     calc(24 * var(--cursor-hotspot-scale)),
     not-allowed;
   --cursor-wait:
-    image-set(url("/cursors/wait.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-wait) var(--cursor-resolution))
     calc(24 * var(--cursor-hotspot-scale))
     calc(25 * var(--cursor-hotspot-scale)),
     wait;
   --cursor-progress:
-    image-set(url("/cursors/progress.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-progress) var(--cursor-resolution))
     calc(6 * var(--cursor-hotspot-scale)) calc(4 * var(--cursor-hotspot-scale)),
     progress;
   --cursor-crosshair:
-    image-set(url("/cursors/crosshair.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-crosshair) var(--cursor-resolution))
     calc(25 * var(--cursor-hotspot-scale))
     calc(23 * var(--cursor-hotspot-scale)),
     crosshair;
   --cursor-help:
-    image-set(url("/cursors/help.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-help) var(--cursor-resolution))
     calc(7 * var(--cursor-hotspot-scale)) calc(5 * var(--cursor-hotspot-scale)),
     help;
   --cursor-move:
-    image-set(url("/cursors/move.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-move) var(--cursor-resolution))
     calc(23 * var(--cursor-hotspot-scale))
     calc(23 * var(--cursor-hotspot-scale)),
     move;
   --cursor-ew-resize:
-    image-set(url("/cursors/ew-resize.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-ew-resize) var(--cursor-resolution))
     calc(23 * var(--cursor-hotspot-scale))
     calc(23 * var(--cursor-hotspot-scale)),
     ew-resize;
   --cursor-ns-resize:
-    image-set(url("/cursors/ns-resize.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-ns-resize) var(--cursor-resolution))
     calc(23 * var(--cursor-hotspot-scale))
     calc(24 * var(--cursor-hotspot-scale)),
     ns-resize;
   --cursor-nwse-resize:
-    image-set(url("/cursors/nwse-resize.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-nwse-resize) var(--cursor-resolution))
     calc(24 * var(--cursor-hotspot-scale))
     calc(24 * var(--cursor-hotspot-scale)),
     nwse-resize;
   --cursor-nesw-resize:
-    image-set(url("/cursors/nesw-resize.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-nesw-resize) var(--cursor-resolution))
     calc(24 * var(--cursor-hotspot-scale))
     calc(24 * var(--cursor-hotspot-scale)),
     nesw-resize;
   --cursor-copy:
-    image-set(url("/cursors/copy.png") var(--cursor-resolution))
+    image-set(var(--cursor-image-copy) var(--cursor-resolution))
     calc(23 * var(--cursor-hotspot-scale))
     calc(22 * var(--cursor-hotspot-scale)),
     copy;
@@ -139,6 +155,21 @@
   --c-status-active: #10b981;
   --c-code-bg: #08090d;
   --c-code-fg: #e2e8f0;
+
+  --cursor-image-default: url("/cursors/dark/default.png");
+  --cursor-image-pointer: url("/cursors/dark/pointer.png");
+  --cursor-image-text: url("/cursors/dark/text.png");
+  --cursor-image-not-allowed: url("/cursors/dark/not-allowed.png");
+  --cursor-image-wait: url("/cursors/dark/wait.png");
+  --cursor-image-progress: url("/cursors/dark/progress.png");
+  --cursor-image-crosshair: url("/cursors/dark/crosshair.png");
+  --cursor-image-help: url("/cursors/dark/help.png");
+  --cursor-image-move: url("/cursors/dark/move.png");
+  --cursor-image-ew-resize: url("/cursors/dark/ew-resize.png");
+  --cursor-image-ns-resize: url("/cursors/dark/ns-resize.png");
+  --cursor-image-nwse-resize: url("/cursors/dark/nwse-resize.png");
+  --cursor-image-nesw-resize: url("/cursors/dark/nesw-resize.png");
+  --cursor-image-copy: url("/cursors/dark/copy.png");
 }
 
 @utility clip-pebble {
