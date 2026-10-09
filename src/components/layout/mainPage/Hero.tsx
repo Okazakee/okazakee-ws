@@ -86,14 +86,14 @@ export default async function Hero({ locale }: { locale: string }) {
                 `absolute inset-0` gives the layer container the portrait's own
                 square — the layers inside are absolutely positioned, so a
                 container in normal flow would collapse to zero height and have
-                nothing to hover — and `pointer-events-auto` on it is what makes
-                the portrait hoverable at all, since the identity block is
+                nothing to hover or tap — and `pointer-events-auto` lets the
+                portrait receive those events even though the identity block is
                 `pointer-events-none`. Everything inside stays
                 `pointer-events-none`, so the image is still neither draggable
                 nor selectable and the matrix magnet still sees the move. */}
             <Glitch
               className="pointer-events-auto absolute inset-0"
-              mode="hover"
+              mode="both"
             >
               {/* Positioned, so the ring inset and the image mask resolve
                   against it exactly as they did against the wrapper — and

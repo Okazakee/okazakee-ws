@@ -168,7 +168,7 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   about blocks are `pointer-events-none`: nothing there is selectable or
   draggable, and the magnet and the pings keep tracking across the whole band.
   The one exception is the portrait's glitch container (§3 below), which takes
-  the pointer so the portrait can glitch on hover; everything inside it stays
+  the pointer so the portrait can glitch on hover or tap; its children stay
   `pointer-events-none` — the container's `auto` does not inherit past the
   glitched element — so the image is still neither draggable nor selectable and
   the magnet still sees the move. The glitched element there is the **whole
@@ -277,9 +277,9 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   **controls** (theme, language, Resume, drawer toggle). Both of its effects
   are fast (a sixth of a second) and small.
   `mode` is per surface. The **skills tiles**, the **post cards**, the
-  **career entries** and the **archive card** that closes each posts list wire
-  both triggers; the **hero portrait**, the **career company links**, the
-  **header nav items** and the **contact tiles** are hover only. Every eligible
+  **career entries**, **hero portrait** and **archive card** that closes each
+  posts list wire both hover and click/tap triggers; the **career company
+  links**, **header nav items** and **contact tiles** are hover only. Every eligible
   trigger independently samples `probability`: the **hero portrait**, **career
   company links**, **header nav items** and **back-to-top button** always play
   (`1`); the **skills tiles**, **post cards**, **archive card** and **contact
