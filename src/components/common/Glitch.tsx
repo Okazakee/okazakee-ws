@@ -32,13 +32,12 @@ interface GlitchProps {
  * react-powerglitch (MIT, github.com/7PH/react-powerglitch) — over the element
  * it wraps, then stops.
  *
- * `mode` picks the triggers. The standard hover and click presets share a
- * 150 ms duration: the canon tear uses four 2–10% bands torn sideways by up to
- * 12%, with 4% shake; the flicker uses three 12–30% bands with ±90° hue and a
- * short vertical nudge. The back-to-top has a slightly stronger four-band
- * flicker preset. **Hover** plays the tear unless the surface selects another
- * `hoverPreset`; a **click** always plays the click preset; `both` wires both
- * and cancels hover on leave. Every mode is one shot.
+ * `mode` picks the triggers. The hover and click presets share a 150 ms
+ * duration: the canon tear uses four 2–10% bands torn sideways by up to 12%,
+ * with 4% shake; the flicker uses three 12–30% bands with ±90° hue and a short
+ * vertical nudge. The back-to-top wraps the button itself and uses the same
+ * hover tear as the profile portrait. A **click** always plays the click
+ * preset; `both` wires both and cancels hover on leave. Every mode is one shot.
  *
  * The wrapped element keeps its own styles: the burst plays on clones the hook
  * stacks inside this container's grid cell (`globals.css`), so the box itself

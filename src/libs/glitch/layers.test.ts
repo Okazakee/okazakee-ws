@@ -46,20 +46,6 @@ describe('generateGlitchLayers', () => {
       ).toBe(true);
     }
   });
-  it('makes the back-to-top flicker stronger than the standard click preset', () => {
-    const preset = glitchPresets.backToTop;
-    const click = glitchPresets.click;
-
-    expect(preset.slice.count).toBeGreaterThan(click.slice.count);
-    expect(preset.slice.maxHeight).toBeGreaterThan(click.slice.maxHeight);
-    expect(preset.slice.hueRange).toBe(120);
-    expect(click.slice.hueRange).toBe(90);
-    expect(preset.shake).not.toBe(false);
-    expect(click.shake).not.toBe(false);
-    if (preset.shake && click.shake) {
-      expect(preset.shake.amplitudeY).toBeGreaterThan(click.shake.amplitudeY);
-    }
-  });
 
   it('steps each layer at its own velocity, inside the preset timing', () => {
     const preset = glitchPresets.click;

@@ -283,11 +283,10 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   cancelling where it started when the pointer leaves. The **contact tiles**
   and the **archive card** flicker on hover instead (`hoverPreset="click"`):
   three broad bands (12–30%) rotate hue within ±90° as the element takes a
-  short vertical nudge. The **back-to-top button** uses its own stronger
-  `backToTop` hover preset across the whole button: four broader bands (15–36%),
-  hue within ±120° and a slightly larger vertical nudge. Both flicker presets
-  run a **150 ms** loop with six steps (35 per second); travel stays within the
-  same pixel caps (`clampGlitchToBox`: 36 px horizontal, 12 / 6 px shake).
+  short vertical nudge. The **back-to-top button** glitches as a whole and uses
+  the same default tear preset as the profile portrait. Both presets run a
+  **150 ms** loop with six steps (35 per second); travel stays within the same
+  pixel caps (`clampGlitchToBox`: 36 px horizontal, 12 / 6 px shake).
   The burst is a WAAPI animation per layer, generated from `libs/glitch/layers.ts`:
   one base layer that shakes the glitched element and one clone per slice layer
   that clips a band of it, shifts it sideways by up to the preset's travel and

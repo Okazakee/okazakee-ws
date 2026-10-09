@@ -53,8 +53,7 @@ export default function ScrollTop() {
     showLink && (
       <Glitch
         className="fixed right-4 z-40 md:right-8"
-        hoverPreset="backToTop"
-        mode="both"
+        mode="hover"
         style={{
           bottom: `${buttonOffset}px`,
           opacity: opacity,
