@@ -43,15 +43,12 @@ const SquircleClipPath = () => (
 
 const roleLineClass =
   'mx-auto w-fit rounded-2xl bg-surface-base/40 p-2 font-mono text-xl tracking-normal text-text-muted md:text-2xl';
-// Keep the hero's initial type-on reveal, but disable repeated idle cycling.
-const roleTypewriterIdleAnimationEnabled = false;
 
 /**
  * Hero and about block (docs/DESIGN.md §6): one full-height band — the portrait
  * beside the name and role(s), then the about card below in the section-header
- * pattern. The portrait shape comes from `hero_section`; localized roles type
- * once, with repeated idle cycling controlled by
- * `roleTypewriterIdleAnimationEnabled`.
+ * pattern. The portrait shape comes from `hero_section`; localized roles
+ * animate, typing once for one role and cycling for several.
  */
 export default async function Hero({ locale }: { locale: string }) {
   const heroSection = await getHeroSection();
@@ -136,7 +133,6 @@ export default async function Hero({ locale }: { locale: string }) {
             <RoleTypewriter
               as="p"
               className={roleLineClass}
-              idleAnimationEnabled={roleTypewriterIdleAnimationEnabled}
               roles={roles}
               slot={0}
             />

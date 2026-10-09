@@ -9,27 +9,25 @@ import {
   typewriterLength,
   typewriterStep,
 } from '@/utils/heroDisplay';
-import {
-  createKeystrokePacer,
-  typewriterHoldMs,
-  typewriterStartMs,
-} from '@/utils/typewriterPacing';
+import { typewriterHoldMs, typewriterStartMs } from '@/utils/typewriterPacing';
 import { typewriterPhases } from './heroAnimationState';
 
 const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
+const typewriterCharacterMs = 80;
+const typewriterBackspaceMs = 40;
+const typewriterNextRoleMs = 320;
+
 
 interface RoleTypewriterProps {
   /** The roles this line carries. */
   roles: string[];
   /** Key of this line in the hero role list; keys the resumable phase. */
   slot: number;
-  /** Whether multiple roles keep cycling after the first reveal. */
-  idleAnimationEnabled?: boolean;
   as?: 'p' | 'span' | 'div';
   className?: string;
 }
 
-type Phase = 'typing' | 'erasing';
+type Phase = 'typing' | 'holding' | 'erasing';
 
 /**
  * The hero role line (docs/DESIGN.md §3). One role types out and stays; a list
@@ -50,11 +48,10 @@ type Phase = 'typing' | 'erasing';
 export function RoleTypewriter({
   roles,
   slot,
-  idleAnimationEnabled = true,
   as = 'p',
   className,
 }: RoleTypewriterProps) {
-  const cycles = idleAnimationEnabled && roles.length > 1;
+  const cycles = roles.length > 1;
   const lines = useMemo(
     () =>
       roles.map((role) => {
@@ -113,7 +110,6 @@ export function RoleTypewriter({
         typed,
         erasing: phase === 'erasing',
       });
-    const pacer = createKeystrokePacer();
 
     setActive(index);
     setRevealed(typed);
@@ -121,12 +117,19 @@ export function RoleTypewriter({
     persist();
 
     const tick = () => {
+      if (phase === 'holding') {
+        phase = 'erasing';
+        setCursorVisible(true);
+        timer.current = window.setTimeout(tick, 0);
+        return;
+      }
+
       if (phase === 'erasing') {
         if (typed > 0) {
           typed = typewriterStep(typed, -1, current.text.length, current.shared);
           setRevealed(typed);
           persist();
-          timer.current = window.setTimeout(tick, pacer.backspaceDelay());
+          timer.current = window.setTimeout(tick, typewriterBackspaceMs);
           return;
         }
         // Erased: the next role starts after a breath.
@@ -137,22 +140,20 @@ export function RoleTypewriter({
         setActive(index);
         setRevealed(0);
         persist();
-        timer.current = window.setTimeout(tick, pacer.nextRoleDelay());
+        setCursorVisible(true);
+        timer.current = window.setTimeout(tick, typewriterNextRoleMs);
         return;
       }
       // A completed single role may acquire companions without remounting.
       if (typed >= current.text.length && cycles) {
-        phase = 'erasing';
+        phase = 'holding';
+        setCursorVisible(false);
         persist();
-        timer.current = window.setTimeout(
-          tick,
-          typewriterHoldMs + pacer.backspaceReachDelay()
-        );
+        timer.current = window.setTimeout(tick, typewriterHoldMs);
         return;
       }
 
       if (typed < current.text.length) {
-        const char = current.text[typed];
         typed = typewriterStep(typed, 1, current.text.length, current.shared);
         setRevealed(typed);
         persist();
@@ -164,21 +165,19 @@ export function RoleTypewriter({
             return;
           }
           // A finished role holds, then the hand reaches back for the key.
-          phase = 'erasing';
+          phase = 'holding';
           persist();
-          timer.current = window.setTimeout(
-            tick,
-            typewriterHoldMs + pacer.backspaceReachDelay()
-          );
+          setCursorVisible(false);
+          timer.current = window.setTimeout(tick, typewriterHoldMs);
           return;
         }
-        timer.current = window.setTimeout(tick, pacer.typingDelay(char));
+        timer.current = window.setTimeout(tick, typewriterCharacterMs);
       }
     };
 
     timer.current = window.setTimeout(
       tick,
-      resume ? pacer.typingDelay('') : typewriterStartMs
+      resume ? typewriterCharacterMs : typewriterStartMs
     );
 
     return () => {

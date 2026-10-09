@@ -6,10 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { typewriterPhases } from '@/components/layout/mainPage/heroAnimationState';
 import { RoleTypewriter } from '@/components/layout/mainPage/RoleTypewriter';
 import { formatLabels } from '@/utils/formatLabels';
-import {
-  createKeystrokePacer,
-  typewriterStartMs,
-} from '@/utils/typewriterPacing';
+import { typewriterStartMs } from '@/utils/typewriterPacing';
 
 const role = 'Fullstack ****Developer****';
 const nextRole = 'Problem ****Solver****';
@@ -106,7 +103,7 @@ describe('RoleTypewriter', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('types a single role once with the paced rhythm, then settles', async () => {
+  it('types a single role at a constant speed, then settles', async () => {
     setReducedMotion(false);
     const text = 'Developer';
     await render(createElement(RoleTypewriter, { roles: [text], slot: 2 }));
@@ -115,11 +112,8 @@ describe('RoleTypewriter', () => {
     expect(live()).toBe('D');
     expect(container.innerHTML).toContain('typewriter-cursor');
 
-    // Replay the pacer the component draws from: the reveal is deterministic,
-    // so each advance lands exactly on the next keystroke.
-    const pacer = createKeystrokePacer();
     for (let index = 0; index < text.length - 1; index += 1) {
-      await advance(pacer.typingDelay(text[index]));
+      await advance(80);
       expect(live()).toBe(text.slice(0, index + 2));
     }
 
@@ -148,27 +142,6 @@ describe('RoleTypewriter', () => {
     ).toBeGreaterThan(0);
     expect(await advanceUntil(() => live() === 'Mobile Developer')).toBeGreaterThan(0);
   });
-  it('types the first role once when idle cycling is disabled', async () => {
-    setReducedMotion(false);
-    await render(
-      createElement(RoleTypewriter, {
-        idleAnimationEnabled: false,
-        roles: ['Fullstack Developer', 'Mobile Developer'],
-        slot: 6,
-      })
-    );
-
-    expect(
-      await advanceUntil(() => live() === 'Fullstack Developer')
-    ).toBeGreaterThan(0);
-    expect(container.querySelector('p')?.innerHTML).not.toContain(
-      'typewriter-cursor'
-    );
-    expect(
-      [...container.querySelectorAll('p')].map((element) => element.textContent)
-    ).toEqual(['Fullstack Developer', 'Mobile Developer']);
-    expect(vi.getTimerCount()).toBe(0);
-  });
 
   it('types, holds four seconds, backspaces away and types the next role', async () => {
     setReducedMotion(false);
@@ -180,7 +153,7 @@ describe('RoleTypewriter', () => {
     );
 
     expect(await advanceUntil(() => live() === 'Developer')).toBeGreaterThan(0);
-    expect(container.innerHTML).toContain('typewriter-cursor');
+    expect(container.innerHTML).not.toContain('typewriter-cursor');
 
     // The finished role is held, then the hand reaches back for the key.
     let heldFor = 0;
@@ -189,14 +162,16 @@ describe('RoleTypewriter', () => {
       heldFor += 20;
     }
     expect(heldFor).toBeGreaterThanOrEqual(4000);
-    expect(heldFor).toBeLessThanOrEqual(4000 + 240 + 40);
+    expect(heldFor).toBeLessThanOrEqual(4040);
     expect('Developer'.startsWith(live())).toBe(true);
     expect(live().length).toBeLessThan('Developer'.length);
 
-    // Backspaced all the way out, then the next role types in its place.
+    // The cursor returns when the next role begins, then leaves after it types.
     expect(await advanceUntil(() => live() === '')).toBeGreaterThanOrEqual(0);
-    expect(await advanceUntil(() => live() === 'Analyst')).toBeGreaterThan(0);
+    await advance(40);
     expect(container.innerHTML).toContain('typewriter-cursor');
+    expect(await advanceUntil(() => live() === 'Analyst')).toBeGreaterThan(0);
+    expect(container.innerHTML).not.toContain('typewriter-cursor');
 
     // …and the cycle keeps going.
     expect(
@@ -217,7 +192,7 @@ describe('RoleTypewriter', () => {
       })
     );
     expect(await advanceUntil(() => live() === 'Analyst')).toBeGreaterThan(0);
-    expect(container.innerHTML).toContain('typewriter-cursor');
+    expect(container.innerHTML).not.toContain('typewriter-cursor');
   });
 
   it('finishes and stops when a cycling list becomes a single role', async () => {

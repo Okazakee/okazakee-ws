@@ -57,6 +57,7 @@ export default function ScrollTop() {
         style={{
           bottom: `${buttonOffset}px`,
           opacity: opacity,
+          borderRadius: '0.75rem',
         }}
       >
         <button

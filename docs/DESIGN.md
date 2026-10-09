@@ -326,10 +326,10 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
 - **Hero roles** are the ordered `hero-section.top.roles` list, represented as
   an array or numeric index map. The dev cutover migrates the old singular
   role; no runtime fallback remains. Blank entries are ignored.
-- **Hero typewriter** is controlled by `roleTypewriterIdleAnimationEnabled` in
-  `Hero.tsx`, currently `false`: roles type out once and the cursor disappears;
-  setting it `true` resumes the saved-order type/hold/erase cycle for multiple
-  roles. Pacing uses the existing seeded human-keystroke rhythm.
+- **Hero typewriter** types each character at a constant speed. One nonblank
+  role stops after completing; multiple roles loop in saved order: type, hold,
+  erase, then type the next. The cursor is visible only while a role starts
+  typing and disappears as soon as that role is complete.
   It is a leaf client component
   (`RoleTypewriter`), so the rest of the hero stays a server component. The line
   is always painted complete first, so server output, hydration and
