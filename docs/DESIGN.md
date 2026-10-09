@@ -324,6 +324,34 @@ the terminal traffic-light dots (`#ff5f57` / `#febc2e` / `#28c840`). Do not
   `prefers-reduced-motion: reduce` is read before any of it exists, so those
   readers get no listeners and no clones — the global rule that flattens
   `animation-duration` cannot reach a WAAPI animation.
+- **Runtime UI SFX infrastructure** lives in `src/libs/sfx/`. The plain,
+  SSR-safe entry exports `sfx.tap()`, `sfx.hover()`, `sfx.glitch()` and
+  `sfx.matrix()` as synchronous `void` methods. All four definitions in
+  `definitions.ts` are deliberately empty: no sounds are designed or wired to
+  controls, the glitch effect or Hero Matrix yet, and empty calls allocate no
+  audio context.
+  Future sound signatures are readonly arrays of oscillator/noise layers.
+  `model.ts` validates them once and prepares relative delays and lifetimes;
+  `synthesis.ts` schedules waveform selection, linear gain attack/hold/release,
+  linear/exponential frequency ramps and optional filters on one audio clock.
+  Layer duration is the sum of its envelope segments; delays and ramp offsets
+  use seconds, frequency values use Hz. Noise uses a cached one-second mono
+  buffer per context with a fresh looping source per layer. Every source gets
+  an explicit stop time; natural completion, cancellation and partial graph
+  failure disconnect temporary nodes and clear handlers.
+  `engine.ts` owns one lazy context for the public API. Creation/resume requires
+  transient user activation (legacy fallback: tap/matrix); unlocked contexts
+  also serve hover calls. SSR and unsupported Web Audio stay silent. A request
+  needing resume is dropped, never replayed later. The context's own
+  `statechange` listener cancels voices on suspension/interruption, including
+  delayed layers, and closed contexts are recreated on a later eligible call.
+  Admission allows at most 32 active source layers and one attempt per name
+  per 40ms, dropping excess requests rather than cutting audible voices.
+  These are resource bounds, not sound-signature durations or gains.
+  Internal disposal detaches the context listener and closes owned resources;
+  it is not part of the four-method public API. Audio does not inspect
+  `prefers-reduced-motion`, share renderer state, install global event
+  delegation or use providers, hooks, stores, preferences or audio files.
 - **Hero portrait shape** (`hero_section.shape`): `pebble` (default), `square`,
   `rounded` and `squircle`. Every preset is built the same way: the accent plate
   is the full portrait box in the preset's shape (`bg-accent-violet`) and the
