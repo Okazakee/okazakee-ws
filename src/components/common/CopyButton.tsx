@@ -36,7 +36,6 @@ export default function CopyLinkButton({
   return (
     <button
       className={className}
-      data-umami-event="P.IVA Copy"
       onClick={handleCopy}
       title={buttonTitle}
       type="button"

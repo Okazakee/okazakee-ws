@@ -30,16 +30,6 @@ export type PostButton = {
   label?: string;
 };
 
-export const postButtonEvents: Record<PostButtonKind, string> = {
-  website: 'Website button',
-  source: 'View Source Code button',
-  demo: 'View Demo button',
-  store: 'Play Store button',
-  fdroid: 'F-Droid button',
-  ios: 'iOS Store button',
-  custom: 'Custom link button',
-};
-
 const legacyButtonColumns = [
   ['website', 'website'],
   ['source', 'source_link'],

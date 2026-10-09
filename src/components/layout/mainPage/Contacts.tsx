@@ -58,7 +58,8 @@ export default async function Contacts({ locale }: { locale: string }) {
             return (
               <Link
                 className="group relative flex min-h-32 rounded-xl border border-border-subtle bg-surface-card p-4 text-center transition-colors hover:border-accent-violet/50 hover:bg-surface-card-hover"
-                data-umami-event={`${label} button`}
+                data-umami-event="contact-open"
+                data-umami-event-channel={label}
                 href={link}
                 key={id}
                 rel="noopener noreferrer"

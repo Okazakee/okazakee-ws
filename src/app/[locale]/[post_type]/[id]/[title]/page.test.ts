@@ -83,11 +83,14 @@ async function render(post: PortfolioPost, locale = 'en') {
 
 // The meta row renders the quick links twice (desktop row, mobile grid), so
 // collapse the repeats and keep the first occurrence order.
-function quickLinks(html: string): { href: string; event: string }[] {
+function quickLinks(
+  html: string
+): { href: string; event: string; kind: string }[] {
   const anchors = [...html.matchAll(/<a\s([^>]*)>/g)].map(([, attrs]) => {
     const href = /href="([^"]+)"/.exec(attrs)?.[1] ?? '';
     const event = /data-umami-event="([^"]+)"/.exec(attrs)?.[1] ?? '';
-    return { href, event };
+    const kind = /data-umami-event-kind="([^"]+)"/.exec(attrs)?.[1] ?? '';
+    return { href, event, kind };
   });
   return anchors.filter(
     (link, index) =>
@@ -103,28 +106,53 @@ describe('post detail quick links', () => {
   it('renders a legacy row with no buttons exactly as before', async () => {
     const html = await render(portfolio());
     expect(quickLinks(html)).toEqual([
-      { href: 'https://pearlift.app', event: 'Website button' },
+      {
+        href: 'https://pearlift.app',
+        event: 'project-link-open',
+        kind: 'website',
+      },
       {
         href: 'https://github.com/okazakee/pearlift',
-        event: 'View Source Code button',
+        event: 'project-link-open',
+        kind: 'source',
       },
-      { href: 'https://demo.example.com', event: 'View Demo button' },
+      {
+        href: 'https://demo.example.com',
+        event: 'project-link-open',
+        kind: 'demo',
+      },
       {
         href: 'https://play.google.com/store/apps/details?id=x',
-        event: 'Play Store button',
+        event: 'project-link-open',
+        kind: 'store',
       },
-      { href: 'https://f-droid.org/packages/x', event: 'F-Droid button' },
-      { href: 'https://apps.apple.com/app/x', event: 'iOS Store button' },
+      {
+        href: 'https://f-droid.org/packages/x',
+        event: 'project-link-open',
+        kind: 'fdroid',
+      },
+      {
+        href: 'https://apps.apple.com/app/x',
+        event: 'project-link-open',
+        kind: 'ios',
+      },
     ]);
     // The globe button carries no text, exactly as it always has.
     expect(html).toContain(
-      '<a class="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-text-muted transition-colors hover:border-accent-violet/50 hover:text-text-white" data-umami-event="Website button" data-umami-event-post="pearllift" href="https://pearlift.app"'
+      '<a class="inline-flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-text-muted transition-colors hover:border-accent-violet/50 hover:text-text-white" data-umami-event="project-link-open" data-umami-event-kind="website" href="https://pearlift.app"'
     );
   });
 
   it('falls back to the legacy columns when buttons is an empty array', async () => {
     const html = await render(portfolio({ buttons: [] }));
-    expect(quickLinks(html)).toHaveLength(6);
+    expect(quickLinks(html).map((link) => link.kind)).toEqual([
+      'website',
+      'source',
+      'demo',
+      'store',
+      'fdroid',
+      'ios',
+    ]);
   });
 
   it('renders the stored order and ignores the legacy columns when buttons exist', async () => {
@@ -137,10 +165,15 @@ describe('post detail quick links', () => {
       })
     );
     expect(quickLinks(html)).toEqual([
-      { href: 'https://demo.example.com', event: 'View Demo button' },
+      {
+        href: 'https://demo.example.com',
+        event: 'project-link-open',
+        kind: 'demo',
+      },
       {
         href: 'https://github.com/okazakee/pearlift',
-        event: 'View Source Code button',
+        event: 'project-link-open',
+        kind: 'source',
       },
     ]);
   });
@@ -160,7 +193,23 @@ describe('post detail quick links', () => {
     );
     expect(html).toContain('Changelog');
     expect(html).toContain('Source');
-    expect(quickLinks(html)[0].event).toBe('Custom link button');
+    expect(quickLinks(html)[0]).toEqual({
+      href: 'https://changelog.example.com',
+      event: 'project-link-open',
+      kind: 'custom',
+    });
+    expect(quickLinks(html)).toEqual([
+      {
+        href: 'https://changelog.example.com',
+        event: 'project-link-open',
+        kind: 'custom',
+      },
+      {
+        href: 'https://github.com/okazakee/pearlift',
+        event: 'project-link-open',
+        kind: 'source',
+      },
+    ]);
   });
 
   it('localizes preset labels for Italian readers', async () => {

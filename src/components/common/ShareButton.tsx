@@ -3,6 +3,7 @@
 import { Check, Share } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { trackUmamiEvent } from '@/utils/analytics';
 
 export default function ShareButton({
   url,
@@ -24,6 +25,7 @@ export default function ShareButton({
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      trackUmamiEvent('content-share', { method: 'clipboard' });
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
@@ -34,6 +36,7 @@ export default function ShareButton({
     if (window.matchMedia('(max-width: 767px)').matches && navigator.share) {
       try {
         await navigator.share({ title, url });
+        trackUmamiEvent('content-share', { method: 'native' });
       } catch {
         // The user dismissed the native sheet; nothing to do.
       }
@@ -45,8 +48,6 @@ export default function ShareButton({
   return (
     <button
       className={`relative inline-flex items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-card px-3 py-2 transition-colors hover:border-accent-violet/50 hover:text-accent-violet-light ${className}`}
-      data-umami-event="Share button"
-      data-umami-event-post={title}
       onClick={handleShare}
       title={buttonTitle}
       type="button"

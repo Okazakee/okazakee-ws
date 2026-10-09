@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, Check, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Dropdown from '@/components/common/Dropdown';
 import { publicConfig } from '@/config/public';
 import {
@@ -12,6 +12,7 @@ import {
   requestFormOptions,
 } from '@/i18n/requestForm';
 import { readIntakeErrorCode } from '@/libs/requests/intake';
+import { trackUmamiEvent } from '@/utils/analytics';
 
 /**
  * Project request form (docs/DESIGN.md §5.4) as a 3-step wizard, so the
@@ -65,6 +66,7 @@ export function RequestForm() {
   const copy = requestFormCopy(currentLocale);
   const options = requestFormOptions(currentLocale);
   const [step, setStep] = useState(0);
+  const requestStarted = useRef(false);
   const [values, setValues] = useState<FormValues>(() =>
     initialValues(options)
   );
@@ -253,12 +255,17 @@ export function RequestForm() {
       });
 
       if (response.ok) {
+        trackUmamiEvent('project-request', { action: 'success' });
         setStatus('sent');
         return;
       }
 
       const body: unknown = await response.json().catch(() => null);
       const code = readIntakeErrorCode(body);
+      trackUmamiEvent('project-request', {
+        action: 'error',
+        code: code ?? 'unknown',
+      });
       setStatus('idle');
       setError(
         code && code in copy.errors
@@ -266,6 +273,10 @@ export function RequestForm() {
           : copy.errors.generic
       );
     } catch {
+      trackUmamiEvent('project-request', {
+        action: 'error',
+        code: 'network',
+      });
       setStatus('idle');
       setError(copy.errors.network);
     }
@@ -289,6 +300,7 @@ export function RequestForm() {
               setValues(initialValues(options));
               setStatus('idle');
               setStep(0);
+              requestStarted.current = false;
             }}
             type="button"
           >
@@ -379,9 +391,13 @@ export function RequestForm() {
           {step < pages.length - 1 ? (
             <button
               className="inline-flex items-center gap-2 rounded-lg bg-accent-violet px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-wider text-text-on-accent transition hover:bg-accent-violet-deep hover:ring-1 hover:ring-accent-violet/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent-violet dark:bg-accent-violet-deep dark:text-white"
-              onClick={() =>
-                setStep((current) => Math.min(pages.length - 1, current + 1))
-              }
+              onClick={() => {
+                setStep((current) => Math.min(pages.length - 1, current + 1));
+                if (step === 0 && !requestStarted.current) {
+                  requestStarted.current = true;
+                  trackUmamiEvent('project-request', { action: 'start' });
+                }
+              }}
               type="button"
             >
               {copy.next}

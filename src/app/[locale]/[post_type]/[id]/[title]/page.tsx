@@ -25,7 +25,6 @@ import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { getPostHref, slugifyTitle } from '@/utils/postHref';
 import {
   type PostButtonKind,
-  postButtonEvents,
   postButtonUrl,
   resolvePostButtons,
 } from '@/utils/postButtons';
@@ -125,7 +124,7 @@ export default async function Page({
     href: string;
     label: string | null;
     icon: React.ReactNode;
-    event: string;
+    kind: PostButtonKind;
   }[] = buttons.map((button, index) => ({
     key: `${button.kind}-${index}`,
     href: button.url,
@@ -134,7 +133,7 @@ export default async function Page({
         ? (button.label ?? postButtonLabel('custom', locale))
         : postButtonLabel(button.kind, locale),
     icon: buttonIcons[button.kind],
-    event: postButtonEvents[button.kind],
+    kind: button.kind,
   }));
 
   const authorBlock = post.author ? (
@@ -223,8 +222,8 @@ export default async function Page({
             {metaLinks.map((link) => (
               <Link
                 className={linkClass}
-                data-umami-event={link.event}
-                data-umami-event-post={title}
+                data-umami-event="project-link-open"
+                data-umami-event-kind={link.kind}
                 href={link.href}
                 key={link.key}
                 rel="noopener noreferrer"
@@ -278,8 +277,8 @@ export default async function Page({
                   .map((item) => (
                     <Link
                       className={mobileLinkClass}
-                      data-umami-event={item.event}
-                      data-umami-event-post={title}
+                      data-umami-event="project-link-open"
+                      data-umami-event-kind={item.kind}
                       href={item.href}
                       key={item.key}
                       rel="noopener noreferrer"

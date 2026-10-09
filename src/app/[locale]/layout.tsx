@@ -15,8 +15,6 @@ import type { ResumeData } from '@/types/fetchedData.types';
 import { getResumeLink, getSiteSettings } from '@/utils/getData';
 import { Providers } from '../providers';
 
-const umamiEnabled = process.env.UMAMI_ENABLED === 'true';
-
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',
   variable: '--font-whiterabt',
@@ -92,7 +90,9 @@ export default async function RootLayout({
             <link rel="dns-prefetch" href={`https://${supabasePreconnect}`} />
           </>
         )}
-        <link rel="preconnect" href="https://umami.okazakee.dev" />
+        {publicConfig.umamiEnabled && (
+          <link rel="preconnect" href="https://umami.okazakee.dev" />
+        )}
       </head>
       <body
         className={`${whiteRabbit.variable} flex min-h-screen flex-col font-whiterabt antialiased scroll-smooth`}
@@ -104,10 +104,13 @@ export default async function RootLayout({
           {/* Vercel-only analytics endpoint: skip it off-platform so local dev
               does not request a script that only exists on Vercel. */}
           {process.env.VERCEL && <SpeedInsights />}
-          {umamiEnabled && (
+          {publicConfig.umamiEnabled && (
             <Script
               src="https://umami.okazakee.dev/script.js"
-              data-website-id="3eba2ffb-eb82-49ab-a7b5-272a0d9a988c"
+              data-website-id="075df10a-949e-4c65-87af-ed9125a266dc"
+              data-domains="okazakee.dev"
+              data-do-not-track="true"
+              data-exclude-hash="true"
               strategy="lazyOnload"
             />
           )}

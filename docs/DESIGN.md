@@ -563,15 +563,23 @@ captions and the blurhash as the placeholder background.
   - icons are per-kind and site-owned (globe, GitHub, external link, play, phone,
     Apple, generic link for `custom`); labels come from `i18n/postButtons.ts`, where
     `website` deliberately has none because the globe button has always been
-    icon-only. The `data-umami-event` names are per-kind and unchanged from the
-    six-column era, so analytics continuity holds; `custom` reports as
-    `Custom link button`.
+    icon-only.
   - JSON-LD `codeRepository` and the `GitHubStars` widget both read the resolved
     `source` button rather than the `source_link` column.
+
 - **Privacy**: numbered sections (`01`, `4.1`) via CSS counters — free, no parser work —
   long-form prose, no table of contents. `Last updated` sits under the title.
 - **Error**: terminal-window card, vertically centred in the space between header and
   footer, with retry + home actions.
+
+### Analytics
+
+Umami owns automatic pageviews. Custom events are limited to `contact-open`,
+`resume-open`, `project-link-open`, `content-share` and `project-request`, with
+deliberately low-cardinality properties. Page, locale and content identity come
+from the normal page URL/session context, not duplicated event properties. Never
+send visitor-entered project-request values to analytics. Umami tags remain unused
+until a real experiment or grouping requirement exists.
 
 ---
 

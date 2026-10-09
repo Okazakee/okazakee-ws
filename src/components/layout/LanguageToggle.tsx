@@ -125,7 +125,6 @@ export default function LanguageToggle() {
     <div
       aria-busy={switchingTo !== null}
       className="flex items-center rounded-lg border border-border-subtle bg-surface-card p-0.5 font-mono text-xs"
-      data-umami-event="Language toggle"
     >
       <button
         aria-current={isItalian ? undefined : 'true'}

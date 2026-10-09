@@ -271,7 +271,7 @@ export default function NavMenu({
           {resumeLink && (
             <Link
               className={`${resumeClass} w-[100px] overflow-hidden px-2 py-1.5 text-xs`}
-              data-umami-event="Resume button"
+              data-umami-event="resume-open"
               href={resumeLink}
               rel="noopener noreferrer"
               target="_blank"
@@ -363,7 +363,7 @@ export default function NavMenu({
                 {resumeLink && (
                   <Link
                     className={`${resumeClass} min-h-[52px] items-center justify-center px-3 py-3 text-sm`}
-                    data-umami-event="Resume button"
+                    data-umami-event="resume-open"
                     href={resumeLink}
                     onClick={() => setIsOpen(false)}
                     rel="noopener noreferrer"
