@@ -107,14 +107,22 @@ export default async function RootLayout({
               does not request a script that only exists on Vercel. */}
           {process.env.VERCEL && <SpeedInsights />}
           {publicConfig.umamiEnabled && (
-            <Script
-              src="https://umami.okazakee.dev/script.js"
-              data-website-id="075df10a-949e-4c65-87af-ed9125a266dc"
-              data-domains="okazakee.dev"
-              data-do-not-track="true"
-              data-exclude-hash="true"
-              strategy="lazyOnload"
-            />
+            <>
+              <Script
+                src="https://umami.okazakee.dev/script.js"
+                data-website-id="075df10a-949e-4c65-87af-ed9125a266dc"
+                data-domains="okazakee.dev"
+                data-do-not-track="true"
+                data-exclude-hash="true"
+                strategy="lazyOnload"
+              />
+              {/* Heatmaps/replays recorder; options come from the website config. */}
+              <Script
+                src="https://umami.okazakee.dev/recorder.js"
+                data-website-id="075df10a-949e-4c65-87af-ed9125a266dc"
+                strategy="afterInteractive"
+              />
+            </>
           )}
         </Providers>
       </body>

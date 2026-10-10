@@ -102,7 +102,10 @@ export default async function Contacts({ locale }: { locale: string }) {
         </div>
       </section>
 
-      <section aria-label={t('projectInquiryLabel')} className="w-full">
+      <section
+        aria-label={t('projectInquiryLabel')}
+        className="umami-replay-block w-full"
+      >
         <SectionEyebrow index={2} label={t('projectInquiry')} />
         <RequestForm />
       </section>
