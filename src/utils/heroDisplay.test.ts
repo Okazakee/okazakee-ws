@@ -276,3 +276,60 @@ describe('typewriter cursor boundary', () => {
     expect(typewriterHtml([], 0, cursorClass)).toBe(cursor);
   });
 });
+
+describe('typewriter HTML escaping', () => {
+  const payload =
+    '<img src=x onerror="document.documentElement.dataset.xss=\'1\'">';
+
+  it('renders ordinary role strings unchanged', () => {
+    const runs = parseTypewriterRuns('Fullstack Developer');
+    expect(typewriterHtml(runs, typewriterLength(runs))).toBe(
+      'Fullstack Developer'
+    );
+  });
+
+  it('renders metacharacters as inert text', () => {
+    const runs = parseTypewriterRuns('R&D <3');
+    expect(typewriterHtml(runs, typewriterLength(runs))).toBe(
+      'R&amp;D &lt;3'
+    );
+  });
+
+  it('neutralizes an event-handler payload', () => {
+    const runs = parseTypewriterRuns(`Dev ${payload}`);
+    const out = typewriterHtml(runs, typewriterLength(runs));
+    expect(out).toContain('&lt;img');
+    expect(out).not.toMatch(/<[^>]*\sonerror=/);
+  });
+
+  it('neutralizes malicious text inside a formatted segment', () => {
+    const runs = parseTypewriterRuns(`Dev ****${payload}****`);
+    const out = typewriterHtml(runs, typewriterLength(runs));
+    expect(out).toContain('<label>&lt;img');
+    expect(out).not.toMatch(/<[^>]*\sonerror=/);
+    expect(out).toContain('</label>');
+  });
+
+  it('keeps generated markup literal while escaping content', () => {
+    const cursorClass = 'typewriter-cursor';
+    const cursor = `<span class="${cursorClass}" aria-hidden="true"></span>`;
+    const runs = parseTypewriterRuns(`a ****${payload}****`);
+    const out = typewriterHtml(
+      runs,
+      typewriterLength(runs),
+      cursorClass
+    );
+    expect(out).toContain(cursor);
+    expect(out).toContain('<label>&lt;img');
+    expect(out).not.toMatch(/<[^>]*\sonerror=/);
+  });
+
+  it('stays equivalent to formatLabels on hostile input', () => {
+    for (const text of [`Dev ${payload}`, `x ****${payload}**** y`]) {
+      const runs = parseTypewriterRuns(text);
+      expect(typewriterHtml(runs, typewriterLength(runs))).toBe(
+        formatLabels(text)
+      );
+    }
+  });
+});

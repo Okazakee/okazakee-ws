@@ -1,4 +1,5 @@
 import type { HeroShape } from '@/types/fetchedData.types';
+import { escapeHtml } from '@/utils/escapeHtml';
 
 /**
  * Hero presentation helpers: portrait presets, ordered role lists and label
@@ -154,6 +155,10 @@ export function typewriterStep(
 /**
  * Markup for the revealed prefix plus shared words. The cursor follows any
  * stationary prefix, but stays before a stationary suffix.
+ *
+ * Role text is CMS-controlled: every emitted character is HTML-escaped so
+ * it can only ever render as text. The cursor `<span>` and `<label>`
+ * wrappers are application-generated and stay literal.
  */
 export function typewriterHtml(
   runs: TypewriterRun[],
@@ -174,7 +179,7 @@ export function typewriterHtml(
     for (const char of run.text) {
       if (position === cursorPosition) content += cursor;
       if (position < revealed || sharedPositions.includes(position)) {
-        content += char;
+        content += escapeHtml(char);
       }
       position += 1;
     }
