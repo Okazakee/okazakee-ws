@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Copy-to-clipboard affordance for the footer VAT number (DESIGN.md §5.5):
@@ -22,12 +22,22 @@ export default function CopyLinkButton({
   children: React.ReactNode;
 }) {
   const [copied, setCopied] = useState(false);
+  // Single reset timer: a new copy replaces the pending one, and unmount
+  // clears it. Failure keeps current behavior (log only, no state flip).
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimer.current !== null) clearTimeout(resetTimer.current);
+    };
+  }, []);
 
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(copyValue);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (resetTimer.current !== null) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }

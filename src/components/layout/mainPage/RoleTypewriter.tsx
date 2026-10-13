@@ -67,30 +67,41 @@ export function RoleTypewriter({
   const sharedWords = useMemo(() => sharedTypewriterWords(roles), [roles]);
   const rolesKey = roles.join('\u0000');
 
+  // Latest derived data for the animation effect below. The effect
+  // subscribes to the semantic key (`rolesKey`) rather than these fresh
+  // identities, so an identical-content rerender never restarts it; the
+  // mirror always hands it the newest values when the key does change.
+  const live = useRef({ roles, lines, sharedWords });
+  live.current = { roles, lines, sharedWords };
+
   const [active, setActive] = useState(0);
   const [revealed, setRevealed] = useState(lines[0]?.length ?? 0);
   const [cursorVisible, setCursorVisible] = useState(false);
   const timer = useRef<number | undefined>(undefined);
 
   useLayoutEffect(() => {
-    if (roles.length === 0 || window.matchMedia(reducedMotionQuery).matches) {
+    const { roles: currentRoles, lines: currentLines } = live.current;
+    if (
+      currentRoles.length === 0 ||
+      window.matchMedia(reducedMotionQuery).matches
+    ) {
       setActive(0);
-      setRevealed(lines[0]?.length ?? 0);
+      setRevealed(currentLines[0]?.length ?? 0);
       setCursorVisible(false);
       return;
     }
 
     const line = (index: number) => {
-      const runs = parseTypewriterRuns(roles[index]);
+      const runs = parseTypewriterRuns(currentRoles[index]);
       return {
         runs,
         text: runs.map((run) => run.text).join(''),
-        shared: sharedWords[index] ?? [],
+        shared: live.current.sharedWords[index] ?? [],
       };
     };
 
     const resume = typewriterPhases.get(slot) ?? null;
-    let index = resume ? Math.min(resume.index, roles.length - 1) : 0;
+    let index = Math.min(resume?.index ?? 0, currentRoles.length - 1);
     let current = line(index);
     let typed = Math.min(resume?.typed ?? 0, current.text.length);
     let phase: Phase = cycles && resume?.erasing ? 'erasing' : 'typing';
@@ -133,7 +144,7 @@ export function RoleTypewriter({
           return;
         }
         // Erased: the next role starts after a breath.
-        index = (index + 1) % roles.length;
+        index = (index + 1) % currentRoles.length;
         current = line(index);
         typed = 0;
         phase = 'typing';
@@ -184,7 +195,7 @@ export function RoleTypewriter({
       clearTimeout(timer.current);
       persist();
     };
-  }, [slot, cycles, rolesKey, roles, lines, sharedWords]);
+  }, [slot, cycles, rolesKey]);
 
   const line = lines[Math.min(active, lines.length - 1)];
 

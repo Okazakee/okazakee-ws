@@ -382,3 +382,52 @@ describe('RoleTypewriter', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 });
+
+describe('RoleTypewriter identical-content rerenders', () => {
+  it('does not reschedule the animation when roles are semantically unchanged', async () => {
+    setReducedMotion(false);
+    const roles = ['Fullstack Developer', 'Mobile Developer'];
+    await render(
+      createElement(RoleTypewriter, { roles, slot: 40 })
+    );
+    const original = window.setTimeout;
+    let scheduledAfterMount = 0;
+    vi.spyOn(window, 'setTimeout').mockImplementation(((
+      handler: unknown,
+      timeout?: number,
+      ...rest: unknown[]
+    ) => {
+      scheduledAfterMount += 1;
+      return (original as (...args: unknown[]) => number)(
+        handler,
+        timeout,
+        ...rest
+      );
+    }) as typeof window.setTimeout);
+    try {
+      // New array identity, byte-identical semantic content.
+      await render(
+        createElement(RoleTypewriter, {
+          roles: ['Fullstack Developer', 'Mobile Developer'],
+          slot: 40,
+        })
+      );
+      expect(scheduledAfterMount).toBe(0);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('restarts for genuinely changed role content', async () => {
+    setReducedMotion(false);
+    await render(createElement(RoleTypewriter, { roles: ['Solo'], slot: 41 }));
+    const soloMs = await advanceUntil(() => live() === 'Solo');
+    expect(soloMs).toBeGreaterThanOrEqual(0);
+
+    await render(
+      createElement(RoleTypewriter, { roles: ['Changed'], slot: 41 })
+    );
+    const changedMs = await advanceUntil(() => live() === 'Changed');
+    expect(changedMs).toBeGreaterThanOrEqual(0);
+  });
+});

@@ -10,7 +10,8 @@ import useThemeStore, { type ThemeMode } from '@/store/themeStore';
  * listener, so the component only reflects `mode` and calls `setThemeMode`.
  */
 export default function ThemeToggle({ ariaLabel }: { ariaLabel?: string }) {
-  const { mode, setThemeMode } = useThemeStore();
+  const mode = useThemeStore((state) => state.mode);
+  const setThemeMode = useThemeStore((state) => state.setThemeMode);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

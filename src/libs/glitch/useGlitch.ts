@@ -82,7 +82,6 @@ export function useGlitch(
   // state effect below reaches it without re-running the setup on every
   // highlight change (which would cancel a burst already in flight).
   const playRef = useRef<(preset: GlitchPreset) => void>(() => {});
-  const mounted = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -186,13 +185,15 @@ export function useGlitch(
   }, [containerRef, mode, trigger, hoverPreset, probability]);
 
   // A state change — the scroll-spy moving the highlight — bursts exactly like
-  // a hover does. The first run is skipped, so a page that loads with a section
-  // already active never glitches on arrival; only a change does.
+  // a hover does. The previous value decides: mount (and StrictMode replay,
+  // which re-runs setup with the same value) never bursts — only a genuine
+  // flip to `true` does. No cleanup reset: resetting here would re-arm the
+  // burst on every replay and recreate the mount bug.
+  const prevActive = useRef(active);
   useEffect(() => {
-    if (!mounted.current) {
-      mounted.current = true;
-      return;
+    if (prevActive.current !== active) {
+      prevActive.current = active;
+      if (active) playRef.current(hoverPreset);
     }
-    if (active) playRef.current(hoverPreset);
   }, [active, hoverPreset]);
 }

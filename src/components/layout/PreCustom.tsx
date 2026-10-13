@@ -2,7 +2,7 @@
 import { Check, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export type PreChild = React.ReactElement & {
   props: {
@@ -18,12 +18,22 @@ export default function PreCustom({ children }: PreCustomProps) {
   const t = useTranslations('posts-section');
 
   const [copied, setCopied] = useState(false);
+  // Single reset timer: a new copy replaces the pending one, and unmount
+  // clears it. Failure keeps current behavior (log only, no state flip).
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimer.current !== null) clearTimeout(resetTimer.current);
+    };
+  }, []);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(children?.props.children);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (resetTimer.current !== null) clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
