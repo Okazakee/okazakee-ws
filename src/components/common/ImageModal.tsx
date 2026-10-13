@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useZoom } from '@/app/hooks/useZoom';
 
@@ -23,13 +23,29 @@ export const ImageModal: React.FC<ImageModalProps> = ({
   const {
     scale,
     position,
-    handleWheel,
+    zoomBy,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
     blockScroll,
   } = useZoom();
   const [loaded, setLoaded] = useState(false);
+  const zoomContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Wheel zoom consumes the gesture, so the page behind the modal must
+    // not scroll: a React `onWheel` prop cannot do this (passive listener
+    // ignores `preventDefault`), hence this explicit non-passive wiring.
+    // Touch handlers stay React props, unchanged.
+    const node = zoomContainerRef.current;
+    if (!node) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      zoomBy(event.deltaY);
+    };
+    node.addEventListener('wheel', onWheel, { passive: false });
+    return () => node.removeEventListener('wheel', onWheel);
+  }, [zoomBy]);
 
   useEffect(() => {
     const unblock = blockScroll();
@@ -53,7 +69,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({
         <div className="relative w-full h-full max-w-(--breakpoint-2xl)">
           <div
             className="w-full h-full overflow-hidden"
-            onWheel={handleWheel}
+            ref={zoomContainerRef}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}

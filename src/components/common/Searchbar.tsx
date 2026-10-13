@@ -7,6 +7,7 @@ import {
   type SetStateAction,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { searchPosts } from '@/app/actions/search';
@@ -26,12 +27,18 @@ export default function Searchbar({
   locale: string;
 }) {
   const [searchFilter, setSearchFilter] = useState('');
+  // Monotonic request generation: fired searches race, so only the
+  // newest completion may update results/loading/error state.
+  const requestRef = useRef(0);
 
   const debouncedSearch = useMemo(
     () =>
       debounce(async (searchQuery: string) => {
+        const generation = requestRef.current + 1;
+        requestRef.current = generation;
         try {
           const result = await searchPosts(post_type, searchQuery, locale);
+          if (generation !== requestRef.current) return;
           if ('error' in result) {
             SetIsRateLimited(false);
             SetPosts([]);

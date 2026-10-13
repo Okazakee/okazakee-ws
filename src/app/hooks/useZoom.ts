@@ -6,10 +6,13 @@ export const useZoom = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
+  // Stable zoom step shared by every wheel source. React `onWheel`
+  // handlers run under a passive listener, where `preventDefault()` is
+  // ignored — wheel zoom must go through a native non-passive listener
+  // (wired by the consumer), so this stays a plain delta function.
+  const zoomBy = useCallback((deltaY: number) => {
     setScale((prevScale) =>
-      Math.min(Math.max(prevScale - e.deltaY * 0.01, 1), 3)
+      Math.min(Math.max(prevScale - deltaY * 0.01, 1), 3)
     );
   }, []);
 
@@ -104,16 +107,19 @@ export const useZoom = () => {
   }, []); // Only run on mount and cleanup
 
   const blockScroll = useCallback(() => {
+    // Restore the previous value, not an assumed default: another layer
+    // (e.g. the nav drawer) may already hold a lock when the modal opens.
+    const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = previous;
     };
   }, []);
 
   return {
     scale,
     position,
-    handleWheel,
+    zoomBy,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,

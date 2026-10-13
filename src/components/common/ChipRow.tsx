@@ -34,19 +34,25 @@ export const ChipRow = ({ children }: { children: React.ReactNode }) => {
 
       if (overflows && !reduced) {
         if (!looping) setLooping(true);
-        setDuration(Math.max(12, Math.round((single + CHIP_GAP) / 45)));
+        const next = Math.max(12, Math.round((single + CHIP_GAP) / 45));
+        setDuration((previous) => (previous === next ? previous : next));
         return;
       }
 
       if (looping) setLooping(false);
-      setDuration(null);
+      setDuration((previous) => (previous === null ? previous : null));
     };
 
     measure();
     const observer = new ResizeObserver(measure);
+    // Viewport resizes AND content changes both alter the fit: the track
+    // grows with its children while the viewport only follows layout.
     observer.observe(viewport);
+    observer.observe(track);
     return () => observer.disconnect();
-  }, [looping]);
+    // Rerun when the content identity or mode changes; every setState
+    // above bails out on equal values, so this cannot loop.
+  }, [children, looping]);
 
   return (
     <div

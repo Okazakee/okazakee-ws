@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { ImageModal } from '../common/ImageModal';
 
@@ -19,6 +19,9 @@ interface NextImageProps {
 const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const blurDataURL = resolveBlurDataURL(blurhash);
+  // Stable identity: the modal effect depends on it, so an inline
+  // closure would re-run the keydown/lock setup on every parent render.
+  const handleClose = useCallback(() => setIsModalOpen(false), []);
 
   return (
     <>
@@ -38,7 +41,7 @@ const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
         <span className="fig-caption block text-center">{alt}</span>
       ) : null}
       {isModalOpen && (
-        <ImageModal alt={alt} onClose={() => setIsModalOpen(false)} src={src} />
+        <ImageModal alt={alt} onClose={handleClose} src={src} />
       )}
     </>
   );
