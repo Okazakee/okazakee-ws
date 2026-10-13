@@ -10,12 +10,14 @@ interface NextImageProps {
   blurhash: string;
 }
 
+// Sizing is owned entirely by `.post .post-figure img` in globals.css:
+// the natural aspect ratio, capped by the figure width
+// (landscape/square) or 80vh (portrait) — never cropped, so there is no
+// client-side orientation measurement. The width/height props below are
+// optimizer hints that also reserve pre-load space; they never fix the
+// rendered ratio.
 const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // Vertical shots stay capped so they don't become towering strips;
-  // horizontal ones fill the figure width. Measured from the loaded asset,
-  // defaulting to capped until it resolves.
-  const [isVertical, setIsVertical] = useState(true);
   const blurDataURL = resolveBlurDataURL(blurhash);
 
   return (
@@ -23,19 +25,12 @@ const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
       <Image
         alt={alt}
         blurDataURL={blurDataURL}
-        className={`mx-auto block cursor-pointer rounded-xl border border-border-subtle ${
-          isVertical ? 'w-full max-w-3xl' : 'w-full'
-        }`}
+        className="cursor-pointer rounded-xl border border-border-subtle"
         height={720}
         onClick={() => setIsModalOpen(true)}
-        onLoad={(event) => {
-          const target = event.currentTarget;
-          setIsVertical(target.naturalHeight >= target.naturalWidth);
-        }}
         placeholder={blurDataURL ? 'blur' : 'empty'}
         sizes="(min-width: 1024px) 960px, 100vw"
         src={src}
-        style={{ objectFit: 'cover', objectPosition: 'center' }}
         title="Click to view"
         width={1280}
       />

@@ -559,9 +559,18 @@
 .post .post-figure {
   margin: 2rem auto;
 }
+/* Body-image sizing (single owner — NextImage sets no sizing classes):
+   the natural aspect ratio always wins (`aspect-ratio: auto` neutralizes
+   the optimizer width/height attrs into a pre-load placeholder only),
+   capped by the figure width for landscape/square and by 80vh for
+   portraits. Never cropped, never distorted, centered at every width. */
 .post .post-figure img {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 80vh;
+  aspect-ratio: auto;
   margin: 0 auto;
   border-radius: 12px;
   border: 1px solid var(--c-border-subtle);
