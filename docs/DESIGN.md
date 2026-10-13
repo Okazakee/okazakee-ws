@@ -576,7 +576,7 @@ Fenced code renders with the "Code" header bar and a copy affordance (mirrors
 `PreCustom`). Prose: headings `text-white`, body `text-main` (this was the fix — muted
 tone was too weak), lists with violet markers, links `accent-violet-light` underlined,
 tables as bordered rounded panels with mono uppercase headers, figures with mono
-captions and the blurhash as the placeholder background.
+captions and the blur placeholder data URL as the placeholder background.
 
 ---
 
@@ -670,8 +670,10 @@ Invented copy is a defect, not a placeholder.
   paragraph and section subtitles. Only words the DB actually wraps are tinted.
 - `post_tags` is a quoted list (`["Docker","Bun"]`) parsed by regex; unquoted fragments
   (e.g. a stray `Tags` token in one row) are ignored.
-- Markdown images use `![caption-blurhash](url)`: the caption before the first `-`, the
-  remainder as the blur placeholder; images open in the lightbox with a "Click to view"
+- Markdown images use `![caption-placeholder](url)`: the caption before
+  the first `-`, the remainder as the ready-to-use blur data URL
+  (`data:image/...;base64,...`); legacy raw hashes degrade to no
+  placeholder; images open in the lightbox with a "Click to view"
   hint.
 - Code fences → the "Code" block with copy; markdown tables render as panels.
 

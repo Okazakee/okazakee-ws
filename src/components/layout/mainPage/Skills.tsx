@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import type { SkillsCategory } from '@/types/fetchedData.types';
+import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { formatLabels } from '@/utils/formatLabels';
 import { getSkillsCategories } from '@/utils/getData';
 import { sortSkillsByPosition } from '@/utils/skillOrder';
@@ -28,18 +29,19 @@ function SkillContent({
   skill: SkillsCategory['skills'][number];
   href: string | null;
 }) {
+  const blurDataURL = resolveBlurDataURL(skill.blurhashURL);
   return (
     <span className="flex w-full items-center justify-between gap-3">
       <span className="flex items-center gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border-subtle bg-surface-raised">
           <Image
             alt={skill.title}
-            blurDataURL={skill.blurhashURL || undefined}
+            blurDataURL={blurDataURL}
             className={`max-h-6 max-w-6 object-contain ${
               skill.invert ? 'dark:invert' : ''
             }`}
             height={48}
-            placeholder={skill.blurhashURL ? 'blur' : 'empty'}
+            placeholder={blurDataURL ? 'blur' : 'empty'}
             sizes="24px"
             src={skill.icon}
             width={48}

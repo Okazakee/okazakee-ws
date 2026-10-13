@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { useState } from 'react';
+import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { ImageModal } from '../common/ImageModal';
 
 interface NextImageProps {
@@ -15,12 +16,13 @@ const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
   // horizontal ones fill the figure width. Measured from the loaded asset,
   // defaulting to capped until it resolves.
   const [isVertical, setIsVertical] = useState(true);
+  const blurDataURL = resolveBlurDataURL(blurhash);
 
   return (
     <>
       <Image
         alt={alt}
-        blurDataURL={blurhash}
+        blurDataURL={blurDataURL}
         className={`mx-auto block cursor-pointer rounded-xl border border-border-subtle ${
           isVertical ? 'w-full max-w-3xl' : 'w-full'
         }`}
@@ -30,7 +32,7 @@ const NextImage = ({ src, alt, blurhash }: NextImageProps) => {
           const target = event.currentTarget;
           setIsVertical(target.naturalHeight >= target.naturalWidth);
         }}
-        placeholder="blur"
+        placeholder={blurDataURL ? 'blur' : 'empty'}
         sizes="(min-width: 1024px) 960px, 100vw"
         src={src}
         style={{ objectFit: 'cover', objectPosition: 'center' }}

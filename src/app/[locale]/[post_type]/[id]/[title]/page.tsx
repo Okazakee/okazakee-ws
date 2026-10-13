@@ -19,6 +19,7 @@ import Tags from '@/components/common/Tags';
 import ViewDisplay from '@/components/common/ViewDisplay';
 import { PublishLocaleAlternates } from '@/components/layout/PublishLocaleAlternates';
 import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
+import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { postButtonLabel } from '@/i18n/postButtons';
 import { locales } from '@/i18n/routing';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
@@ -136,8 +137,7 @@ export default async function Page({
     kind: button.kind,
   }));
 
-  const authorBlock = post.author ? (
-    <>
+  const authorBlock = post.author ? (    <>
       <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-surface-raised">
         {post.author.avatar_url ? (
           <Image
@@ -156,6 +156,8 @@ export default async function Page({
       <span className="text-sm text-text-main">{post.author.display_name}</span>
     </>
   ) : null;
+
+  const coverBlurDataURL = resolveBlurDataURL(post.blurhashURL);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -204,13 +206,13 @@ export default async function Page({
       <div className="relative mt-10 h-56 w-full overflow-hidden rounded-2xl border border-accent-violet bg-surface-raised md:h-96">
         <Image
           alt="post_image"
-          blurDataURL={post.blurhashURL}
+          blurDataURL={coverBlurDataURL}
           className="object-cover"
           decoding="sync"
           fetchPriority="high"
           fill
           loading="eager"
-          placeholder="blur"
+          placeholder={coverBlurDataURL ? 'blur' : 'empty'}
           priority
           sizes="(min-width: 1024px) 1024px, 100vw"
           src={post.image}

@@ -1,21 +1,21 @@
 'use client';
 import Markdown from 'markdown-to-jsx';
 import type { ReactNode } from 'react';
+import { parseBodyImageAlt } from '@/utils/blurPlaceholder';
 import NextImage from '@/components/layout/NextImage';
 import PreCustom, { type PreChild } from './PreCustom';
 
 /**
  * Standalone post image: centered, capped at the prose width, rendered with
  * next/image. The modal keeps the raw asset; only the inline figure is
- * optimized.
+ * optimized. Missing/invalid placeholders degrade to no blur, never a
+ * crash: legacy raw hashes render the sharp image without a placeholder.
  */
 function PostFigure({ src, alt }: { src: unknown; alt: unknown }) {
-  if (typeof alt !== 'string') throw new Error('alt should never be undefined');
-
-  const data = alt.split('-');
-  const altText = data[0] ?? '';
-  const blurhash = data[1] ?? '';
   const imageSrc = typeof src === 'string' ? src : '';
+  if (typeof alt !== 'string' || imageSrc === '') return null;
+
+  const { caption: altText, placeholder: blurhash } = parseBodyImageAlt(alt);
 
   return (
     <figure className="post-figure mx-auto my-8 w-full">
@@ -39,13 +39,15 @@ function isImageOnlyChild(child: unknown): boolean {
   );
 }
 
-// Markdown images: `![alt-blurhash](url)` where the first "-" splits alt from blurhash.
+// Markdown images: `![caption-placeholder](url)` where the first "-"
+// splits caption from the ready-to-use blur data URL. Legacy raw hashes
+// degrade to no placeholder (see parseBodyImageAlt).
 const MarkdownRenderer = ({ markdown }: { markdown: string }) => {
   /*
     Alt prop in img is taken from markdown, an example image is like this:
-    "![alt-data:image/png;base64,BLURHASHVALUE](imageurl)"
+    "![caption-data:image/png;base64,....](imageurl)"
 
-    usually the [x] represents the alt prop, for efficiency porpuses it now will be handled as [alt-blurhashdataurl]
+    usually the [x] represents the alt prop, for efficiency porpuses it now will be handled as [caption-placeholderDataUrl]
   */
 
   return (

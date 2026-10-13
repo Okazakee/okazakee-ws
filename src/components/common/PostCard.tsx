@@ -3,6 +3,7 @@ import { ArrowUpRight, Eye } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { getPostHref } from '@/utils/postHref';
 import { Tags } from './Tags';
 
@@ -30,6 +31,7 @@ export default function PostCard({
     post[`description_${locale}` as keyof typeof post] ?? ''
   );
   const href = getPostHref({ locale, postType, id: post.id, title });
+  const blurDataURL = resolveBlurDataURL(post.blurhashURL);
 
   return (
     <Link
@@ -47,10 +49,10 @@ export default function PostCard({
           <div className="relative h-[200px] w-full shrink-0 overflow-hidden rounded-xl bg-surface-raised sm:h-[220px] lg:w-[380px]">
             <Image
               alt={title}
-              blurDataURL={post.blurhashURL || undefined}
+              blurDataURL={blurDataURL}
               className="object-cover"
               fill
-              placeholder={post.blurhashURL ? 'blur' : 'empty'}
+              placeholder={blurDataURL ? 'blur' : 'empty'}
               sizes="(min-width: 1024px) 380px, (min-width: 640px) 600px, 100vw"
               src={post.image}
             />

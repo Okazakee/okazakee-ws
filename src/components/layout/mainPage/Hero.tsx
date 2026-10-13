@@ -4,6 +4,7 @@ import { FingerprintPattern, Mouse } from 'lucide-react';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
+import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { formatLabels } from '@/utils/formatLabels';
 import { getHeroSection } from '@/utils/getData';
 import {
@@ -64,6 +65,7 @@ export default async function Hero({ locale }: { locale: string }) {
   const paragraphs = t('aboutme.paragraph')
     .split('\n\n')
     .filter((paragraph) => paragraph.trim());
+  const blurDataURL = resolveBlurDataURL(heroSection.blurhashURL);
 
   return (
     <section
@@ -105,10 +107,10 @@ export default async function Hero({ locale }: { locale: string }) {
                 <span className={heroPortraitClass(shape)}>
                   <Image
                     alt="Profile picture"
-                    blurDataURL={heroSection.blurhashURL}
+                    blurDataURL={blurDataURL}
                     className="object-cover"
                     fill
-                    placeholder="blur"
+                    placeholder={blurDataURL ? 'blur' : 'empty'}
                     priority
                     sizes="(min-width: 1280px) 260px, (min-width: 768px) 240px, 190px"
                     src={heroSection.propic}
