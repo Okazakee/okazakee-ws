@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { ErrorDiv } from '@/components/common/ErrorDiv';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import PostList from '@/components/common/PostList';
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { PostCardData } from '@/types/fetchedData.types';
 import { formatLabels } from '@/utils/formatLabels';
 import { getPosts } from '@/utils/getData';
 import { SITE_NAME, SITE_OG_IMAGE } from '@/utils/structuredData';
@@ -98,7 +98,7 @@ export default async function PostsPage({
   const t = await getTranslations({ locale, namespace: 'posts-section' });
 
   // Get posts based on the post_type
-  const posts = (await getPosts(post_type)) as PortfolioPost[] | BlogPost[];
+  const posts = (await getPosts(post_type)) as PostCardData[];
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-24">

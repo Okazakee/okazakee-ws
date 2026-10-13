@@ -2,24 +2,18 @@
 
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { PostCardData } from '@/types/fetchedData.types';
 import { ErrorDiv } from './ErrorDiv';
 import Postcard from './PostCard';
 import { PostViewsProvider } from './PostViews';
 import Searchbar from './Searchbar';
-
-function postViewsType(
-  post: BlogPost | PortfolioPost
-): 'blog' | 'portfolio' {
-  return 'source_link' in post ? 'portfolio' : 'blog';
-}
 
 export default function PostList({
   initialPosts,
   post_type,
   locale,
 }: {
-  initialPosts: PortfolioPost[] | BlogPost[];
+  initialPosts: PostCardData[];
   post_type: string;
   locale: string;
 }) {
@@ -27,11 +21,13 @@ export default function PostList({
   const [isRateLimited, SetIsRateLimited] = useState(false);
 
   const t = useTranslations('posts-section');
+  // The whole list is one type; cards take it explicitly instead of
+  // probing for legacy link columns the projection no longer carries.
+  const postType: 'blog' | 'portfolio' =
+    post_type === 'portfolio' ? 'portfolio' : 'blog';
 
-  // One batched live-count request per visible set: search updates swap
-  // the set without ever issuing per-card requests.
   const viewKeys = posts.map((post) => ({
-    postType: postViewsType(post),
+    postType,
     id: post.id,
   }));
 
@@ -49,7 +45,12 @@ export default function PostList({
         <div className="space-y-6">
           {posts.length > 0 ? (
             posts.map((post) => (
-              <Postcard key={post.id} post={post} locale={locale} />
+              <Postcard
+                key={post.id}
+                post={post}
+                postType={postType}
+                locale={locale}
+              />
             ))
           ) : isRateLimited ? (
             <ErrorDiv>{t('ratelimit')}</ErrorDiv>

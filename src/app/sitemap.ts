@@ -2,7 +2,7 @@ import { getPosts } from '@utils/getData';
 import { getPostHref } from '@utils/postHref';
 import type { MetadataRoute } from 'next';
 import { locales } from '@/i18n/routing';
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { PostCardData } from '@/types/fetchedData.types';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.DOMAIN_URL;
@@ -13,13 +13,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     undefined,
     undefined,
     100
-  )) as PortfolioPost[];
+  )) as PostCardData[];
   const blogPosts = (await getPosts(
     'blog',
     undefined,
     undefined,
     100
-  )) as BlogPost[];
+  )) as PostCardData[];
 
   // Create sitemap entries for each locale and post
   const portfolioUrls =

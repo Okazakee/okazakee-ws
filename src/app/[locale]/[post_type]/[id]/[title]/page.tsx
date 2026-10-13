@@ -22,7 +22,7 @@ import MarkdownRenderer from '@/components/layout/MarkdownRenderer';
 import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { postButtonLabel } from '@/i18n/postButtons';
 import { locales } from '@/i18n/routing';
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { PostCardData } from '@/types/fetchedData.types';
 import { getPostHref, slugifyTitle } from '@/utils/postHref';
 import {
   type PostButtonKind,
@@ -309,15 +309,15 @@ export async function generateStaticParams() {
     undefined,
     undefined,
     100
-  )) as PortfolioPost[];
+  )) as PostCardData[];
   const blogPosts = (await getPosts(
     'blog',
     undefined,
     undefined,
     100
-  )) as BlogPost[];
+  )) as PostCardData[];
 
-  const portfolioParams = portfolioPosts.flatMap((post: PortfolioPost) =>
+  const portfolioParams = portfolioPosts.flatMap((post: PostCardData) =>
     locales.map((locale) => ({
       locale,
       post_type: 'portfolio',
@@ -326,7 +326,7 @@ export async function generateStaticParams() {
     }))
   );
 
-  const blogParams = blogPosts.flatMap((post: BlogPost) =>
+  const blogParams = blogPosts.flatMap((post: PostCardData) =>
     locales.map((locale) => ({
       locale,
       post_type: 'blog',
@@ -361,7 +361,7 @@ export async function generateMetadata({
     };
   }
 
-  const post: PortfolioPost | BlogPost | null = await getPost(id, post_type);
+  const post: PostCardData | null = await getPost(id, post_type);
 
   if (!post) {
     return {

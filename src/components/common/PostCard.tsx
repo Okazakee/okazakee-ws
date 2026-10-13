@@ -2,7 +2,7 @@ import { Glitch } from '@components/common/Glitch';
 import { ArrowUpRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { PostCardData } from '@/types/fetchedData.types';
 import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { getPostHref } from '@/utils/postHref';
 import { PostViewsBadge } from './PostViews';
@@ -13,23 +13,27 @@ import { Tags } from './Tags';
  * the card, and the glitch (`docs/DESIGN.md` §3) on the content *inside* it —
  * the frame keeps still. The same flicker as the archive card plays on hover
  * and click; `trigger="group"` gives its padded link the full card hit area.
+ *
+ * Data contract: `post` is exactly `POST_CARD_COLUMNS` and `postType` is
+ * threaded explicitly — field presence is never used as a discriminator.
  */
 export default function PostCard({
   post,
+  postType,
   locale,
 }: {
-  post: PortfolioPost | BlogPost;
+  post: PostCardData;
+  postType: 'blog' | 'portfolio';
   locale: string;
 }) {
-  const isPortfolioPost = 'source_link' in post;
-  const postType = isPortfolioPost ? 'portfolio' : 'blog';
   const title = String(
     postType === 'portfolio'
       ? post.title_en
-      : post[`title_${locale}` as keyof typeof post]
+      : post[`title_${locale}` as 'title_en' | 'title_it']
   );
   const description = String(
-    post[`description_${locale}` as keyof typeof post] ?? ''
+    post[`description_${locale}` as 'description_en' | 'description_it'] ??
+      ''
   );
   const href = getPostHref({ locale, postType, id: post.id, title });
   const blurDataURL = resolveBlurDataURL(post.blurhashURL);

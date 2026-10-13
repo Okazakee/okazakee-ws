@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 import { searchPosts } from '@/app/actions/search';
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { PostCardData } from '@/types/fetchedData.types';
 
 export default function Searchbar({
   post_type,
@@ -20,9 +20,9 @@ export default function Searchbar({
   locale,
 }: {
   post_type: string;
-  SetPosts: Dispatch<SetStateAction<BlogPost[] | PortfolioPost[]>>;
+  SetPosts: Dispatch<SetStateAction<PostCardData[]>>;
   SetIsRateLimited: Dispatch<SetStateAction<boolean>>;
-  initialPosts: BlogPost[] | PortfolioPost[];
+  initialPosts: PostCardData[];
   locale: string;
 }) {
   const [searchFilter, setSearchFilter] = useState('');

@@ -3,16 +3,23 @@ import { cacheLife, cacheTag } from 'next/cache';
 import { publicConfig } from '@/config/public';
 import { authorTag, cacheTags, postDetailTag } from '@/libs/content/cacheTags';
 import type {
-  BlogPost,
+  BlogPostDetail,
   CareerEntry,
   Contact,
   HeroSection,
-  PortfolioPost,
+  PortfolioPostDetail,
+  PostCardData,
   ResumeData,
   SiteSettings,
   SkillsCategory,
 } from '@/types/fetchedData.types';
 import { isValidHttpUrl } from '@/utils/postButtons';
+import {
+  POST_CARD_COLUMNS,
+  POST_DETAIL_COLUMNS,
+  POST_DETAIL_PORTFOLIO_COLUMNS,
+  postListCacheTags,
+} from '@/utils/postProjections';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -144,14 +151,14 @@ export async function getSkillsCategories(): Promise<SkillsCategory[] | null> {
   return data;
 }
 
-export async function getPortfolioPosts(): Promise<PortfolioPost[] | null> {
+export async function getPortfolioPosts(): Promise<PostCardData[] | null> {
   'use cache';
   cacheTag(cacheTags.portfolio);
   applySupabaseCacheLife();
 
   let query = supabase
     .from('portfolio_posts')
-    .select('*')
+    .select(POST_CARD_COLUMNS)
     .eq('hidden', false)
     .limit(3);
 
@@ -169,14 +176,14 @@ export async function getPortfolioPosts(): Promise<PortfolioPost[] | null> {
   return data;
 }
 
-export async function getBlogPosts(): Promise<BlogPost[] | null> {
+export async function getBlogPosts(): Promise<PostCardData[] | null> {
   'use cache';
   cacheTag(cacheTags.blog);
   applySupabaseCacheLife();
 
   let query = supabase
     .from('blog_posts')
-    .select('*')
+    .select(POST_CARD_COLUMNS)
     .eq('hidden', false)
     .limit(3);
 
@@ -245,10 +252,13 @@ async function queryPosts(
   searchQuery?: string,
   locale?: string,
   limit?: number
-): Promise<BlogPost[] | PortfolioPost[] | null> {
+): Promise<PostCardData[] | null> {
   const table = type === 'blog' ? 'blog_posts' : 'portfolio_posts';
 
-  let query = supabase.from(table).select('*').eq('hidden', false);
+  let query = supabase
+    .from(table)
+    .select(POST_CARD_COLUMNS)
+    .eq('hidden', false);
 
   if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
@@ -282,9 +292,9 @@ export async function getPosts(
   searchQuery?: string,
   locale?: string,
   limit?: number
-): Promise<BlogPost[] | PortfolioPost[] | null> {
+): Promise<PostCardData[] | null> {
   'use cache';
-  cacheTag(cacheTags.posts);
+  for (const tag of postListCacheTags(type)) cacheTag(tag);
   applySupabaseCacheLife();
 
   return queryPosts(type, searchQuery, locale, limit);
@@ -295,7 +305,7 @@ export async function searchPostsData(
   searchQuery: string,
   locale: string,
   limit: number
-): Promise<BlogPost[] | PortfolioPost[] | null> {
+): Promise<PostCardData[] | null> {
   return queryPosts(type, searchQuery, locale, limit);
 }
 
@@ -305,7 +315,7 @@ export type PostAuthor = {
   avatar_url: string | null;
 };
 
-export type PostWithAuthor = (PortfolioPost | BlogPost) & {
+export type PostWithAuthor = (BlogPostDetail | PortfolioPostDetail) & {
   author?: PostAuthor | null;
 };
 
@@ -317,13 +327,20 @@ export async function getPost(
   cacheTag(postDetailTag(type === 'portfolio' ? 'portfolio' : 'blog', id));
   applySupabaseCacheLife();
 
-  const tableName = type === 'portfolio' ? 'portfolio_posts' : 'blog_posts';
-
-  let query = supabase
-    .from(tableName)
-    .select('*')
-    .eq('id', id)
-    .eq('hidden', false);
+  // Literal table names per branch: the client parses select strings at
+  // the type level and cannot follow a widened table variable.
+  let query =
+    type === 'portfolio'
+      ? supabase
+          .from('portfolio_posts')
+          .select(POST_DETAIL_PORTFOLIO_COLUMNS)
+          .eq('id', id)
+          .eq('hidden', false)
+      : supabase
+          .from('blog_posts')
+          .select(POST_DETAIL_COLUMNS)
+          .eq('id', id)
+          .eq('hidden', false);
 
   if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());

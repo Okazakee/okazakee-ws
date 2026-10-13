@@ -5,11 +5,11 @@ import { MAX_SEARCH_RESULTS } from '@/config/search';
 import { clientKeyFromHeaders } from '@/libs/clientKey';
 import { normalizeSearchTerm } from '@/libs/search/query';
 import { searchThrottle } from '@/libs/search/rateLimit';
-import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
+import type { PostCardData } from '@/types/fetchedData.types';
 import { searchPostsData } from '@/utils/getData';
 
 export type SearchPostsResult =
-  | { posts: BlogPost[] | PortfolioPost[]; rateLimited?: false }
+  | { posts: PostCardData[]; rateLimited?: false }
   | { posts: []; rateLimited: true }
   | { error: string };
 

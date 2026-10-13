@@ -77,7 +77,12 @@ export default async function PostsSection({ locale }: { locale: string }) {
                 >
                   <div className="space-y-6">
                     {posts.slice(0, 3).map((post) => (
-                      <PostCard key={post.id} locale={locale} post={post} />
+                      <PostCard
+                        key={post.id}
+                        locale={locale}
+                        post={post}
+                        postType={section}
+                      />
                     ))}
                   </div>
                 </PostViewsProvider>

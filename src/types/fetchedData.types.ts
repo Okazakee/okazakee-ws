@@ -83,6 +83,66 @@ export type BlogPost = {
   author_id?: string;
 };
 
+/**
+ * Card/list/search view model: exactly `POST_CARD_COLUMNS`. No bodies,
+ * no `views` (live metrics own it), no author linkage, no buttons or
+ * legacy link columns — the card threads `postType` explicitly instead
+ * of probing field presence.
+ */
+export type PostCardData = {
+  id: number;
+  created_at: string;
+  title_en: string;
+  title_it: string;
+  description_en: string;
+  description_it: string;
+  image: string;
+  blurhashURL: string;
+  post_tags: string;
+};
+
+/**
+ * Detail view model shared by both tables: exactly
+ * `POST_DETAIL_COLUMNS`. No `views`, no `hidden` (filter-only), no
+ * legacy `title` (nothing renders it). `author_id` is linkage for the
+ * author lookup, never displayed.
+ */
+export type PostDetailData = {
+  id: number;
+  created_at: string;
+  title_en: string;
+  title_it: string;
+  description_en: string;
+  description_it: string;
+  body_en: string;
+  body_it: string;
+  image: string;
+  blurhashURL: string;
+  post_tags: string;
+  author_id?: string;
+};
+
+/**
+ * Blog detail view model: exactly the shared detail columns
+ * (`blog_posts` has no buttons/link columns).
+ */
+export type BlogPostDetail = PostDetailData;
+
+/**
+ * Portfolio detail view model: the shared detail shape plus
+ * `POST_DETAIL_PORTFOLIO_COLUMNS` extras (which cannot live on the
+ * shared type for the reason above).
+ */
+export type PortfolioPostDetail = PostDetailData & {
+  buttons?: unknown;
+  website?: string | null;
+  source_link?: string | null;
+  demo_link?: string | null;
+  store_link?: string | null;
+  fdroid_link?: string | null;
+  ios_store_link?: string | null;
+};
+
 export type Contact = {
   id: number;
   position: number;
