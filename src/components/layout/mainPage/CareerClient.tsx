@@ -1,7 +1,4 @@
-'use client';
-
 import { ArrowUpRight, Tag } from 'lucide-react';
-import { useTranslations } from 'next-intl';
 import { ChipRow } from '@components/common/ChipRow';
 import { ClientMarkdown } from '@components/common/ClientMarkdown';
 import { Glitch } from '@components/common/Glitch';
@@ -9,6 +6,7 @@ import { SectionNumber } from '@components/common/SectionNumber';
 import { InnerHtml } from '@/components/common/InnerHtml';
 import { diffMonths, formatMonthYear } from '@/utils/formatDate';
 import { formatLabels } from '@/utils/formatLabels';
+import { getTranslations } from 'next-intl/server';
 
 const separator = '//';
 
@@ -63,14 +61,14 @@ const parseSkills = (skills: string): string[] =>
  * it starts at the first dot's centre and ends at the last; only the company
  * name links out to the company site.
  */
-export function CareerClient({
+export async function CareerClient({
   careerEntries,
   locale,
 }: {
   careerEntries: CareerEntry[];
   locale: string;
 }) {
-  const t = useTranslations('career-section');
+  const t = await getTranslations({ locale, namespace: 'career-section' });
   const groups = groupByCompany(careerEntries);
 
   // Current positions fall back to the current date, which is dynamic at

@@ -1,5 +1,3 @@
-'use client';
-
 interface InnerHtmlProps {
   /**
    * Already-safe generated HTML (e.g. `formatLabels` / `typewriterHtml`
