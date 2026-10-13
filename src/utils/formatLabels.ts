@@ -1,7 +1,3 @@
-// TODO: Consolidate into a unified custom formatter that handles:
-// 1. `****text****` -> violet highlight (currently produces `<label>`)
-// 2. Markdown images: `![alt-blurhash](url)` split parsing
-// This formatter should be shared between CMS previews and public site rendering.
 import { escapeHtml } from '@/utils/escapeHtml';
 
 export const formatLabels = (text: string) => {

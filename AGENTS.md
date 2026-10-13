@@ -277,10 +277,15 @@ conventions for file placement, naming, and structure.
 
 ### 13.1 Branch and PR workflow (mandatory)
 
-`staging` is the only branch for new edits. Do not create, switch to, or
-commit on any other branch. Every change is committed and pushed to `staging`.
+If the user's initial request explicitly names a branch, use that branch
+subject to normal safety checks. If it does not say whether to work on the
+production branch or another branch, ASK which branch before modifying
+files, committing, or switching branches. Read-only investigation may
+proceed first only while the tree stays clean, nothing is committed, and
+no branch switch occurs. Never silently default to `staging`, `master`,
+or `main`; do not ask again once the user has specified a branch.
 
-Changes may be committed and pushed to `staging` when ready. Do not open a PR,
+Changes may be committed and pushed to the agreed branch when ready. Do not open a PR,
 merge, or delete branches unless the owner explicitly requests it.
 
 ### 13.2 Commit and merge conventions
