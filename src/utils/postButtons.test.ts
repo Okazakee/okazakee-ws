@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { postButtonLabel } from '@/i18n/postButtons';
 import type { PortfolioPost } from '@/types/fetchedData.types';
+
+// Cross-repo button contract: mirrors okazakee-cms
+// `src/utils/cms/postButtons.ts` (identical kind list, legacy order,
+// `{kind,url,label?}` shape). Intentional asymmetry: the CMS *rejects* a
+// write with a bad URL/kind/labelless custom, while this site *drops* the
+// entry and falls back to the legacy columns — both sides never render an
+// unusable button.
 import {
   type PostButton,
   postButtonUrl,
@@ -134,6 +141,15 @@ describe('parsePostButtons validation', () => {
   it('returns an empty list for anything that is not an array', () => {
     expect(parsePostButtons(null)).toEqual([]);
     expect(parsePostButtons({ kind: 'source' })).toEqual([]);
+  });
+
+  it('drops a labelless custom entry and falls back to legacy columns', () => {
+    expect(
+      resolvePostButtons({
+        ...legacyRow,
+        buttons: [{ kind: 'custom', url: 'https://example.com' }],
+      })
+    ).toHaveLength(6);
   });
 });
 

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { formatLabels } from './formatLabels';
 
+// Cross-repo marker contract: mirrors okazakee-cms
+// `src/utils/cms/markers.ts` (same `****([^*]+)****` semantics).
+// Intentional difference: runs render as `<label>` here vs
+// `<span data-marker="1">` in the CMS editor; this site also escapes `'`.
+
 const PAYLOAD =
   '<img src=x onerror="document.documentElement.dataset.xss=\'1\'">';
 
@@ -36,5 +41,16 @@ describe('formatLabels', () => {
     expect(out).toContain('<label>&lt;img');
     expect(out).not.toMatch(/<[^>]*\sonerror=/);
     expect(out).toContain('</label>');
+  });
+
+  it('parses adjacent regions as two runs', () => {
+    expect(formatLabels('****a********b****')).toBe(
+      '<label>a</label><label>b</label>'
+    );
+  });
+
+  it('leaves unclosed and empty markers literal', () => {
+    expect(formatLabels('a **** b')).toBe('a **** b');
+    expect(formatLabels('********')).toBe('********');
   });
 });
