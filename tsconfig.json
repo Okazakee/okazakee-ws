@@ -20,20 +20,10 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@app/*": ["./src/app/*"],
-      "@api/*": ["./src/app/api/*"],
-      "@blog/*": ["./src/blog/*"],
-      "@portfolio/*": ["./src/portfolio/*"],
       "@public/*": ["./src/app/public/*"],
       "@components/*": ["./src/components/*"],
       "@layout/*": ["./src/components/layout/*"],
-      "@store/*": ["./src/store/*"],
-      "@types/*": ["./src/types/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@fonts/*": ["./src/fonts/*"],
-      "@styles/*": ["./src/public/*.css"],
-      "@config/*": ["./*config.ts"],
-      "@libs/*": ["./src/libs/*"]
+      "@utils/*": ["./src/utils/*"]
     }
   },
   "include": [

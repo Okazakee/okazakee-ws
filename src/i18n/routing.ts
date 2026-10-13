@@ -14,7 +14,6 @@ export const routing = defineRouting({
 export type AppLocale = (typeof routing.locales)[number];
 
 export const locales = routing.locales;
-export const defaultLocale = routing.defaultLocale;
 
 export function isValidLocale(locale: string): locale is AppLocale {
   return (routing.locales as readonly string[]).includes(locale);

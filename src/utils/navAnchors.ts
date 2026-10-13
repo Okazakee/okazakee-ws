@@ -17,8 +17,6 @@ export const navItemIds = [
   'contacts',
 ] as const;
 
-export type NavItemId = (typeof navItemIds)[number];
-
 export type NavMenuItem = {
   id: string;
   /** In-page section id on the home page (`home`, `skills`, ...). */

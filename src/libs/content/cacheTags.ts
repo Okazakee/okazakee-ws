@@ -3,7 +3,8 @@
  *
  * Used by:
  * - the public read layer (src/utils/getData.ts) via cacheTag();
- * - CMS invalidation descriptors (src/libs/cms/invalidation.ts);
+ * - CMS invalidation descriptors (`src/libs/cms/invalidation.ts` in the
+ *   standalone okazakee-cms repo);
  * - the signed revalidation endpoint (Phase 9) allowlist.
  *
  * Do NOT write tag string literals elsewhere. Adding a tag here extends the

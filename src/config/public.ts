@@ -1,5 +1,4 @@
 import {
-  appEnv,
   isProductionEnv,
   parsePositiveInt,
   supabasePublishableKey,
@@ -53,13 +52,4 @@ export const publicConfig = {
     (process.env.REQUEST_INTAKE_ENABLED === undefined && !isProductionEnv),
 
   umamiEnabled: process.env.UMAMI_ENABLED === 'true',
-
-  appEnv,
-
-  /**
-   * True on production builds only. Use it to gate preview-only UI such as
-   * the request form "coming soon" overlay: testers see the live form on
-   * every other environment, prod visitors see the overlay.
-   */
-  isProduction: isProductionEnv,
 } as const;

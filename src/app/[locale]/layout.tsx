@@ -13,7 +13,7 @@ import { publicConfig } from '@/config/public';
 import { isValidLocale, locales } from '@/i18n/routing';
 import type { ResumeData } from '@/types/fetchedData.types';
 import { getResumeLink, getSiteSettings } from '@/utils/getData';
-import { Providers } from '../providers';
+import { Providers } from '@/app/providers';
 
 const whiteRabbit = localFont({
   src: '../public/fonts/whiterabbit.woff2',

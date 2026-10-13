@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { useCallback, useState } from 'react';
 import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
-import { ImageModal } from '../common/ImageModal';
+import { ImageModal } from '@components/common/ImageModal';
 
 interface NextImageProps {
   src: string;

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import CopyLinkButton from '../common/CopyButton';
+import CopyLinkButton from '@components/common/CopyButton';
 
 const siteName = 'Okazakee';
 
