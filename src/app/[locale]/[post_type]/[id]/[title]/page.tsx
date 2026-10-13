@@ -250,7 +250,6 @@ export default async function Page({
         {sourceUrl && <GitHubStars sourceLink={sourceUrl} />}
 
         <ViewDisplay
-          initialViews={post.views ?? 0}
           postId={id}
           postType={post_type as 'blog' | 'portfolio'}
         />

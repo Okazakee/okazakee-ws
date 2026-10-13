@@ -5,7 +5,14 @@ import { useState } from 'react';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { ErrorDiv } from './ErrorDiv';
 import Postcard from './PostCard';
+import { PostViewsProvider } from './PostViews';
 import Searchbar from './Searchbar';
+
+function postViewsType(
+  post: BlogPost | PortfolioPost
+): 'blog' | 'portfolio' {
+  return 'source_link' in post ? 'portfolio' : 'blog';
+}
 
 export default function PostList({
   initialPosts,
@@ -21,6 +28,13 @@ export default function PostList({
 
   const t = useTranslations('posts-section');
 
+  // One batched live-count request per visible set: search updates swap
+  // the set without ever issuing per-card requests.
+  const viewKeys = posts.map((post) => ({
+    postType: postViewsType(post),
+    id: post.id,
+  }));
+
   return (
     <>
       <Searchbar
@@ -31,17 +45,19 @@ export default function PostList({
         locale={locale}
       />
 
-      <div className="space-y-6">
-        {posts.length > 0 ? (
-          posts.map((post) => (
-            <Postcard key={post.id} post={post} locale={locale} />
-          ))
-        ) : isRateLimited ? (
-          <ErrorDiv>{t('ratelimit')}</ErrorDiv>
-        ) : (
-          <ErrorDiv>{t('no-posts')}</ErrorDiv>
-        )}
-      </div>
+      <PostViewsProvider viewKeys={viewKeys}>
+        <div className="space-y-6">
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <Postcard key={post.id} post={post} locale={locale} />
+            ))
+          ) : isRateLimited ? (
+            <ErrorDiv>{t('ratelimit')}</ErrorDiv>
+          ) : (
+            <ErrorDiv>{t('no-posts')}</ErrorDiv>
+          )}
+        </div>
+      </PostViewsProvider>
     </>
   );
 }

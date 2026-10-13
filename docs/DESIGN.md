@@ -459,7 +459,7 @@ Blog and portfolio use one card component and one layout: a rounded image poster
 (`200px`, `220px` from `sm`, `lg:w-[380px]`), then title with an external-arrow
 affordance, description and wrapping chips. The card uses theme-token surfaces
 and border hover without a shadow; the poster never zooms. The view count
-(eye icon and current total) floats bottom-right. Cards carry no star badge;
+(eye icon and live total, `—` until loaded) floats bottom-right. Cards carry no star badge;
 `GitHubStars` renders on the post detail page only. The whole card links through
 to `/{locale}/{type}/{id}/{slug}`; the slug uses the card title (English for
 portfolio, visitor locale for blog).

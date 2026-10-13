@@ -6,6 +6,7 @@ import { Archive, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
+import { PostViewsProvider } from '@/components/common/PostViews';
 import { formatLabels } from '@/utils/formatLabels';
 import { getBlogPosts, getPortfolioPosts, getPostCount } from '@/utils/getData';
 
@@ -68,11 +69,18 @@ export default async function PostsSection({ locale }: { locale: string }) {
                   <div className="mx-auto mt-3 h-0.5 w-10 rounded-full bg-accent-violet" />
                 </div>
 
-                <div className="space-y-6">
-                  {posts.slice(0, 3).map((post) => (
-                    <PostCard key={post.id} locale={locale} post={post} />
-                  ))}
-                </div>
+                <PostViewsProvider
+                  viewKeys={posts.map((post) => ({
+                    postType: section,
+                    id: post.id,
+                  }))}
+                >
+                  <div className="space-y-6">
+                    {posts.slice(0, 3).map((post) => (
+                      <PostCard key={post.id} locale={locale} post={post} />
+                    ))}
+                  </div>
+                </PostViewsProvider>
 
                 <Link
                   className="group mt-6 flex w-full rounded-2xl border border-dashed border-border-subtle bg-surface-card/40 p-6 transition-all hover:border-accent-violet/50 hover:bg-surface-card-hover/60 sm:min-h-[290px] sm:p-7 md:min-h-[275px] lg:min-h-[175px] lg:py-6"

@@ -1,96 +1,114 @@
 'use client';
 
 import { Eye } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getCurrentViews } from '@/app/actions/getCurrentViews';
 import { incrementViews } from '@/app/actions/incrementViews';
 
-interface ViewDisplayProps {
-  postId: string;
-  postType: 'blog' | 'portfolio';
-  initialViews: number | string;
-  isCard?: boolean;
+const VIEW_TTL_MS = 24 * 60 * 60 * 1000;
+const PLACEHOLDER = '—';
+
+// Preview or malformed ids never touch the metric path.
+function isCountableId(postId: string): boolean {
+  return postId.trim() !== '' && /^\d+$/.test(postId);
 }
 
+function readLastViewed(visitKey: string): number | null {
+  try {
+    const raw = localStorage.getItem(visitKey);
+    if (raw === null) return null;
+    const parsed = parseInt(raw, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function markViewed(visitKey: string): void {
+  try {
+    localStorage.setItem(visitKey, Date.now().toString());
+  } catch {
+    // Private mode etc: counting still proceeds, dedupe just won't stick.
+  }
+}
+
+function clearViewed(visitKey: string): void {
+  try {
+    localStorage.removeItem(visitKey);
+  } catch {
+    // Ignore: best-effort retry marker only.
+  }
+}
+
+/**
+ * Detail-page view counter: volatile metric rendered as a client island,
+ * never from ISR (baked numbers go stale and disagree across locales, so
+ * the badge shows `—` until the live value resolves and keeps it when
+ * the metric request fails). At most one increment per
+ * browser/post/24h; the guarded ref (not state) makes rerenders and
+ * effect reruns unable to duplicate it. Never invalidates content cache.
+ */
 export default function ViewDisplay({
   postId,
   postType,
-  initialViews,
-  isCard = false,
-}: ViewDisplayProps) {
-  const [views, setViews] = useState(initialViews);
-  const [hasIncremented, setHasIncremented] = useState(false);
-  const displayViews = `${views}`;
+}: {
+  postId: string;
+  postType: 'blog' | 'portfolio';
+}) {
+  const [views, setViews] = useState<number | null>(null);
+  const ranRef = useRef(false);
 
   useEffect(() => {
-    if (isCard) {
-      setViews(initialViews);
-      return;
-    }
+    if (ranRef.current) return;
+    ranRef.current = true;
 
-    // Skip API calls for preview or non-numeric post id (e.g. CMS post preview)
-    const numericId = postId.trim() !== '' && /^\d+$/.test(postId);
-    if (!numericId) {
-      setViews(initialViews);
-      return;
-    }
+    if (!isCountableId(postId)) return;
 
-    // Create a unique key for this post visit with 24-hour expiration
+    // Unique key for this post visit with 24-hour expiration.
     const visitKey = `viewed_${postType}_${postId}`;
+    const lastViewed = readLastViewed(visitKey);
+    const hasViewedRecently =
+      lastViewed !== null && Date.now() - lastViewed < VIEW_TTL_MS;
 
-    // Check if we've already incremented for this post in the last 24 hours
-    const lastViewed = localStorage.getItem(visitKey);
-    const now = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-    let hasViewedRecently = false;
-    if (lastViewed) {
-      const lastViewedTime = parseInt(lastViewed, 10);
-      hasViewedRecently = now - lastViewedTime < twentyFourHours;
-    }
-
-    if (!hasViewedRecently && !hasIncremented) {
-      setHasIncremented(true);
-
-      // Mark as viewed with current timestamp
-      localStorage.setItem(visitKey, now.toString());
-
-      // First increment in the database
+    if (!hasViewedRecently) {
+      // Marked synchronously so a rerun/double-effect cannot re-enter.
+      markViewed(visitKey);
       incrementViews(postId, postType)
         .then((result) => {
+          if (result.success && typeof result.views === 'number') {
+            setViews(result.views);
+            return;
+          }
           if (result.success) {
-            // Then fetch the real current view count from database
-            return getCurrentViews(postId, postType);
+            // Beta/localhost skip or pre-migration RPC without a count:
+            // resolve the live value with a read.
+            getCurrentViews(postId, postType)
+              .then((current) => {
+                if (current.success) setViews(current.views);
+              })
+              .catch(() => undefined);
+            return;
           }
-
-          console.error('❌ Database update failed:', result.error);
-          throw new Error(result.error);
+          clearViewed(visitKey);
         })
-        .then((viewsResult) => {
-          if (viewsResult?.success) {
-            // Update with the real count from database
-            setViews(viewsResult.views);
-          }
-        })
-        .catch((error) => {
-          console.error('❌ Failed to increment views:', error);
-          // Remove the localStorage if increment failed
-          localStorage.removeItem(visitKey);
+        .catch(() => {
+          clearViewed(visitKey);
         });
-    } else if (hasViewedRecently) {
-      // If already viewed in this session, just fetch current count
-      getCurrentViews(postId, postType).then((viewsResult) => {
-        if (viewsResult?.success) {
-          setViews(viewsResult.views);
-        }
-      });
+    } else {
+      getCurrentViews(postId, postType)
+        .then((current) => {
+          if (current.success) setViews(current.views);
+        })
+        .catch(() => undefined);
     }
-  }, [isCard, initialViews, postId, postType, hasIncremented]);
+  }, [postId, postType]);
 
   return (
     <div className="inline-flex items-center gap-2">
       <Eye size={14} />
-      <span className="inline-block shrink-0 tabular-nums">{displayViews}</span>
+      <span className="inline-block shrink-0 tabular-nums">
+        {views === null ? PLACEHOLDER : views}
+      </span>
     </div>
   );
 }

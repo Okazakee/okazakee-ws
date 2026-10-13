@@ -1,10 +1,11 @@
 import { Glitch } from '@components/common/Glitch';
-import { ArrowUpRight, Eye } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { BlogPost, PortfolioPost } from '@/types/fetchedData.types';
 import { resolveBlurDataURL } from '@/utils/blurPlaceholder';
 import { getPostHref } from '@/utils/postHref';
+import { PostViewsBadge } from './PostViews';
 import { Tags } from './Tags';
 
 /**
@@ -56,10 +57,7 @@ export default function PostCard({
               sizes="(min-width: 1024px) 380px, (min-width: 640px) 600px, 100vw"
               src={post.image}
             />
-            <span className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-base/85 px-2 py-0.5 font-mono text-[11px] text-text-muted backdrop-blur-surface">
-              <Eye className="h-3.5 w-3.5 text-text-dim" />
-              {post.views}
-            </span>
+            <PostViewsBadge postId={post.id} postType={postType} />
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col justify-between py-1">
