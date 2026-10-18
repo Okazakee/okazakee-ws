@@ -62,14 +62,19 @@ function messageOf(error: unknown): string {
   return String(error);
 }
 
-/** Coerces a Storage download payload to raw bytes. */
-function payloadToBytes(data: unknown): Buffer {
+/**
+ * Coerces a Storage download payload to raw bytes.
+ *
+ * Supabase Storage's `download()` returns a Blob, so that is the normal shape in
+ * production; Buffer/Uint8Array/ArrayBuffer stay supported for the injected
+ * fake and for runtimes that hand back an ArrayBuffer. The bytes are always the
+ * ones hashed — never the text — so a tampered object cannot pass verification.
+ */
+async function payloadToBytes(data: unknown): Promise<Buffer> {
   if (Buffer.isBuffer(data)) return data;
   if (data instanceof Uint8Array) return Buffer.from(data);
   if (data instanceof ArrayBuffer) return Buffer.from(data);
-  if (data instanceof Blob) {
-    throw new Error('[ws-body] Blob payloads must be converted before reading');
-  }
+  if (data instanceof Blob) return Buffer.from(await data.arrayBuffer());
   throw new Error('[ws-body] unsupported download payload type');
 }
 
@@ -144,7 +149,7 @@ export async function readMarkdownBodies(
       throw new Error(`[ws-body] download ${path} returned no data`);
     }
 
-    const bytes = payloadToBytes(result.data);
+    const bytes = await payloadToBytes(result.data);
     const actualHash = sha256Hex(bytes);
     if (actualHash !== expectedHash) {
       throw new Error(

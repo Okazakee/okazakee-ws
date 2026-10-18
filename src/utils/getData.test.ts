@@ -53,8 +53,14 @@ vi.mock('@supabase/supabase-js', () => ({
         download: async (path: string) => {
           h.downloads.push(`${bucket}/${path}`);
           const bytes = h.objects.get(path);
-          return bytes
-            ? { data: bytes, error: null }
+          // Supabase Storage's download() resolves a Blob; mirror that exactly.
+          // TS 7 requires an ArrayBuffer-backed BlobPart, not the Uint8Array view.
+          const part = bytes?.buffer.slice(
+            bytes.byteOffset,
+            bytes.byteOffset + bytes.byteLength
+          ) as ArrayBuffer | undefined;
+          return part
+            ? { data: new Blob([part], { type: 'text/markdown' }), error: null }
             : { data: null, error: { message: 'Object not found' } };
         },
       }),
@@ -227,6 +233,43 @@ describe('getPost: dev Storage dual-read enabled', () => {
     expect(post?.body_en).toBe(en);
     expect(post?.body_it).toBe('# db it');
     expect(h.downloads).toEqual([`website-content-dev/${enPath}`]);
+  });
+
+  it('resolves a portfolio detail through a real Blob payload', async () => {
+    const en = '# blob en 🎉\r\n\r\nline two\n';
+    const it = '# blob it\r\n';
+    const enPath = `portfolio/11/en/${sha256(en)}.md`;
+    const itPath = `portfolio/11/it/${sha256(it)}.md`;
+    h.row = {
+      ...PORTFOLIO_ROW,
+      body_en: en,
+      body_it: it,
+      body_en_path: enPath,
+      body_it_path: itPath,
+    };
+    h.objects.set(enPath, new TextEncoder().encode(en));
+    h.objects.set(itPath, new TextEncoder().encode(it));
+
+    const post = await getPost('11', 'portfolio');
+
+    // Exact UTF-8 Markdown, including Unicode, CRLF and the final newline.
+    expect(post?.body_en).toBe(en);
+    expect(post?.body_it).toBe(it);
+    const row = post as unknown as Record<string, unknown>;
+    // Portfolio fields and the author survive the dual-read.
+    expect(row.buttons).toEqual(PORTFOLIO_ROW.buttons);
+    expect(row.website).toBe('https://site.example');
+    expect(row.source_link).toBe('https://source.example');
+    expect(row.author).toEqual(h.author);
+    // Internal pointer fields are omitted from the page payload.
+    expect(post).not.toHaveProperty('body_en_path');
+    expect(post).not.toHaveProperty('body_it_path');
+    // The canonical pointers were requested verbatim.
+    expect(h.downloads).toEqual([
+      `website-content-dev/${enPath}`,
+      `website-content-dev/${itPath}`,
+    ]);
+    expect(h.cacheTags).toContain('post:portfolio:11');
   });
 
   it('never reads Storage for a hidden or missing post', async () => {

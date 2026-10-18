@@ -27,9 +27,33 @@ function pointer(
   return `${kind}/${id}/${locale}/${sha256(markdown)}.md`;
 }
 
+type PayloadKind = 'buffer' | 'uint8' | 'arraybuffer' | 'blob';
+
+/** Supabase Storage's `download()` returns a Blob; the others stay supported. */
+function toPayload(text: string, kind: PayloadKind): unknown {
+  const bytes = Buffer.from(text, 'utf8');
+  if (kind === 'uint8') return new Uint8Array(bytes);
+  if (kind === 'arraybuffer') {
+    return bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength
+    );
+  }
+  if (kind === 'blob') {
+    // TS 7 requires an ArrayBuffer-backed BlobPart, not the Uint8Array view.
+    const part = bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength
+    ) as ArrayBuffer;
+    return new Blob([part], { type: 'text/markdown' });
+  }
+  return bytes;
+}
+
 function makeStorage(
   objects: Record<string, string> = {},
-  failure?: string
+  failure?: string,
+  kind: PayloadKind = 'buffer'
 ): { api: MarkdownStorageApi; downloads: string[] } {
   const downloads: string[] = [];
   return {
@@ -42,10 +66,15 @@ function makeStorage(
         if (stored === undefined) {
           return { data: null, error: { message: 'Object not found' } };
         }
-        return { data: Buffer.from(stored, 'utf8'), error: null };
+        return { data: toPayload(stored, kind), error: null };
       },
     },
   };
+}
+
+/** Storage that hands back a payload the reader must reject explicitly. */
+function makeRawStorage(payload: unknown): MarkdownStorageApi {
+  return { download: async () => ({ data: payload, error: null }) };
 }
 
 const NO_POINTERS = { en: null, it: null };
@@ -250,6 +279,79 @@ describe('readMarkdownBodies: integrity failures', () => {
         pointers: { en: pointer('blog', 7, 'en', stored), it: null },
       })
     ).rejects.toThrow('disagreement');
+  });
+});
+
+describe('readMarkdownBodies: payload shapes', () => {
+  const markdown = '# from storage 🎉\r\n\r\nsecond line\n';
+
+  it.each(['blob', 'buffer', 'uint8', 'arraybuffer'] as const)(
+    'accepts a %s payload and verifies the raw bytes',
+    async (kind) => {
+      const path = pointer('blog', 7, 'en', markdown);
+      const storage = makeStorage({ [path]: markdown }, undefined, kind);
+
+      const bodies = await readMarkdownBodies({
+        kind: 'blog',
+        postId: 7,
+        storage: storage.api,
+        legacy: { en: markdown, it: null },
+        pointers: { en: path, it: null },
+      });
+
+      expect(bodies.en).toBe(markdown);
+      expect(bodies.en.length).toBe(markdown.length);
+    }
+  );
+
+  it('rejects a Blob whose bytes do not hash to the object key', async () => {
+    const promised = '# the promised content';
+    const storage = makeStorage(
+      { [pointer('blog', 7, 'en', promised)]: '# tampered in a blob' },
+      undefined,
+      'blob'
+    );
+
+    await expect(
+      readMarkdownBodies({
+        kind: 'blog',
+        postId: 7,
+        storage: storage.api,
+        legacy: { en: promised, it: null },
+        pointers: { en: pointer('blog', 7, 'en', promised), it: null },
+      })
+    ).rejects.toThrow('integrity failure');
+  });
+
+  it('rejects a valid Blob that disagrees with the legacy body', async () => {
+    const stored = '# storage version';
+    const storage = makeStorage(
+      { [pointer('blog', 7, 'en', stored)]: stored },
+      undefined,
+      'blob'
+    );
+
+    await expect(
+      readMarkdownBodies({
+        kind: 'blog',
+        postId: 7,
+        storage: storage.api,
+        legacy: { en: '# database version', it: null },
+        pointers: { en: pointer('blog', 7, 'en', stored), it: null },
+      })
+    ).rejects.toThrow('disagreement');
+  });
+
+  it('rejects an unsupported payload type explicitly', async () => {
+    await expect(
+      readMarkdownBodies({
+        kind: 'blog',
+        postId: 7,
+        storage: makeRawStorage('# not bytes'),
+        legacy: { en: null, it: null },
+        pointers: { en: pointer('blog', 7, 'en', '# not bytes'), it: null },
+      })
+    ).rejects.toThrow('unsupported download payload type');
   });
 });
 
