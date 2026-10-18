@@ -293,12 +293,14 @@ describe('getPost: dev Storage dual-read enabled', () => {
     await expect(getPost('7', 'blog')).rejects.toThrow('integrity failure');
   });
 
-  it('rejects enablement in production before querying anything', async () => {
+  it('rejects an incompatible production pairing before querying anything', async () => {
+    // production+public is the valid production pairing; a production env
+    // pointed at the dev clone schema must fail closed.
     vi.stubEnv('APP_ENV', 'production');
-    vi.stubEnv('NEXT_PUBLIC_SUPABASE_DB_SCHEMA', 'public');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_DB_SCHEMA', 'dev_staging');
 
     await expect(getPost('7', 'blog')).rejects.toThrow(
-      'must not be enabled in production'
+      'requires APP_ENV=production'
     );
     expect(h.selects).toEqual([]);
     expect(h.downloads).toEqual([]);

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CONTENT_BUCKET_DEV,
+  CONTENT_BUCKET_PROD,
   currentWsBodyStorageRead,
   resolveWsBodyStorageRead,
   WS_BODY_STORAGE_READ_FLAG,
@@ -35,7 +36,17 @@ describe('resolveWsBodyStorageRead', () => {
     ).toEqual({ mode: 'enabled', bucket: CONTENT_BUCKET_DEV });
   });
 
-  it('rejects enablement in production before any read', () => {
+  it('enables the production bucket only for production+public', () => {
+    expect(
+      resolveWsBodyStorageRead({
+        enabled: true,
+        appEnv: 'production',
+        schema: 'public',
+      })
+    ).toEqual({ mode: 'enabled', bucket: CONTENT_BUCKET_PROD });
+  });
+
+  it('rejects a production env pointed at the dev clone schema', () => {
     const decision = resolveWsBodyStorageRead({
       enabled: true,
       appEnv: 'production',
@@ -43,8 +54,29 @@ describe('resolveWsBodyStorageRead', () => {
     });
     expect(decision.mode).toBe('invalid');
     expect(decision.mode === 'invalid' ? decision.error : '').toContain(
-      'must not be enabled in production'
+      'requires APP_ENV=production'
     );
+  });
+
+  it('never crosses buckets between environments', () => {
+    const prod = resolveWsBodyStorageRead({
+      enabled: true,
+      appEnv: 'production',
+      schema: 'public',
+    });
+    const dev = resolveWsBodyStorageRead({
+      enabled: true,
+      appEnv: 'development',
+      schema: 'dev_staging',
+    });
+    expect(prod).toEqual({ mode: 'enabled', bucket: 'website-content' });
+    expect(dev).toEqual({ mode: 'enabled', bucket: 'website-content-dev' });
+    expect(
+      resolveWsBodyStorageRead({ enabled: true, appEnv: 'production', schema: 'dev_staging' }).mode
+    ).toBe('invalid');
+    expect(
+      resolveWsBodyStorageRead({ enabled: true, appEnv: 'development', schema: 'public' }).mode
+    ).toBe('invalid');
   });
 
   it('rejects enablement outside the dev clone schema', () => {
@@ -101,7 +133,13 @@ describe('currentWsBodyStorageRead', () => {
   it('derives production semantics from NODE_ENV when APP_ENV is unset', () => {
     delete process.env.APP_ENV;
     vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_DB_SCHEMA', 'public');
     vi.stubEnv(WS_BODY_STORAGE_READ_FLAG, 'true');
-    expect(currentWsBodyStorageRead().mode).toBe('invalid');
+    // NODE_ENV=production resolves production semantics, so the public schema
+    // enables reads against the PRODUCTION bucket — never the dev one.
+    expect(currentWsBodyStorageRead()).toEqual({
+      mode: 'enabled',
+      bucket: 'website-content',
+    });
   });
 });
