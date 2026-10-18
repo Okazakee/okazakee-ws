@@ -733,6 +733,31 @@ that already cost the `request-form` namespace and the `Top` label once.
 **New copy that still needs i18n keys.** `header.language` is frozen in the site
 copy and wired in both navs; nothing is English-only in the drawer any more.
 
+### Markdown bodies and detail caches (Phase 10A)
+
+Detail rows still carry `body_en`/`body_it` in PostgreSQL. When
+`WS_BODY_STORAGE_READ_ENABLED=true` **and** `APP_ENV != production` **and** the
+schema is `dev_staging`, `getPost()` also selects `body_en_path`/`body_it_path`
+and resolves each locale from the private `website-content-dev` bucket: it
+verifies that the pointer names the requested entity, id and locale, that the raw
+bytes hash to the SHA-256 in the object key, and that Storage and the committed
+column agree. Without the flag the existing PostgreSQL-only read and detail
+projections are used unchanged, and the pointer columns are never named in a
+query.
+
+Cache contract (unchanged): the detail read is `'use cache'`, tagged
+`postDetailTag(type, id)` with `applySupabaseCacheLife()`. Storage resolution runs
+**inside** that cached read, so a CMS publish that switches a pointer invalidates
+the same detail entry through the signed revalidation endpoint — there is no
+separate Storage cache. A missing, corrupt or mismatched object throws an
+operational error, so it can never be cached as an empty body.
+
+A later **direct database backfill** that writes `body_*_path` without going
+through the CMS emits no mutation event. After such a backfill, revalidate every
+affected `post:<type>:<id>` tag explicitly (the same tags the CMS publishes) —
+otherwise the cached detail entry keeps serving the previous body for its whole
+`cacheLife` window.
+
 ---
 
 ## 9. Accessibility

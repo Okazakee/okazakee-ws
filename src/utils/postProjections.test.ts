@@ -3,7 +3,9 @@ import { cacheTags } from '@/libs/content/cacheTags';
 import {
   POST_CARD_COLUMNS,
   POST_DETAIL_COLUMNS,
+  POST_DETAIL_DEV_COLUMNS,
   POST_DETAIL_PORTFOLIO_COLUMNS,
+  POST_DETAIL_PORTFOLIO_DEV_COLUMNS,
   postListCacheTags,
 } from './postProjections';
 
@@ -121,5 +123,36 @@ describe('postListCacheTags', () => {
         expect(allowed.has(tag)).toBe(true);
       }
     }
+  });
+});
+
+describe('dev detail projections (Storage dual-read)', () => {
+  it('extends the shared blog detail columns with exactly the pointer columns', () => {
+    const dev = columns(POST_DETAIL_DEV_COLUMNS);
+    expect(dev).toEqual([
+      ...columns(POST_DETAIL_COLUMNS),
+      'body_en_path',
+      'body_it_path',
+    ]);
+    expect(dev).not.toContain('*');
+    expect(dev).not.toContain('views');
+  });
+
+  it('extends the portfolio projection while keeping buttons and legacy links', () => {
+    const dev = columns(POST_DETAIL_PORTFOLIO_DEV_COLUMNS);
+    for (const column of columns(POST_DETAIL_PORTFOLIO_COLUMNS)) {
+      expect(dev).toContain(column);
+    }
+    for (const pointer of ['body_en_path', 'body_it_path']) {
+      expect(dev).toContain(pointer);
+    }
+    expect(dev).not.toContain('views');
+    expect(dev).not.toContain('*');
+  });
+
+  it('never selects pointer columns in the card projection', () => {
+    const card = columns(POST_CARD_COLUMNS);
+    expect(card).not.toContain('body_en_path');
+    expect(card).not.toContain('body_it_path');
   });
 });
