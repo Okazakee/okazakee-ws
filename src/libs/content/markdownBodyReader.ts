@@ -1,21 +1,26 @@
 /**
- * Server-only Markdown reader for the public site (Phase 10A).
+ * Server-only Markdown reader for the public site.
  *
- * Resolves a post's EN/IT Markdown from the private dev content bucket, falling
- * back to the committed PostgreSQL bodies for locales without a pointer. The
- * Storage surface is INJECTED (a bucket-scoped `storage.from(bucket)`), so
+ * Supabase Storage is the SOLE authoritative store for post bodies: every
+ * locale is resolved from the private content bucket named by its committed
+ * content-addressed pointer. The PostgreSQL `body_en`/`body_it` columns are
+ * never read — they no longer exist once the retirement is applied — and there
+ * is no fallback, no agreement check against them and no empty-body default.
+ *
+ * The Storage surface is INJECTED (a bucket-scoped `storage.from(bucket)`), so
  * integrity and failure behaviour is testable without network access, and this
- * module never constructs credentials.
+ * module never constructs credentials or resolves a bucket.
  *
  * Contract per locale:
- * - pointer NULL            -> the legacy PostgreSQL body;
- * - pointer + Storage       -> download, verify the raw bytes hash to the
- *                              SHA-256 embedded in the canonical key, and — while
- *                              both copies exist — verify Storage and the legacy
- *                              column agree;
- * - pointer + no Storage    -> error (a referenced object is never silently
- *                              replaced by the legacy column);
- * - missing/unreadable/bad  -> error, never an empty document.
+ * - NULL pointer     -> `''`: the row genuinely has no body committed yet (a
+ *                       row only gets its canonical key after its first save
+ *                       with content, and the columns stay nullable for that
+ *                       reason). There is no PostgreSQL copy to consult.
+ * - pointer          -> download, verify the raw bytes hash to the SHA-256
+ *                       embedded in the canonical key, and return the exact
+ *                       UTF-8 bytes;
+ * - missing/unreadable/mismatched/non-canonical -> error, never an empty
+ *   document and never another locale's or post's content.
  *
  * The exact UTF-8 bytes are the identity: no trimming, no newline or Unicode
  * normalization.
@@ -40,11 +45,9 @@ export type MarkdownStorageApi = {
 export type ReadMarkdownBodiesArgs = {
   kind: MarkdownBodyKind;
   postId: number;
-  /** Bucket-scoped Storage API, or null when Storage reads are disabled. */
-  storage: MarkdownStorageApi | null;
-  /** Committed PostgreSQL bodies (dev projection includes both columns). */
-  legacy: { en: string | null; it: string | null };
-  /** Committed content-addressed pointers. */
+  /** Bucket-scoped Storage API for the environment's content bucket. */
+  storage: MarkdownStorageApi;
+  /** Committed content-addressed pointers; NULL means "no body committed". */
   pointers: { en: string | null; it: string | null };
 };
 
@@ -114,28 +117,21 @@ function expectedHashFromPointer(
 }
 
 /**
- * Resolves the EN/IT Markdown of one post. Throws on any integrity failure.
+ * Resolves the EN/IT Markdown of one post from Storage. Throws on any integrity
+ * failure; a locale without a committed pointer resolves to an empty body.
  */
 export async function readMarkdownBodies(
   args: ReadMarkdownBodiesArgs
 ): Promise<ResolvedMarkdownBodies> {
   const { kind, postId, storage } = args;
-  const resolved: ResolvedMarkdownBodies = {
-    en: args.legacy.en ?? '',
-    it: args.legacy.it ?? '',
-  };
+  const resolved: ResolvedMarkdownBodies = { en: '', it: '' };
 
   for (const locale of BODY_LOCALES) {
     const path = args.pointers[locale] ?? null;
-    if (!path) {
-      // No pointer: the committed PostgreSQL body is authoritative.
+    if (path === null) {
+      // No committed body for this locale: the row has no object, and there is
+      // no PostgreSQL copy that could stand in for it.
       continue;
-    }
-
-    if (!storage) {
-      throw new Error(
-        `[ws-body] ${path} is referenced but Storage reads are disabled`
-      );
     }
 
     const expectedHash = expectedHashFromPointer(kind, postId, locale, path);
@@ -157,15 +153,7 @@ export async function readMarkdownBodies(
       );
     }
 
-    const markdown = bytes.toString('utf8');
-    const legacy = args.legacy[locale];
-    if (legacy !== null && legacy !== markdown) {
-      throw new Error(
-        `[ws-body] disagreement at ${path}: stored Markdown differs from the committed PostgreSQL body`
-      );
-    }
-
-    resolved[locale] = markdown;
+    resolved[locale] = bytes.toString('utf8');
   }
 
   return resolved;

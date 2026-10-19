@@ -3,9 +3,7 @@ import { cacheTags } from '@/libs/content/cacheTags';
 import {
   POST_CARD_COLUMNS,
   POST_DETAIL_COLUMNS,
-  POST_DETAIL_DEV_COLUMNS,
   POST_DETAIL_PORTFOLIO_COLUMNS,
-  POST_DETAIL_PORTFOLIO_DEV_COLUMNS,
   postListCacheTags,
 } from './postProjections';
 
@@ -30,11 +28,13 @@ describe('POST_CARD_COLUMNS', () => {
     );
   });
 
-  it('excludes bodies, views and detail-only columns', () => {
+  it('excludes bodies, pointers, views and detail-only columns', () => {
     const selected = columns(POST_CARD_COLUMNS);
     for (const absent of [
       'body_en',
       'body_it',
+      'body_en_path',
+      'body_it_path',
       'views',
       'hidden',
       'author_id',
@@ -59,6 +59,24 @@ describe('POST_DETAIL_COLUMNS', () => {
     expect(columns(POST_DETAIL_PORTFOLIO_COLUMNS)).not.toContain('views');
   });
 
+  it('names the canonical pointers and never the retired body columns', () => {
+    for (const projection of [
+      POST_DETAIL_COLUMNS,
+      POST_DETAIL_PORTFOLIO_COLUMNS,
+    ]) {
+      const selected = columns(projection);
+      for (const pointer of ['body_en_path', 'body_it_path']) {
+        expect(selected).toContain(pointer);
+      }
+      // The detail payload is hydrated from Storage, so the PostgreSQL body
+      // columns must not appear: the retirement drops them.
+      for (const retired of ['body_en', 'body_it']) {
+        expect(selected).not.toContain(retired);
+      }
+      expect(selected).not.toContain('*');
+    }
+  });
+
   it('keeps every field detail rendering and metadata consume', () => {
     for (const required of [
       'id',
@@ -67,8 +85,6 @@ describe('POST_DETAIL_COLUMNS', () => {
       'title_it',
       'description_en',
       'description_it',
-      'body_en',
-      'body_it',
       'image',
       'blurhashURL',
       'post_tags',
@@ -123,36 +139,5 @@ describe('postListCacheTags', () => {
         expect(allowed.has(tag)).toBe(true);
       }
     }
-  });
-});
-
-describe('dev detail projections (Storage dual-read)', () => {
-  it('extends the shared blog detail columns with exactly the pointer columns', () => {
-    const dev = columns(POST_DETAIL_DEV_COLUMNS);
-    expect(dev).toEqual([
-      ...columns(POST_DETAIL_COLUMNS),
-      'body_en_path',
-      'body_it_path',
-    ]);
-    expect(dev).not.toContain('*');
-    expect(dev).not.toContain('views');
-  });
-
-  it('extends the portfolio projection while keeping buttons and legacy links', () => {
-    const dev = columns(POST_DETAIL_PORTFOLIO_DEV_COLUMNS);
-    for (const column of columns(POST_DETAIL_PORTFOLIO_COLUMNS)) {
-      expect(dev).toContain(column);
-    }
-    for (const pointer of ['body_en_path', 'body_it_path']) {
-      expect(dev).toContain(pointer);
-    }
-    expect(dev).not.toContain('views');
-    expect(dev).not.toContain('*');
-  });
-
-  it('never selects pointer columns in the card projection', () => {
-    const card = columns(POST_CARD_COLUMNS);
-    expect(card).not.toContain('body_en_path');
-    expect(card).not.toContain('body_it_path');
   });
 });

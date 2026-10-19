@@ -2,9 +2,10 @@ import { createHash } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
- * Public detail read (Phase 10A): the Storage/legacy dual-read sits behind the
- * dev gate, keeps the existing PostgreSQL-only path untouched when disabled,
- * and resolves Markdown only for visible rows.
+ * Public detail read: Storage is the sole body store. The read always selects
+ * the canonical pointers, resolves them from the environment's content bucket
+ * and hydrates `body_en`/`body_it`; hidden, missing and future-dated posts never
+ * touch the bucket, and every integrity failure surfaces as an error.
  */
 
 const h = vi.hoisted(() => ({
@@ -71,13 +72,20 @@ vi.mock('@supabase/supabase-js', () => ({
 import { getPost } from '@/utils/getData';
 import {
   POST_DETAIL_COLUMNS,
-  POST_DETAIL_DEV_COLUMNS,
   POST_DETAIL_PORTFOLIO_COLUMNS,
-  POST_DETAIL_PORTFOLIO_DEV_COLUMNS,
 } from '@/utils/postProjections';
 
 function sha256(text: string): string {
   return createHash('sha256').update(Buffer.from(text, 'utf8')).digest('hex');
+}
+
+function pointer(
+  kind: 'blog' | 'portfolio',
+  id: number,
+  locale: string,
+  markdown: string
+): string {
+  return `${kind}/${id}/${locale}/${sha256(markdown)}.md`;
 }
 
 const BLOG_ROW = {
@@ -87,8 +95,6 @@ const BLOG_ROW = {
   title_it: 'IT title',
   description_en: 'en desc',
   description_it: 'it desc',
-  body_en: '# db en',
-  body_it: '# db it',
   image: 'cover.webp',
   blurhashURL: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
   post_tags: 'tag',
@@ -119,11 +125,18 @@ beforeEach(() => {
   h.cacheTags = [];
   vi.stubEnv('APP_ENV', 'development');
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_DB_SCHEMA', 'dev_staging');
-  vi.stubEnv('WS_BODY_STORAGE_READ_ENABLED', 'false');
 });
 
-describe('getPost: gate disabled (production contract)', () => {
-  it('uses the existing blog projection and never touches Storage', async () => {
+describe('getPost: Storage-only blog reads', () => {
+  it('selects the pointer projection and hydrates both bodies in full', async () => {
+    const en = '# storage en 🎉';
+    const it = '# storage it';
+    const enPath = pointer('blog', 7, 'en', en);
+    const itPath = pointer('blog', 7, 'it', it);
+    h.row = { ...BLOG_ROW, body_en_path: enPath, body_it_path: itPath };
+    h.objects.set(enPath, new TextEncoder().encode(en));
+    h.objects.set(itPath, new TextEncoder().encode(it));
+
     const post = await getPost('7', 'blog');
 
     expect(h.selects).toContainEqual({
@@ -134,27 +147,123 @@ describe('getPost: gate disabled (production contract)', () => {
       table: 'user_profiles',
       columns: 'id, display_name, avatar_url',
     });
-    expect(h.downloads).toEqual([]);
-    expect(post?.body_en).toBe('# db en');
-    expect(post?.body_it).toBe('# db it');
+    expect(h.downloads).toEqual([
+      `website-content-dev/${enPath}`,
+      `website-content-dev/${itPath}`,
+    ]);
+    expect(post?.body_en).toBe(en);
+    expect(post?.body_it).toBe(it);
     expect(post?.author).toEqual(h.author);
+    // Internal pointer columns never travel to the page.
+    expect(post).not.toHaveProperty('body_en_path');
+    expect(post).not.toHaveProperty('body_it_path');
     expect(h.cacheTags).toContain('post:blog:7');
   });
 
-  it('uses the existing portfolio projection and keeps buttons and legacy links', async () => {
-    h.row = { ...PORTFOLIO_ROW };
+  it('never selects the retired PostgreSQL body columns', async () => {
+    await getPost('7', 'blog');
+
+    for (const { columns } of h.selects) {
+      const selected = columns.split(',');
+      expect(selected).not.toContain('body_en');
+      expect(selected).not.toContain('body_it');
+    }
+  });
+
+  it('resolves each locale independently', async () => {
+    const en = '# storage only en';
+    const enPath = pointer('blog', 7, 'en', en);
+    // IT has no committed pointer: no object exists for it.
+    h.row = { ...BLOG_ROW, body_en_path: enPath, body_it_path: null };
+    h.objects.set(enPath, new TextEncoder().encode(en));
+
+    const post = await getPost('7', 'blog');
+
+    expect(post?.body_en).toBe(en);
+    expect(post?.body_it).toBe('');
+    expect(h.downloads).toEqual([`website-content-dev/${enPath}`]);
+  });
+
+  it('resolves a post with no committed pointers to empty bodies', async () => {
+    h.row = { ...BLOG_ROW, body_en_path: null, body_it_path: null };
+
+    const post = await getPost('7', 'blog');
+
+    // A brand-new row: Storage has nothing, and there is no PostgreSQL copy
+    // left to fall back to.
+    expect(post?.body_en).toBe('');
+    expect(post?.body_it).toBe('');
+    expect(h.downloads).toEqual([]);
+  });
+});
+
+describe('getPost: Storage-only portfolio reads', () => {
+  it('resolves a portfolio detail through a real Blob payload', async () => {
+    const en = '# blob en 🎉\r\n\r\nline two\n';
+    const it = '# blob it\r\n';
+    const enPath = pointer('portfolio', 11, 'en', en);
+    const itPath = pointer('portfolio', 11, 'it', it);
+    h.row = {
+      ...PORTFOLIO_ROW,
+      body_en_path: enPath,
+      body_it_path: itPath,
+    };
+    h.objects.set(enPath, new TextEncoder().encode(en));
+    h.objects.set(itPath, new TextEncoder().encode(it));
+
     const post = await getPost('11', 'portfolio');
 
     expect(h.selects).toContainEqual({
       table: 'portfolio_posts',
       columns: POST_DETAIL_PORTFOLIO_COLUMNS,
     });
-    expect(h.downloads).toEqual([]);
+    // Exact UTF-8 Markdown, including Unicode, CRLF and the final newline.
+    expect(post?.body_en).toBe(en);
+    expect(post?.body_it).toBe(it);
     const row = post as unknown as Record<string, unknown>;
+    // Portfolio fields and the author survive the Storage read.
     expect(row.buttons).toEqual(PORTFOLIO_ROW.buttons);
     expect(row.website).toBe('https://site.example');
     expect(row.source_link).toBe('https://source.example');
+    expect(row.author).toEqual(h.author);
+    expect(post).not.toHaveProperty('body_en_path');
+    expect(post).not.toHaveProperty('body_it_path');
+    expect(h.downloads).toEqual([
+      `website-content-dev/${enPath}`,
+      `website-content-dev/${itPath}`,
+    ]);
     expect(h.cacheTags).toContain('post:portfolio:11');
+  });
+
+  it('downloads from the production bucket for a production process', async () => {
+    const en = '# prod en';
+    const enPath = pointer('blog', 7, 'en', en);
+    h.row = { ...BLOG_ROW, body_en_path: enPath, body_it_path: null };
+    h.objects.set(enPath, new TextEncoder().encode(en));
+    vi.stubEnv('APP_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_DB_SCHEMA', 'public');
+
+    const post = await getPost('7', 'blog');
+
+    expect(post?.body_en).toBe(en);
+    expect(h.downloads).toEqual([`website-content/${enPath}`]);
+  });
+});
+
+describe('getPost: hidden, missing and misconfigured posts', () => {
+  it('filters out hidden posts in the query and never reads Storage', async () => {
+    // A hidden row is filtered by the query, so `.single()` reports no row.
+    h.error = { code: 'PGRST116', message: 'no rows' };
+
+    const post = await getPost('7', 'blog');
+
+    expect(h.filters).toContainEqual({
+      table: 'blog_posts',
+      op: 'eq',
+      column: 'hidden',
+    });
+    expect(post).toBeNull();
+    expect(h.downloads).toEqual([]);
   });
 
   it('returns null for a missing post without touching Storage', async () => {
@@ -164,135 +273,6 @@ describe('getPost: gate disabled (production contract)', () => {
     expect(h.downloads).toEqual([]);
   });
 
-  it('filters out hidden posts in the query', async () => {
-    await getPost('7', 'blog');
-    expect(h.filters).toContainEqual({
-      table: 'blog_posts',
-      op: 'eq',
-      column: 'hidden',
-    });
-  });
-});
-
-describe('getPost: dev Storage dual-read enabled', () => {
-  beforeEach(() => {
-    vi.stubEnv('WS_BODY_STORAGE_READ_ENABLED', 'true');
-  });
-
-  it('selects the dev projection and serves verified Storage Markdown', async () => {
-    const en = '# storage en 🎉';
-    const it = '# storage it';
-    const enPath = `blog/7/en/${sha256(en)}.md`;
-    const itPath = `blog/7/it/${sha256(it)}.md`;
-    h.row = {
-      ...BLOG_ROW,
-      body_en: en,
-      body_it: it,
-      body_en_path: enPath,
-      body_it_path: itPath,
-    };
-    h.objects.set(enPath, new TextEncoder().encode(en));
-    h.objects.set(itPath, new TextEncoder().encode(it));
-
-    const post = await getPost('7', 'blog');
-
-    expect(h.selects).toContainEqual({
-      table: 'blog_posts',
-      columns: POST_DETAIL_DEV_COLUMNS,
-    });
-    expect(h.downloads).toEqual([
-      `website-content-dev/${enPath}`,
-      `website-content-dev/${itPath}`,
-    ]);
-    expect(post?.body_en).toBe(en);
-    expect(post?.body_it).toBe(it);
-    // Internal pointer columns never travel to the page.
-    expect(post).not.toHaveProperty('body_en_path');
-    expect(post).not.toHaveProperty('body_it_path');
-    expect(h.cacheTags).toContain('post:blog:7');
-  });
-
-  it('keeps the legacy body for a locale without a pointer', async () => {
-    const en = '# storage only en';
-    const enPath = `portfolio/11/en/${sha256(en)}.md`;
-    // Both copies agree for EN; IT has no pointer and falls back to PostgreSQL.
-    h.row = {
-      ...PORTFOLIO_ROW,
-      body_en: en,
-      body_en_path: enPath,
-      body_it_path: null,
-    };
-    h.objects.set(enPath, new TextEncoder().encode(en));
-
-    const post = await getPost('11', 'portfolio');
-
-    expect(h.selects).toContainEqual({
-      table: 'portfolio_posts',
-      columns: POST_DETAIL_PORTFOLIO_DEV_COLUMNS,
-    });
-    expect(post?.body_en).toBe(en);
-    expect(post?.body_it).toBe('# db it');
-    expect(h.downloads).toEqual([`website-content-dev/${enPath}`]);
-  });
-
-  it('resolves a portfolio detail through a real Blob payload', async () => {
-    const en = '# blob en 🎉\r\n\r\nline two\n';
-    const it = '# blob it\r\n';
-    const enPath = `portfolio/11/en/${sha256(en)}.md`;
-    const itPath = `portfolio/11/it/${sha256(it)}.md`;
-    h.row = {
-      ...PORTFOLIO_ROW,
-      body_en: en,
-      body_it: it,
-      body_en_path: enPath,
-      body_it_path: itPath,
-    };
-    h.objects.set(enPath, new TextEncoder().encode(en));
-    h.objects.set(itPath, new TextEncoder().encode(it));
-
-    const post = await getPost('11', 'portfolio');
-
-    // Exact UTF-8 Markdown, including Unicode, CRLF and the final newline.
-    expect(post?.body_en).toBe(en);
-    expect(post?.body_it).toBe(it);
-    const row = post as unknown as Record<string, unknown>;
-    // Portfolio fields and the author survive the dual-read.
-    expect(row.buttons).toEqual(PORTFOLIO_ROW.buttons);
-    expect(row.website).toBe('https://site.example');
-    expect(row.source_link).toBe('https://source.example');
-    expect(row.author).toEqual(h.author);
-    // Internal pointer fields are omitted from the page payload.
-    expect(post).not.toHaveProperty('body_en_path');
-    expect(post).not.toHaveProperty('body_it_path');
-    // The canonical pointers were requested verbatim.
-    expect(h.downloads).toEqual([
-      `website-content-dev/${enPath}`,
-      `website-content-dev/${itPath}`,
-    ]);
-    expect(h.cacheTags).toContain('post:portfolio:11');
-  });
-
-  it('never reads Storage for a hidden or missing post', async () => {
-    h.error = { code: 'PGRST116', message: 'no rows' };
-    const post = await getPost('7', 'blog');
-
-    expect(post).toBeNull();
-    expect(h.downloads).toEqual([]);
-  });
-
-  it('propagates an integrity failure instead of returning null or an empty body', async () => {
-    const promised = '# promised';
-    h.row = {
-      ...BLOG_ROW,
-      body_en: promised,
-      body_en_path: `blog/7/en/${sha256(promised)}.md`,
-      body_it_path: null,
-    };
-    h.objects.set(`blog/7/en/${sha256(promised)}.md`, new TextEncoder().encode('# tampered'));
-
-    await expect(getPost('7', 'blog')).rejects.toThrow('integrity failure');
-  });
-
   it('rejects an incompatible production pairing before querying anything', async () => {
     // production+public is the valid production pairing; a production env
     // pointed at the dev clone schema must fail closed.
@@ -300,10 +280,42 @@ describe('getPost: dev Storage dual-read enabled', () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_DB_SCHEMA', 'dev_staging');
 
     await expect(getPost('7', 'blog')).rejects.toThrow(
-      'requires APP_ENV=production'
+      'refusing to resolve a content bucket'
     );
     expect(h.selects).toEqual([]);
     expect(h.downloads).toEqual([]);
+  });
+});
+
+describe('getPost: integrity failures are never an empty body', () => {
+  it('propagates a missing object', async () => {
+    const en = '# promised but absent';
+    h.row = {
+      ...BLOG_ROW,
+      body_en_path: pointer('blog', 7, 'en', en),
+      body_it_path: null,
+    };
+
+    await expect(getPost('7', 'blog')).rejects.toThrow('Object not found');
+  });
+
+  it('propagates a hash mismatch', async () => {
+    const promised = '# promised';
+    const path = pointer('blog', 7, 'en', promised);
+    h.row = { ...BLOG_ROW, body_en_path: path, body_it_path: null };
+    h.objects.set(path, new TextEncoder().encode('# tampered'));
+
+    await expect(getPost('7', 'blog')).rejects.toThrow('integrity failure');
+  });
+
+  it('propagates a malformed pointer', async () => {
+    h.row = {
+      ...BLOG_ROW,
+      body_en_path: `blog/8/en/${sha256('# other post')}.md`,
+      body_it_path: null,
+    };
+
+    await expect(getPost('7', 'blog')).rejects.toThrow('does not belong to');
   });
 });
 

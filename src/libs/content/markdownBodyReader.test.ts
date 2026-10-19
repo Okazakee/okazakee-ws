@@ -8,8 +8,9 @@ import {
 } from '@/libs/content/markdownBodyReader';
 
 /**
- * Public Markdown reader (Phase 10A). The Storage surface is injected, so every
- * integrity and failure branch is exercised without network access.
+ * Public Markdown reader: Storage is the sole body store. The Storage surface is
+ * injected, so every integrity and failure branch is exercised without network
+ * access and no PostgreSQL body column exists in the contract at all.
  */
 
 type Locale = 'en' | 'it';
@@ -79,103 +80,102 @@ function makeRawStorage(payload: unknown): MarkdownStorageApi {
 
 const NO_POINTERS = { en: null, it: null };
 
-describe('readMarkdownBodies: legacy fallback', () => {
-  it('returns both legacy bodies without touching Storage', async () => {
-    const storage = makeStorage();
-    const bodies = await readMarkdownBodies({
-      kind: 'blog',
-      postId: 7,
-      storage: storage.api,
-      legacy: { en: '# en from db', it: '# it from db' },
-      pointers: NO_POINTERS,
-    });
-    expect(bodies).toEqual({ en: '# en from db', it: '# it from db' });
-    expect(storage.downloads).toEqual([]);
-  });
-
-  it('uses the legacy column for the locale without a pointer', async () => {
+describe('readMarkdownBodies: Storage-only resolution', () => {
+  it('serves both locales from the bucket when both are referenced', async () => {
     const en = '# en from storage';
-    const storage = makeStorage({ [pointer('blog', 7, 'en', en)]: en });
-    const bodies = await readMarkdownBodies({
-      kind: 'blog',
-      postId: 7,
-      storage: storage.api,
-      legacy: { en, it: '# it from db' },
-      pointers: { en: pointer('blog', 7, 'en', en), it: null },
-    });
-    expect(bodies).toEqual({ en, it: '# it from db' });
-    expect(storage.downloads).toHaveLength(1);
-  });
-
-  it('uses the legacy column for EN when only IT has a pointer', async () => {
     const it = '# it from storage';
-    const storage = makeStorage({ [pointer('blog', 7, 'it', it)]: it });
-    const bodies = await readMarkdownBodies({
-      kind: 'blog',
-      postId: 7,
-      storage: storage.api,
-      legacy: { en: '# en from db', it },
-      pointers: { en: null, it: pointer('blog', 7, 'it', it) },
-    });
-    expect(bodies).toEqual({ en: '# en from db', it });
-  });
-
-  it('serves both locales from Storage when both are referenced', async () => {
-    const en = '# en storage';
-    const it = '# it storage';
     const storage = makeStorage({
       [pointer('portfolio', 11, 'en', en)]: en,
       [pointer('portfolio', 11, 'it', it)]: it,
     });
+
     const bodies = await readMarkdownBodies({
       kind: 'portfolio',
       postId: 11,
       storage: storage.api,
-      legacy: { en, it },
       pointers: {
         en: pointer('portfolio', 11, 'en', en),
         it: pointer('portfolio', 11, 'it', it),
       },
     });
+
     expect(bodies).toEqual({ en, it });
+    expect(storage.downloads).toHaveLength(2);
   });
 
-  it('preserves exact Unicode and newlines', async () => {
-    const markdown = '# Tïtolo 🎉\r\n\r\nSecondo — “virgolette”\n\n- àèìòù\n';
-    const storage = makeStorage({ [pointer('blog', 3, 'it', markdown)]: markdown });
+  it('resolves each locale independently', async () => {
+    const en = '# en from storage';
+    const storage = makeStorage({ [pointer('blog', 7, 'en', en)]: en });
+
+    const bodies = await readMarkdownBodies({
+      kind: 'blog',
+      postId: 7,
+      storage: storage.api,
+      pointers: { en: pointer('blog', 7, 'en', en), it: null },
+    });
+
+    // IT has no committed object, so its body is empty — never another
+    // locale's Markdown and never a read of the IT locale.
+    expect(bodies).toEqual({ en, it: '' });
+    expect(storage.downloads).toEqual([pointer('blog', 7, 'en', en)]);
+  });
+
+  it('resolves an IT-only post without touching the EN locale', async () => {
+    const it = '# solo italiano';
+    const storage = makeStorage({ [pointer('blog', 3, 'it', it)]: it });
+
     const bodies = await readMarkdownBodies({
       kind: 'blog',
       postId: 3,
       storage: storage.api,
-      legacy: { en: null, it: markdown },
-      pointers: { en: null, it: pointer('blog', 3, 'it', markdown) },
+      pointers: { en: null, it: pointer('blog', 3, 'it', it) },
     });
+
+    expect(bodies).toEqual({ en: '', it });
+    expect(storage.downloads).toEqual([pointer('blog', 3, 'it', it)]);
+  });
+
+  it('returns empty bodies for a row with no committed pointers', async () => {
+    const storage = makeStorage();
+
+    const bodies = await readMarkdownBodies({
+      kind: 'blog',
+      postId: 7,
+      storage: storage.api,
+      pointers: NO_POINTERS,
+    });
+
+    // A brand-new row has no object yet; there is no PostgreSQL body to fall
+    // back to, so "no body" is the honest answer.
+    expect(bodies).toEqual({ en: '', it: '' });
+    expect(storage.downloads).toEqual([]);
+  });
+
+  it('preserves exact Unicode and newlines', async () => {
+    const markdown = '# Tïtolo 🎉\r\n\r\nSecondo — “virgolette”\n\n- àèìòù\n';
+    const path = pointer('blog', 3, 'it', markdown);
+    const storage = makeStorage({ [path]: markdown });
+
+    const bodies = await readMarkdownBodies({
+      kind: 'blog',
+      postId: 3,
+      storage: storage.api,
+      pointers: { en: null, it: path },
+    });
+
     expect(bodies.it).toBe(markdown);
     expect(bodies.it.length).toBe(markdown.length);
   });
 });
 
 describe('readMarkdownBodies: integrity failures', () => {
-  it('throws when a pointer exists but Storage reads are disabled', async () => {
-    await expect(
-      readMarkdownBodies({
-        kind: 'blog',
-        postId: 7,
-        storage: null,
-        legacy: { en: '# en', it: null },
-        pointers: { en: pointer('blog', 7, 'en', '# en'), it: null },
-      })
-    ).rejects.toThrow('Storage reads are disabled');
-  });
-
-  it('throws on a missing object instead of falling back to the legacy body', async () => {
+  it('throws on a missing object instead of returning an empty body', async () => {
     const storage = makeStorage();
     await expect(
       readMarkdownBodies({
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: '# en', it: null },
         pointers: { en: pointer('blog', 7, 'en', '# en'), it: null },
       })
     ).rejects.toThrow('Object not found');
@@ -188,7 +188,6 @@ describe('readMarkdownBodies: integrity failures', () => {
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: '# en', it: null },
         pointers: { en: pointer('blog', 7, 'en', '# en'), it: null },
       })
     ).rejects.toThrow('network exploded');
@@ -196,31 +195,18 @@ describe('readMarkdownBodies: integrity failures', () => {
 
   it('throws when the bytes do not hash to the object key', async () => {
     const promised = '# the promised content';
-    const tampered = '# something else';
-    const storage = makeStorage({ [pointer('blog', 7, 'en', promised)]: tampered });
+    const storage = makeStorage({
+      [pointer('blog', 7, 'en', promised)]: '# something else',
+    });
+
     await expect(
       readMarkdownBodies({
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: promised, it: null },
         pointers: { en: pointer('blog', 7, 'en', promised), it: null },
       })
     ).rejects.toThrow('integrity failure');
-  });
-
-  it('throws when the pointer names another post id', async () => {
-    const markdown = '# cross post';
-    const storage = makeStorage({ [pointer('blog', 8, 'en', markdown)]: markdown });
-    await expect(
-      readMarkdownBodies({
-        kind: 'blog',
-        postId: 7,
-        storage: storage.api,
-        legacy: { en: markdown, it: null },
-        pointers: { en: pointer('blog', 8, 'en', markdown), it: null },
-      })
-    ).rejects.toThrow('does not belong to');
   });
 
   it('throws when the pointer names another entity', async () => {
@@ -228,26 +214,44 @@ describe('readMarkdownBodies: integrity failures', () => {
     const storage = makeStorage({
       [pointer('portfolio', 7, 'en', markdown)]: markdown,
     });
+
     await expect(
       readMarkdownBodies({
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: markdown, it: null },
         pointers: { en: pointer('portfolio', 7, 'en', markdown), it: null },
+      })
+    ).rejects.toThrow('does not belong to');
+  });
+
+  it('throws when the pointer names another post id', async () => {
+    const markdown = '# cross post';
+    const storage = makeStorage({
+      [pointer('blog', 8, 'en', markdown)]: markdown,
+    });
+
+    await expect(
+      readMarkdownBodies({
+        kind: 'blog',
+        postId: 7,
+        storage: storage.api,
+        pointers: { en: pointer('blog', 8, 'en', markdown), it: null },
       })
     ).rejects.toThrow('does not belong to');
   });
 
   it('throws when the pointer names another locale', async () => {
     const markdown = '# cross locale';
-    const storage = makeStorage({ [pointer('blog', 7, 'it', markdown)]: markdown });
+    const storage = makeStorage({
+      [pointer('blog', 7, 'it', markdown)]: markdown,
+    });
+
     await expect(
       readMarkdownBodies({
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: markdown, it: null },
         pointers: { en: pointer('blog', 7, 'it', markdown), it: null },
       })
     ).rejects.toThrow('does not belong to');
@@ -260,25 +264,32 @@ describe('readMarkdownBodies: integrity failures', () => {
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: '# en', it: null },
         pointers: { en: 'blog/7/en/not-a-hash.md', it: null },
       })
     ).rejects.toThrow('canonical');
   });
 
-  it('throws when Storage and the legacy body disagree', async () => {
-    const stored = '# storage version';
-    const legacy = '# database version';
-    const storage = makeStorage({ [pointer('blog', 7, 'en', stored)]: stored });
+  it('throws on an empty pointer rather than treating it as "no body"', async () => {
+    const storage = makeStorage();
     await expect(
       readMarkdownBodies({
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: legacy, it: null },
-        pointers: { en: pointer('blog', 7, 'en', stored), it: null },
+        pointers: { en: '', it: null },
       })
-    ).rejects.toThrow('disagreement');
+    ).rejects.toThrow('does not belong to');
+  });
+
+  it('rejects an unsupported payload type explicitly', async () => {
+    await expect(
+      readMarkdownBodies({
+        kind: 'blog',
+        postId: 7,
+        storage: makeRawStorage('# not bytes'),
+        pointers: { en: pointer('blog', 7, 'en', '# not bytes'), it: null },
+      })
+    ).rejects.toThrow('unsupported download payload type');
   });
 });
 
@@ -295,7 +306,6 @@ describe('readMarkdownBodies: payload shapes', () => {
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: markdown, it: null },
         pointers: { en: path, it: null },
       });
 
@@ -317,41 +327,9 @@ describe('readMarkdownBodies: payload shapes', () => {
         kind: 'blog',
         postId: 7,
         storage: storage.api,
-        legacy: { en: promised, it: null },
         pointers: { en: pointer('blog', 7, 'en', promised), it: null },
       })
     ).rejects.toThrow('integrity failure');
-  });
-
-  it('rejects a valid Blob that disagrees with the legacy body', async () => {
-    const stored = '# storage version';
-    const storage = makeStorage(
-      { [pointer('blog', 7, 'en', stored)]: stored },
-      undefined,
-      'blob'
-    );
-
-    await expect(
-      readMarkdownBodies({
-        kind: 'blog',
-        postId: 7,
-        storage: storage.api,
-        legacy: { en: '# database version', it: null },
-        pointers: { en: pointer('blog', 7, 'en', stored), it: null },
-      })
-    ).rejects.toThrow('disagreement');
-  });
-
-  it('rejects an unsupported payload type explicitly', async () => {
-    await expect(
-      readMarkdownBodies({
-        kind: 'blog',
-        postId: 7,
-        storage: makeRawStorage('# not bytes'),
-        legacy: { en: null, it: null },
-        pointers: { en: pointer('blog', 7, 'en', '# not bytes'), it: null },
-      })
-    ).rejects.toThrow('unsupported download payload type');
   });
 });
 

@@ -735,15 +735,18 @@ copy and wired in both navs; nothing is English-only in the drawer any more.
 
 ### Markdown bodies and detail caches (Phase 10A)
 
-Detail rows still carry `body_en`/`body_it` in PostgreSQL. When
-`WS_BODY_STORAGE_READ_ENABLED=true` **and** `APP_ENV != production` **and** the
-schema is `dev_staging`, `getPost()` also selects `body_en_path`/`body_it_path`
-and resolves each locale from the private `website-content-dev` bucket: it
-verifies that the pointer names the requested entity, id and locale, that the raw
-bytes hash to the SHA-256 in the object key, and that Storage and the committed
-column agree. Without the flag the existing PostgreSQL-only read and detail
-projections are used unchanged, and the pointer columns are never named in a
-query.
+Supabase Storage is the only body store. `getPost()` selects the canonical
+`body_en_path` / `body_it_path` columns — never the retired `body_en` /
+`body_it` — and resolves each locale from the private content bucket of its
+environment (`website-content` for production on schema `public`,
+`website-content-dev` for a non-production clone on `dev_staging`; an unknown or
+crossed pairing fails closed before any query in
+`src/libs/content/contentBucket.ts`). It verifies that the pointer names the
+requested entity, id and locale, and that the raw bytes hash to the SHA-256 in
+the object key. A locale without a committed pointer resolves to an empty body;
+a missing, corrupt, mismatched or malformed pointer throws, so it can never be
+rendered as an empty document. The internal pointer columns are stripped from
+the page payload.
 
 Cache contract (unchanged): the detail read is `'use cache'`, tagged
 `postDetailTag(type, id)` with `applySupabaseCacheLife()`. Storage resolution runs
