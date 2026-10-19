@@ -102,10 +102,13 @@ export type PostCardData = {
 };
 
 /**
- * Detail view model shared by both tables: exactly
- * `POST_DETAIL_COLUMNS`. No `views`, no `hidden` (filter-only), no
- * legacy `title` (nothing renders it). `author_id` is linkage for the
- * author lookup, never displayed.
+ * Detail view model shared by both tables. The row projection names
+ * `POST_DETAIL_COLUMNS` — metadata plus the canonical `body_en_path` /
+ * `body_it_path` pointers — and `getPost()` resolves them against the
+ * environment's content bucket, so `body_en`/`body_it` here are the hydrated
+ * Markdown and the internal pointer columns never appear in this payload. No
+ * `views`, no `hidden` (filter-only), no legacy `title` (nothing renders it).
+ * `author_id` is linkage for the author lookup, never displayed.
  */
 export type PostDetailData = {
   id: number;

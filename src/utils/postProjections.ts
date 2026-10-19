@@ -13,34 +13,22 @@ export const POST_CARD_COLUMNS =
 
 /**
  * Shared detail projection: everything the detail page and its metadata
- * consume from either table. `views` is deliberately absent — live
- * metrics own it — as are `hidden` (filter-only) and the legacy `title`
- * column (nothing renders it). Portfolio-only columns live in
+ * consume from either table, with the canonical Markdown pointers in place of
+ * the retired `body_en`/`body_it` columns (Storage is the sole authoritative
+ * body store; `getPost` downloads and hydrates them). `views` is deliberately
+ * absent — live metrics own it — as are `hidden` (filter-only) and the legacy
+ * `title` column (nothing renders it). Portfolio-only columns live in
  * `POST_DETAIL_PORTFOLIO_COLUMNS`: `blog_posts` has no such columns.
  */
 export const POST_DETAIL_COLUMNS =
-  'id,created_at,title_en,title_it,description_en,description_it,body_en,body_it,image,blurhashURL,post_tags,author_id';
+  'id,created_at,title_en,title_it,description_en,description_it,body_en_path,body_it_path,image,blurhashURL,post_tags,author_id';
 
 /** Detail projection for `portfolio_posts` (buttons + legacy links). Kept
  * as one literal string (not built by concatenation) because the
  * Supabase client parses select strings at the type level. The contract
  * test pins the shared-subset relationship with `POST_DETAIL_COLUMNS`. */
 export const POST_DETAIL_PORTFOLIO_COLUMNS =
-  'id,created_at,title_en,title_it,description_en,description_it,body_en,body_it,image,blurhashURL,post_tags,author_id,buttons,website,source_link,demo_link,store_link,fdroid_link,ios_store_link';
-
-/**
- * Dev-only detail projections (Phase 10A): the same metadata plus the immutable
- * Markdown pointers. Selected only when the Storage dual-read gate is enabled in
- * the dev clone; production never names these columns in a query.
- *
- * Kept as literal strings (not concatenation) because the Supabase client parses
- * select strings at the type level.
- */
-export const POST_DETAIL_DEV_COLUMNS =
-  'id,created_at,title_en,title_it,description_en,description_it,body_en,body_it,image,blurhashURL,post_tags,author_id,body_en_path,body_it_path';
-
-export const POST_DETAIL_PORTFOLIO_DEV_COLUMNS =
-  'id,created_at,title_en,title_it,description_en,description_it,body_en,body_it,image,blurhashURL,post_tags,author_id,buttons,website,source_link,demo_link,store_link,fdroid_link,ios_store_link,body_en_path,body_it_path';
+  'id,created_at,title_en,title_it,description_en,description_it,body_en_path,body_it_path,image,blurhashURL,post_tags,author_id,buttons,website,source_link,demo_link,store_link,fdroid_link,ios_store_link';
 
 /**
  * Cache tags for a post list of the given type. Entity-only for known

@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { cacheLife, cacheTag } from 'next/cache';
 import { publicConfig } from '@/config/public';
-import { currentWsBodyStorageRead } from '@/libs/content/bodyStorageGate';
 import { authorTag, cacheTags, postDetailTag } from '@/libs/content/cacheTags';
+import { currentContentBucket } from '@/libs/content/contentBucket';
 import {
   type MarkdownStorageApi,
   readMarkdownBodies,
@@ -23,9 +23,7 @@ import { isValidHttpUrl } from '@/utils/postButtons';
 import {
   POST_CARD_COLUMNS,
   POST_DETAIL_COLUMNS,
-  POST_DETAIL_DEV_COLUMNS,
   POST_DETAIL_PORTFOLIO_COLUMNS,
-  POST_DETAIL_PORTFOLIO_DEV_COLUMNS,
   postListCacheTags,
 } from '@/utils/postProjections';
 
@@ -335,42 +333,30 @@ export async function getPost(
   cacheTag(postDetailTag(type === 'portfolio' ? 'portfolio' : 'blog', id));
   applySupabaseCacheLife();
 
-  // Phase 10A: resolve the Storage dual-read gate before touching either
-  // backend; an enabled-but-incompatible environment fails here.
-  const bodyRead = currentWsBodyStorageRead();
-  if (bodyRead.mode === 'invalid') {
-    throw new Error(bodyRead.error);
+  // Supabase Storage is the only body store, so the environment's content
+  // bucket is resolved first: an unknown or crossed pairing fails here instead
+  // of querying and then serving another environment's Markdown.
+  const bucket = currentContentBucket();
+  if (!bucket.ok) {
+    throw new Error(bucket.error);
   }
-  const bodyBucket = bodyRead.mode === 'enabled' ? bodyRead.bucket : null;
 
   // Literal table names AND literal projections per branch: the client parses
   // select strings at the type level and cannot follow a widened variable.
-  // Production keeps the existing projection and never names the pointer
-  // columns; only the dev clone selects them.
+  // The projection names the canonical pointers; the retired `body_en` /
+  // `body_it` columns are never selected.
   let query =
     type === 'portfolio'
-      ? bodyBucket
-        ? supabase
-            .from('portfolio_posts')
-            .select(POST_DETAIL_PORTFOLIO_DEV_COLUMNS)
-            .eq('id', id)
-            .eq('hidden', false)
-        : supabase
-            .from('portfolio_posts')
-            .select(POST_DETAIL_PORTFOLIO_COLUMNS)
-            .eq('id', id)
-            .eq('hidden', false)
-      : bodyBucket
-        ? supabase
-            .from('blog_posts')
-            .select(POST_DETAIL_DEV_COLUMNS)
-            .eq('id', id)
-            .eq('hidden', false)
-        : supabase
-            .from('blog_posts')
-            .select(POST_DETAIL_COLUMNS)
-            .eq('id', id)
-            .eq('hidden', false);
+      ? supabase
+          .from('portfolio_posts')
+          .select(POST_DETAIL_PORTFOLIO_COLUMNS)
+          .eq('id', id)
+          .eq('hidden', false)
+      : supabase
+          .from('blog_posts')
+          .select(POST_DETAIL_COLUMNS)
+          .eq('id', id)
+          .eq('hidden', false);
 
   if (enforcePublishDate) {
     query = query.lte('created_at', getCurrentTime());
@@ -401,37 +387,36 @@ export async function getPost(
     }
   }
 
-  // Storage/legacy dual-read (Phase 10A). Only a visible row reaches this
-  // point, so hidden, deleted and future-dated posts never touch Storage. The
-  // download happens inside this cached read, so it participates in
-  // `postDetailTag` invalidation rather than forming an untracked cache.
-  if (data && bodyBucket) {
-    const row = data as unknown as (BlogPostDetail | PortfolioPostDetail) & {
-      body_en_path?: string | null;
-      body_it_path?: string | null;
-    };
-    const bodies = await readMarkdownBodies({
-      kind: type === 'portfolio' ? 'portfolio' : 'blog',
-      postId: row.id,
-      storage: supabase.storage.from(
-        bodyBucket
-      ) as unknown as MarkdownStorageApi,
-      legacy: { en: row.body_en ?? null, it: row.body_it ?? null },
-      pointers: {
-        en: row.body_en_path ?? null,
-        it: row.body_it_path ?? null,
-      },
-    });
-    // Pointer columns are internal: never spread them into the page payload.
-    return {
-      ...withoutBodyPointers(row),
-      body_en: bodies.en,
-      body_it: bodies.it,
-      author,
-    };
+  if (!data) {
+    return null;
   }
 
-  return { ...data, author };
+  // Storage read: only a visible row reaches this point, so hidden, deleted and
+  // future-dated posts never touch the bucket. The download happens inside this
+  // cached read, so it participates in `postDetailTag` invalidation rather than
+  // forming an untracked cache.
+  const row = data as unknown as (BlogPostDetail | PortfolioPostDetail) & {
+    body_en_path?: string | null;
+    body_it_path?: string | null;
+  };
+  const bodies = await readMarkdownBodies({
+    kind: type === 'portfolio' ? 'portfolio' : 'blog',
+    postId: row.id,
+    storage: supabase.storage.from(
+      bucket.bucket
+    ) as unknown as MarkdownStorageApi,
+    pointers: {
+      en: row.body_en_path ?? null,
+      it: row.body_it_path ?? null,
+    },
+  });
+  // Pointer columns are internal: never spread them into the page payload.
+  return {
+    ...withoutBodyPointers(row),
+    body_en: bodies.en,
+    body_it: bodies.it,
+    author,
+  };
 }
 
 export async function getResumeLink(
