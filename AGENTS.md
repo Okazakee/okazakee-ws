@@ -49,9 +49,6 @@ src/
 ## 5. Commands and Workflows
 
 - Install: `bun install`
-- Post-install patch: `node src/utils/patchNextTypeScript7.mjs` (runs
-  automatically via the `postinstall` script; teaches Next's internal
-  type-check loader about the TypeScript 7 package layout)
 - Dev server: `bun run dev`
 - Build: `bun run build`
 - Start production: `bun run start`
@@ -67,7 +64,7 @@ test → build → typecheck (build before typecheck: fresh checkouts need
 
 ## 6. Code Formatting
 
-> **Repo-wide:** Biome 2.5 is the formatter and linter. Config lives at `biome.json`. The editorconfig at `.editorconfig` mirrors indent/line-ending settings.
+> **Repo-wide:** Biome 2.6.3 is the formatter and linter. Config lives at `biome.json`. The editorconfig at `.editorconfig` mirrors indent/line-ending settings.
 
 ### TypeScript / TSX
 
@@ -303,10 +300,11 @@ merge, or delete branches unless the owner explicitly requests it.
 - **Package manager:** bun (`packageManager: "bun@1.3.14"` in `package.json`). Always use `bun` not `npm`/`yarn`/`pnpm`.
 - **Lockfile:** `bun.lock` — committed to the repo.
 - **Add dependency:** `bun add <package>` (prod) or `bun add -d <package>` (dev).
-- **Linter/Formatter:** Biome 2.5. Config: `biome.json`.
-- **Type checker:** TypeScript 7 with `strict: true`. Config: `tsconfig.json`. `next build` skips its internal type check on TS 7 (patched by the `postinstall` script), so `bunx tsc --noEmit` is the only typecheck that runs — CI relies on it.
+- **Linter/Formatter:** Biome 2.6.3. Config: `biome.json`.
+- **Type checker:** TypeScript 7.0.2 with `strict: true`. Config: `tsconfig.json`. Next 16.4.3 type-checks the build through the project-local TypeScript CLI, and CI runs `bunx tsc --noEmit` as well; there is no loader patch or `postinstall` step.
 - **CSS:** Tailwind CSS 4 with `@tailwindcss/postcss`. Config: `postcss.config.mjs`, `tailwind.config.ts`.
-- **Runtime:** Next.js 16 with Turbopack dev server. Config: `next.config.ts`.
+- **Runtime:** Next.js 16.4.3 (App Router, Turbopack dev server), React 19.3.1, and sharp 0.35.5 for the image optimizer. Config: `next.config.ts`.
+- **Dependency security:** Next.js and React versions track the [October 14, 2026 Next.js security update](https://nextjs.org/blog/nextjs-security-update-october-14-2026); keep sharp at 0.35.5 or later, the fixed image-optimization dependency.
 - **Environment variables:** Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `DOMAIN_URL`. Full list in `.env.local.example`.
 - **Deployment:** Vercel with Next.js framework preset. Build output: `.next/`.
 

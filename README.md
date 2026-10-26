@@ -47,9 +47,11 @@ public caches through a signed revalidation endpoint
 
 | Layer | Choice |
 | --- | --- |
-| Framework | Next.js 16 (App Router, Turbopack) |
+| Framework | Next.js 16.4.3 (App Router, Turbopack) |
+| UI | React 19.3.1 |
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS 4 · Lucide icons |
+| Images | `next/image` + sharp 0.35.5 (WebP only) |
 | Data | Supabase (PostgreSQL · Storage · RPCs) — read-only, publishable key |
 | i18n | next-intl (EN/IT) |
 | State | Zustand (theme store) |
@@ -222,6 +224,15 @@ bun run test      # Vitest test suite
   install → lint → test → build → typecheck. Build runs before typecheck
   because a fresh checkout needs `.next/types` for route and image module
   resolution.
+
+## Security
+
+Runtime dependencies track the official
+[October 14, 2026 Next.js security update](https://nextjs.org/blog/nextjs-security-update-october-14-2026):
+Next.js 16.4.3 (16.4.1 was the first patched 16.4 release), React and React DOM
+19.3.1, and sharp 0.35.5 (the fixed image-optimization dependency). All three
+affected paths — Cache Components, image optimization and Server Actions — are
+in use here, so keep these pins together.
 
 ## Troubleshooting
 

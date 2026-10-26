@@ -6,6 +6,7 @@ import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { InnerHtml } from '@/components/common/InnerHtml';
+import { publicConfig } from '@/config/public';
 import { formatLabels } from '@/utils/formatLabels';
 import { getContacts } from '@/utils/getData';
 import { RequestForm } from './RequestForm';
@@ -16,6 +17,11 @@ export default async function Contacts({ locale }: { locale: string }) {
   if (!contacts) return <ErrorDiv>Error loading Contacts data</ErrorDiv>;
 
   const t = await getTranslations({ locale, namespace: 'contacts-section' });
+
+  // Intake availability derives from server-only env (`APP_ENV` /
+  // `REQUEST_INTAKE_ENABLED`). Resolve it here and hand it to the client form,
+  // so the server HTML and the hydration render can never disagree.
+  const intakeEnabled = publicConfig.requestIntakeEnabled;
 
   return (
     <section
@@ -107,7 +113,7 @@ export default async function Contacts({ locale }: { locale: string }) {
         className="umami-replay-block w-full"
       >
         <SectionEyebrow index={2} label={t('projectInquiry')} />
-        <RequestForm />
+        <RequestForm intakeEnabled={intakeEnabled} />
       </section>
     </section>
   );

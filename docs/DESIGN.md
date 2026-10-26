@@ -550,9 +550,12 @@ horizontal scroll under `prefers-reduced-motion`).
   production, where it defaults **off**, the band shows, and the endpoint
   answers 503. Setting the variable to `true` in production makes the band
   disappear and the endpoint accept submissions, so the visitor's view and the
-  endpoint's behaviour are always driven by the same flag and can never
-  disagree. It is still `aria-hidden` and translucent enough to read the form
-  underneath.
+  endpoint's behaviour are driven by the same server-side flag. `Contacts`
+  serializes that boolean into the client `RequestForm`; the browser must not
+  re-evaluate the non-public environment variables during hydration. The
+  prerendered form reflects the build-time flag, while the endpoint checks it
+  per request. The band is still `aria-hidden` and translucent enough to read
+  the form underneath.
 
 ### 5.5 Footer
 Left: `Made with ❤️ by` + the name **linked to the GitHub profile**, then `Source Code`

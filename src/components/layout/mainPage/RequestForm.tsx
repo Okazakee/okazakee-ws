@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import Dropdown from '@/components/common/Dropdown';
-import { publicConfig } from '@/config/public';
 import {
   type RequestFormOptions,
   requestFormCopy,
@@ -26,9 +25,13 @@ import { trackUmamiEvent } from '@/utils/analytics';
  * error code plus the offending field, so a failure renders as a message the
  * visitor can act on in their own locale.
  *
- * While `REQUEST_INTAKE_ENABLED` is off — the fail-safe default on production
- * builds — the form renders the "coming soon" band and the endpoint answers
- * 503, so the two can never disagree about whether a submission is accepted.
+ * Availability is resolved on the server and passed in as `intakeEnabled`:
+ * `publicConfig.requestIntakeEnabled` derives from non-public env
+ * (`APP_ENV`/`REQUEST_INTAKE_ENABLED`), which the browser bundle cannot read —
+ * evaluating it here made the client fall back to `NODE_ENV` and hydrate the
+ * "coming soon" band the server had not rendered. While the flag is off — the
+ * fail-safe default on production builds — the form renders that band and the
+ * endpoint answers 503, so the two can never disagree.
  */
 type FormValues = {
   name: string;
@@ -60,7 +63,15 @@ function initialValues(options: RequestFormOptions): FormValues {
   };
 }
 
-export function RequestForm() {
+export function RequestForm({
+  intakeEnabled,
+}: {
+  /**
+   * Server-resolved `publicConfig.requestIntakeEnabled`; never read on the
+   * client.
+   */
+  intakeEnabled: boolean;
+}) {
   const tFooter = useTranslations('footer');
   const currentLocale = useLocale();
   const copy = requestFormCopy(currentLocale);
@@ -417,7 +428,7 @@ export function RequestForm() {
       </form>
 
       {/* The intake band mirrors the endpoint's fail-safe availability. */}
-      {!publicConfig.requestIntakeEnabled && (
+      {!intakeEnabled && (
         <div
           aria-hidden="true"
           className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden bg-surface-base/45 backdrop-blur-surface"

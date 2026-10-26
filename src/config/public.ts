@@ -46,6 +46,11 @@ export const publicConfig = {
    * `REQUEST_INTAKE_ENABLED=true` in the production environment to go live
    * deliberately. The route handler reads the same value, so the UI and the
    * endpoint can never disagree.
+   *
+   * Server-only: `REQUEST_INTAKE_ENABLED` and `APP_ENV` are not inlined into
+   * the browser bundle, so a client component that evaluated this would fall
+   * back to `NODE_ENV` and hydrate the opposite tree. Pass the resolved
+   * boolean down as a prop from a server component.
    */
   requestIntakeEnabled:
     process.env.REQUEST_INTAKE_ENABLED === 'true' ||
